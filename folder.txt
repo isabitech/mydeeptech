@@ -2,27 +2,45 @@ src/
 ├── assets/               # Static assets like images, icons, etc.
 │   └── logo.svg          # Example logo
 ├── components/           # Reusable components
-│   └── Button.tsx        # Example reusable button
+│   ├── Button.tsx        # Example reusable button
+│   ├── Modal.tsx         # Reusable modal component
+│   └── Card.tsx          # Reusable card component
 ├── context/              # React context for global state management
 │   └── AuthContext.tsx   # Context for authentication
+├── dashboard/            # Dashboard-specific components and pages
+│   ├── components/       # Reusable components specific to dashboard
+│   │   ├── Sidebar.tsx   # Sidebar component
+│   │   ├── Header.tsx    # Header component
+│   │   └── Footer.tsx    # Footer component
+│   ├── pages/            # Pages within the dashboard
+│   │   ├── Overview.tsx  # Overview/dashboard home page
+│   │   ├── Profile.tsx   # User profile page
+│   │   └── Settings.tsx  # Settings page
+│   └── DashboardLayout.tsx # Layout for dashboard pages
 ├── hooks/                # Custom React hooks
 │   └── useAuth.ts        # Hook for authentication logic
 ├── layouts/              # Layout components
-│   └── AuthLayout.tsx    # Layout for authentication pages
+│   ├── AuthLayout.tsx    # Layout for authentication pages
+│   └── MainLayout.tsx    # General layout for non-dashboard pages
 ├── pages/                # Route-based components
+│   ├── LandingPage.tsx   # Landing page
 │   ├── Login.tsx         # Login page
 │   ├── Signup.tsx        # Signup page
 │   └── ForgotPassword.tsx # Forgot password page
 ├── routes/               # Application routing
 │   └── AppRoutes.tsx     # Centralized route configuration
 ├── services/             # API or service calls
-│   └── authService.ts    # Authentication-related API calls
+│   ├── authService.ts    # Authentication-related API calls
+│   └── dashboardService.ts # API calls related to dashboard
 ├── styles/               # Global and module CSS/SCSS styles
-│   └── globals.css       # Global styles
+│   ├── globals.css       # Global styles
+│   └── dashboard.css     # Styles specific to dashboard
 ├── types/                # TypeScript types and interfaces
-│   └── auth.d.ts         # Types for authentication
+│   ├── auth.d.ts         # Types for authentication
+│   └── dashboard.d.ts    # Types for dashboard components and pages
 ├── utils/                # Utility functions/helpers
-│   └── validation.ts     # Input validation utilities
+│   ├── validation.ts     # Input validation utilities
+│   └── dateUtils.ts      # Date-related utilities
 ├── App.tsx               # Main app component
 ├── main.tsx              # Vite's entry point
 └── vite-env.d.ts         # Vite-specific TypeScript declarations

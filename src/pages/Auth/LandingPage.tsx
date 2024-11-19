@@ -1,8 +1,8 @@
 import { Button, ConfigProvider } from "antd";
-import Logo from "../assets/deeptech.png";
-import freelancer from "../assets/freelancer.jpg";
+import Logo from "../../assets/deeptech.png";
+import freelancer from "../../assets/freelancer.jpg";
 import { useState } from "react";
-import PageModal from "../components/Modal/PageModal";
+import PageModal from "../../components/Modal/PageModal";
 import SignupContent from "./Signup";
 import LoginContent from "./Login";
 

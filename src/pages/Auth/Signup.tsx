@@ -22,7 +22,7 @@ const Signup = () => {
             </span>
           }
           name="firstName"
-          rules={[{ required: true, message: "Please enter your full name!" }]}
+          rules={[{ required: true, message: "Please enter your first name!" }]}
         >
           <Input
             className=" !font-[gilroy-regular] !!text-[#333333] !h-12"
@@ -37,7 +37,7 @@ const Signup = () => {
             </span>
           }
           name="lastName"
-          rules={[{ required: true, message: "Please enter your full name!" }]}
+          rules={[{ required: true, message: "Please enter your last name!" }]}
         >
           <Input
             className=" !font-[gilroy-regular] !text-[#333333] !h-12"
@@ -52,7 +52,7 @@ const Signup = () => {
             </span>
           }
           name="username"
-          rules={[{ required: true, message: "Please enter your full name!" }]}
+          rules={[{ required: true, message: "Please enter your username!" }]}
         >
           <Input
             className=" !font-[gilroy-regular] !text-[#333333] !h-12"
@@ -85,7 +85,7 @@ const Signup = () => {
             </span>
           }
           name="phone"
-          rules={[{ required: true, message: "Please enter your full name!" }]}
+          rules={[{ required: true, message: "Please enter your phone!" }]}
         >
           <Input
             className=" !font-[gilroy-regular] !text-[#333333] !h-12"

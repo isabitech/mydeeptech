@@ -11,7 +11,7 @@ const Login = () => {
       <Form layout="vertical" onFinish={handleLogin}>
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
+            <span className="!font-[gilroy-regular] !text-white">
               Email Address
             </span>
           }
