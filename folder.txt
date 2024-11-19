@@ -1,0 +1,28 @@
+src/
+├── assets/               # Static assets like images, icons, etc.
+│   └── logo.svg          # Example logo
+├── components/           # Reusable components
+│   └── Button.tsx        # Example reusable button
+├── context/              # React context for global state management
+│   └── AuthContext.tsx   # Context for authentication
+├── hooks/                # Custom React hooks
+│   └── useAuth.ts        # Hook for authentication logic
+├── layouts/              # Layout components
+│   └── AuthLayout.tsx    # Layout for authentication pages
+├── pages/                # Route-based components
+│   ├── Login.tsx         # Login page
+│   ├── Signup.tsx        # Signup page
+│   └── ForgotPassword.tsx # Forgot password page
+├── routes/               # Application routing
+│   └── AppRoutes.tsx     # Centralized route configuration
+├── services/             # API or service calls
+│   └── authService.ts    # Authentication-related API calls
+├── styles/               # Global and module CSS/SCSS styles
+│   └── globals.css       # Global styles
+├── types/                # TypeScript types and interfaces
+│   └── auth.d.ts         # Types for authentication
+├── utils/                # Utility functions/helpers
+│   └── validation.ts     # Input validation utilities
+├── App.tsx               # Main app component
+├── main.tsx              # Vite's entry point
+└── vite-env.d.ts         # Vite-specific TypeScript declarations

@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: "gilroy-light";
+    src: url("./assets/Fonts/Gilroy-Light.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "gilroy-regular";
+    src: url("./assets/Fonts/Gilroy-Regular.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "gilroy-medium";
+    src: url("./assets/Fonts/Gilroy-Medium.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "gilroy-semibold";
+    src: url("./assets/Fonts/Gilroy-SemiBold.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "gilroy-bold";
+    src: url("./assets/Fonts/Gilroy-Bold.ttf") format("truetype");
+  }
+  @font-face {
+    font-family: "gilroy-extraBold";
+    src: url("./assets/Fonts/Gilroy-ExtraBold.ttf") format("truetype");
+  }
+  
+  body {
+    background-color: #f7f8fa;
+    font-family: "gilroy-extraBold";
+  }
+  /* width */
+  ::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #eef2f8;
+    display: none;
+  }
+  
+  ::-webkit-scrollbar-track:hover {
+    display: block;
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    display: none;
+  }
+  
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #096a95;
+    border-radius: 12px;
+    display: block;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  /* .background {
+    background: "url('../assets/images/bgImage.png')";
+    background-repeat: no-repeat;
+    background-size: cover;
+  } */
+  /* .background-image {
+    background-image: url("/assets/images/bgImage.png");
+    background-size: cover;
+    background-position: center; */
+  /* } */
+  
