@@ -55,7 +55,7 @@
   
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background: #096a95;
+    background: #F6921E;
     border-radius: 12px;
     display: block;
   }

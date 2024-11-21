@@ -16,7 +16,7 @@ const PageModal = ({
   onCancel,
   closable,
   className,
-  
+
   modalwidth,
 }: Props) => {
   return (
@@ -31,7 +31,6 @@ const PageModal = ({
       style={{
         // Set a solid or semi-transparent background
         backgroundColor: "#333333", // Dark gray background for the modal
-      
       }}
       maskStyle={{
         // Optional: Adjust the overlay opacity
