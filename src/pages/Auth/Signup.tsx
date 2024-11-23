@@ -1,8 +1,57 @@
-import { Form, Input, Button } from "antd";
+import { Form, Input, Button, notification } from "antd";
+import { useState } from "react";
+import { endpoints } from "../../store/api/endpoints";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
-  const handleSignup = (values: any) => {
-    console.log("Sign Up Data:", values);
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignup = async (values: any) => {
+    setIsLoading(true);
+
+    // Adjust phone number to match API pattern if necessary
+    const formattedPhone = values.phone.startsWith("0")
+      ? values.phone.slice(1) // Remove leading zero
+      : values.phone;
+
+    try {
+      const response = await fetch(endpoints.auth.signup, {
+        method: "POST",
+        body: JSON.stringify({
+          firstname: values.firstName,
+          lastname: values.lastName,
+          email: values.email,
+          password: values.password,
+          username: values.username,
+          phone: formattedPhone, // Use formatted phone
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        notification.open({
+          type: "success",
+          message: result.message || "Registration Succesful Kindly Login",
+        });
+        form.resetFields();
+        navigate("/dashboard/overview");
+      } else {
+        notification.open({
+          type: "error",
+          message: result.message || "Signup failed! Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error during signup:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -11,13 +60,14 @@ const Signup = () => {
         Sign Up
       </h2>
       <Form
-        layout="vertical"
         onFinish={handleSignup}
-        className=" !font-[gilroy-regular] !text-white"
+        form={form}
+        layout="vertical"
+        className="!font-[gilroy-regular] !text-white"
       >
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
+            <span className="!font-[gilroy-regular] !text-white">
               First Name
             </span>
           }
@@ -25,14 +75,14 @@ const Signup = () => {
           rules={[{ required: true, message: "Please enter your first name!" }]}
         >
           <Input
-            className=" !font-[gilroy-regular] !!text-[#333333] !h-12"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12"
             placeholder="Enter your First Name"
           />
         </Form.Item>
 
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
+            <span className="!font-[gilroy-regular] !text-white">
               Last Name
             </span>
           }
@@ -40,22 +90,20 @@ const Signup = () => {
           rules={[{ required: true, message: "Please enter your last name!" }]}
         >
           <Input
-            className=" !font-[gilroy-regular] !text-[#333333] !h-12"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12"
             placeholder="Enter your Last Name"
           />
         </Form.Item>
 
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
-              Username
-            </span>
+            <span className="!font-[gilroy-regular] !text-white">Username</span>
           }
           name="username"
           rules={[{ required: true, message: "Please enter your username!" }]}
         >
           <Input
-            className=" !font-[gilroy-regular] !text-[#333333] !h-12"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12"
             placeholder="Enter a username"
           />
         </Form.Item>
@@ -73,14 +121,14 @@ const Signup = () => {
           ]}
         >
           <Input
-            className=" !font-[gilroy-regular] !text-[#333333] !h-12"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12"
             placeholder="Enter your email"
           />
         </Form.Item>
 
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
+            <span className="!font-[gilroy-regular] !text-white">
               Phone Number
             </span>
           }
@@ -88,16 +136,14 @@ const Signup = () => {
           rules={[{ required: true, message: "Please enter your phone!" }]}
         >
           <Input
-            className=" !font-[gilroy-regular] !text-[#333333] !h-12"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12"
             placeholder="Enter Phone Number"
           />
         </Form.Item>
 
         <Form.Item
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
-              Password
-            </span>
+            <span className="!font-[gilroy-regular] !text-white">Password</span>
           }
           name="password"
           rules={[
@@ -114,35 +160,20 @@ const Signup = () => {
         <Form.Item
           hasFeedback
           label={
-            <span className=" !font-[gilroy-regular] !text-white">
+            <span className="!font-[gilroy-regular] !text-white">
               Confirm Password
             </span>
           }
-          name={"confirmpassword"}
+          name="confirmpassword"
+          dependencies={["password"]}
           rules={[
-            {
-              required: true,
-              message: "Confirm password must match password",
-            },
-            {
-              min: 8,
-              message: "Password must have a minimum length of 8",
-            },
-            {
-              pattern: new RegExp(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{6,})/
-              ),
-              message:
-                "Password must contain at least one lowercase letter, uppercase letter, number, and special character",
-            },
+            { required: true, message: "Please confirm your password!" },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue("password") === value) {
                   return Promise.resolve();
                 }
-                return Promise.reject(
-                  new Error("The new password that you entered do not match!")
-                );
+                return Promise.reject(new Error("Passwords do not match!"));
               },
             }),
           ]}
@@ -154,9 +185,11 @@ const Signup = () => {
         </Form.Item>
 
         <Button
-          className=" hover:!bg-secondary !font-[gilroy-regular] !text-white !border-primary bg-secondary !w-full !h-12 !mt-4"
+          className="hover:!bg-secondary !font-[gilroy-regular] !text-white !border-primary bg-secondary !w-full !h-12 !mt-4"
           type="primary"
           htmlType="submit"
+          loading={isLoading} // Show loading spinner
+          disabled={isLoading} // Disable button while loading
         >
           Sign Up
         </Button>
