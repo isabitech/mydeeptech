@@ -1,16 +1,14 @@
 import {
-  BellOutlined,
-  SearchOutlined,
+ 
   BarChartOutlined,
   CodeSandboxOutlined,
   ClockCircleOutlined,
   InboxOutlined,
-  ArrowRightOutlined,
+  
   PlusSquareOutlined,
-  OpenAIOutlined,
-  RedEnvelopeOutlined,
+  
 } from "@ant-design/icons";
-import Tables from "./Tables";
+
 import {Button} from "antd";
 import Header from "./Header";
 

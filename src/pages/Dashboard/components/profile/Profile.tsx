@@ -3,7 +3,7 @@ import Header from "../Header";
 import { useState } from "react";
 
 const Profile = () => {
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable] = useState(false);
   return (
     <div className="h-full flex flex-col gap-4  font-[gilroy-regular]">
       <Header title="Profile" />
