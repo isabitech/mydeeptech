@@ -1,10 +1,12 @@
 import { Form, Input, Button, notification } from "antd";
 import { useState } from "react";
 import { endpoints } from "../../store/api/endpoints"; // Assuming endpoints are defined
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
+    const navigate = useNavigate()
   const handleLogin = async (values: any) => {
     setIsLoading(true);
 
@@ -33,7 +35,7 @@ const Login = () => {
         });
 
         // Redirect to the dashboard or home page
-        window.location.href = "/dashboard/overview"; // You can use React Router for navigation if needed
+        navigate("/dashboard/overview"); // You can use React Router for navigation if needed
       } else {
         notification.error({
           message: "Login Failed",
