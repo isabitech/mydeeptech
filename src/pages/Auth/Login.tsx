@@ -11,7 +11,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Send login request to the API
+      
       const response = await fetch(endpoints.auth.login, {
         method: "POST",
         body: JSON.stringify({
@@ -34,7 +34,7 @@ const Login = () => {
           description: "You have successfully logged in.",
         });
 
-        // Redirect to the dashboard or home page
+        
         navigate("/dashboard/overview"); // You can use React Router for navigation if needed
       } else {
         notification.error({
