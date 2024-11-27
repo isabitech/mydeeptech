@@ -71,7 +71,7 @@ const Unpaid = () => {
             </tr>
           </thead>
           <tbody className=" h-full overflow-auto">
-            {/* Sample data rows */}
+            {/* Sample data rows here */}
             {unpaid.map((row, index) => (
               <tr className=" " key={row.id}>
                 <td className="p-2 ">{index + 1}</td>

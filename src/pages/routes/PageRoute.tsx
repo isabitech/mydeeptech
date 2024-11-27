@@ -10,13 +10,13 @@ const PageRoute = () => {
   ];
 
   const navigate = useNavigate();
-  const [openOutlet, setOpenOutlet] = useState(false);
+  // const [openOutlet, setOpenOutlet] = useState(false);
   const openDashboard = () => {
     if (userStatus === "user") {
-      setOpenOutlet(true);
+      // setOpenOutlet(true);
       navigate("/dashboard/overview");
     } else if (userStatus === "admin") {
-      setOpenOutlet(true);
+      // setOpenOutlet(true);
       navigate("/admin");
     }
   };

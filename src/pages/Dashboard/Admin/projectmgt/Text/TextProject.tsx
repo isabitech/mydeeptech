@@ -1,4 +1,3 @@
-import React from 'react'
 
 const TextProject = () => {
   return (
@@ -6,4 +5,4 @@ const TextProject = () => {
   )
 }
 
-export default TextProject
+export default TextProject;

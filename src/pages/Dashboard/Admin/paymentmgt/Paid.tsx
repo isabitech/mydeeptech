@@ -47,7 +47,7 @@ const Paid = () => {
       <p>
         Your Paid Out Jobs as at {todaysDate} {"-"} {month} {"-"} {year}{" "}
       </p>
-      {/* Todays Task */}
+      {/* Todays Payout */}
       <div className="  w-full h-[70vh] overflow-y-auto flex flex-col gap-2 pt-4">
         <p className="text-primary">paid Jobs</p>
 
