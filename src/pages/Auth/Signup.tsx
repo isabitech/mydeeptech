@@ -12,7 +12,7 @@ const Signup = () => {
   const handleSignup = async (values: any) => {
     setIsLoading(true);
 
-    // Adjust phone number to match API pattern if necessary
+    // Adjust phone number to match API pattern 
     const formattedPhone = values.phone.startsWith("0")
       ? values.phone.slice(1) // Remove leading zero
       : values.phone;
