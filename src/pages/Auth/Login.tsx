@@ -35,7 +35,7 @@ const Login = () => {
         });
 
         
-        navigate("/dashboard/overview"); // You can use React Router for navigation if needed
+        navigate("/route"); // You can use React Router for navigation if needed
       } else {
         notification.error({
           message: "Login Failed",
