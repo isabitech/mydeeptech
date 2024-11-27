@@ -1,4 +1,3 @@
-import React from 'react'
 import Header from '../../User/Header'
 import UserList from './UserList'
 

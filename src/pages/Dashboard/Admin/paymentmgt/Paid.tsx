@@ -1,4 +1,4 @@
-import { DollarCircleOutlined, DownloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 
 const Paid = () => {

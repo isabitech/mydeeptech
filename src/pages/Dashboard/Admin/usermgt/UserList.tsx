@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const UserList = () => {
 
-    const [tasks, setTasks] = useState([
+    const [tasks] = useState([
         {
           id: 1,
           firstName: "John",
