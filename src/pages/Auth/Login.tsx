@@ -26,7 +26,7 @@ const Login = () => {
 
       if (response.ok) {
         // Assuming the response contains a token or user session information
-        sessionStorage.setItem("authToken", result.token); // Save token 
+        sessionStorage.setItem("authToken", result.token); // Save token to session
         sessionStorage.setItem("user", JSON.stringify(result.user)); // Save user info to sessionStorage
 
         notification.success({
