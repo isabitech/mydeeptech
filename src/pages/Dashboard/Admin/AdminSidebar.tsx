@@ -14,7 +14,7 @@ import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button } from "antd";
 
-const Sidebar = () => {
+const AdminSidebar = () => {
   const [openModal, setOpenModal] = useState(false);
 
   const menuItems = [
@@ -22,43 +22,43 @@ const Sidebar = () => {
       key: "overview",
       label: "Overview",
       icon: <HomeOutlined />,
-      path: "/dashboard/overview",
+      path: "/overview",
     },
     {
       key: "projects",
       label: "Projects",
       icon: <CodeSandboxOutlined />,
-      path: "/dashboard/projects",
+      path: "/projects",
     },
     {
       key: "jobs",
       label: "Jobs",
       icon: <InboxOutlined />,
-      path: "/dashboard/jobs",
+      path: "/jobs",
     },
     {
       key: "tasks",
       label: "Tasks",
       icon: <UnorderedListOutlined />,
-      path: "/dashboard/tasks",
+      path: "/tasks",
     },
     {
       key: "payment",
       label: "Payment",
       icon: <WalletOutlined />,
-      path: "/dashboard/payment",
+      path: "/payments",
     },
     {
-      key: "profile",
-      label: "Profile",
+      key: "users",
+      label: "Users",
       icon: <UserOutlined />,
-      path: "/dashboard/profile",
+      path: "/users",
     },
     {
       key: "settings",
       label: "Settings",
       icon: <SettingOutlined />,
-      path: "/dashboard/settings",
+      path: "/settings",
     },
     // { key: "logout", label: "Logout", icon: <LogoutOutlined />, path: "" }, // Example logout redirection
   ];
@@ -74,7 +74,7 @@ const Sidebar = () => {
         <div className="h-[70%]">
           <img className="h-full rounded-md" src={Logo} alt="" />
         </div>
-        Dashboard
+        Admin Dashboard
       </div>
 
       {/* Navigation Links */}
@@ -83,7 +83,7 @@ const Sidebar = () => {
           {menuItems.map((item) => (
             <li key={item.key}>
               <NavLink
-                to={item.path}
+                to={`/admin${item.path}`}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 text-sm font-medium ${
                     isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
@@ -119,10 +119,12 @@ const Sidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-          <Button className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
-            Yes
-          </Button>
-          <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">No</Button>
+            <Button className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+              Yes
+            </Button>
+            <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">
+              No
+            </Button>
           </span>
         </div>
       </PageModal>
@@ -130,4 +132,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default AdminSidebar;

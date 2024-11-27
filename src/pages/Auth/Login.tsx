@@ -33,7 +33,7 @@ const Login = () => {
         });
 
         // Redirect to the dashboard or home page
-        window.location.href = "/dashboard/overview"; // You can use React Router for navigation if needed
+        window.location.href = "/dashboard"; // You can use React Router for navigation if needed
       } else {
         notification.error({
           message: "Login Failed",

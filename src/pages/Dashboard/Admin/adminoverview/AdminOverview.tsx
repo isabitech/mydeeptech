@@ -1,21 +1,15 @@
 import {
-  BellOutlined,
-  SearchOutlined,
   BarChartOutlined,
   CodeSandboxOutlined,
   ClockCircleOutlined,
   InboxOutlined,
-  ArrowRightOutlined,
   PlusSquareOutlined,
-  OpenAIOutlined,
-  RedEnvelopeOutlined,
 } from "@ant-design/icons";
-import Tables from "./Tables";
-import {Button} from "antd";
-import Header from "./Header";
+import { Button } from "antd";
+import Header from "../../User/Header";
+import { MessageCircleDashed } from "lucide-react";
 
-
-const Overview = () => {
+const AdminOverview = () => {
   const activeProjects = [
     {
       id: 1,
@@ -44,29 +38,28 @@ const Overview = () => {
     {
       id: 1,
       name: "John Doe",
-      company: "TechCorp",
+      email: "johndoe@gmail.com",
       dueDate: "2024-12-01",
-      
     },
     {
       id: 2,
       name: "Jane Smith",
-      company: "InnovateX",
+      email: "janesmith@d.co",
       dueDate: "2024-11-25",
-      
     },
     {
       id: 3,
       name: "Robert Brown",
-      company: "NextGen Solutions",
+      email: "robertbrown@g.co",
       dueDate: "2024-12-10",
-     
     },
-  ]
+  ];
+
+
   return (
     <div className=" h-full flex flex-col gap-4  font-[gilroy-regular]">
       {/* Header */}
-      <Header title="Dashboard"/>
+      <Header title=" Admin Overview" />
 
       <hr />
       {/* Content */}
@@ -79,17 +72,17 @@ const Overview = () => {
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <BarChartOutlined />
             </span>
-            <p className="text-[12px]">Total revenue</p>
-            <p className="text-[2rem]">$45,000.00</p>
+            <p className="text-[12px]">Total Paid Out</p>
+            <p className="text-[2rem]">$95,000.00</p>
           </div>
           {/* Projects */}
           <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <CodeSandboxOutlined />
             </span>
-            <p className="text-[12px]">Projects</p>
+            <p className="text-[12px]">Total Projects</p>
             <p className="text-[2rem]">
-              1<span className="text-[18px]">{"/"} 10</span>
+              21<span className="text-[18px]"></span>
             </p>
           </div>
 
@@ -98,9 +91,9 @@ const Overview = () => {
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <ClockCircleOutlined />
             </span>
-            <p className="text-[12px]">Time spent</p>
+            <p className="text-[12px]">Total Users</p>
             <p className="text-[2rem]">
-              102<span className="text-[18px]">{"/"} 40Hrs</span>
+              1000<span className="text-[18px]"></span>
             </p>
           </div>
 
@@ -109,16 +102,16 @@ const Overview = () => {
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <InboxOutlined />
             </span>
-            <p className="text-[12px]">Resources</p>
+            <p className="text-[12px]">Total Tasks</p>
             <p className="text-[2rem]">
-              10<span className="text-[12px]">{"/"} 120</span>
+            147<span className="text-[12px]"> </span>
             </p>
           </div>
         </div>
         {/* Active Projects */}
         <div className=" bg-primary rounded-md shadow-primary shadow-md w-full h-[30vh] flex flex-col gap-2 pt-4">
           <p className="text-white">Active Projects</p>
-          
+
           <table
             className="text-white w-full border-collapse border border-white 
       "
@@ -146,13 +139,17 @@ const Overview = () => {
             </tbody>
           </table>
 
-          <div className="flex justify-end mt-4"><Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">Join New Project <PlusSquareOutlined/> </Button></div>
+          <div className="flex justify-end mt-4">
+            <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
+             Create New Project <PlusSquareOutlined />{" "}
+            </Button>
+          </div>
         </div>
 
         {/* Todays Task */}
         <div className=" bg-primary rounded-md w-full h-[30vh] shadow-primary shadow-md flex flex-col gap-2 pt-4">
-          <p className="text-white">Todays Tasks</p>
-          
+          <p className="text-white">Todays Assigned Tasks</p>
+
           <table
             className="text-white w-full border-collapse border border-white 
       "
@@ -160,8 +157,8 @@ const Overview = () => {
             <thead className=" text-left">
               <tr className=" ">
                 <th className="p-2 font-normal">S/N</th>
-                <th className="p-2 font-normal">Name</th>
-                <th className="p-2 font-normal">Company</th>
+                <th className="p-2 font-normal">Task Name</th>
+                <th className="p-2 font-normal">Assigned User Email</th>
                 <th className="p-2 font-normal">Due Date</th>
                 <th className="p-2 font-normal">Action</th>
               </tr>
@@ -172,21 +169,23 @@ const Overview = () => {
                 <tr className=" " key={row.id}>
                   <td className="p-2 ">{index + 1}</td>
                   <td className="p-2 ">{row.name}</td>
-                  <td className="p-2 ">{row.company}</td>
+                  <td className="p-2 ">{row.email}</td>
                   <td className="p-2 ">{row.dueDate}</td>
-                  <td className="p-2 "><Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">Open Task <PlusSquareOutlined/>  </Button></td>
+                  <td className="p-2 flex gap-2 ">
+                    <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
+                      Open Task <PlusSquareOutlined />{" "}
+                    </Button>
+                    <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
+                      Message User <MessageCircleDashed/>                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-
-          
         </div>
-
-
       </div>
     </div>
   );
 };
 
-export default Overview;
+export default AdminOverview;

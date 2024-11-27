@@ -1,0 +1,25 @@
+Final Route Structure
+Public:
+
+/: Landing Page
+/login: Login
+/signup: Signup
+/forgot-password: Forgot Password
+Dashboard (User):
+
+/dashboard: Overview (default)
+/dashboard/projects
+/dashboard/jobs
+/dashboard/tasks
+/dashboard/payment
+/dashboard/profile
+/dashboard/settings
+Dashboard (Admin):
+
+/dashboard/admin: Admin Overview (default)
+/dashboard/admin/users
+/dashboard/admin/projects
+/dashboard/admin/jobs
+/dashboard/admin/tasks
+/dashboard/admin/payments
+/dashboard/admin/settings
