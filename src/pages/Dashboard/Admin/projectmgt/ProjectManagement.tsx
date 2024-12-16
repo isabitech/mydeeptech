@@ -1,69 +1,103 @@
-import { useState } from "react";
-import { Button, Select, Modal, Form, Input, DatePicker } from "antd";
+import React, { useEffect, useState } from "react";
+import { Button, Modal, Form, Input, DatePicker, notification, Spin } from "antd";
+import { LoadingOutlined, PlusSquareOutlined } from "@ant-design/icons";
 import Header from "../../User/Header";
-import { PlusSquareOutlined } from "@ant-design/icons";
+import { endpoints } from "../../../../store/api/endpoints";
 
-const ProjectManagement = () => {
-  const [activeProjects, setActiveProjects] = useState([
-    {
-      id: 1,
-      name: "Image Annotation",
-      company: "CVAT",
-      dueDate: "2024-12-01",
-      status: "Pending",
-      enrolledUsers: "20",
-      Applied: "30",
-      rejectedUsers: "10",
-    },
-    {
-      id: 2,
-      name: "Text Annotation",
-      company: "e2f",
-      dueDate: "2024-11-25",
-      status: "Completed",
-      enrolledUsers: "20",
-      Applied: "30",
-      rejectedUsers: "10",
-    },
-    {
-      id: 3,
-      name: "Data Collection",
-      company: "Appen",
-      dueDate: "2024-12-10",
-      status: "In Progress",
-      enrolledUsers: "20",
-      Applied: "30",
-      rejectedUsers: "10",
-    },
-  ]);
+export interface ProjectType {
+  responseCode: number;
+  message: string;
+  data: Project[];
+}
 
+export interface Project {
+  _id: string;
+  projectName: string;
+  company: string;
+  dueDate: string;
+  __v: number;
+}
+
+const ProjectManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
-  // Show Modal
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
+  // Fetch Projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(endpoints.project.getProject, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-  // Handle Form Submission
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      const newProject = {
-        id: activeProjects.length + 1,
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projects: ${response.statusText}`);
+        }
+
+        const data: ProjectType = await response.json();
+        setProjects(data.data); // Update state with fetched data
+      } catch (error: any) {
+        notification.error({
+          message: "Error Fetching Projects",
+          description: error.message,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  // Create Project
+  const handleCreateProject = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
         ...values,
-        dueDate: values.dueDate.format("YYYY-MM-DD"), // Format Date
+        dueDate: values.dueDate.format("YYYY-MM-DD"),
       };
-      setActiveProjects([...activeProjects, newProject]);
+
+      const response = await fetch(endpoints.project.createProject, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create project");
+      }
+
+      const data = await response.json();
+      notification.success({ message: "Project created successfully!" });
+
+      setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
       form.resetFields();
       setIsModalVisible(false);
-    });
+    } catch (error: any) {
+      notification.error({
+        message: "Error Creating Project",
+        description: error.message,
+      });
+    }
   };
 
-  // Handle Cancel Modal
   const handleCancel = () => {
     form.resetFields();
     setIsModalVisible(false);
   };
+
+  // Show Modal
+  const showModal = () => setIsModalVisible(true);
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
@@ -78,47 +112,46 @@ const ProjectManagement = () => {
         </Button>
       </div>
 
-      <table className="text-primary w-full border-collapse border border-white">
-        <thead className="text-left">
-          <tr>
-            <th className="p-2">S/N</th>
-            <th className="p-2">Name</th>
-            <th className="p-2">Company</th>
-            <th className="p-2">Due Date</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Enrolled Users</th>
-            <th className="p-2">Applied</th>
-            <th className="p-2">Rejected</th>
-          </tr>
-        </thead>
-        <tbody>
-          {activeProjects.map((project, index) => (
-            <tr key={project.id}>
-              <td className="p-2">{index + 1}</td>
-              <td className="p-2">{project.name}</td>
-              <td className="p-2">{project.company}</td>
-              <td className="p-2">{project.dueDate}</td>
-              <td className="p-2">{project.status}</td>
-              <td className="p-2">{project.enrolledUsers}</td>
-              <td className="p-2">{project.Applied}</td>
-              <td className="p-2">{project.rejectedUsers}</td>
+      {/* Table */}
+      {loading ? (
+        <Spin indicator={<LoadingOutlined spin />} size="small" />
+      ) : (
+        <table className="text-primary w-full border-collapse border border-white">
+          <thead className="text-left">
+            <tr>
+              <th className="p-2">S/N</th>
+              <th className="p-2">Name</th>
+              <th className="p-2">Company</th>
+              <th className="p-2">Due Date</th>
+              <th className="p-2">Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {projects.map((project, index) => (
+              <tr key={project._id}>
+                <td className="p-2">{index + 1}</td>
+                <td className="p-2">{project.projectName}</td>
+                <td className="p-2">{project.company}</td>
+                <td className="p-2">{project.dueDate}</td>
+                <td className="p-2">Active</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {/* Modal */}
       <Modal
         title="Create New Project"
         visible={isModalVisible}
-        onOk={handleOk}
+        onOk={handleCreateProject}
         onCancel={handleCancel}
         okText="Create"
         cancelText="Cancel"
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="name"
+            name="projectName"
             label="Project Name"
             rules={[{ required: true, message: "Please input the project name!" }]}
           >
@@ -137,38 +170,6 @@ const ProjectManagement = () => {
             rules={[{ required: true, message: "Please select a due date!" }]}
           >
             <DatePicker />
-          </Form.Item>
-          <Form.Item
-            name="status"
-            label="Status"
-            rules={[{ required: true, message: "Please select a status!" }]}
-          >
-            <Select>
-              <Select.Option value="Pending">Pending</Select.Option>
-              <Select.Option value="In Progress">In Progress</Select.Option>
-              <Select.Option value="Completed">Completed</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            name="enrolledUsers"
-            label="Enrolled Users"
-            rules={[{ required: true, message: "Please input the number of enrolled users!" }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="Applied"
-            label="Applied"
-            rules={[{ required: true, message: "Please input the number of applied users!" }]}
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            name="rejectedUsers"
-            label="Rejected Users"
-            rules={[{ required: true, message: "Please input the number of rejected users!" }]}
-          >
-            <Input type="number" />
           </Form.Item>
         </Form>
       </Modal>
