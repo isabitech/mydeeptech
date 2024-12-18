@@ -1,6 +1,16 @@
 import { useState } from "react";
-import { Button, Modal, Form, Input, DatePicker, Select } from "antd";
+import {
+  Button,
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  notification,
+} from "antd";
 import { UserPlus } from "lucide-react";
+import { useUserContext } from "../../../UserContext";
+import { endpoints } from "../../../store/api/endpoints";
 
 const TaskTable = () => {
   const [tasks, setTasks] = useState([
@@ -32,18 +42,42 @@ const TaskTable = () => {
     setIsModalVisible(true);
   };
 
+  const { userInfo } = useUserContext();
+
   // Handle Form Submission
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      const newTask = {
-        id: tasks.length + 1,
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
         ...values,
-        deadline: values.deadline.format("YYYY-MM-DD"), // Format Date
+        dueDate: values.dueDate.format("YYYY-MM-DD"),
       };
-      setTasks([...tasks, newTask]);
+
+      const response = await fetch(endpoints.tasks.createTask, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create project");
+      }
+
+      const data = await response.json();
+      notification.success({ message: "Task created successfully!" });
+
+      // setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
       form.resetFields();
       setIsModalVisible(false);
-    });
+    } catch (error: any) {
+      notification.error({
+        message: "Error Creating Project",
+        description: error.message,
+      });
+    }
   };
 
   // Handle Cancel
@@ -57,20 +91,20 @@ const TaskTable = () => {
       <h2 className="text-lg font-bold mb-4">Task Management</h2>
 
       <div className="flex justify-between mb-4">
-        <p>List of Assigned Tasks</p>
+        <p>List of Created Tasks</p>
         <Button
           onClick={showModal}
           className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md"
         >
-          Assign a Task <UserPlus />
+          Create a Task <UserPlus />
         </Button>
       </div>
       <table className="min-w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2">S/N</th>
-            <th className="border p-2">Annotator First Name</th>
-            <th className="border p-2">Email</th>
+            {/* <th className="border p-2">Annotator First Name</th>
+            <th className="border p-2">Email</th> */}
             <th className="border p-2">Task Link</th>
             <th className="border p-2">Task Guideline Link</th>
             <th className="border p-2">Task Name</th>
@@ -81,8 +115,8 @@ const TaskTable = () => {
           {tasks.map((task, index) => (
             <tr key={task.id}>
               <td className="border p-2">{index + 1}</td>
-              <td className="border p-2">{task.firstName}</td>
-              <td className="border p-2">{task.email}</td>
+              {/* <td className="border p-2">{task.firstName}</td>
+              <td className="border p-2">{task.email}</td> */}
               <td className="border p-2">
                 <a
                   href={task.taskLink}
@@ -114,29 +148,10 @@ const TaskTable = () => {
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
-        okText="Assign"
+        okText="Create"
         cancelText="Cancel"
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="firstName"
-            label="Annotator First Name"
-            rules={[
-              { required: true, message: "Please enter the first name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Please enter an email!" },
-              { type: "email", message: "Please enter a valid email!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
           <Form.Item
             name="taskLink"
             label="Task Link"
@@ -145,7 +160,7 @@ const TaskTable = () => {
             <Input />
           </Form.Item>
           <Form.Item
-            name="guidelineLink"
+            name="taskGuidelineLink"
             label="Task Guideline Link"
             rules={[
               { required: true, message: "Please enter the guideline link!" },
@@ -160,27 +175,23 @@ const TaskTable = () => {
               { required: true, message: "Please select the task name!" },
             ]}
           >
-            <Select placeholder="Select Task Name">
-              <Select.Option value="Video Annotation">
-                Video Annotation
-              </Select.Option>
-              <Select.Option value="Image Annotation">
-                Image Annotation
-              </Select.Option>
-              <Select.Option value="Text Annotation">
-                Text Annotation
-              </Select.Option>
-              <Select.Option value="Audio Annotation">
-                Audio Annotation
-              </Select.Option>
-            </Select>
+            <Input />
           </Form.Item>
           <Form.Item
-            name="deadline"
+            name="dueDate"
             label="Deadline"
             rules={[{ required: true, message: "Please select a deadline!" }]}
           >
             <DatePicker />
+          </Form.Item>
+          <Form.Item
+            name="createdBy"
+            label="Created By"
+            rules={[
+              { required: true, message: "Please select the task name!" },
+            ]}
+          >
+          <Input value={userInfo.userName}/>
           </Form.Item>
         </Form>
       </Modal>

@@ -2,16 +2,17 @@ import { Form, Input, Button, notification } from "antd";
 import { useState } from "react";
 import { endpoints } from "../../store/api/endpoints"; // Assuming endpoints are defined
 import { useNavigate } from "react-router-dom";
+import { useUserContext } from "../../UserContext"; // Adjust path
 
 const Login = () => {
+  const { setUserInfo } = useUserContext(); // Get the setUserInfo function
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const navigate = useNavigate()
   const handleLogin = async (values: any) => {
     setIsLoading(true);
 
     try {
-      
       const response = await fetch(endpoints.auth.login, {
         method: "POST",
         body: JSON.stringify({
@@ -22,28 +23,34 @@ const Login = () => {
       });
 
       const result = await response.json();
-      console.log(result);
-
       if (response.ok) {
-        // Assuming the response contains a token or user session information
-        sessionStorage.setItem("authToken", result.token); // Save token to session
-        sessionStorage.setItem("user", JSON.stringify(result.user)); // Save user info to sessionStorage
+        // Update the context with user info
+        setUserInfo({
+          firstName: result.user.firstname,
+          lastName: result.user.lastname,
+          email: result.user.email,
+          userId: result.user._id,
+          phone: result.user.phone,
+          userName: result.user.username,
+          userRole: result.user.role,
+        });
 
+        sessionStorage.setItem("authToken", result.token); // Save token to session
         notification.success({
           message: "Login Successful",
           description: "You have successfully logged in.",
         });
 
-        
-        navigate("/route"); // You can use React Router for navigation if needed
+        if (result.user.role === "USER") {
+          navigate("/dashboard/overview"); // Navigate after successful login
+        }
       } else {
         notification.error({
           message: "Login Failed",
-          description: result.message || "Invalid credentials or error occurred.",
+          description: result.message || "Invalid credentials.",
         });
       }
     } catch (error) {
-      console.error("Error during login:", error);
       notification.error({
         message: "Login Failed",
         description: "An error occurred. Please try again.",
@@ -58,22 +65,34 @@ const Login = () => {
       <h2 className="text-center text-2xl font-bold mb-4">Hi, Welcome Back!</h2>
       <Form layout="vertical" onFinish={handleLogin}>
         <Form.Item
-          label={<span className="!font-[gilroy-regular] !text-white">Email Address</span>}
+          label={
+            <span className="!font-[gilroy-regular] !text-white">
+              Email Address
+            </span>
+          }
           name="email"
           rules={[
             { required: true, message: "Please enter your email!" },
             { type: "email", message: "Please enter a valid email!" },
           ]}
         >
-          <Input className="!font-[gilroy-regular] !text-primary !h-12" placeholder="Enter your email" />
+          <Input
+            className="!font-[gilroy-regular] !text-primary !h-12"
+            placeholder="Enter your email"
+          />
         </Form.Item>
 
         <Form.Item
-          label={<span className="!font-[gilroy-regular] !text-white">Password</span>}
+          label={
+            <span className="!font-[gilroy-regular] !text-white">Password</span>
+          }
           name="password"
           rules={[{ required: true, message: "Please enter your password!" }]}
         >
-          <Input.Password className="!font-[gilroy-regular] !text-primary !h-12" placeholder="Enter your password" />
+          <Input.Password
+            className="!font-[gilroy-regular] !text-primary !h-12"
+            placeholder="Enter your password"
+          />
         </Form.Item>
 
         <span className="text-white text-right w-full underline cursor-pointer">

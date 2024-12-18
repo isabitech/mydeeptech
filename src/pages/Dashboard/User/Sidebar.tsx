@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   HomeOutlined,
   UserOutlined,
@@ -16,6 +16,7 @@ import { Button } from "antd";
 
 const Sidebar = () => {
   const [openModal, setOpenModal] = useState(false);
+  const navigate = useNavigate();
 
   const menuItems = [
     {
@@ -119,7 +120,11 @@ const Sidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+            <Button  onClick={()=> {
+              sessionStorage.clear()
+              navigate("/");
+              
+            }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
             <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">

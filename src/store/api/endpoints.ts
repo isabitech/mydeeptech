@@ -8,5 +8,9 @@ export const endpoints = {
   project : {
     createProject : "https://my-deep-tech.onrender.com/api/auth/createProject",
     getProject: "https://my-deep-tech.onrender.com/api/auth/getProject"
+  },
+  tasks:{
+    createTask: "https://my-deep-tech.onrender.com/api/auth/createTasks",
+    assignTask: "https://my-deep-tech.onrender.com/api/auth/assignTask"
   }
 };

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   HomeOutlined,
   UserOutlined,
@@ -67,6 +67,8 @@ const AdminSidebar = () => {
     setOpenModal(!openModal);
   };
 
+  const navigate = useNavigate()
+
   return (
     <div className="h-full font-[gilroy-regular] bg-primary text-white w-[250px] flex flex-col">
       {/* Logo */}
@@ -119,7 +121,11 @@ const AdminSidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+            <Button onClick={()=> {
+              sessionStorage.clear()
+              navigate("/");
+              
+            }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
             <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">

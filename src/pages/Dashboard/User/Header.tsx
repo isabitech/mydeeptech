@@ -1,9 +1,11 @@
 import { BellOutlined, SearchOutlined } from "@ant-design/icons"
+import { useUserContext } from "../../../UserContext";
 
 type Props ={
     title: string;
 }
 const Header:React.FC<Props> = ({title}) => {
+  const {userInfo} = useUserContext();
   return (
     <div><div className="  h-[3rem] flex px-2 items-center justify-between w-full ">
     <div className="">
@@ -33,8 +35,8 @@ const Header:React.FC<Props> = ({title}) => {
           alt=""
         />
         <span>
-          <p className="text-[10px]">John Doe</p>
-          <p className="text-[9px]">johndoe@gmail.com</p>
+          <p className="text-[10px]">{userInfo.firstName}{""}{userInfo.lastName}</p>
+          <p className="text-[9px]">{userInfo.email}</p>
         </span>
       </div>
     </div>
