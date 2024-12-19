@@ -12,7 +12,7 @@ import { LoadingOutlined, PlusSquareOutlined } from "@ant-design/icons";
 import Header from "../../User/Header";
 import { endpoints } from "../../../../store/api/endpoints";
 import moment from "moment";
-import { differenceInDays, differenceInMonths, differenceInWeeks, format } from "date-fns";
+import { differenceInDays, differenceInMonths, differenceInWeeks, } from "date-fns";
 
 export interface ProjectType {
   responseCode: number;
