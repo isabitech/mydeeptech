@@ -7,7 +7,9 @@ export const endpoints = {
   // admin
   project : {
     createProject : "https://my-deep-tech.onrender.com/api/auth/createProject",
-    getProject: "https://my-deep-tech.onrender.com/api/auth/getProject"
+    getProject: "https://my-deep-tech.onrender.com/api/auth/getProject",
+    updateProject: "https://my-deep-tech.onrender.com/api/auth/updateProject",
+    deleteProject: "https://my-deep-tech.onrender.com/api/auth/deleteProject"
   },
   tasks:{
     createTask: "https://my-deep-tech.onrender.com/api/auth/createTasks",

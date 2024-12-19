@@ -42,7 +42,7 @@ const Login = () => {
         });
 
         if (result.user.role === "USER") {
-          navigate("/dashboard/overview"); // Navigate after successful login
+          navigate("/admin/overview"); // Navigate after successful login
         }
       } else {
         notification.error({
