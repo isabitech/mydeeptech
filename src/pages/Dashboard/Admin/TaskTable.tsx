@@ -1,19 +1,11 @@
 import { useState } from "react";
-import {
-  Button,
-  Modal,
-  Form,
-  Input,
-  DatePicker,
-  Select,
-  notification,
-} from "antd";
+import { Button, Modal, Form, Input, DatePicker, notification } from "antd";
 import { UserPlus } from "lucide-react";
 import { useUserContext } from "../../../UserContext";
 import { endpoints } from "../../../store/api/endpoints";
 
 const TaskTable = () => {
-  const [tasks, setTasks] = useState([
+  const tasks = [
     {
       id: 1,
       firstName: "John",
@@ -32,7 +24,7 @@ const TaskTable = () => {
       taskName: "Text Annotation",
       deadline: "2024-11-25",
     },
-  ]);
+  ];
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
@@ -67,6 +59,8 @@ const TaskTable = () => {
       }
 
       const data = await response.json();
+      console.log(data);
+
       notification.success({ message: "Task created successfully!" });
 
       // setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
@@ -191,7 +185,7 @@ const TaskTable = () => {
               { required: true, message: "Please select the task name!" },
             ]}
           >
-          <Input value={userInfo.userName}/>
+            <Input value={userInfo.userName} />
           </Form.Item>
         </Form>
       </Modal>
