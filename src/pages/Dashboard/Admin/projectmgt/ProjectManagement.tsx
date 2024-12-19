@@ -67,7 +67,7 @@ const ProjectManagement: React.FC = () => {
     fetchProjects();
   }, []);
 
-  // Create or Update Project
+  // Create or Update a Project
   const handleSubmitProject = async () => {
     try {
       const values = await form.validateFields();
