@@ -1,74 +1,88 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { endpoints } from "../../../../store/api/endpoints";
+import { notification, Spin } from "antd";
+
+type UserListType = {
+  role: string;
+  _id: string;
+  firstname: string;
+  lastname: string;
+  username: string;
+  email: string;
+  password: string;
+  phone: string;
+  __v: number;
+};
 
 const UserList = () => {
+  const [users, setUsers] = useState<UserListType[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    const [tasks] = useState([
-        {
-          id: 1,
-          firstName: "John",
-          email: "john.doe@example.com",
-          username: "johndoe22",
-          phoneNumber: "425465432",
-          telegramUsername: "jhndoooe"
+  useEffect(() => {
+    setIsLoading(!isLoading);
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(endpoints.users.getAllUsers, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        const data = await response.json();
+        setIsLoading(false);
+        setUsers(data);
+        notification.success({
+          message: "Users fetched successfully",
+        });
+      } catch (error) {
+        console.error("An error occurred:", error);
+        notification.error({
+          message: "Error fetching users",
+          description: "An error occurred while fetching the user list. Please try again.",
+        });
+      }
+    };
 
-        },
-        {
-          id: 2,
-          firstName: "Jane",
-          email: "jane.smith@example.com",
-          username: "janesmith24",
-          phoneNumber: "8145645646",
-          telegramUsername: "janesmitth"
-        },
-        {
-            id: 3,
-            firstName: "Jane",
-            email: "jane.smith@example.com",
-            username: "janesmith24",
-            phoneNumber: "8145645646",
-            telegramUsername: "janesmitth"
-          },
-          {
-            id: 4,
-            firstName: "Jane",
-            email: "jane.smith@example.com",
-            username: "janesmith24",
-            phoneNumber: "8145645646",
-            telegramUsername: "janesmitth"
-          },
-      ]);
+    fetchUsers();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
   return (
     <div>
-        <table className="min-w-full border-collapse border border-gray-300">
+      {
+        isLoading ? <div>
+          <Spin />
+        </div>: <table className="min-w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-100">
             <th className="border p-2">S/N</th>
             <th className="border p-2">Annotator Full Name</th>
             <th className="border p-2">Email</th>
             <th className="border p-2">Username</th>
-            <th className="border p-2">PhoneNumber</th>
-            <th className="border p-2">Telegram Username</th>
+            <th className="border p-2">Phone Number</th>
+            <th className="border p-2">Role</th>
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task, index) => (
-            <tr key={task.id}>
+          {users.map((user, index) => (
+            <tr key={user._id}>
               <td className="border p-2">{index + 1}</td>
-              <td className="border p-2">{task.firstName}</td>
-              <td className="border p-2">{task.email}</td>
               <td className="border p-2">
-                {task.username}
+                {user.firstname} {user.lastname}
               </td>
-              <td className="border p-2">
-               {task.phoneNumber}
-              </td>
-              <td className="border p-2">{task.telegramUsername}</td>
+              <td className="border p-2">{user.email}</td>
+              <td className="border p-2">{user.username}</td>
+              <td className="border p-2">{user.phone}</td>
+              <td className="border p-2">{user.role}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      }
     </div>
-  )
-}
+  );
+};
 
-export default UserList
+export default UserList;
