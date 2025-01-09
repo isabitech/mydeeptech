@@ -35,7 +35,7 @@ const Header:React.FC<Props> = ({title}) => {
           alt=""
         />
         <span>
-          <p className="text-[10px]">{userInfo.firstName}{""}{userInfo.lastName}</p>
+          <p className="text-[10px]">{userInfo.firstName}{" "}{userInfo.lastName}</p>
           <p className="text-[9px]">{userInfo.email}</p>
         </span>
       </div>

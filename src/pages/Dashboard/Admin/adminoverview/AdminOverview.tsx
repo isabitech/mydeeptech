@@ -5,34 +5,25 @@ import {
   InboxOutlined,
   PlusSquareOutlined,
 } from "@ant-design/icons";
-import { Button } from "antd";
+import { Button, notification, Spin } from "antd";
 import Header from "../../User/Header";
 import { MessageCircleDashed } from "lucide-react";
+import { useEffect, useState } from "react";
+import { endpoints } from "../../../../store/api/endpoints";
+import { useNavigate } from "react-router-dom";
+import { ProjectType } from "../projectmgt/ProjectManagement";
+import { Project } from "../projectmgt/ProjectManagement";
+import {
+  differenceInDays,
+  differenceInMonths,
+  differenceInWeeks,
+} from "date-fns";
 
 const AdminOverview = () => {
-  const activeProjects = [
-    {
-      id: 1,
-      name: "Image Annotation",
-      company: "CVAT",
-      dueDate: "2024-12-01",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      name: "Text Annotation",
-      company: "e2f",
-      dueDate: "2024-11-25",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      name: "Data Collection",
-      company: "Appen",
-      dueDate: "2024-12-10",
-      status: "In Progress",
-    },
-  ];
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalUser, settotalUser] = useState<number>(0);
+  const [totalProject, settotalProject] = useState<number>(0);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const todayTasks = [
     {
@@ -55,6 +46,87 @@ const AdminOverview = () => {
     },
   ];
 
+  const navigate = useNavigate();
+  useEffect(() => {
+    setIsLoading(!isLoading);
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch(endpoints.users.getAllUsers, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch users");
+        }
+        const data = await response.json();
+        setIsLoading(false);
+        const result = data.data;
+        const totalUser = result.length;
+        settotalUser(totalUser);
+      } catch (error) {
+        console.error("An error occurred:", error);
+        notification.error({
+          message: "Error fetching users",
+          description:
+            "An error occurred while fetching the user list. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+
+    const fetchProjects = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(endpoints.project.getProject, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projects: ${response.statusText}`);
+        }
+
+        const data: ProjectType = await response.json();
+        const result = data.data;
+        const projectNumber = result.length;
+        settotalProject(projectNumber);
+        setProjects(result);
+
+        // Update state with fetched data
+      } catch (error: any) {
+        notification.error({
+          message: "Error Fetching Projects",
+          description: error.message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const calculateTimeLeft = (dueDate: string): string => {
+    const now = new Date();
+    const due = new Date(dueDate);
+
+    const monthsLeft = differenceInMonths(due, now);
+    const weeksLeft = differenceInWeeks(due, now) % 4;
+    const daysLeft = differenceInDays(due, now) % 7;
+
+    if (monthsLeft < 0 || weeksLeft < 0 || daysLeft < 0) {
+      return "Past Due";
+    }
+
+    return `${monthsLeft} months, ${weeksLeft} weeks, ${daysLeft} days left`;
+  };
 
   return (
     <div className=" h-full flex flex-col gap-4  font-[gilroy-regular]">
@@ -76,25 +148,45 @@ const AdminOverview = () => {
             <p className="text-[2rem]">$95,000.00</p>
           </div>
           {/* Projects */}
-          <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
+          <div
+            onClick={() => {
+              navigate("/admin/projects");
+            }}
+            className=" cursor-pointer hover:ease-in-out hover:translate-y-3 w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4"
+          >
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <CodeSandboxOutlined />
             </span>
             <p className="text-[12px]">Total Projects</p>
-            <p className="text-[2rem]">
-              21<span className="text-[18px]"></span>
-            </p>
+            {isLoading ? (
+              <Spin />
+            ) : (
+              <p className="text-[2rem]">
+                {totalProject}
+                <span className="text-[18px]"></span>
+              </p>
+            )}
           </div>
 
           {/* Time spent */}
-          <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
+          <div
+            onClick={() => {
+              navigate("/admin/users");
+            }}
+            className=" cursor-pointer hover:ease-in-out hover:translate-y-3 w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4"
+          >
             <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
               <ClockCircleOutlined />
             </span>
             <p className="text-[12px]">Total Users</p>
-            <p className="text-[2rem]">
-              1000<span className="text-[18px]"></span>
-            </p>
+            {isLoading ? (
+              <Spin />
+            ) : (
+              <p className="text-[2rem]">
+                {totalUser}
+                <span className="text-[18px]"></span>
+              </p>
+            )}
           </div>
 
           {/* Resources */}
@@ -104,7 +196,7 @@ const AdminOverview = () => {
             </span>
             <p className="text-[12px]">Total Tasks</p>
             <p className="text-[2rem]">
-            147<span className="text-[12px]"> </span>
+              147<span className="text-[12px]"> </span>
             </p>
           </div>
         </div>
@@ -112,36 +204,43 @@ const AdminOverview = () => {
         <div className=" bg-primary rounded-md shadow-primary shadow-md w-full h-[30vh] flex flex-col gap-2 pt-4">
           <p className="text-white">Active Projects</p>
 
-          <table
-            className="text-white w-full border-collapse border border-white 
+          <div className=" h-[10rem] overflow-y-auto">
+            <table
+              className="text-white w-full border-collapse border border-white h-[15rem] overflow-y-auto
       "
-          >
-            <thead className=" text-left">
-              <tr className=" ">
-                <th className="p-2 font-normal">S/N</th>
-                <th className="p-2 font-normal">Name</th>
-                <th className="p-2 font-normal">Company</th>
-                <th className="p-2 font-normal">Due Date</th>
-                <th className="p-2 font-normal">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Sample data rows */}
-              {activeProjects.map((row, index) => (
-                <tr className=" " key={row.id}>
-                  <td className="p-2 ">{index + 1}</td>
-                  <td className="p-2 ">{row.name}</td>
-                  <td className="p-2 ">{row.company}</td>
-                  <td className="p-2 ">{row.dueDate}</td>
-                  <td className="p-2 ">{row.status}</td>
+            >
+              <thead className=" text-left">
+                <tr className=" ">
+                  <th className="p-2 font-normal">S/N</th>
+                  <th className="p-2 font-normal">Name</th>
+                  <th className="p-2 font-normal">Company</th>
+                  <th className="p-2 font-normal">Due Date</th>
+                  {/* <th className="p-2 font-normal">Status</th> */}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {/* Sample data rows */}
+                {projects.map((row, index) => (
+                  <tr className=" " key={row._id}>
+                    <td className="p-2 ">{index + 1}</td>
+                    <td className="p-2 ">{row.projectName}</td>
+                    <td className="p-2 ">{row.company}</td>
+                    <td className="p-2 ">{calculateTimeLeft(row.dueDate)}</td>
+                    {/* <td className="p-2 ">{row.status}</td> */}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           <div className="flex justify-end mt-4">
-            <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-             Create New Project <PlusSquareOutlined />{" "}
+            <Button
+              onClick={() => {
+                navigate("/admin/projects");
+              }}
+              className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md"
+            >
+              Create New Project <PlusSquareOutlined />{" "}
             </Button>
           </div>
         </div>
@@ -150,7 +249,8 @@ const AdminOverview = () => {
         <div className=" bg-primary rounded-md w-full h-[30vh] shadow-primary shadow-md flex flex-col gap-2 pt-4">
           <p className="text-white">Todays Assigned Tasks</p>
 
-          <table
+         <div className=" h-[15rem] overflow-y-auto">
+         <table
             className="text-white w-full border-collapse border border-white 
       "
           >
@@ -175,13 +275,13 @@ const AdminOverview = () => {
                     <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
                       Open Task <PlusSquareOutlined />{" "}
                     </Button>
-                    <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-                      Message User <MessageCircleDashed/>                    </Button>
+                  
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+         </div>
         </div>
       </div>
     </div>
