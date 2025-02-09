@@ -36,7 +36,7 @@ const ProjectManagement: React.FC = () => {
   const [projectId, setProjectId] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Fetch list of Projects
+  // Fetch list of Projects assigned
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
