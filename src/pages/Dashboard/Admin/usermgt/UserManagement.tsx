@@ -1,7 +1,8 @@
 import Header from "../../User/Header";
 import { useEffect, useState } from "react";
 import { endpoints } from "../../../../store/api/endpoints";
-import { notification, Spin } from "antd";
+import { notification } from "antd";
+import Loader from "../../../../components/Loader";
 
 type UserListType = {
   role?: string;
@@ -55,9 +56,8 @@ const UserManagement = () => {
       <Header title="Users Management" />
       <div>
         {isLoading ? (
-          <div>
-            <Spin />
-          </div>
+                  <div className="h-screen flex items-center justify-center"><Loader/></div>
+
         ) : (
           <div>
             <table className="min-w-full border-collapse border border-gray-300">

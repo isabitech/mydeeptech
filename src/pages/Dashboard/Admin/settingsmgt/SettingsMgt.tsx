@@ -4,12 +4,9 @@ import Reset from "../../User/settings/Reset";
 const SettingsMgt = () => {
   return (
     <div className="h-full flex flex-col gap-4  font-[gilroy-regular]">
-      <Header title="Setings" />
+      <Header title="Settings" />
 
       <Reset />
-      {/* <Component/>
-
-    <Analysis/> */}
     </div>
   );
 };

@@ -31,10 +31,9 @@ const TaskManagement = () => {
   // ];
 
   return (
-    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+    <div className="h-full flex flex-col font-[gilroy-regular]">
       {/* Header */}
       <Header title="Task Management" />
-
       <TaskTable />
     </div>
   );

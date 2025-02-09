@@ -13,7 +13,8 @@ export const endpoints = {
   },
   tasks:{
     createTask: "https://my-deep-tech.onrender.com/api/auth/createTasks",
-    assignTask: "https://my-deep-tech.onrender.com/api/auth/assignTask"
+    assignTask: "https://my-deep-tech.onrender.com/api/auth/assignTask",
+    getAllTasks: "https://my-deep-tech.onrender.com/api/auth/getAllTasks",
   },
   users :{
     getAllUsers: "https://my-deep-tech.onrender.com/api/auth/getAllUsers"

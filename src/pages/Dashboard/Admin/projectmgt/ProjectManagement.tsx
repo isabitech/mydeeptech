@@ -6,13 +6,13 @@ import {
   Input,
   DatePicker,
   notification,
-  Spin,
 } from "antd";
-import { LoadingOutlined, PlusSquareOutlined } from "@ant-design/icons";
+import { PlusSquareOutlined } from "@ant-design/icons";
 import Header from "../../User/Header";
 import { endpoints } from "../../../../store/api/endpoints";
 import moment from "moment";
 import { differenceInDays, differenceInMonths, differenceInWeeks, } from "date-fns";
+import Loader from "../../../../components/Loader";
 
 export interface ProjectType {
   responseCode: number;
@@ -100,7 +100,7 @@ const ProjectManagement: React.FC = () => {
       if (isEditMode) {
         setProjects((prev) =>
           prev.map((project) =>
-            project._id === projectId ? { ...project, ...payload } : project
+            project?._id === projectId ? { ...project, ...payload } : project
           )
         );
         notification.success({ message: "Project updated successfully!" });
@@ -137,7 +137,7 @@ const ProjectManagement: React.FC = () => {
   };
 
   // Delete Project
-  const handleDeleteProject = async (id: string) => {
+  const handleDeleteProject = async (id?: string) => {
     Modal.confirm({
       title: "Are you sure you want to delete this project?",
       okText: "Yes",
@@ -208,8 +208,9 @@ const ProjectManagement: React.FC = () => {
 
       {/* Table */}
       {loading ? (
-        <Spin indicator={<LoadingOutlined spin />} size="small" />
+        <div className="h-screen flex items-center justify-center"><Loader/></div>
       ) : (
+
         <table className="text-primary w-full border-collapse border border-white">
           <thead className="text-left">
             <tr>
@@ -221,7 +222,7 @@ const ProjectManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {projects.map((project, index) => (
+            {projects?.map((project, index) => (
               <tr key={project._id}>
                 <td className="p-2">{index + 1}</td>
                 <td className="p-2">{project.projectName}</td>
@@ -235,7 +236,7 @@ const ProjectManagement: React.FC = () => {
                     Update
                   </Button>
                   <Button
-                    onClick={() => handleDeleteProject(project._id)}
+                    onClick={() => handleDeleteProject(project?._id)}
                     className="!bg-primary !text-white !border-none !font-[gilroy-regular] rounded-md"
                   >
                     Delete

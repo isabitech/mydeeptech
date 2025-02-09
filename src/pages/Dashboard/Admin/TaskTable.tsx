@@ -1,33 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Modal, Form, Input, DatePicker, notification } from "antd";
 import { UserPlus } from "lucide-react";
 import { useUserContext } from "../../../UserContext";
 import { endpoints } from "../../../store/api/endpoints";
+import { PlusCircleFilled } from "@ant-design/icons";
+import useGetUsers from "../../../hooks/Auth/Admin/Users/useGetUsers";
+import Loader from "../../../components/Loader";
+
+export type ResponseType = TaskType[];
+
+export interface TaskType {
+  _id: string;
+  taskLink: string;
+  taskGuidelineLink: string;
+  taskName: string;
+  createdBy: string;
+  dateCreated: string;
+  dueDate: string;
+  __v: number;
+}
 
 const TaskTable = () => {
-  const tasks = [
-    {
-      id: 1,
-      firstName: "John",
-      email: "john.doe@example.com",
-      taskLink: "https://example.com/task1",
-      guidelineLink: "https://example.com/guideline1",
-      taskName: "Image Annotation",
-      deadline: "2024-12-01",
-    },
-    {
-      id: 2,
-      firstName: "Jane",
-      email: "jane.smith@example.com",
-      taskLink: "https://example.com/task2",
-      guidelineLink: "https://example.com/guideline2",
-      taskName: "Text Annotation",
-      deadline: "2024-11-25",
-    },
-  ];
-
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [totalTask, settotalTask] = useState<number>(0);
+  const [allTask, setAllTask] = useState<ResponseType>();
+  const [isAssignTaskModalVisibile, setIsAssignTaskModalVisibile] =
+    useState<boolean>(false);
+  const [selectedTask, setSelectedTask] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<string>("");
 
   // Show Modal
   const showModal = () => {
@@ -35,6 +37,7 @@ const TaskTable = () => {
   };
 
   const { userInfo } = useUserContext();
+  const getAllUsers = useGetUsers();
 
   // Handle Form Submission
   const handleOk = async () => {
@@ -60,6 +63,7 @@ const TaskTable = () => {
 
       const data = await response.json();
       console.log(data);
+      setAllTask((prev) => prev?.map((task)=>( task._id === data._id ? {...task, ...payload}: task)));
 
       notification.success({ message: "Task created successfully!" });
 
@@ -74,16 +78,94 @@ const TaskTable = () => {
     }
   };
 
+  const handleAssingTask = async (
+    selectedUser: string,
+    selectedTask: string
+  ) => {
+    try {
+      const payload = {
+        taskId: selectedTask,
+        userId: selectedUser,
+      };
+
+      const response = await fetch(endpoints.tasks.assignTask, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.responseMessage || "Failed to assign task");
+      }
+
+      const data = await response.json();
+      console.log(data);
+
+      notification.success({ message: "Task assigned successfully!" });
+
+      // setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
+      form.resetFields();
+      setIsAssignTaskModalVisibile(false);
+    } catch (error: any) {
+      notification.error({
+        message: "Error Assigning Task",
+        description: error.message,
+      });
+    }
+  };
+
   // Handle Cancel
   const handleCancel = () => {
     form.resetFields();
     setIsModalVisible(false);
+    setIsAssignTaskModalVisibile(false);
   };
+
+  useEffect(() => {
+    setIsLoading(!isLoading);
+    const fetchAllTasks = async () => {
+      try {
+        const response = await fetch(endpoints.tasks.getAllTasks, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch tasks");
+        }
+        const data = await response.json();
+        setIsLoading(false);
+        const result: ResponseType = data.data;
+        console.log(result);
+        setAllTask(result);
+        // const totalTask = result.length;
+
+        settotalTask(totalTask);
+      } catch (error) {
+        console.error("An error occurred:", error);
+        notification.error({
+          message: "Error fetching tasks",
+          description:
+            "An error occurred while fetching the task list. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAllTasks();
+  }, []);
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-bold mb-4">Task Management</h2>
-
+      {isLoading && (
+        <div className="h-screen flex items-center justify-center">
+          <Loader />
+        </div>
+      )}
       <div className="flex justify-between mb-4">
         <p>List of Created Tasks</p>
         <Button
@@ -103,14 +185,14 @@ const TaskTable = () => {
             <th className="border p-2">Task Guideline Link</th>
             <th className="border p-2">Task Name</th>
             <th className="border p-2">Deadline</th>
+            <th className="border p-2">Created By</th>
+            <th className="border p-2">Action</th>
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task, index) => (
-            <tr key={task.id}>
+          {allTask?.map((task, index) => (
+            <tr key={task._id}>
               <td className="border p-2">{index + 1}</td>
-              {/* <td className="border p-2">{task.firstName}</td>
-              <td className="border p-2">{task.email}</td> */}
               <td className="border p-2">
                 <a
                   href={task.taskLink}
@@ -122,7 +204,7 @@ const TaskTable = () => {
               </td>
               <td className="border p-2">
                 <a
-                  href={task.guidelineLink}
+                  href={task.taskGuidelineLink}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -130,15 +212,109 @@ const TaskTable = () => {
                 </a>
               </td>
               <td className="border p-2">{task.taskName}</td>
-              <td className="border p-2">{task.deadline}</td>
+              <td className="border p-2">{task.dueDate}</td>
+              <td className="border p-2">{task.createdBy}</td>
+              <td>
+                <button
+                  onClick={() => {
+                    form.setFieldsValue({
+                      taskLink: task.taskLink,
+                      taskGuidelineLink: task.taskGuidelineLink,
+                      taskName: task.taskName,
+                      dueDate: task.dueDate,
+                      userInfo: userInfo.userName,
+                    });
+                    setIsAssignTaskModalVisibile(true);
+                    setSelectedTask(task._id); // Track the selected task
+                  }}
+                  className="!bg-primary !text-white !border-none !mr-3 !font-[gilroy-regular] rounded-md p-1 !hover:bg-secondary"
+                >
+                  Assign Task <PlusCircleFilled />
+                </button>
+              </td>
             </tr>
           ))}
+
+          {/* Assign Task Modal */}
+          <Modal
+            title="Assign Task"
+            visible={isAssignTaskModalVisibile}
+            onOk={() => handleAssingTask(selectedUser, selectedTask)}
+            onCancel={() => setIsAssignTaskModalVisibile(false)}
+            okText="Assign"
+            cancelText="Cancel"
+          >
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="taskLink"
+                label="Task Link"
+                rules={[
+                  { required: true, message: "Please enter the task link!" },
+                ]}
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                name="taskGuidelineLink"
+                label="Task Guideline Link"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter the guideline link!",
+                  },
+                ]}
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                name="taskName"
+                label="Task Name"
+                rules={[
+                  { required: true, message: "Please select the task name!" },
+                ]}
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                name="dueDate"
+                label="Deadline"
+                rules={[
+                  { required: true, message: "Please select a deadline!" },
+                ]}
+              >
+                <Input disabled />
+              </Form.Item>
+              <Form.Item
+                name="userInfo"
+                label="Assign to"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select the username of the user!",
+                  },
+                ]}
+              >
+                <select
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  onChange={(e: any) => setSelectedUser(e.target.value)} // Ensure setSelectedUser is defined
+                >
+                  {/* Check if getAllUsers and getAllUsers.users exist before mapping */}
+                  <option value="">Select A User</option>
+                  {getAllUsers?.users?.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.username} ({user.email}){" "}
+                    </option>
+                  ))}
+                </select>
+              </Form.Item>
+            </Form>
+          </Modal>
         </tbody>
       </table>
 
-      {/* Modal for Assigning New Task */}
+      {/* Modal for Creating New Task */}
       <Modal
-        title="Assign New Task"
+        title="Create New Task"
         visible={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
