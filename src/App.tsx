@@ -25,6 +25,8 @@ import TaskManagement from "./pages/Dashboard/Admin/taskmgt/TaskManagement";
 import PaymentManagement from "./pages/Dashboard/Admin/paymentmgt/PaymentManagement";
 import SettingsMgt from "./pages/Dashboard/Admin/settingsmgt/SettingsMgt";
 import PageRoute from "./pages/routes/PageRoute";
+import AboutUs from "./pages/AboutUs/AboutUs";
+import NewProjects from "./pages/Projects/NewProjects";
 
 const AppRoutes = () => {
   return (
@@ -35,6 +37,8 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/new-projects" element={<NewProjects />} />
 
         <Route path="/route" element={<PageRoute />} />
 
