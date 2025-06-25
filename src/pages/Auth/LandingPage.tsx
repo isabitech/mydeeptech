@@ -56,7 +56,7 @@ const LandingPage = () => {
                 Get Started
               </Button> */}
               <a href="/new-projects">
-                <Button className="!bg-[#F6921E] !text-white !w-[10rem] !h-10 !rounded-xl !font-[gilroy-regular] !border-none !shadow-md max-sm:mt-4">
+                <Button className="!bg-[#F6921E] !text-white !w-[10rem] !h-10 !rounded-xl !font-[gilroy-regular] !border-none !shadow-md mt-4">
                 Get Started
               </Button>
               </a>
