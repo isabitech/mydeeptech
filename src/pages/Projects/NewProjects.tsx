@@ -113,6 +113,7 @@ const NewProjects = () => {
           </div>
         ))}
       </div>
+      
     </div>
   );
 };

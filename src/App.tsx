@@ -27,6 +27,7 @@ import SettingsMgt from "./pages/Dashboard/Admin/settingsmgt/SettingsMgt";
 import PageRoute from "./pages/routes/PageRoute";
 import AboutUs from "./pages/AboutUs/AboutUs";
 import NewProjects from "./pages/Projects/NewProjects";
+import Survey from "./pages/Projects/SurveyProjects/Survey";
 
 const AppRoutes = () => {
   return (
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/new-projects" element={<NewProjects />} />
+        <Route path="/new-projects/survey" element={<Survey/>} />
 
         <Route path="/route" element={<PageRoute />} />
 

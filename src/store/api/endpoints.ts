@@ -19,5 +19,8 @@ export const endpoints = {
   users :{
     getAllUsers: "https://my-deep-tech.onrender.com/api/auth/getAllUsers"
   },
+  survey: {
+    verifyEmail: "https://deep-tech-survey.onrender.com/api/auth/validateuseremail",
+  },
   
 };
