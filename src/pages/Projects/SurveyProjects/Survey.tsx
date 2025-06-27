@@ -75,7 +75,7 @@ const Survey = () => {
       ) : (
         <div className="mt-8">
           <h3 className="text-xl font-semibold mb-4 text-center">
-            Please wait while the form Loads
+            Please fill the form, when it Loads successfully.
           </h3>
           <div className="w-full flex justify-center px-4">
             <div className="w-[75vw] max-sm:w-[95vw] min-h-[80svh]  ">
