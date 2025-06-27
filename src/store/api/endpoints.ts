@@ -22,5 +22,6 @@ export const endpoints = {
   survey: {
     verifyEmail: "https://deep-tech-survey.onrender.com/api/auth/validateuseremail",
   },
+  addBulkEmails: "https://deep-tech-survey.onrender.com/api/auth/addbulkemails",
   
 };

@@ -29,6 +29,7 @@ import AboutUs from "./pages/AboutUs/AboutUs";
 import NewProjects from "./pages/Projects/NewProjects";
 import Survey from "./pages/Projects/SurveyProjects/Survey";
 import Hiring from "./pages/Careers/Hiring";
+import UploadEmail from "./pages/Projects/SurveyProjects/UploadEmail";
 
 const AppRoutes = () => {
   return (
@@ -43,6 +44,7 @@ const AppRoutes = () => {
         <Route path="/new-projects" element={<NewProjects />} />
         <Route path="/new-projects/survey" element={<Survey/>} />
         <Route path="/careers" element={<Hiring/>} />
+        <Route path="/uploadEmail" element={<UploadEmail />} />
 
         <Route path="/route" element={<PageRoute />} />
 

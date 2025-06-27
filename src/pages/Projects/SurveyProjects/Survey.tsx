@@ -17,7 +17,7 @@ const Survey = () => {
 
     try {
       const response = await axios.post(`${endpoints.survey.verifyEmail}`, {
-        email,
+        email: email,
       });
       console.log(response.data);
       if (response.data?.success) {
