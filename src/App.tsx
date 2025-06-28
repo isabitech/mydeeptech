@@ -27,7 +27,7 @@ import SettingsMgt from "./pages/Dashboard/Admin/settingsmgt/SettingsMgt";
 import PageRoute from "./pages/routes/PageRoute";
 import AboutUs from "./pages/AboutUs/AboutUs";
 import NewProjects from "./pages/Projects/NewProjects";
-import Survey from "./pages/Projects/SurveyProjects/Survey";
+// import Survey from "./pages/Projects/SurveyProjects/Survey";
 import Hiring from "./pages/Careers/Hiring";
 import UploadEmail from "./pages/Projects/SurveyProjects/UploadEmail";
 
@@ -42,7 +42,7 @@ const AppRoutes = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/new-projects" element={<NewProjects />} />
-        <Route path="/new-projects/survey" element={<Survey/>} />
+        {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
         <Route path="/careers" element={<Hiring/>} />
         <Route path="/uploadEmail" element={<UploadEmail />} />
 
