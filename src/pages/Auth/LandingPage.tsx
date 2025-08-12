@@ -38,8 +38,8 @@ const LandingPage = () => {
               {/* <li className="cursor-pointer hover:underline">Contact</li> */}
             </ul>
             <div className="flex gap-3">
-              {/* <Button className="!bg-[#333333] !text-white !rounded-xl" onClick={handleOpenLogin}>Login</Button>
-              <Button className="!bg-[#F6921E] !text-white !rounded-xl" onClick={handleSignUpModal}>Sign Up</Button> */}
+              <Button className="!bg-[#333333] !text-white !rounded-xl" onClick={handleOpenLogin}>Login</Button>
+              {/* <Button className="!bg-[#F6921E] !text-white !rounded-xl" onClick={handleSignUpModal}>Sign Up</Button> */}
             </div>
           </nav>
 
