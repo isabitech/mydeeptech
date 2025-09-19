@@ -3,6 +3,8 @@ import { useState } from "react";
 import { endpoints } from "../../store/api/endpoints"; // Assuming endpoints are defined
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../../UserContext"; // Adjust path
+import { USER_INFORMATION } from "../../constants";
+import { Encryption } from "../../encryption";
 
 const Login = () => {
   const { setUserInfo } = useUserContext(); // Get the setUserInfo function
@@ -35,7 +37,17 @@ const Login = () => {
           userRole: result.user.role,
         });
 
-        sessionStorage.setItem("authToken", result.token); // Save token to session
+        if (result.token) {
+          const encryptedToken = await Encryption.encrypt(result.token);
+          sessionStorage.setItem("authToken", JSON.stringify(encryptedToken));
+        }
+        const userInfo = result.user;
+        const encryptedUser = await Encryption.encrypt(
+          JSON.stringify(userInfo)
+        );
+        sessionStorage.setItem(USER_INFORMATION, JSON.stringify(encryptedUser));
+
+        // console.log(result)
         notification.success({
           message: "Login Successful",
           description: "You have successfully logged in.",

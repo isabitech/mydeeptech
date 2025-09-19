@@ -3,8 +3,8 @@ import Logo from "../../assets/deeptech.png";
 import freelancer from "../../assets/freelancer.jpg";
 import { useState } from "react";
 import PageModal from "../../components/Modal/PageModal";
-import SignupContent from "./Signup";
 import LoginContent from "./Login";
+import SignUpForm from "../Projects/GetPaidToTrainAi/Signupform";
 
 const LandingPage = () => {
   const [isLoginModal, setIsLoginModal] = useState(false);
@@ -55,11 +55,13 @@ const LandingPage = () => {
               {/* <Button className="!bg-[#F6921E] !text-white !w-[10rem] !h-10 !rounded-xl !font-[gilroy-regular] !border-none !shadow-md" onClick={handleSignUpModal}>
                 Get Started
               </Button> */}
-              <a href="/new-projects">
-                <Button className="!bg-[#F6921E] !text-white !w-[10rem] !h-10 !rounded-xl !font-[gilroy-regular] !border-none !shadow-md mt-4">
+              
+                <Button
+                onClick={handleSignUpModal}
+                 className="!bg-[#F6921E] !text-white !w-[10rem] !h-10 !rounded-xl !font-[gilroy-regular] !border-none !shadow-md mt-4">
                 Get Started
               </Button>
-              </a>
+              
             </div>
             <div className="hidden md:block">
               <img src={freelancer} className="w-[28rem] h-[28rem] object-cover rounded-full border-4 border-white" alt="Freelancer" />
@@ -136,13 +138,13 @@ const LandingPage = () => {
           >
             Join Now
           </Button> */}
-          <a href="/new-projects">
+          
           <Button
             className="!bg-[#F6921E] !text-white !rounded-xl !px-6 !py-2 !font-[gilroy-regular] !border-none !shadow-md"
-            // onClick={handleSignUpModal}
+            onClick={handleSignUpModal}
           >
             Join Now
-          </Button></a>
+          </Button>
         </section>
 
         {/* Footer */}
@@ -185,10 +187,10 @@ const LandingPage = () => {
           openModal={isSignUpModal}
           onCancel={handleSignUpModal}
           closable={true}
-          className="custom-modal"
-          modalwidth="400px"
+          className=""
+          modalwidth="50rem"
         >
-          <SignupContent />
+          <SignUpForm />
         </PageModal>
       </div>
     </ConfigProvider>

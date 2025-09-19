@@ -2,32 +2,39 @@ import { ArrowRightOutlined } from "@ant-design/icons";
 
 const ActiveProjects = () => {
   const activeProjects = [
+    // {
+    //   title: "Image Annotation Project",
+    //   description:
+    //     "This project involves annotating objects for autonomous vehicles",
+    //   rate: "N1000",
+    //   projectLink: "",
+
+    // },
+    // {
+    //   title: "Video Annotation Project",
+    //   description: "This project involves annotating objects for CCTV System",
+    //   rate: "N2000",
+    //   projectLink: "",
+    // },
     {
-      title: "Image Annotation Project",
-      description:
-        "This project involves annotating objects for autonomous vehicles",
-      rate: "N1000",
-      projectLink: "",
-    },
-    {
-      title: "Video Annotation Project",
-      description: "This project involves annotating objects for CCTV System",
-      rate: "N2000",
-      projectLink: "",
-    },
-    {
-      title: "Text Annotation Project",
+      title: "Annotator Assessment",
       description: "This project involves evaluating LLM responses",
-      rate: "N2500",
-      projectLink: "",
+      rate: " up to $25",
+      projectLink: "https://talent.micro1.ai",
     },
     {
-      title: "Audio Annotation Project",
-      description:
-        "This project involves trasncribing and translating language.",
-      rate: "N1500",
-      projectLink: "",
+      title: "English Language Proficiency",
+      description: "Take English Language Proficiency test",
+      rate: "up to $10",
+      projectLink: "https://jobs.e2f.io/",
     },
+    // {
+    //   title: "Audio Annotation Project",
+    //   description:
+    //     "This project involves trasncribing and translating language.",
+    //   rate: "N1500",
+    //   projectLink: "",
+    // },
   ];
 
   return (
@@ -62,10 +69,16 @@ const ActiveProjects = () => {
                   {"/"} hr
                 </span>
                 {/* Action */}
+                <a
+                  href={project.projectLink}
+                  referrerPolicy={"no-referrer"}
+                  target="_blank"
+                >
                 <span className=" text-secondary cursor-pointer">
                   {" "}
-                  <ArrowRightOutlined /> Work
+                  <ArrowRightOutlined /> Take test
                 </span>
+                </a>
               </div>
             </div>
           </div>

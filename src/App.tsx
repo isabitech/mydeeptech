@@ -31,6 +31,7 @@ import NewProjects from "./pages/Projects/NewProjects";
 import Hiring from "./pages/Careers/Hiring";
 import UploadEmail from "./pages/Projects/SurveyProjects/UploadEmail";
 import MathTalent from "./pages/Careers/Talents/MathTalent";
+import Welcome from "./pages/Dashboard/User/Welcome";
 
 const AppRoutes = () => {
   return (
@@ -54,7 +55,7 @@ const AppRoutes = () => {
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<Dashboard />}>
           {/* User Dashboard */}
-          <Route path="overview" index element={<Overview />} />
+          <Route path="overview" index element={<Welcome />} />
           <Route path="projects" element={<Projects />} />
           <Route path="jobs" element={<Jobs />} />
           <Route path="tasks" element={<Tasks />} />
