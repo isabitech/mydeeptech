@@ -1,6 +1,6 @@
 import { Form, Input, Button, notification } from "antd";
 import { useState } from "react";
-import { endpoints } from "../../store/api/endpoints"; // Assuming endpoints are defined
+import { baseURL, endpoints } from "../../store/api/endpoints"; // Assuming endpoints are defined
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../../UserContext"; // Adjust path
 import { USER_INFORMATION } from "../../constants";
@@ -15,7 +15,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(endpoints.auth.login, {
+      const response = await fetch(`${baseURL}${endpoints.auth.login}`, {
         method: "POST",
         body: JSON.stringify({
           email: values.email,

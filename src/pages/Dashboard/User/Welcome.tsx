@@ -30,7 +30,7 @@ const Welcome = () => {
         />
         <div className="flex gap-4">
           {/* <p className="my-auto">User Role</p> */}
-          <Link to={"/dashboard/projects"}>
+          <Link to={"/dashboard/assessment"}>
             <Button
               className="!font-[gilroy-regular] !bg-secondary !border-none  !text-[#FFFFFF]  !flex !h-10 !items-center !justify-center !rounded-xl hover:!bg-[#393735] hover:!text-secondary"
               // onClick={openDashboard}
