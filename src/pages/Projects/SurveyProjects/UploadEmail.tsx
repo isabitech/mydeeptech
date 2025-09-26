@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { endpoints } from "../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../store/api/endpoints";
 
 const UploadEmail = () => {
   const [emails, setEmails] = useState<string[]>([]);
@@ -31,7 +31,7 @@ const UploadEmail = () => {
     setMessage("");
 
     try {
-      const res = await fetch(`${endpoints.addBulkEmails}`, {
+      const res = await fetch(`${baseURL}${endpoints.addBulkEmails}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emails }),

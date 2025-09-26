@@ -8,7 +8,7 @@ import {
 import { Button, notification } from "antd";
 import Header from "../../User/Header";
 import { useEffect, useState } from "react";
-import { endpoints } from "../../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import { useNavigate } from "react-router-dom";
 import { ProjectType } from "../projectmgt/ProjectManagement";
 import { Project } from "../projectmgt/ProjectManagement";
@@ -52,7 +52,7 @@ const AdminOverview = () => {
     setIsLoading(!isLoading);
     const fetchUsers = async () => {
       try {
-        const response = await fetch(endpoints.users.getAllUsers, {
+        const response = await fetch(`${baseURL}${endpoints.users.getAllUsers}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -82,7 +82,7 @@ const AdminOverview = () => {
 
     const fetchAllTasks = async () => {
       try {
-        const response = await fetch(endpoints.tasks.getAllTasks, {
+        const response = await fetch(`${baseURL}${endpoints.tasks.getAllTasks}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -112,7 +112,7 @@ const AdminOverview = () => {
     const fetchProjects = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(endpoints.project.getProject, {
+        const response = await fetch(`${baseURL}${endpoints.project.getProject}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

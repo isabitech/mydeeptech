@@ -1,8 +1,8 @@
 import { useState } from "react";
 import Header from "../Header";
 import ActiveProjects from "./ActiveProjects";
-import AvailableProjects from "./AvailableProjects";
-import Pendingprojects from "./PendingProjects";
+// import AvailableProjects from "./AvailableProjects";
+// import Pendingprojects from "./PendingProjects";
 
 const Projects = () => {
   // State to track the currently selected project
@@ -15,16 +15,16 @@ const Projects = () => {
       title: "Active Projects",
       component: <ActiveProjects />,
     },
-    {
-      key: 2,
-      title: "Pending Projects",
-      component: <Pendingprojects />,
-    },
-    {
-      key: 3,
-      title: "Available Projects",
-      component: <AvailableProjects />,
-    },
+    // {
+    //   key: 2,
+    //   title: "Pending Projects",
+    //   component: <Pendingprojects />,
+    // },
+    // {
+    //   key: 3,
+    //   title: "Available Projects",
+    //   component: <AvailableProjects />,
+    // },
   ];
 
   return (

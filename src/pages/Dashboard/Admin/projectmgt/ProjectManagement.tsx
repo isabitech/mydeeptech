@@ -9,7 +9,7 @@ import {
 } from "antd";
 import { PlusSquareOutlined } from "@ant-design/icons";
 import Header from "../../User/Header";
-import { endpoints } from "../../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import moment from "moment";
 import { differenceInDays, differenceInMonths, differenceInWeeks, } from "date-fns";
 import Loader from "../../../../components/Loader";
@@ -41,7 +41,7 @@ const ProjectManagement: React.FC = () => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
-        const response = await fetch(endpoints.project.getProject, {
+        const response = await fetch(`${baseURL}${endpoints.project.getProject}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -77,8 +77,8 @@ const ProjectManagement: React.FC = () => {
       };
 
       const endpoint = isEditMode
-        ? `${endpoints.project.updateProject}/${projectId}`
-        : endpoints.project.createProject;
+        ? `${baseURL}${endpoints.project.updateProject}/${projectId}`
+        : `${baseURL}${endpoints.project.createProject}`;
 
       const method = isEditMode ? "PUT" : "POST";
 
@@ -145,7 +145,7 @@ const ProjectManagement: React.FC = () => {
       onOk: async () => {
         try {
           const response = await fetch(
-            `${endpoints.project.deleteProject}/${id}`,
+            `${baseURL}${endpoints.project.deleteProject}/${id}`,
             {
               method: "DELETE",
               headers: {

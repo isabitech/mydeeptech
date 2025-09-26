@@ -8,7 +8,7 @@ import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import Signup from "./pages/Auth/Signup";
 import LandingPage from "./pages/Auth/LandingPage";
-import Overview from "./pages/Dashboard/User/Overview";
+// import Overview from "./pages/Dashboard/User/Overview";
 import Tasks from "./pages/Dashboard/User/tasks/Tasks";
 import Payment from "./pages/Dashboard/User/payment/Payment";
 import Jobs from "./pages/Dashboard/User/jobs/Jobs";
@@ -31,10 +31,14 @@ import NewProjects from "./pages/Projects/NewProjects";
 import Hiring from "./pages/Careers/Hiring";
 import UploadEmail from "./pages/Projects/SurveyProjects/UploadEmail";
 import MathTalent from "./pages/Careers/Talents/MathTalent";
+import Welcome from "./pages/Dashboard/User/Welcome";
+import Assessment from "./pages/Dashboard/User/assessment/Assessment";
+import CustomerService from "./components/CustomerService";
 
 const AppRoutes = () => {
   return (
     <Router>
+      <CustomerService/>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -54,13 +58,15 @@ const AppRoutes = () => {
         {/* Protected Dashboard Routes */}
         <Route path="/dashboard" element={<Dashboard />}>
           {/* User Dashboard */}
-          <Route path="overview" index element={<Overview />} />
+          <Route path="overview" index element={<Welcome />} />
           <Route path="projects" element={<Projects />} />
           <Route path="jobs" element={<Jobs />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="payment" element={<Payment />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="assessment" element={<Assessment />} />
+
 
         </Route>
           {/* Admin Dashboard */}
