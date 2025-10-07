@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSignUpApi } from "../../../hooks/Auth/useSignUp";
 
 type FormState = {
   fullName: string;
@@ -59,6 +60,8 @@ export default function SignUpForm() {
     consent: "",
   });
 
+  const { signUp, loading, error } = useSignUpApi()
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -91,14 +94,38 @@ export default function SignUpForm() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
-    setSubmitting(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 800));
+  e.preventDefault();
+  if (!validate()) return;
+  
+  setSubmitting(true);
+  
+  try {
+    const payload = {
+      fullName: form.fullName,
+      phone: form.phone,
+      email: form.email,
+      domains: form.domains,
+      socialsFollowed: form.socialsFollowed,
+      consent: form.consent
+    };
+
+    const result = await signUp(payload);
+    
+    if (result.error) {
+      // Error is already set in the hook state, but you can handle it here too
+      setErrors({ submit: result.error });
+      return;
+    }
+    
+    // Success case
     setSubmitting(false);
     setSubmitted(true);
+    
+  } catch (err: any) {
+    setErrors({ submit: err.message });
+    setSubmitting(false);
   }
+}
 
   if (submitted) {
     return (
@@ -112,14 +139,14 @@ export default function SignUpForm() {
           }}
           className="mt-6 inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700"
         >
-          Submit another
+          Check your email for verification link
         </button>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto p-6 font-[gilroy-regular] bg-white rounded-2xl shadow">
+    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto p-6 font-[gilroy-regular] bg-inherit rounded-2xl shadow">
       <h1 className="text-2xl font-bold mb-1">Get Paid to Train AI (Up to $30/hr)</h1>
       <p className="mb-4 text-sm text-muted-foreground">We’re building a community for people who want to shape the future of AI. By signing up, you’ll get access to free webinars, trainings, and updates on paid opportunities.</p>
 
@@ -197,17 +224,17 @@ export default function SignUpForm() {
             <span>No</span>
           </label>
         </div>
-        {errors.consent && <p className="text-xs text-red-600 mt-1">{errors.consent}</p>}
+        {error && errors.consent && <p className="text-xs text-red-600 mt-1">{errors.consent}</p>}
       </div>
 
       <div className="mt-6 flex items-center justify-between">
         <div className="text-xs text-gray-500">* Indicates required question</div>
         <button
           type="submit"
-          disabled={submitting}
-          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-60"
+          disabled={loading || submitting}
+          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 bg-secondary text-white hover:bg-primary-hover  disabled:opacity-60"
         >
-          {submitting ? "Submitting..." : "Join the community"}
+          {loading ? "Submitting..." : "Join the community"}
         </button>
       </div>
 

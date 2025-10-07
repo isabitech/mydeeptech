@@ -187,7 +187,7 @@ const LandingPage = () => {
           openModal={isSignUpModal}
           onCancel={handleSignUpModal}
           closable={true}
-          className=""
+          className="bg-white text-[#333333]"
           modalwidth="50rem"
         >
           <SignUpForm />

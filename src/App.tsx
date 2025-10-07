@@ -34,6 +34,7 @@ import MathTalent from "./pages/Careers/Talents/MathTalent";
 import Welcome from "./pages/Dashboard/User/Welcome";
 import Assessment from "./pages/Dashboard/User/assessment/Assessment";
 import CustomerService from "./components/CustomerService";
+import AdsLandingPage from "./pages/Ads/AdsLandingPage";
 
 const AppRoutes = () => {
   return (
@@ -52,6 +53,8 @@ const AppRoutes = () => {
         <Route path="/careers/math-ai-trainer" element={<MathTalent/>} />
 
         <Route path="/uploadEmail" element={<UploadEmail />} />
+        <Route path="/apply" element={<AdsLandingPage />} />
+
 
         <Route path="/route" element={<PageRoute />} />
 
