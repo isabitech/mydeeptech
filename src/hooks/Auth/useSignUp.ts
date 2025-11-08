@@ -1,54 +1,50 @@
-// import { useMutation } from "@tanstack/react-query";
-// import  { AxiosError, AxiosResponse } from "axios";
-// import { endpoints } from "../../store/api/endpoints";
+// src/hooks/useSignUpApi.ts
+import { useState } from "react";
+import { endpoints } from "../../store/api/endpoints";
 
+type SignUpPayload = {
+  fullName: string;
+  phone: string;
+  email: string;
+  domains: string[];
+  socialsFollowed: string[];
+  consent: string;
+};
 
-// export type SignupRequestType = {
-//   firstname: string;
-//   lastname: string;
-//   email: string;
-//   password: string;
-//   username: string;
-//   phone: string;
+type ApiResponse<T> = {
+  data?: T;
+  error?: string;
+};
 
-// };
-// export interface User {
-//   firstname: string
-//   lastname: string
-//   email: string
-//   consent: string
-//   password: string
-//   role: string
-//   verified: boolean
-//   _id: string
-//   createdAt: string
-//   updatedAt: string
-//   __v: number
-// }
+export function useSignUpApi() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-// export interface Data {
-//   user: User
-// }
+  async function signUp(payload: SignUpPayload): Promise<ApiResponse<any>> {
+    setLoading(true);
+    setError(null);
 
-// export type SignupResponseType =  {
-//   data: Data
-//   responseMessage: string
-//   responseCode: number
-// }
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoints.authDT.createDTUser}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-// const SignUp = async (
-//   input: SignupRequestType
-// ): Promise<AxiosResponse<any>> => {
-//   const response = await axiosInstance.post(endpoints.auth.signup, input);
-//   return response;
-// };
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
 
-// export const useSignUp = () => {
-//   return useMutation<AxiosResponse<any>, AxiosError, SignupRequestType>({
-//     mutationFn: (input: SignupRequestType) => SignUp(input),
-//     onSuccess: () => {},
-//     onError: () => {},
-//   });
-// };
+      const data = await res.json();
+      return { data };
+    } catch (err: any) {
+      setError(err.message);
+      return { error: err.message };
+    } finally {
+      setLoading(false);
+    }
+  }
 
-
+  return { signUp, loading, error };
+  
+}
