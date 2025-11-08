@@ -4,7 +4,8 @@ import freelancer from "../../assets/freelancer.jpg";
 import { useState } from "react";
 import PageModal from "../../components/Modal/PageModal";
 import LoginContent from "./Login";
-import SignUpForm from "../Projects/GetPaidToTrainAi/Signupform";
+import MultiStageSignUpForm from "../../components/MultiStageSignUpForm";
+import { toast } from "sonner";
 
 const LandingPage = () => {
   const [isLoginModal, setIsLoginModal] = useState(false);
@@ -12,6 +13,13 @@ const LandingPage = () => {
 
   const handleOpenLogin = () => setIsLoginModal(!isLoginModal);
   const handleSignUpModal = () => setIsSignUpModal(!isSignUpModal);
+
+  const handleSignUpSuccess = () => {
+    // Handle successful signup if needed
+    console.log("Sign up successful");
+    toast.success("Sign up successful! Please cheeck your email for verification.");
+    setIsSignUpModal(false);
+  }
 
   return (
     <ConfigProvider
@@ -190,7 +198,7 @@ const LandingPage = () => {
           className="bg-white text-[#333333]"
           modalwidth="50rem"
         >
-          <SignUpForm />
+          <MultiStageSignUpForm onSuccess={handleSignUpSuccess} className=" font-[gilroy-regular]" />
         </PageModal>
       </div>
     </ConfigProvider>
