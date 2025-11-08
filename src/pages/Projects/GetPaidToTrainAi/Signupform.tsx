@@ -73,12 +73,6 @@ export default function SignUpForm() {
     });
   }
 
-  function toggleSocial(label: string) {
-    setForm((s) => {
-      const exists = s.socialsFollowed.includes(label);
-      return { ...s, socialsFollowed: exists ? s.socialsFollowed.filter((d) => d !== label) : [...s.socialsFollowed, label] };
-    });
-  }
 
   function validate() {
     const e: Record<string, string> = {};
