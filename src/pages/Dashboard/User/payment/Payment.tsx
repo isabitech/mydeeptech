@@ -1,52 +1,186 @@
-import { useState } from "react";
-import Header from "../Header"
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  Tabs,
+  Row,
+  Col,
+  Statistic,
+  Button,
+  Space,
+  DatePicker,
+  message,
+} from "antd";
+import {
+  DollarOutlined,
+  FileTextOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import Header from "../Header";
 import Paid from "./Paid";
 import Unpaid from "./Unpaid";
+import { useUserInvoices } from "../../../../hooks/Auth/User/Invoices/useUserInvoices";
+
+const { RangePicker } = DatePicker;
 
 const Payment = () => {
+  const [activeTab, setActiveTab] = useState("unpaid");
+  const [filters, setFilters] = useState({
+    startDate: undefined as string | undefined,
+    endDate: undefined as string | undefined,
+  });
 
-  // State to track the currently selected project
-  const [selectedProject, setSelectedProject] = useState(1); // Default to the first project
+  const { 
+    getUserInvoices,
+    getUnpaidInvoices,
+    getPaidInvoices,
+    getInvoiceDashboard,
+    invoices,
+    dashboardData,
+    loading 
+  } = useUserInvoices();
 
-  // List of projects
-  const list = [
-    {
-      key: 1,
-      title: "Unpaid Tasks",
-      component: <Unpaid />,
-    },
-    {
-      key: 2,
-      title: "Paid Tasks",
-      component: <Paid />,
-    },
-  
-  ];
+  useEffect(() => {
+    loadData();
+  }, [activeTab, filters]);
+
+  const loadData = () => {
+    if (activeTab === "paid") {
+      getPaidInvoices({
+        ...filters,
+        page: 1,
+        limit: 50,
+      });
+    } else {
+      getUnpaidInvoices({
+        ...filters,
+        page: 1,
+        limit: 50,
+      });
+    }
+    
+    // Load dashboard data
+    getInvoiceDashboard();
+  };
+
+  const handleDateRangeChange = (dates: any) => {
+    setFilters(prev => ({
+      ...prev,
+      startDate: dates?.[0]?.toISOString(),
+      endDate: dates?.[1]?.toISOString(),
+    }));
+  };
+
+  const handleRefresh = () => {
+    loadData();
+    message.success("Data refreshed");
+  };
+
   return (
-    <div className="h-full flex flex-col gap-4  font-[gilroy-regular]">
-    <Header title="Payments" />
+    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+      <Header title="Payments" />
 
-    {/* Navigation Buttons */}
-    <div className="flex gap-2">
-        {list.map((item) => (
-          <button
-            key={item.key}
-            className={`px-4 py-2 rounded ${
-              selectedProject === item.key ? "bg-secondary text-white" : "bg-gray-300 text-black"
-            }`}
-            onClick={() => setSelectedProject(item.key)}
-          >
-            {item.title}
-          </button>
-        ))}
-      </div>
+      {/* Summary Statistics */}
+      <Row gutter={16}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Total Invoices"
+              value={dashboardData?.summary?.totalAmount || 0}
+              prefix={<FileTextOutlined />}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Total Amount"
+              value={dashboardData?.summary?.totalAmount || 0}
+              precision={2}
+              prefix={<DollarOutlined />}
+              suffix="USD"
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Paid Amount"
+              value={dashboardData?.summary?.paidAmount || 0}
+              precision={2}
+              prefix={<CheckCircleOutlined />}
+              suffix="USD"
+              valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Unpaid Amount"
+              value={dashboardData?.summary?.unpaidAmount || 0}
+              precision={2}
+              prefix={<ClockCircleOutlined />}
+              suffix="USD"
+              valueStyle={{ color: '#cf1322' }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
-      {/* Render the selected component */}
-      <div className="mt-4">
-        {list.find((item) => item.key === selectedProject)?.component}
-      </div>
-  </div>
-  )
-}
+      {/* Filters */}
+      <Card>
+        <Row gutter={16} align="middle">
+          <Col>
+            <RangePicker
+              onChange={handleDateRangeChange}
+              placeholder={["Start Date", "End Date"]}
+            />
+          </Col>
+          <Col>
+            <Space>
+              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
+                Refresh
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
 
-export default Payment
+      {/* Tabs for Paid/Unpaid */}
+      <Card>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'unpaid',
+              label: 'Unpaid Invoices',
+              children: (
+                <Unpaid
+                  invoices={invoices || []}
+                  loading={loading}
+                  onRefresh={loadData}
+                />
+              ),
+            },
+            {
+              key: 'paid',
+              label: 'Paid Invoices',
+              children: (
+                <Paid
+                  invoices={invoices || []}
+                  loading={loading}
+                  onRefresh={loadData}
+                />
+              ),
+            },
+          ]}
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default Payment;

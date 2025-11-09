@@ -10,8 +10,6 @@ import Header from "../../User/Header";
 import { useEffect, useState } from "react";
 import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import { useNavigate } from "react-router-dom";
-import { ProjectType } from "../projectmgt/ProjectManagement";
-import { Project } from "../projectmgt/ProjectManagement";
 import {
   differenceInDays,
   differenceInMonths,
@@ -23,7 +21,7 @@ const AdminOverview = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [totalUser, settotalUser] = useState<number>(0);
   const [totalProject, settotalProject] = useState<number>(0);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [totalTask, settotalTask] = useState<number>(0);
 
   const todayTasks = [
@@ -123,7 +121,7 @@ const AdminOverview = () => {
           throw new Error(`Failed to fetch projects: ${response.statusText}`);
         }
 
-        const data: ProjectType = await response.json();
+        const data: any = await response.json();
         const result = data.data;
         const projectNumber = result.length;
         settotalProject(projectNumber);

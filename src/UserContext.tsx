@@ -1,25 +1,35 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// Define the type for the user info
-interface UserInfo {
-  firstName: string;
-  lastName: string;
+// Define the type for the user info - updated to match login response
+export interface UserInfo {
+  id: string;
+  fullName: string;
   email: string;
-  userId: string;
   phone: string;
-  userName: string;
-  userRole: string;
+  domains: string[];
+  socialsFollowed: any[];
+  consent: boolean;
+  isEmailVerified: boolean;
+  hasSetPassword: boolean;
+  annotatorStatus: string;
+  microTaskerStatus: string;
+  resultLink: string;
 }
 
 // Default user info object
 const defaultUserInfo: UserInfo = {
-  firstName: "",
-  lastName: "",
+  id: "",
+  fullName: "",
   email: "",
-  userId: "",
   phone: "",
-  userName: "",
-  userRole: "",
+  domains: [],
+  socialsFollowed: [],
+  consent: false,
+  isEmailVerified: false,
+  hasSetPassword: false,
+  annotatorStatus: "",
+  microTaskerStatus: "",
+  resultLink: "",
 };
 
 // Create the context

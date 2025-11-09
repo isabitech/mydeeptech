@@ -13,14 +13,34 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button } from "antd";
+import { retrieveUserInfoFromStorage } from "../../../helpers";
 
 const Sidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const [isOpen, setIsOpen] = useState(false); // for mobile toggle
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Load user info on component mount
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        const result = await retrieveUserInfoFromStorage();
+        setUserInfo(result);
+        console.log(result)
+      } catch (error) {
+        console.error("Failed to load user info:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserInfo();
+  }, []);
 
   const menuItems = [
     { key: "overview", label: "Overview", icon: <HomeOutlined />, path: "/dashboard/overview" },
@@ -32,6 +52,29 @@ const Sidebar = () => {
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/dashboard/profile" },
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
   ];
+
+  // Filter menu items based on user status
+  const getFilteredMenuItems = () => {
+    if (loading || !userInfo) {
+      // Show all items while loading or if user info is not available
+      return menuItems;
+    }
+
+    const { annotatorStatus, microTaskerStatus } = userInfo;
+    
+    // If either status is pending, show only overview, assessment, and settings
+    if (annotatorStatus === "pending" || microTaskerStatus === "pending") {
+      return menuItems.filter(item => 
+        ["overview", "assessment", "settings"].includes(item.key)
+      );
+    }
+    
+
+    // Otherwise show all items
+    return menuItems;
+  };
+
+  const filteredMenuItems = getFilteredMenuItems();
 
   const handleLogOutModal = () => setOpenModal(!openModal);
 
@@ -65,7 +108,7 @@ const Sidebar = () => {
         {/* Navigation Links */}
         <div className="flex flex-col justify-between h-full mt-4">
           <ul className="space-y-2">
-            {menuItems.map((item) => (
+            {filteredMenuItems.map((item) => (
               <li key={item.key}>
                 <NavLink
                   to={item.path}
