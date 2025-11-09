@@ -9,6 +9,14 @@ export const endpoints = {
     getDTUser: "/auth/allDTusers",
     submitResult: "/DTusertosubmitresult",
     verifyEmail: "/auth/verifyDTusermail",
+    setUpPassword: "/auth/setupPassword",
+    loginDTUser: "/auth/dtUserLogin",
+    resetPassword: "/auth/dtUserResetPassword",
+  },
+
+  profileDT:{
+    getProfile: "/auth/dtUserProfile",
+    updateProfile: "/auth/dtUserProfile",
   },
 
   userStatus: {
@@ -16,13 +24,69 @@ export const endpoints = {
     getSingleUser: "/auth/DTsingleuser"
   },
 
-  // admin
+  // admin authentication
+  adminAuth: {
+    signup: "/admin/create",
+    verifyOTP: "/admin/verify-otp",
+    login: "/admin/login",
+  },
+
+
+
+  // admin management
   project: {
     createProject: "/auth/createProject",
     getProject: "/auth/getProject",
     updateProject: "/auth/updateProject",
     deleteProject: "/auth/deleteProject",
   },
+
+  // Admin project management endpoints
+  adminProject: {
+    createProject: "/admin/projects",
+    getAllProjects: "/admin/projects",
+    getProjectById: "/admin/projects",
+    updateProject: "/admin/projects",
+    deleteProject: "/admin/projects",
+    getAllApplications: "/admin/applications",
+    approveApplication: "/admin/applications",
+    rejectApplication: "/admin/applications",
+  },
+
+  // User project endpoints  
+  userProject: {
+    projects: "/auth/projects", // New unified endpoint that supports view and status parameters
+    browseProjects: "/auth/projects", // Legacy endpoint for backward compatibility  
+    applyToProject: "/auth/projects",
+    getActiveProjects: "/auth/activeProjects", // Legacy endpoint
+  },
+
+  adminActions:{
+    getAllDTUsers: "/admin/dtusers",
+    updateUserStatus: "/admin/dtusers",
+    getAdminUsers: "/admin/admin-users"
+  },
+
+  // Admin invoice management endpoints
+  adminInvoice: {
+    createInvoice: "/admin/invoices",
+    getAllInvoices: "/admin/invoices",
+    getInvoiceDetails: "/admin/invoices",
+    updatePaymentStatus: "/admin/invoices",
+    sendPaymentReminder: "/admin/invoices",
+    deleteInvoice: "/admin/invoices",
+  },
+
+  // User invoice endpoints  
+  userInvoice: {
+    getUserInvoices: "/auth/invoices",
+    getUnpaidInvoices: "/auth/invoices/unpaid",
+    getPaidInvoices: "/auth/invoices/paid",
+    getInvoiceDashboard: "/auth/invoices/dashboard",
+    getInvoiceDetails: "/auth/invoices",
+  },
+
+
   tasks: {
     createTask: "/auth/createTasks",
     assignTask: "/auth/assignTask",

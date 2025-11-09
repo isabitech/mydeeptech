@@ -31,6 +31,18 @@ const AdminSidebar = () => {
       path: "/projects",
     },
     {
+      key: "applications",
+      label: "Applications",
+      icon: <InboxOutlined />,
+      path: "/applications",
+    },
+    {
+      key: "annotators",
+      label: "Annotators",
+      icon: <UserOutlined />,
+      path: "/annotators",
+    },
+    {
       key: "jobs",
       label: "Jobs",
       icon: <InboxOutlined />,

@@ -186,7 +186,7 @@ const LandingPage = () => {
           onCancel={handleOpenLogin}
           closable={true}
           className="custom-modal"
-          modalwidth="400px"
+          modalwidth="auto"
         >
           <LoginContent />
         </PageModal>

@@ -10,20 +10,19 @@ import Header from "../../User/Header";
 import { useEffect, useState } from "react";
 import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import { useNavigate } from "react-router-dom";
-import { ProjectType } from "../projectmgt/ProjectManagement";
-import { Project } from "../projectmgt/ProjectManagement";
 import {
   differenceInDays,
   differenceInMonths,
   differenceInWeeks,
 } from "date-fns";
 import Loader from "../../../../components/Loader";
+import { ProjectType } from "../projectmgt/ProjectManagement";
 
 const AdminOverview = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [totalUser, settotalUser] = useState<number>(0);
   const [totalProject, settotalProject] = useState<number>(0);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [totalTask, settotalTask] = useState<number>(0);
 
   const todayTasks = [

@@ -7,16 +7,20 @@ type Props = {
 };
 
 export type UserInfoProps = {
-  role: string;
-  _id: string;
-  firstname: string;
-  lastname: string;
-  username: string;
-  email: string;
-  password: string;
-  phone: string;
-  __v: number;
-  userRole: string;
+  id: string
+  fullName: string
+  email: string
+  phone: string
+  domains: string[]
+  socialsFollowed: any[]
+  consent: boolean
+  isEmailVerified: boolean
+  hasSetPassword: boolean
+  annotatorStatus: string
+  microTaskerStatus: string
+  resultLink: string
+  createdAt: string
+  updatedAt: string
 };
 
 const Header: React.FC<Props> = ({ title }) => {
@@ -63,7 +67,7 @@ const Header: React.FC<Props> = ({ title }) => {
             />
             <span>
               <p className="text-[10px]">
-                {userInfo?.firstname} {userInfo?.lastname}
+                {userInfo?.fullName} 
               </p>
               <p className="text-[9px]">{userInfo?.email}</p>
             </span>

@@ -1,6 +1,7 @@
 // src/hooks/useSignUpApi.ts
 import { useState } from "react";
 import { endpoints } from "../../store/api/endpoints";
+import { apiPost, getErrorMessage } from "../../service/apiUtils";
 
 type SignUpPayload = {
   fullName: string;
@@ -25,21 +26,12 @@ export function useSignUpApi() {
     setError(null);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}${endpoints.authDT.createDTUser}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`);
-      }
-
-      const data = await res.json();
+      const data = await apiPost(endpoints.authDT.createDTUser, payload);
       return { data };
     } catch (err: any) {
-      setError(err.message);
-      return { error: err.message };
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { error: errorMessage };
     } finally {
       setLoading(false);
     }
