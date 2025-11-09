@@ -222,7 +222,7 @@ const TaskTable = () => {
                       taskGuidelineLink: task.taskGuidelineLink,
                       taskName: task.taskName,
                       dueDate: task.dueDate,
-                      userInfo: userInfo.userName,
+                      userInfo: userInfo.fullName,
                     });
                     setIsAssignTaskModalVisibile(true);
                     setSelectedTask(task._id); // Track the selected task
@@ -361,7 +361,7 @@ const TaskTable = () => {
               { required: true, message: "Please select the task name!" },
             ]}
           >
-            <Input value={userInfo.userName} />
+            <Input value={userInfo.fullName} />
           </Form.Item>
         </Form>
       </Modal>
