@@ -16,7 +16,6 @@ import {
   differenceInWeeks,
 } from "date-fns";
 import Loader from "../../../../components/Loader";
-import { ProjectType } from "../projectmgt/ProjectManagement";
 
 const AdminOverview = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -122,7 +121,7 @@ const AdminOverview = () => {
           throw new Error(`Failed to fetch projects: ${response.statusText}`);
         }
 
-        const data: ProjectType = await response.json();
+        const data: any = await response.json();
         const result = data.data;
         const projectNumber = result.length;
         settotalProject(projectNumber);
