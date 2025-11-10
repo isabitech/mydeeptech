@@ -39,7 +39,7 @@ const RejectedProjects = () => {
     project.userApplication && project.userApplication.status === 'rejected'
   );
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchRejectedProjects = async () => {
       try {
         await getRejectedApplications({ limit: 50, page: 1 });
@@ -251,12 +251,6 @@ const RejectedProjects = () => {
                     : 'N/A'
                   }
                 </Descriptions.Item>
-                <Descriptions.Item label="Application Deadline">
-                  {selectedProject.applicationDeadline
-                    ? moment(selectedProject.applicationDeadline).format("MMMM DD, YYYY")
-                    : 'N/A'
-                  }
-                </Descriptions.Item>
               </Descriptions>
             </Card>
 
@@ -292,36 +286,6 @@ const RejectedProjects = () => {
               </Card>
             )}
 
-            {selectedProject.requiredSkills && selectedProject.requiredSkills.length > 0 && (
-              <Card>
-                <div>
-                  <strong className="mb-2 block">Required Skills:</strong>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedProject.requiredSkills.map((skill: string, index: number) => (
-                      <Tag key={index} color="blue">
-                        {skill}
-                      </Tag>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {selectedProject.languageRequirements && selectedProject.languageRequirements.length > 0 && (
-              <Card>
-                <div>
-                  <strong className="mb-2 block">Language Requirements:</strong>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedProject.languageRequirements.map((lang: string, index: number) => (
-                      <Tag key={index} color="green">
-                        {lang}
-                      </Tag>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            )}
-
             <div className="bg-red-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 text-red-700">
                 <CloseCircleOutlined />
@@ -336,6 +300,177 @@ const RejectedProjects = () => {
             </div>
           </div>
         )}
+      </Modal>
+    </div>
+  );
+};
+
+export default RejectedProjects;
+              <div className="mb-6">
+                <h3 className="text-xl font-bold mb-2">
+                  {selectedApplication.projectId.projectName}
+                </h3>
+                <div className="flex gap-2">
+                  <Tag color="red">
+                    <CloseCircleOutlined /> REJECTED
+                  </Tag>
+                  <Tag color="blue">
+                    {selectedApplication.projectId.projectCategory}
+                  </Tag>
+                  <Tag color="purple">
+                    {selectedApplication.projectId.difficultyLevel}
+                  </Tag>
+                </div>
+              </div>
+
+              <Card>
+                <Descriptions title="Project Information" bordered column={2}>
+                  <Descriptions.Item label="Description" span={2}>
+                    {selectedApplication.projectId.projectDescription}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Category">
+                    {selectedApplication.projectId.projectCategory}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Difficulty">
+                    {selectedApplication.projectId.difficultyLevel}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Pay Rate">
+                    {selectedApplication.projectId.payRateCurrency}{" "}
+                    {selectedApplication.projectId.payRate} per{" "}
+                    {selectedApplication.projectId.payRateType.replace(
+                      "_",
+                      " "
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Duration">
+                    {selectedApplication.projectId.estimatedDuration}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Max Annotators">
+                    {selectedApplication.projectId.maxAnnotators || "Unlimited"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Current Applications">
+                    {selectedApplication.projectId.totalApplications}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Project Deadline">
+                    {moment(selectedApplication.projectId.deadline).format(
+                      "MMMM DD, YYYY"
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Application Deadline">
+                    {moment(
+                      selectedApplication.projectId.applicationDeadline
+                    ).format("MMMM DD, YYYY")}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+
+              <Card>
+                <Descriptions title="Your Application" bordered column={2}>
+                  <Descriptions.Item label="Applied Date">
+                    {moment(selectedApplication.appliedAt).format(
+                      "MMMM DD, YYYY HH:mm"
+                    )}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Rejected Date">
+                    {selectedApplication.rejectedAt
+                      ? moment(selectedApplication.rejectedAt).format(
+                          "MMMM DD, YYYY HH:mm"
+                        )
+                      : "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag color="red">REJECTED</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Rejection Reason">
+                    {selectedApplication.rejectionReason
+                      ?.replace("_", " ")
+                      .toUpperCase() || "Not specified"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Availability">
+                    {selectedApplication.availability
+                      .replace("_", " ")
+                      .toUpperCase()}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Proposed Rate">
+                    {selectedApplication.proposedRate
+                      ? `${selectedApplication.projectId.payRateCurrency} ${selectedApplication.proposedRate}`
+                      : "As Listed"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Estimated Completion">
+                    {selectedApplication.estimatedCompletionTime ||
+                      "Not specified"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Cover Letter" span={2}>
+                    <div className="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+                      {selectedApplication.coverLetter}
+                    </div>
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+
+              {selectedApplication.reviewNotes && (
+                <Card>
+                  <Descriptions title="Rejection Feedback" bordered>
+                    <Descriptions.Item label="Review Notes" span={2}>
+                      <div className="bg-red-50 p-3 rounded border border-red-200">
+                        {selectedApplication.reviewNotes}
+                      </div>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              )}
+
+              {selectedApplication.projectId.requiredSkills?.length > 0 && (
+                <Card>
+                  <div>
+                    <strong className="mb-2 block">Required Skills:</strong>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedApplication.projectId.requiredSkills.map(
+                        (skill, index) => (
+                          <Tag key={index} color="blue">
+                            {skill}
+                          </Tag>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {selectedApplication.projectId.languageRequirements?.length >
+                0 && (
+                <Card>
+                  <div>
+                    <strong className="mb-2 block">
+                      Language Requirements:
+                    </strong>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedApplication.projectId.languageRequirements.map(
+                        (lang, index) => (
+                          <Tag key={index} color="green">
+                            {lang}
+                          </Tag>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div className="flex items-center gap-2 text-red-700">
+                  <CloseCircleOutlined />
+                  <strong>Application Rejected</strong>
+                </div>
+                <p className="text-red-600 mt-1">
+                  Unfortunately, your application was not accepted for this
+                  project. Please review the feedback above and consider
+                  applying to other projects that better match your skills and
+                  experience.
+                </p>
+              </div>
+            </div>
+          )}
       </Modal>
     </div>
   );
