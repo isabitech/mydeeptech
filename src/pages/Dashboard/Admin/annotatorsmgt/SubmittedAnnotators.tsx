@@ -8,9 +8,9 @@ import PageModal from "../../../../components/Modal/PageModal";
 const { Search } = Input;
 const { Option } = Select;
 
-const AllAnnotators = () => {
+const SubmittedAnnotators = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("submitted");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,7 +53,6 @@ const AllAnnotators = () => {
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
-    // Trigger fetch with new search term
     setTimeout(() => {
       fetchUsers(1, pageSize);
     }, 0);
@@ -62,7 +61,6 @@ const AllAnnotators = () => {
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
     setCurrentPage(1);
-    // Trigger fetch with new filter
     setTimeout(() => {
       fetchUsers(1, pageSize);
     }, 0);
@@ -101,7 +99,7 @@ const AllAnnotators = () => {
       message.success(`${type === 'annotator' ? 'Annotator' : 'MicroTasker'} approved successfully`);
       handleCloseModal();
       handleCloseResultModal();
-      fetchUsers(); // Refresh the data
+      fetchUsers();
     } else {
       message.error(result.error || 'Failed to approve user');
     }
@@ -120,7 +118,7 @@ const AllAnnotators = () => {
       message.success(`${type === 'annotator' ? 'Annotator' : 'MicroTasker'} rejected successfully`);
       handleCloseModal();
       handleCloseResultModal();
-      fetchUsers(); // Refresh the data
+      fetchUsers();
     } else {
       message.error(result.error || 'Failed to reject user');
     }
@@ -131,7 +129,8 @@ const AllAnnotators = () => {
       approved: 'green',
       pending: 'orange',
       rejected: 'red',
-      inactive: 'gray'
+      inactive: 'gray',
+      submitted: 'blue'
     };
     return (
       <Tag color={statusColors[status as keyof typeof statusColors] || 'default'}>
@@ -182,26 +181,6 @@ const AllAnnotators = () => {
       render: (status: string) => getStatusTag(status),
     },
     {
-      title: 'Email Verified',
-      dataIndex: 'isEmailVerified',
-      key: 'isEmailVerified',
-      render: (verified: boolean) => (
-        <Tag color={verified ? 'green' : 'red'}>
-          {verified ? 'VERIFIED' : 'UNVERIFIED'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Password Set',
-      dataIndex: 'hasSetPassword',
-      key: 'hasSetPassword',
-      render: (hasPassword: boolean) => (
-        <Tag color={hasPassword ? 'green' : 'orange'}>
-          {hasPassword ? 'SET' : 'NOT SET'}
-        </Tag>
-      ),
-    },
-    {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
@@ -212,15 +191,15 @@ const AllAnnotators = () => {
         dataIndex: "resultLink",
         key: "resultLink",
         render: (link: string, record: DTUser) => (
-          link ? 
+          link ? (
             <Button 
               type="link" 
               icon={<FileImageOutlined />}
               onClick={() => handleViewResult(record)}
             >
               View Result
-            </Button> 
-            : "No Result"
+            </Button>
+          ) : "No Result"
         )
     },
     {
@@ -277,10 +256,10 @@ const AllAnnotators = () => {
             style={{ width: 150 }}
           >
             <Option value="all">All Status</Option>
+            <Option value="submitted">Submitted</Option>
             <Option value="approved">Approved</Option>
             <Option value="pending">Pending</Option>
             <Option value="rejected">Rejected</Option>
-            <Option value="submitted">Submitted</Option>
           </Select>
           
           <Button 
@@ -309,7 +288,6 @@ const AllAnnotators = () => {
             onChange: (page, size) => {
               setCurrentPage(page);
               setPageSize(size || 10);
-              // Fetch new data when pagination changes
               getAllDTUsers({
                 page,
                 limit: size || 10,
@@ -336,11 +314,13 @@ const AllAnnotators = () => {
               <h2 className="text-2xl font-bold text-white mb-2">Annotator Details</h2>
               <div className="flex gap-2">
                 <Tag color={selectedAnnotator.annotatorStatus === 'approved' ? 'green' : 
-                           selectedAnnotator.annotatorStatus === 'pending' ? 'orange' : 'red'}>
+                           selectedAnnotator.annotatorStatus === 'pending' ? 'orange' : 
+                           selectedAnnotator.annotatorStatus === 'submitted' ? 'blue' : 'red'}>
                   Annotator: {selectedAnnotator.annotatorStatus?.toUpperCase()}
                 </Tag>
                 <Tag color={selectedAnnotator.microTaskerStatus === 'approved' ? 'green' : 
-                           selectedAnnotator.microTaskerStatus === 'pending' ? 'orange' : 'red'}>
+                           selectedAnnotator.microTaskerStatus === 'pending' ? 'orange' : 
+                           selectedAnnotator.microTaskerStatus === 'submitted' ? 'blue' : 'red'}>
                   MicroTasker: {selectedAnnotator.microTaskerStatus?.toUpperCase()}
                 </Tag>
               </div>
@@ -382,9 +362,14 @@ const AllAnnotators = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Assessment Result">
                   {selectedAnnotator.resultLink ? (
-                    <a href={selectedAnnotator.resultLink} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                    <Button 
+                      type="link" 
+                      icon={<FileImageOutlined />}
+                      onClick={() => handleViewResult(selectedAnnotator)}
+                      className="p-0"
+                    >
                       View Assessment Result
-                    </a>
+                    </Button>
                   ) : (
                     <span className="text-gray-500">No Result Available</span>
                   )}
@@ -417,13 +402,12 @@ const AllAnnotators = () => {
                   </Button>
                 </div>
               </div>
-
             </div>
           </div>
         )}
       </PageModal>
 
-      {/* Image Result Modal */}
+      {/* Assessment Result Modal */}
       <Modal
         title="Assessment Result"
         open={isResultModalOpen}
@@ -432,36 +416,43 @@ const AllAnnotators = () => {
         width={800}
         centered
       >
-        {selectedAnnotator && (
-          <div>
-            <Image
-              src={selectedAnnotator.resultLink}
-              alt="Assessment Result"
-              style={{ width: '100%' }}
-              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
-            />
-            <div style={{ marginTop: 16, textAlign: 'center' }}>
-              <Space>
-                <Button
-                  type="primary"
-                  icon={<CheckOutlined />}
-                  onClick={() => handleApprove('annotator')}
-                  loading={updateLoading}
-                  disabled={selectedAnnotator.annotatorStatus === 'approved'}
-                >
-                  Approve
-                </Button>
-                <Button
-                  type="default"
-                  danger
-                  icon={<CloseOutlined />}
-                  onClick={() => handleReject('annotator')}
-                  loading={updateLoading}
-                  disabled={selectedAnnotator.annotatorStatus === 'rejected'}
-                >
-                  Reject
-                </Button>
-              </Space>
+        {selectedAnnotator && selectedAnnotator.resultLink && (
+          <div className="text-center">
+            <div className="mb-4">
+              <Image
+                src={selectedAnnotator.resultLink}
+                alt="Assessment Result"
+                style={{ maxWidth: '100%', maxHeight: '500px' }}
+                placeholder={
+                  <div className="flex items-center justify-center h-64 bg-gray-200">
+                    <Spin size="large" />
+                  </div>
+                }
+              />
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-center gap-4 mt-6">
+              <Button
+                type="primary"
+                size="large"
+                icon={<CheckOutlined />}
+                onClick={() => handleApprove('annotator')}
+                loading={updateLoading}
+                disabled={selectedAnnotator.annotatorStatus === 'approved'}
+              >
+                Approve
+              </Button>
+              <Button
+                danger
+                size="large"
+                icon={<CloseOutlined />}
+                onClick={() => handleReject('annotator')}
+                loading={updateLoading}
+                disabled={selectedAnnotator.annotatorStatus === 'rejected'}
+              >
+                Reject
+              </Button>
             </div>
           </div>
         )}
@@ -470,4 +461,4 @@ const AllAnnotators = () => {
   );
 };
 
-export default AllAnnotators;
+export default SubmittedAnnotators;

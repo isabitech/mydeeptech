@@ -37,6 +37,8 @@ const Payment = () => {
     getPaidInvoices,
     getInvoiceDashboard,
     invoices,
+    unpaidInvoices,
+    paidInvoices,
     dashboardData,
     loading 
   } = useUserInvoices();
@@ -75,7 +77,36 @@ const Payment = () => {
   const handleRefresh = () => {
     loadData();
     message.success("Data refreshed");
+    
   };
+
+  // Debug: Log dashboard data structure
+  useEffect(() => {
+    if (dashboardData) {
+      console.log("Dashboard Data Structure:", dashboardData);
+      console.log("Dashboard Data Keys:", Object.keys(dashboardData));
+      if (dashboardData.statistics) {
+        console.log("Statistics:", dashboardData.statistics);
+      }
+      if (dashboardData.summary) {
+        console.log("Summary:", dashboardData.summary);
+      }
+    }
+  }, [dashboardData]);
+
+  useEffect(() => {
+    // Only refetch when filters change, not on mount
+    if (filters.startDate !== undefined || filters.endDate !== undefined) {
+      loadData();
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    // Only refetch when tab changes from the initial load
+    if (activeTab !== "unpaid") {
+      loadData();
+    }
+  }, [activeTab]);
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
@@ -87,7 +118,12 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Total Invoices"
-              value={dashboardData?.summary?.totalAmount || 0}
+              value={
+                dashboardData?.statistics?.totalInvoices || 
+                dashboardData?.summary?.totalInvoices || 
+                dashboardData?.totalInvoices || 
+                0
+              }
               prefix={<FileTextOutlined />}
             />
           </Card>
@@ -96,7 +132,12 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Total Amount"
-              value={dashboardData?.summary?.totalAmount || 0}
+              value={
+                dashboardData?.statistics?.totalAmount || 
+                dashboardData?.summary?.totalAmount || 
+                dashboardData?.totalAmount || 
+                0
+              }
               precision={2}
               prefix={<DollarOutlined />}
               suffix="USD"
@@ -107,7 +148,12 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Paid Amount"
-              value={dashboardData?.summary?.paidAmount || 0}
+              value={
+                dashboardData?.statistics?.paidAmount || 
+                dashboardData?.summary?.paidAmount || 
+                dashboardData?.paidAmount || 
+                0
+              }
               precision={2}
               prefix={<CheckCircleOutlined />}
               suffix="USD"
@@ -119,7 +165,12 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Unpaid Amount"
-              value={dashboardData?.summary?.unpaidAmount || 0}
+              value={
+                dashboardData?.statistics?.unpaidAmount || 
+                dashboardData?.summary?.unpaidAmount || 
+                dashboardData?.unpaidAmount || 
+                0
+              }
               precision={2}
               prefix={<ClockCircleOutlined />}
               suffix="USD"
@@ -159,7 +210,7 @@ const Payment = () => {
               label: 'Unpaid Invoices',
               children: (
                 <Unpaid
-                  invoices={invoices || []}
+                  invoices={unpaidInvoices || []}
                   loading={loading}
                   onRefresh={loadData}
                 />
@@ -170,7 +221,7 @@ const Payment = () => {
               label: 'Paid Invoices',
               children: (
                 <Paid
-                  invoices={invoices || []}
+                  invoices={paidInvoices || []}
                   loading={loading}
                   onRefresh={loadData}
                 />

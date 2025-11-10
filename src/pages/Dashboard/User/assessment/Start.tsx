@@ -15,13 +15,13 @@ const Start = () => {
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <Button
+        {/* <Button
           type="primary"
           className="!bg-secondary !text-white !font-[gilroy-regular]"
           onClick={() => setOpenMicro1(true)}
         >
           Micro1 Certification
-        </Button>
+        </Button> */}
 
         <Button
           type="primary"

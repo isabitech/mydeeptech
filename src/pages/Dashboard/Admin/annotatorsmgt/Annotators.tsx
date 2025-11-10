@@ -6,6 +6,7 @@ import AllAnnotators from "./AllAnnotators";
 import ApprovedAnnotators from "./ApprovedAnnotators";
 import MicroTasker from "./MicroTasker";
 import PendingAnnotators from "./PendingAnnotators";
+import SubmittedAnnotators from "./SubmittedAnnotators";
 
 const { TabPane } = Tabs;
 
@@ -54,6 +55,12 @@ const Annotators = () => {
                <TabPane tab="Pending Annotators" key="4">
                 <div className="pt-4">
                   <PendingAnnotators />
+                </div>
+              </TabPane>
+              
+              <TabPane tab="Submitted Annotators" key="5">
+                <div className="pt-4">
+                  <SubmittedAnnotators />
                 </div>
               </TabPane>
             </Tabs>

@@ -19,45 +19,47 @@ import {
 import moment from "moment";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
 import { retrieveUserInfoFromStorage } from "../../../../helpers";
-import { Application } from "../../../../types/project.types";
+import { 
+  Project as ProjectWithStatus 
+} from "../../../../hooks/Auth/User/Projects/project-status-type";
 
 const PendingProjects = () => {
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectWithStatus | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
   const {
-    getApplicationsByStatus,
     loading,
     error,
-    applications,
+    projects,
     userStats,
     resetState,
+    getPendingApplications,
   } = useUserProjects();
 
-  // Use applications directly since getApplicationsByStatus filters server-side
-  const pendingApplications = applications;
+  // Filter projects that have pending applications - cast to proper type
+  const pendingProjects: ProjectWithStatus[] = (projects as unknown as ProjectWithStatus[]).filter(project => 
+    project.userApplication && project.userApplication.status === 'pending'
+  );
 
   useEffect(() => {
-    loadUserAndFetchProjects();
-  }, []);
-
-  const loadUserAndFetchProjects = async () => {
-    try {
-      const userInfo = await retrieveUserInfoFromStorage();
-      if (userInfo && userInfo._id) {
-        await getApplicationsByStatus('pending');
+    const fetchPendingProjects = async () => {
+      try {
+        await getPendingApplications({ limit: 50, page: 1 });
+      } catch (error) {
+        console.error("Failed to fetch active projects:", error);
       }
-    } catch (err) {
-      console.error("Failed to load user info:", err);
-    }
-  };
+    };
+
+    fetchPendingProjects();
+  }, [getPendingApplications]);
 
   const handleRefresh = () => {
-    getApplicationsByStatus('pending');
+    console.log("Refreshing pending applications...");
+    getPendingApplications({ limit: 50, page: 1 });
   };
 
-  const showApplicationDetails = (application: Application) => {
-    setSelectedApplication(application);
+  const showProjectDetails = (project: ProjectWithStatus) => {
+    setSelectedProject(project);
     setIsDetailModalVisible(true);
   };
 
@@ -69,7 +71,13 @@ const PendingProjects = () => {
           description={error}
           type="error"
           action={
-            <Button size="small" onClick={() => { resetState(); handleRefresh(); }}>
+            <Button
+              size="small"
+              onClick={() => {
+                resetState();
+                handleRefresh();
+              }}
+            >
               Retry
             </Button>
           }
@@ -87,7 +95,7 @@ const PendingProjects = () => {
         <Card size="small" className="mb-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">
-              {pendingApplications.length || 0}
+              {pendingProjects.length || 0}
             </div>
             <div className="text-gray-600">Pending Applications</div>
           </div>
@@ -106,69 +114,74 @@ const PendingProjects = () => {
       </div>
 
       <Spin spinning={loading}>
-        {pendingApplications.length === 0 ? (
+        {pendingProjects.length === 0 ? (
           <Empty description="No pending applications" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pendingApplications.map((application) => {
-              const project = typeof application.projectId === 'object' ? application.projectId : null;
-              if (!project) return null;
+            {pendingProjects.map((project) => (
+              <Card
+                key={project._id}
+                className="project-card hover:shadow-lg transition-shadow"
+                actions={[
+                  <Button
+                    type="text"
+                    icon={<EyeOutlined />}
+                    onClick={() => showProjectDetails(project)}
+                  >
+                    View Details
+                  </Button>,
+                ]}
+              >
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold mb-2 line-clamp-2">
+                    {project.projectName}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                    {project.projectDescription}
+                  </p>
+                </div>
 
-              return (
-                <Card
-                  key={application._id}
-                  className="project-card hover:shadow-lg transition-shadow"
-                  actions={[
-                    <Button
-                      type="text"
-                      icon={<EyeOutlined />}
-                      onClick={() => showApplicationDetails(application)}
-                    >
-                      View Details
-                    </Button>,
-                  ]}
-                >
-                  <div className="mb-3">
-                    <h3 className="text-lg font-bold mb-2 line-clamp-2">
-                      {project.projectName}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                      {project.projectDescription}
-                    </p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Tag color="orange">
+                      <ClockCircleOutlined /> PENDING
+                    </Tag>
+                    <Tag color="blue">{project.projectCategory}</Tag>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Tag color="orange">
-                        <ClockCircleOutlined /> PENDING
-                      </Tag>
-                      <Tag color="blue">{project.projectCategory}</Tag>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-green-600">
-                        <DollarOutlined /> {project.payRateCurrency} {project.payRate}
-                        <span className="text-gray-500">/{project.payRateType.replace('_', ' ')}</span>
-                      </span>
-                    </div>
-
-                    <div className="text-gray-500 text-sm">
-                      <CalendarOutlined /> Applied: {moment(application.appliedAt).format('MMM DD, YYYY')}
-                    </div>
-
-                    <div className="text-gray-500 text-sm">
-                      Availability: {application.availability.replace('_', ' ').toUpperCase()}
-                    </div>
-
-                    {application.proposedRate && (
-                      <div className="text-gray-500 text-sm">
-                        Proposed Rate: {project.payRateCurrency} {application.proposedRate}
-                      </div>
-                    )}
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-green-600">
+                      <DollarOutlined /> {project.payRateCurrency} {project.payRate}
+                      {project.payRateType ? (
+                        <span className="text-gray-500">
+                          /{project.payRateType.replace("_", " ")}
+                        </span>
+                      ) : null}
+                    </span>
                   </div>
-                </Card>
-              );
-            })}
+
+                  <div className="text-gray-500 text-sm">
+                    <CalendarOutlined /> Applied:{" "}
+                    {project.userApplication?.appliedAt 
+                      ? moment(project.userApplication.appliedAt).format("MMM DD, YYYY")
+                      : 'N/A'
+                    }
+                  </div>
+
+                  <div className="text-gray-500 text-sm">
+                    Deadline:{" "}
+                    {project.deadline 
+                      ? moment(project.deadline).format("MMM DD, YYYY")
+                      : 'N/A'
+                    }
+                  </div>
+
+                  <div className="text-gray-500 text-sm">
+                    {project.totalApplications || 0} applicants
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         )}
       </Spin>
@@ -185,101 +198,121 @@ const PendingProjects = () => {
         ]}
         width={800}
       >
-        {selectedApplication && typeof selectedApplication.projectId === 'object' && (
+        {selectedProject && (
           <div className="space-y-4">
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-2">
-                {selectedApplication.projectId.projectName}
+                {selectedProject.projectName}
               </h3>
               <div className="flex gap-2">
                 <Tag color="orange">
                   <ClockCircleOutlined /> PENDING REVIEW
                 </Tag>
-                <Tag color="blue">{selectedApplication.projectId.projectCategory}</Tag>
-                <Tag color="purple">{selectedApplication.projectId.difficultyLevel}</Tag>
+                <Tag color="blue">
+                  {selectedProject.projectCategory}
+                </Tag>
+                {selectedProject.difficultyLevel && (
+                  <Tag color="purple">
+                    {selectedProject.difficultyLevel}
+                  </Tag>
+                )}
               </div>
             </div>
 
             <Card>
               <Descriptions title="Project Information" bordered column={2}>
                 <Descriptions.Item label="Description" span={2}>
-                  {selectedApplication.projectId.projectDescription}
+                  {selectedProject.projectDescription}
                 </Descriptions.Item>
                 <Descriptions.Item label="Category">
-                  {selectedApplication.projectId.projectCategory}
-                </Descriptions.Item>
-                <Descriptions.Item label="Difficulty">
-                  {selectedApplication.projectId.difficultyLevel}
+                  {selectedProject.projectCategory}
                 </Descriptions.Item>
                 <Descriptions.Item label="Pay Rate">
-                  {selectedApplication.projectId.payRateCurrency} {selectedApplication.projectId.payRate} per {selectedApplication.projectId.payRateType.replace('_', ' ')}
+                  {selectedProject.payRateCurrency} {selectedProject.payRate}
+                  {selectedProject.payRateType ? ` per ${selectedProject.payRateType.replace('_', ' ')}` : ''}
+                </Descriptions.Item>
+                <Descriptions.Item label="Company">
+                  {selectedProject.createdBy?.fullName || 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Applicants">
+                  {selectedProject.totalApplications || 0}
+                </Descriptions.Item>
+                <Descriptions.Item label="Deadline">
+                  {selectedProject.deadline
+                    ? moment(selectedProject.deadline).format("MMMM DD, YYYY")
+                    : 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Posted">
+                  {selectedProject.createdAt
+                    ? moment(selectedProject.createdAt).format("MMMM DD, YYYY")
+                    : 'N/A'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Duration">
-                  {selectedApplication.projectId.estimatedDuration}
-                </Descriptions.Item>
-                <Descriptions.Item label="Max Annotators">
-                  {selectedApplication.projectId.maxAnnotators || 'Unlimited'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Current Applications">
-                  {selectedApplication.projectId.totalApplications}
-                </Descriptions.Item>
-                <Descriptions.Item label="Project Deadline">
-                  {moment(selectedApplication.projectId.deadline).format('MMMM DD, YYYY')}
-                </Descriptions.Item>
-                <Descriptions.Item label="Application Deadline">
-                  {moment(selectedApplication.projectId.applicationDeadline).format('MMMM DD, YYYY')}
+                  {selectedProject.estimatedDuration || 'N/A'}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
-            <Card>
-              <Descriptions title="Your Application" bordered column={2}>
-                <Descriptions.Item label="Applied Date">
-                  {moment(selectedApplication.appliedAt).format('MMMM DD, YYYY HH:mm')}
-                </Descriptions.Item>
-                <Descriptions.Item label="Status">
-                  <Tag color="orange">PENDING REVIEW</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Availability">
-                  {selectedApplication.availability.replace('_', ' ').toUpperCase()}
-                </Descriptions.Item>
-                <Descriptions.Item label="Proposed Rate">
-                  {selectedApplication.proposedRate 
-                    ? `${selectedApplication.projectId.payRateCurrency} ${selectedApplication.proposedRate}`
-                    : 'As Listed'
-                  }
-                </Descriptions.Item>
-                <Descriptions.Item label="Estimated Completion">
-                  {selectedApplication.estimatedCompletionTime || 'Not specified'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Cover Letter" span={2}>
-                  <div className="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
-                    {selectedApplication.coverLetter}
-                  </div>
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+            {selectedProject.userApplication && (
+              <Card>
+                <Descriptions title="Your Application" bordered column={2}>
+                  <Descriptions.Item label="Applied Date">
+                    {selectedProject.userApplication.appliedAt
+                      ? moment(selectedProject.userApplication.appliedAt).format("MMMM DD, YYYY HH:mm")
+                      : 'N/A'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag color="orange">
+                      {selectedProject.userApplication.status?.toUpperCase() || 'PENDING'}
+                    </Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Availability">
+                    {selectedProject.userApplication.availability
+                      ? selectedProject.userApplication.availability.replace('_', ' ').toUpperCase()
+                      : 'N/A'}
+                  </Descriptions.Item>
+                  {selectedProject.userApplication.coverLetter && (
+                    <Descriptions.Item label="Cover Letter" span={2}>
+                      <div className="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+                        {selectedProject.userApplication.coverLetter}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+                  {selectedProject.userApplication.reviewNotes && (
+                    <Descriptions.Item label="Review Notes" span={2}>
+                      <div className="bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
+                        {selectedProject.userApplication.reviewNotes}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
+            )}
 
-            {selectedApplication.projectId.requiredSkills?.length > 0 && (
+            {selectedProject.requiredSkills && selectedProject.requiredSkills.length > 0 && (
               <Card>
                 <div>
                   <strong className="mb-2 block">Required Skills:</strong>
                   <div className="flex flex-wrap gap-1">
-                    {selectedApplication.projectId.requiredSkills.map((skill, index) => (
-                      <Tag key={index} color="blue">{skill}</Tag>
+                    {selectedProject.requiredSkills.map((skill: string, index: number) => (
+                      <Tag key={index} color="blue">
+                        {skill}
+                      </Tag>
                     ))}
                   </div>
                 </div>
               </Card>
             )}
 
-            {selectedApplication.projectId.languageRequirements?.length > 0 && (
+            {selectedProject.languageRequirements && selectedProject.languageRequirements.length > 0 && (
               <Card>
                 <div>
                   <strong className="mb-2 block">Language Requirements:</strong>
                   <div className="flex flex-wrap gap-1">
-                    {selectedApplication.projectId.languageRequirements.map((lang, index) => (
-                      <Tag key={index} color="green">{lang}</Tag>
+                    {selectedProject.languageRequirements.map((lang: string, index: number) => (
+                      <Tag key={index} color="green">
+                        {lang}
+                      </Tag>
                     ))}
                   </div>
                 </div>
@@ -292,8 +325,9 @@ const PendingProjects = () => {
                 <strong>Application Status</strong>
               </div>
               <p className="text-blue-600 mt-1">
-                Your application is under review. You will receive an email notification 
-                once the admin has made a decision. This process typically takes 1-3 business days.
+                Your application is under review. You will receive an email
+                notification once the admin has made a decision. This process
+                typically takes 1-3 business days.
               </p>
             </div>
           </div>

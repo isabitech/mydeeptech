@@ -14,10 +14,10 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import { Invoice } from "../../../../types/invoice.types";
+import { PaidInvoice } from "../../../../hooks/Auth/User/Invoices/paid-invoice-type";
 
 interface PaidProps {
-  invoices: Invoice[];
+  invoices: PaidInvoice[];
   loading: boolean;
   onRefresh: () => void;
 }
@@ -26,7 +26,7 @@ const Paid: React.FC<PaidProps> = ({
   invoices,
   loading,
 }) => {
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<PaidInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const getProjectName = (projectId: any): string => {
@@ -34,7 +34,7 @@ const Paid: React.FC<PaidProps> = ({
     return projectId?.projectName || "Unknown Project";
   };
 
-  const columns: ColumnsType<Invoice> = [
+  const columns: ColumnsType<PaidInvoice> = [
     {
       title: "S/N",
       key: "index",

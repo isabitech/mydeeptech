@@ -1,15 +1,37 @@
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, message } from "antd";
+import { useResetPassword } from "../../../../hooks/Auth/User/useResetPassword";
 
 const Reset = () => {
+  const [form] = Form.useForm();
+  const { resetPassword, loading, error } = useResetPassword();
+
+  const handleSubmit = async (values: any) => {
+    try {
+      const result = await resetPassword({
+        currentPassword: values.oldPassword,
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword,
+      });
+
+      if (result.success) {
+        message.success("Password reset successfully!");
+        form.resetFields();
+      } else {
+        message.error(result.error || "Failed to reset password");
+      }
+    } catch (error) {
+      message.error("An unexpected error occurred");
+    }
+  };
   return (
     <div className=" flex flex-col gap-4">
       <p>Reset Password</p>
 
-      <Form>
+      <Form form={form} onFinish={handleSubmit}>
         <Form.Item
-          name="password"
+          name="oldPassword"
           rules={[
-            { required: true, message: "Please enter your password!" },
+            { required: true, message: "Please enter your current password!" },
             { min: 6, message: "Password must be at least 6 characters!" },
           ]}
         >
@@ -20,10 +42,17 @@ const Reset = () => {
         </Form.Item>
 
         <Form.Item
-          name="password"
+          name="newPassword"
           rules={[
-            { required: true, message: "Please enter your password!" },
+            { required: true, message: "Please enter your new password!" },
             { min: 6, message: "Password must be at least 6 characters!" },
+            {
+              pattern: new RegExp(
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{6,})/
+              ),
+              message:
+                "Password must contain at least one lowercase letter, uppercase letter, number, and special character",
+            },
           ]}
         >
           <Input.Password
@@ -34,26 +63,19 @@ const Reset = () => {
 
         <Form.Item
           hasFeedback
-          name={"confirmpassword"}
+          name="confirmPassword"
           rules={[
             {
               required: true,
               message: "Confirm password must match password",
             },
             {
-              min: 8,
-              message: "Password must have a minimum length of 8",
-            },
-            {
-              pattern: new RegExp(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{6,})/
-              ),
-              message:
-                "Password must contain at least one lowercase letter, uppercase letter, number, and special character",
+              min: 6,
+              message: "Password must have a minimum length of 6",
             },
             ({ getFieldValue }) => ({
               validator(_, value) {
-                if (!value || getFieldValue("password") === value) {
+                if (!value || getFieldValue("newPassword") === value) {
                   return Promise.resolve();
                 }
                 return Promise.reject(
@@ -70,13 +92,20 @@ const Reset = () => {
         </Form.Item>
 
         <Button
-          className="  !font-[gilroy-regular] !text-white  bg-secondary  !h-12 !mt-4"
+          className="!font-[gilroy-regular] !text-white bg-secondary !h-12 !mt-4"
           type="primary"
           htmlType="submit"
+          loading={loading}
         >
-          Reset
+          Reset Password
         </Button>
       </Form>
+
+      {error && (
+        <div className="text-red-500 text-sm mt-2">
+          {error}
+        </div>
+      )}
     </div>
   );
 };

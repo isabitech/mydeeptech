@@ -7,7 +7,7 @@ export const endpoints = {
   authDT: {
     createDTUser: "/auth/createDTuser",
     getDTUser: "/auth/allDTusers",
-    submitResult: "/DTusertosubmitresult",
+    submitResult: "/auth/submit-result",
     verifyEmail: "/auth/verifyDTusermail",
     setUpPassword: "/auth/setupPassword",
     loginDTUser: "/auth/dtUserLogin",
@@ -17,6 +17,8 @@ export const endpoints = {
   profileDT:{
     getProfile: "/auth/dtUserProfile",
     updateProfile: "/auth/dtUserProfile",
+    uploadResume: "/auth/upload-resume",
+    uploadIdDocument: "/auth/upload-id-document",
   },
 
   userStatus: {

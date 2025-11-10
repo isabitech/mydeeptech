@@ -40,6 +40,7 @@ import VerifyEmail from "./pages/Auth/VerifyEmail";
 import SignupPage from "./pages/Auth/SignupPage";
 import AdminSignup from "./pages/Auth/Admin/AdminSignup";
 import AdminLogin from "./pages/Auth/Admin/AdminLogin";
+import InvoiceManagement from "./pages/Dashboard/Admin/invoicemgt/InvoiceManagement";
 
 const AppRoutes = () => {
   return (
@@ -93,7 +94,9 @@ const AppRoutes = () => {
             <Route path="applications" element={<ApplicationManagement />} />
             <Route path="jobs" element={<JobManagement />} />
             <Route path="tasks" element={<TaskManagement />} />
+            <Route path="invoices" element={<InvoiceManagement />} />
             <Route path="payments" element={<PaymentManagement />} />
+            
             <Route path="settings" element={<SettingsMgt />} />
           </Route>
 

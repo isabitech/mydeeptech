@@ -22,61 +22,45 @@ import {
 import moment from "moment";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
 import { retrieveUserInfoFromStorage } from "../../../../helpers";
-import { Application } from "../../../../types/project.types";
+import { Project } from "../../../../hooks/Auth/User/Projects/project-status-type";
 
 const ActiveProjects = () => {
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
   const {
-    getApplicationsByStatus,
     loading,
     error,
-    applications,
+    projects,
     userStats,
     resetState,
+    getActiveProjects,
   } = useUserProjects();
 
-  // Use applications directly since getApplicationsByStatus filters server-side
-  const activeProjects = applications;
-
-  // Legacy projects for backward compatibility
-  const legacyProjects = [
-    {
-      title: "Annotator Assessment",
-      description: "This project involves evaluating LLM responses",
-      rate: " up to $25",
-      projectLink: "https://talent.micro1.ai",
-    },
-    {
-      title: "English Language Proficiency",
-      description: "Take English Language Proficiency test",
-      rate: "up to $10",
-      projectLink: "https://jobs.e2f.io/",
-    },
-  ];
+  // Filter projects that have active applications
+  const activeProjects: Project[] = (projects as unknown as Project[]).filter(project => 
+    project.userApplication && project.userApplication.status === 'approved'
+  );
 
   useEffect(() => {
-    loadUserAndFetchProjects();
-  }, []);
-
-  const loadUserAndFetchProjects = async () => {
-    try {
-      const userInfo = await retrieveUserInfoFromStorage();
-      if (userInfo && userInfo._id) {
-        await getApplicationsByStatus('approved');
+    const fetchActiveProjects = async () => {
+      try {
+        await getActiveProjects({ limit: 50, page: 1 });
+      } catch (error) {
+        console.error('Failed to fetch active projects:', error);
       }
-    } catch (err) {
-      console.error("Failed to load user info:", err);
-    }
-  };
+    };
+
+    fetchActiveProjects();
+  }, [getActiveProjects]);
 
   const handleRefresh = () => {
-    getApplicationsByStatus('approved');
+    console.log("Refreshing active projects...");
+    getActiveProjects({ limit: 50, page: 1 });
   };
 
-  const showApplicationDetails = (application: Application) => {
-    setSelectedApplication(application);
+  const showProjectDetails = (project: Project) => {
+    setSelectedProject(project);
     setIsDetailModalVisible(true);
   };
 
@@ -156,28 +140,25 @@ const ActiveProjects = () => {
       </div>
 
       <Spin spinning={loading}>
-        {activeProjects.length === 0 && legacyProjects.length === 0 ? (
+        {activeProjects.length === 0 ? (
           <Empty description="No active projects" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* API-based Active Projects */}
-            {activeProjects.map((application) => {
-              const project = typeof application.projectId === 'object' ? application.projectId : null;
-              if (!project) return null;
-
-              const progress = application.workStartedAt 
-                ? calculateProgress(application.workStartedAt, project.deadline)
+            {activeProjects.map((project) => {
+              const progress = project.userApplication?.appliedAt 
+                ? calculateProgress(project.userApplication.appliedAt, project.deadline)
                 : 0;
 
               return (
                 <Card
-                  key={application._id}
+                  key={project._id}
                   className="project-card hover:shadow-lg transition-shadow"
                   actions={[
                     <Button
                       type="text"
                       icon={<EyeOutlined />}
-                      onClick={() => showApplicationDetails(application)}
+                      onClick={() => showProjectDetails(project)}
                     >
                       View Details
                     </Button>,
@@ -223,58 +204,18 @@ const ActiveProjects = () => {
                     </div>
 
                     <div className="text-gray-500 text-sm">
-                      <CalendarOutlined /> Due: {moment(project.deadline).format('MMM DD, YYYY')}
+                      <CalendarOutlined /> Due: {project.deadline ? moment(project.deadline).format('MMM DD, YYYY') : 'N/A'}
                     </div>
 
-                    {application.approvedAt && (
+                    {project.userApplication?.appliedAt && (
                       <div className="text-gray-500 text-sm">
-                        Started: {moment(application.approvedAt).format('MMM DD, YYYY')}
+                        Started: {moment(project.userApplication.appliedAt).format('MMM DD, YYYY')}
                       </div>
                     )}
                   </div>
                 </Card>
               );
             })}
-
-            {/* Legacy Projects for Assessment */}
-            {legacyProjects.map((project, index) => (
-              <Card
-                key={`legacy-${index}`}
-                className="project-card hover:shadow-lg transition-shadow"
-                actions={[
-                  <a
-                    href={project.projectLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button
-                      type="primary"
-                      icon={<ArrowRightOutlined />}
-                      className="!bg-secondary !border-secondary"
-                    >
-                      Take Test
-                    </Button>
-                  </a>,
-                ]}
-              >
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold mb-2">{project.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3">{project.description}</p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Tag color="orange">
-                      <ClockCircleOutlined /> ASSESSMENT
-                    </Tag>
-                  </div>
-
-                  <div className="font-bold text-green-600">
-                    <DollarOutlined /> {project.rate}/hr
-                  </div>
-                </div>
-              </Card>
-            ))}
           </div>
         )}
       </Spin>
@@ -291,34 +232,34 @@ const ActiveProjects = () => {
         ]}
         width={800}
       >
-        {selectedApplication && typeof selectedApplication.projectId === 'object' && (
+        {selectedProject && (
           <div className="space-y-4">
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-2">
-                {selectedApplication.projectId.projectName}
+                {selectedProject.projectName}
               </h3>
               <div className="flex gap-2">
                 <Tag color="green">
                   <CheckCircleOutlined /> ACTIVE
                 </Tag>
-                <Tag color="blue">{selectedApplication.projectId.projectCategory}</Tag>
-                <Tag color="purple">{selectedApplication.projectId.difficultyLevel}</Tag>
+                <Tag color="blue">{selectedProject.projectCategory}</Tag>
+                <Tag color="purple">{selectedProject.difficultyLevel}</Tag>
               </div>
             </div>
 
             <Card>
               <Descriptions title="Project Information" bordered column={2}>
                 <Descriptions.Item label="Description" span={2}>
-                  {selectedApplication.projectId.projectDescription}
+                  {selectedProject.projectDescription}
                 </Descriptions.Item>
                 <Descriptions.Item label="Pay Rate">
-                  {selectedApplication.projectId.payRateCurrency} {selectedApplication.projectId.payRate} per {selectedApplication.projectId.payRateType.replace('_', ' ')}
+                  {selectedProject.payRateCurrency} {selectedProject.payRate} per {selectedProject.payRateType.replace('_', ' ')}
                 </Descriptions.Item>
                 <Descriptions.Item label="Duration">
-                  {selectedApplication.projectId.estimatedDuration}
+                  {selectedProject.estimatedDuration || 'N/A'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Deadline">
-                  {moment(selectedApplication.projectId.deadline).format('MMMM DD, YYYY')}
+                  {selectedProject.deadline ? moment(selectedProject.deadline).format('MMMM DD, YYYY') : 'N/A'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
                   <Tag color="green">ACTIVE</Tag>
@@ -326,37 +267,35 @@ const ActiveProjects = () => {
               </Descriptions>
             </Card>
 
-            <Card>
-              <Descriptions title="Your Application" bordered column={2}>
-                <Descriptions.Item label="Applied Date">
-                  {moment(selectedApplication.appliedAt).format('MMMM DD, YYYY')}
-                </Descriptions.Item>
-                <Descriptions.Item label="Approved Date">
-                  {selectedApplication.approvedAt 
-                    ? moment(selectedApplication.approvedAt).format('MMMM DD, YYYY')
-                    : 'N/A'
-                  }
-                </Descriptions.Item>
-                <Descriptions.Item label="Availability">
-                  {selectedApplication.availability.replace('_', ' ').toUpperCase()}
-                </Descriptions.Item>
-                <Descriptions.Item label="Proposed Rate">
-                  {selectedApplication.proposedRate || 'As Listed'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Cover Letter" span={2}>
-                  <div className="bg-gray-50 p-3 rounded">
-                    {selectedApplication.coverLetter}
-                  </div>
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+            {selectedProject.userApplication && (
+              <Card>
+                <Descriptions title="Your Application" bordered column={2}>
+                  <Descriptions.Item label="Applied Date">
+                    {selectedProject.userApplication.appliedAt ? moment(selectedProject.userApplication.appliedAt).format('MMMM DD, YYYY') : 'N/A'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Status">
+                    <Tag color="green">{selectedProject.userApplication.status?.toUpperCase() || 'APPROVED'}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Availability">
+                    {selectedProject.userApplication.availability ? selectedProject.userApplication.availability.replace('_', ' ').toUpperCase() : 'N/A'}
+                  </Descriptions.Item>
+                  {selectedProject.userApplication.coverLetter && (
+                    <Descriptions.Item label="Cover Letter" span={2}>
+                      <div className="bg-gray-50 p-3 rounded">
+                        {selectedProject.userApplication.coverLetter}
+                      </div>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
+            )}
 
-            {selectedApplication.reviewNotes && (
+            {selectedProject.userApplication?.reviewNotes && (
               <Card>
                 <Descriptions title="Review Notes" bordered>
                   <Descriptions.Item label="Admin Notes">
                     <div className="bg-gray-50 p-3 rounded">
-                      {selectedApplication.reviewNotes}
+                      {selectedProject.userApplication.reviewNotes}
                     </div>
                   </Descriptions.Item>
                 </Descriptions>

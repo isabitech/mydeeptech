@@ -42,24 +42,32 @@ const AdminSidebar = () => {
       icon: <UserOutlined />,
       path: "/annotators",
     },
-    {
-      key: "jobs",
-      label: "Jobs",
-      icon: <InboxOutlined />,
-      path: "/jobs",
-    },
-    {
-      key: "tasks",
-      label: "Tasks",
-      icon: <UnorderedListOutlined />,
-      path: "/tasks",
-    },
+    // {
+    //   key: "jobs",
+    //   label: "Jobs",
+    //   icon: <InboxOutlined />,
+    //   path: "/jobs",
+    // },
+    // {
+    //   key: "tasks",
+    //   label: "Tasks",
+    //   icon: <UnorderedListOutlined />,
+    //   path: "/tasks",
+    // },
     {
       key: "payment",
       label: "Payment",
       icon: <WalletOutlined />,
       path: "/payments",
     },
+
+    {
+      key: "invoice",
+      label: "Invoice",
+      icon: <WalletOutlined />,
+      path: "/invoices",
+    },
+
     {
       key: "users",
       label: "Users",

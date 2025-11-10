@@ -14,6 +14,10 @@ import {
   ApplicationResponse,
   HookOperationResult,
 } from "../../../../types/project.types";
+import {
+  Project as ProjectWithStatus,
+  ProjectStatusResponse,
+} from "./project-status-type";
 
 export type ProjectView = "available" | "applied" | "all";
 export type ApplicationStatus = "approved" | "rejected" | "pending";
@@ -166,9 +170,10 @@ export const useUserProjects = () => {
         );
 
         if (data.success) {
-          setApplications(data.data.applications || []);
+          // Updated to handle the new project-based response structure
+          setProjects(data.data.projects || []);
           setPagination(data.data.pagination);
-          setUserStats(data.data.userStats);
+          setUserStats(data.data.userInfo);
           return { success: true, data };
         } else {
           const errorMessage =

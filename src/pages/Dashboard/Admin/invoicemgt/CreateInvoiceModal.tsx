@@ -14,24 +14,16 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
+import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
+import { useAdminApplications } from "../../../../hooks/Auth/Admin/Projects/useAdminApplications";
+import { useAdminDTUsers } from "../../../../hooks/Auth/Admin/useAdminDTUsers";
 import {
   CreateInvoiceForm,
 } from "../../../../types/invoice.types";
+import { Project, DTUser, Application } from "../../../../types/project.types";
 
 const { Option } = Select;
 const { TextArea } = Input;
-
-interface Project {
-  _id: string;
-  projectName: string;
-  projectCategory: string;
-}
-
-interface DTUser {
-  _id: string;
-  fullName: string;
-  email: string;
-}
 
 interface CreateInvoiceModalProps {
   open: boolean;
@@ -46,11 +38,16 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const { createInvoice, loading } = useAdminInvoices();
+  const { getAllProjects } = useAdminProjects();
+  const { getAllApplications } = useAdminApplications();
+  const { getAllDTUsers } = useAdminDTUsers();
+  
   const [projects, setProjects] = useState<Project[]>([]);
   const [dtUsers, setDtUsers] = useState<DTUser[]>([]);
+  const [projectDTUsers, setProjectDTUsers] = useState<DTUser[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
-  // Mock data - replace with actual API calls
   useEffect(() => {
     if (open) {
       loadInitialData();
@@ -60,22 +57,75 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const loadInitialData = async () => {
     setLoadingData(true);
     try {
-      // TODO: Replace with actual API calls to get projects and DTUsers
-      // For now using mock data
-      setProjects([
-        { _id: "1", projectName: "Sentiment Analysis Project", projectCategory: "Text Annotation" },
-        { _id: "2", projectName: "Image Classification", projectCategory: "Computer Vision" },
+      // Load all projects and DTUsers
+      const [projectsResult, dtUsersResult] = await Promise.all([
+        getAllProjects({ status: "active" }),
+        getAllDTUsers(),
       ]);
-      
-      setDtUsers([
-        { _id: "1", fullName: "John Doe", email: "john@example.com" },
-        { _id: "2", fullName: "Jane Smith", email: "jane@example.com" },
-      ]);
+
+      if (projectsResult.success) {
+        setProjects(projectsResult.data.data.projects);
+      }
+
+      console.log(dtUsersResult.data)
+
+      if (dtUsersResult.success) {
+        // Ensure dtUsers is always an array
+        const usersData = dtUsersResult.data.users;
+        setDtUsers( usersData || []);
+      }
     } catch (error) {
       message.error("Failed to load data");
+      console.error("Error loading data:", error);
     } finally {
       setLoadingData(false);
     }
+  };
+
+  const handleProjectChange = async (projectId: string) => {
+    setSelectedProjectId(projectId);
+    setProjectDTUsers([]);
+    
+    try {
+      // Get approved applications for this project to find assigned DTUsers
+      const applicationsResult = await getAllApplications({
+        projectId,
+        status: "approved",
+      });
+
+      if (applicationsResult.success) {
+        const applications = applicationsResult.data.data.applications;
+        
+        // Extract unique DTUsers from approved applications
+        const assignedDTUserIds = applications
+          .map((app: Application) => {
+            // Handle both cases where applicantId might be a string or DTUser object
+            if (typeof app.applicantId === 'string') {
+              return app.applicantId;
+            } else {
+              return app.applicantId._id;
+            }
+          })
+          .filter((id: string) => id);
+
+        // Filter DTUsers to show only those assigned to this project
+        const assignedDTUsers = Array.isArray(dtUsers) ? dtUsers.filter(user => 
+          assignedDTUserIds.includes(user._id)
+        ) : [];
+        
+        setProjectDTUsers(assignedDTUsers);
+      }
+    } catch (error) {
+      console.error("Error loading project DTUsers:", error);
+      message.error("Failed to load project users");
+    }
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    setSelectedProjectId(null);
+    setProjectDTUsers([]);
+    onClose();
   };
 
   const handleSubmit = async (values: any) => {
@@ -100,18 +150,17 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       const result = await createInvoice(invoiceData);
       if (result.success) {
         form.resetFields();
+        setSelectedProjectId(null);
+        setProjectDTUsers([]);
+        message.success("Invoice created successfully!");
         onSuccess();
       } else {
         message.error(result.error || "Failed to create invoice");
       }
     } catch (error) {
+      console.error("Error creating invoice:", error);
       message.error("Failed to create invoice");
     }
-  };
-
-  const handleCancel = () => {
-    form.resetFields();
-    onClose();
   };
 
   return (
@@ -152,10 +201,17 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                 label="Project"
                 rules={[{ required: true, message: "Please select a project" }]}
               >
-                <Select placeholder="Select project">
-                  {projects.map((project: any) => (
-                    <Option key={project._id} value={project._id}>
-                      {project.projectName}
+                <Select 
+                  placeholder="Select project"
+                  onChange={handleProjectChange}
+                  showSearch
+                  filterOption={(input, option) =>
+                    String(option?.label || '').toLowerCase().includes(input.toLowerCase())
+                  }
+                >
+                  {projects.map((project) => (
+                    <Option key={project._id} value={project._id} label={`${project.projectName} (${project.projectCategory})`}>
+                      {project.projectName} ({project.projectCategory})
                     </Option>
                   ))}
                 </Select>
@@ -167,9 +223,21 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                 label="DTUser"
                 rules={[{ required: true, message: "Please select a DTUser" }]}
               >
-                <Select placeholder="Select DTUser">
-                  {dtUsers.map((user: any) => (
-                    <Option key={user._id} value={user._id}>
+                <Select 
+                  placeholder={selectedProjectId ? "Select DTUser assigned to this project" : "Please select a project first"}
+                  disabled={!selectedProjectId || projectDTUsers.length === 0}
+                  showSearch
+                  filterOption={(input, option) =>
+                    String(option?.label || '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  notFoundContent={
+                    selectedProjectId && projectDTUsers.length === 0 
+                      ? "No DTUsers assigned to this project" 
+                      : "No DTUsers found"
+                  }
+                >
+                  {projectDTUsers.map((user) => (
+                    <Option key={user._id} value={user._id} label={`${user.fullName} (${user.email})`}>
                       {user.fullName} ({user.email})
                     </Option>
                   ))}
