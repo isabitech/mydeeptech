@@ -1,5 +1,5 @@
-import { Button, Form, Input, Select, Tag, Divider, Card, Upload } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Button, Form, Input, Select, Tag, Divider, Card, Upload, Space } from "antd";
+import { UploadOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import Header from "../Header";
 import { useState, useEffect } from "react";
 import { useGetProfile } from "../../../../hooks/useGetProfile";
@@ -9,6 +9,8 @@ import { retrieveUserInfoFromStorage } from "../../../../helpers";
 import { notification } from "antd";
 import { africanCountries } from "../../../../utils/africanCountries";
 import { getTimezoneByCountry, getTimezoneDisplayName } from "../../../../utils/countryTimezoneMapping";
+import { baseURL, endpoints } from "../../../../store/api/endpoints";
+import { useUploadFile } from "../../../../hooks/useUploadFile";
 
 const Profile = () => {
   const [isEditable, setIsEditable] = useState(false);
@@ -20,6 +22,7 @@ const Profile = () => {
   const { userInfo, setUserInfo } = useUserContext();
   const { getProfile, loading, error, profile } = useGetProfile();
   const { updateProfile, loading: updateLoading, error: updateError } = useUpdateProfile();
+  const { uploadFile, uploading } = useUploadFile();
 
   // Load user from storage (if not already in context)
   useEffect(() => {
@@ -175,10 +178,31 @@ useEffect(() => {
         });
         setIsEditable(false);
         
-        // Optionally refresh the profile data
+        // Refresh the profile data to update UI with latest changes
         const refreshResult = await getProfile(userId);
         if (refreshResult.success) {
           console.log("✅ Profile refreshed after update");
+          // Update form with fresh data
+          form.setFieldsValue({
+            fullName: refreshResult.data?.personalInfo?.fullName,
+            phoneNumber: refreshResult.data?.personalInfo?.phoneNumber,
+            country: refreshResult.data?.personalInfo?.country,
+            timeZone: refreshResult.data?.personalInfo?.timeZone,
+            availableHoursPerWeek: refreshResult.data?.personalInfo?.availableHoursPerWeek,
+            preferredCommunicationChannel: refreshResult.data?.personalInfo?.preferredCommunicationChannel,
+            accountName: refreshResult.data?.paymentInfo?.accountName,
+            accountNumber: refreshResult.data?.paymentInfo?.accountNumber,
+            bankName: refreshResult.data?.paymentInfo?.bankName,
+            paymentMethod: refreshResult.data?.paymentInfo?.paymentMethod,
+            educationField: refreshResult.data?.professionalBackground?.educationField,
+            yearsOfExperience: refreshResult.data?.professionalBackground?.yearsOfExperience,
+            annotationSkills: refreshResult.data?.annotationSkills || [],
+            toolExperience: refreshResult.data?.toolExperience || [],
+            primaryLanguage: refreshResult.data?.languageProficiency?.primaryLanguage,
+            englishFluencyLevel: refreshResult.data?.languageProficiency?.englishFluencyLevel,
+            resumeUrl: refreshResult.data?.attachments?.resumeUrl,
+            idDocumentUrl: refreshResult.data?.attachments?.idDocumentUrl,
+          });
         }
       } else {
         notification.error({
@@ -223,6 +247,97 @@ useEffect(() => {
       });
     }
     setIsEditable(false);
+  };
+
+  const handleResumeUpload = async (file: File) => {
+    if (file.size / 1024 / 1024 > 5) {
+      notification.error({ 
+        message: "File too large", 
+        description: "Resume must be less than 5MB." 
+      });
+      return false;
+    }
+
+    try {
+      const result = await uploadFile(file, endpoints.profileDT.uploadResume);
+      if (result.success) {
+        form.setFieldsValue({ resumeUrl: result.url });
+        notification.success({ 
+          message: "Resume uploaded", 
+          description: "Resume uploaded successfully." 
+        });
+        // Refresh profile to update UI
+        if (userId) {
+          await getProfile(userId);
+        }
+      } else {
+        notification.error({ 
+          message: "Upload failed", 
+          description: result.error || "Failed to upload resume"
+        });
+      }
+    } catch (error) {
+      notification.error({ 
+        message: "Upload failed", 
+        description: "An unexpected error occurred while uploading"
+      });
+    }
+    return false;
+  };
+
+  const handleIdDocumentUpload = async (file: File) => {
+    if (file.size / 1024 / 1024 > 5) {
+      notification.error({ 
+        message: "File too large", 
+        description: "ID document must be less than 5MB." 
+      });
+      return false;
+    }
+
+    try {
+      const result = await uploadFile(file, endpoints.profileDT.uploadIdDocument);
+      if (result.success) {
+        form.setFieldsValue({ idDocumentUrl: result.url });
+        notification.success({ 
+          message: "ID document uploaded", 
+          description: "ID document uploaded successfully." 
+        });
+        // Refresh profile to update UI
+        if (userId) {
+          await getProfile(userId);
+        }
+      } else {
+        notification.error({ 
+          message: "Upload failed", 
+          description: result.error || "Failed to upload ID document"
+        });
+      }
+    } catch (error) {
+      notification.error({ 
+        message: "Upload failed", 
+        description: "An unexpected error occurred while uploading"
+      });
+    }
+    return false;
+  };
+
+  const handleViewDocument = (url: string, type: string) => {
+    if (url) {
+      window.open(url, '_blank');
+    } else {
+      notification.warning({
+        message: "No Document",
+        description: `No ${type} has been uploaded yet.`
+      });
+    }
+  };
+
+  const handleRemoveDocument = (fieldName: string, documentType: string) => {
+    form.setFieldsValue({ [fieldName]: '' });
+    notification.success({
+      message: "Document Removed",
+      description: `${documentType} has been removed. Remember to save your changes.`
+    });
   };
 
   if (!userLoaded || loading) {
@@ -505,60 +620,124 @@ useEffect(() => {
                 <div className="mt-6">
                   <h4 className="font-semibold mb-4">Document Attachments</h4>
                   
+
                   <Form.Item label="Resume/CV" name="resumeUrl">
-                    <Input
-                      disabled={!isEditable}
-                      className="!font-[gilroy-regular]"
-                      placeholder="Enter resume/CV URL or upload link"
-                      addonAfter={
-                        isEditable && (
-                          <Upload
-                            showUploadList={false}
-                            beforeUpload={() => false} // Prevent auto upload
-                            onChange={(info) => {
-                              // Handle file selection - you can implement upload logic here
-                              console.log('Resume file selected:', info.file.name);
-                            }}
+                    <div className="flex gap-2">
+                      <Input
+                        disabled={!isEditable}
+                        className="!font-[gilroy-regular] flex-1"
+                        placeholder={
+                          profile?.attachments?.resumeUrl 
+                            ? "Resume uploaded successfully" 
+                            : "No resume uploaded"
+                        }
+                        value={
+                          profile?.attachments?.resumeUrl 
+                            ? "Resume uploaded" 
+                            : ""
+                        }
+                      />
+                      {profile?.attachments?.resumeUrl && (
+                        <Space>
+                          <Button
+                            icon={<EyeOutlined />}
+                            size="small"
+                            onClick={() => handleViewDocument(profile.attachments.resumeUrl, "resume")}
+                            title="View Resume"
                           >
-                            <Button 
-                              icon={<UploadOutlined />} 
+                            View
+                          </Button>
+                          {isEditable && (
+                            <Button
+                              icon={<DeleteOutlined />}
                               size="small"
-                              disabled={!isEditable}
+                              danger
+                              onClick={() => handleRemoveDocument('resumeUrl', 'Resume')}
+                              title="Remove Resume"
                             >
-                              Upload
+                              Remove
                             </Button>
-                          </Upload>
-                        )
-                      }
-                    />
+                          )}
+                        </Space>
+                      )}
+                      {isEditable && (
+                        <Upload
+                          showUploadList={false}
+                          beforeUpload={handleResumeUpload}
+                          accept=".pdf,.doc,.docx"
+                        >
+                          <Button 
+                            icon={<UploadOutlined />} 
+                            size="small"
+                            disabled={!isEditable}
+                            loading={uploading}
+                            title={profile?.attachments?.resumeUrl ? "Change Resume" : "Upload Resume"}
+                          >
+                            {profile?.attachments?.resumeUrl ? "Change" : "Upload"}
+                          </Button>
+                        </Upload>
+                      )}
+                    </div>
                   </Form.Item>
 
+
                   <Form.Item label="ID Document" name="idDocumentUrl">
-                    <Input
-                      disabled={!isEditable}
-                      className="!font-[gilroy-regular]"
-                      placeholder="Enter ID document URL or upload link"
-                      addonAfter={
-                        isEditable && (
-                          <Upload
-                            showUploadList={false}
-                            beforeUpload={() => false} // Prevent auto upload
-                            onChange={(info) => {
-                              // Handle file selection - you can implement upload logic here
-                              console.log('ID document file selected:', info.file.name);
-                            }}
+                    <div className="flex gap-2">
+                      <Input
+                        disabled={!isEditable}
+                        className="!font-[gilroy-regular] flex-1"
+                        placeholder={
+                          profile?.attachments?.idDocumentUrl 
+                            ? "ID document uploaded successfully" 
+                            : "No ID document uploaded"
+                        }
+                        value={
+                          profile?.attachments?.idDocumentUrl 
+                            ? "ID document uploaded" 
+                            : ""
+                        }
+                      />
+                      {profile?.attachments?.idDocumentUrl && (
+                        <Space>
+                          <Button
+                            icon={<EyeOutlined />}
+                            size="small"
+                            onClick={() => handleViewDocument(profile.attachments.idDocumentUrl, "ID document")}
+                            title="View ID Document"
                           >
-                            <Button 
-                              icon={<UploadOutlined />} 
+                            View
+                          </Button>
+                          {isEditable && (
+                            <Button
+                              icon={<DeleteOutlined />}
                               size="small"
-                              disabled={!isEditable}
+                              danger
+                              onClick={() => handleRemoveDocument('idDocumentUrl', 'ID Document')}
+                              title="Remove ID Document"
                             >
-                              Upload
+                              Remove
                             </Button>
-                          </Upload>
-                        )
-                      }
-                    />
+                          )}
+                        </Space>
+                      )}
+                      {isEditable && (
+                        <Upload
+                          showUploadList={false}
+                          beforeUpload={handleIdDocumentUpload}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                        >
+                          <Button 
+                            icon={<UploadOutlined />} 
+                            size="small"
+                            disabled={!isEditable}
+                            loading={uploading}
+                            title={profile?.attachments?.idDocumentUrl ? "Change ID Document" : "Upload ID Document"}
+                          >
+                            {profile?.attachments?.idDocumentUrl ? "Change" : "Upload"}
+                          </Button>
+                        </Upload>
+                      )}
+                    </div>
                   </Form.Item>
                 </div>
               </Card>

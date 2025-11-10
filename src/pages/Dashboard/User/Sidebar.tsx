@@ -46,8 +46,8 @@ const Sidebar = () => {
     { key: "overview", label: "Overview", icon: <HomeOutlined />, path: "/dashboard/overview" },
     { key: "assessment", label: "Assessment", icon: <BookOutlined />, path: "/dashboard/assessment" },
     { key: "projects", label: "Projects", icon: <CodeSandboxOutlined />, path: "/dashboard/projects" },
-    { key: "jobs", label: "Jobs", icon: <InboxOutlined />, path: "/dashboard/jobs" },
-    { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
+    // { key: "jobs", label: "Jobs", icon: <InboxOutlined />, path: "/dashboard/jobs" },
+    // { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
     { key: "payment", label: "Payment", icon: <WalletOutlined />, path: "/dashboard/payment" },
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/dashboard/profile" },
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
@@ -63,9 +63,15 @@ const Sidebar = () => {
     const { annotatorStatus, microTaskerStatus } = userInfo;
     
     // If either status is pending, show only overview, assessment, and settings
-    if (annotatorStatus === "pending" || microTaskerStatus === "pending") {
+    if (annotatorStatus === "pending" && microTaskerStatus === "pending") {
       return menuItems.filter(item => 
         ["overview", "assessment", "settings"].includes(item.key)
+      );
+    }
+
+    if (annotatorStatus === "submitted" && microTaskerStatus === "pending") {
+      return menuItems.filter(item => 
+        ["overview", "settings"].includes(item.key)
       );
     }
     

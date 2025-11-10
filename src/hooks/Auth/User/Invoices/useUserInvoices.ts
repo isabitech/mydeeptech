@@ -11,11 +11,15 @@ import {
   PaginationInfo,
   HookOperationResult,
 } from "../../../../types/invoice.types";
+import { UnpaidInvoiceResponse, UnpaidInvoice } from "./invoice-type";
+import { PaidInvoiceResponse, PaidInvoice } from "./paid-invoice-type";
 
 export const useUserInvoices = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [unpaidInvoices, setUnpaidInvoices] = useState<UnpaidInvoice[]>([]);
+  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [summary, setSummary] = useState<InvoicesSummary | null>(null);
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -75,14 +79,27 @@ export const useUserInvoices = () => {
       if (filters?.startDate) queryParams.append("startDate", filters.startDate);
       if (filters?.endDate) queryParams.append("endDate", filters.endDate);
 
-      const response = await apiUtils.get<InvoicesResponse>(
+      const response = await apiUtils.get<UnpaidInvoiceResponse>(
         `/auth/invoices/unpaid?${queryParams.toString()}`
       );
 
       if (response.data.success && response.data.data) {
-        setInvoices(response.data.data.invoices);
-        setPagination(response.data.data.pagination);
-        setSummary(response.data.data.summary);
+        setUnpaidInvoices(response.data.data.unpaidInvoices);
+        // Convert pagination data to match PaginationInfo structure
+        setPagination({
+          currentPage: response.data.data.pagination.currentPage,
+          totalPages: response.data.data.pagination.totalPages,
+          totalInvoices: response.data.data.pagination.totalUnpaidInvoices, // Map to expected field
+          invoicesPerPage: response.data.data.pagination.invoicesPerPage
+        });
+        // Convert summary data to match InvoicesSummary structure
+        setSummary({
+          totalAmount: response.data.data.summary.totalAmountDue,
+          paidAmount: 0, // Not available in unpaid summary
+          unpaidAmount: response.data.data.summary.totalAmountDue,
+          totalInvoices: response.data.data.summary.unpaidCount,
+          overdueAmount: response.data.data.summary.overdueAmount
+        });
       }
 
       return response.data;
@@ -98,14 +115,27 @@ export const useUserInvoices = () => {
       if (filters?.startDate) queryParams.append("startDate", filters.startDate);
       if (filters?.endDate) queryParams.append("endDate", filters.endDate);
 
-      const response = await apiUtils.get<InvoicesResponse>(
+      const response = await apiUtils.get<PaidInvoiceResponse>(
         `/auth/invoices/paid?${queryParams.toString()}`
       );
 
       if (response.data.success && response.data.data) {
-        setInvoices(response.data.data.invoices);
-        setPagination(response.data.data.pagination);
-        setSummary(response.data.data.summary);
+        setPaidInvoices(response.data.data.paidInvoices);
+        // Convert pagination data to match PaginationInfo structure
+        setPagination({
+          currentPage: response.data.data.pagination.currentPage,
+          totalPages: response.data.data.pagination.totalPages,
+          totalInvoices: response.data.data.pagination.totalPaidInvoices, // Map to expected field
+          invoicesPerPage: response.data.data.pagination.invoicesPerPage
+        });
+        // Convert summary data to match InvoicesSummary structure
+        setSummary({
+          totalAmount: response.data.data.summary.totalEarnings,
+          paidAmount: response.data.data.summary.totalEarnings,
+          unpaidAmount: 0, // Not available in paid summary
+          totalInvoices: response.data.data.summary.paidCount,
+          overdueAmount: 0 // Not relevant for paid invoices
+        });
       }
 
       return response.data;
@@ -141,6 +171,8 @@ export const useUserInvoices = () => {
     loading,
     error,
     invoices,
+    unpaidInvoices,
+    paidInvoices,
     pagination,
     summary,
     dashboardData,

@@ -35,6 +35,7 @@ import {
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import UpdatePaymentModal from "./UpdatePaymentModal";
 import InvoiceDetailsModal from "./InvoiceDetailsModal";
+import Header from "../../User/Header";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -295,8 +296,9 @@ const InvoiceManagement: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-6 font-[gilroy-regular]">
       {/* Header */}
+      <Header title="Invoicing" />
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Invoice Management</h1>

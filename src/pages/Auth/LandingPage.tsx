@@ -18,7 +18,6 @@ const LandingPage = () => {
     // Handle successful signup if needed
     console.log("Sign up successful");
     toast.success("Sign up successful! Please cheeck your email for verification.");
-    setIsSignUpModal(false);
   }
 
   return (

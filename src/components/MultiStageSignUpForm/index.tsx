@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
 import { useSignUpApi } from "../../hooks/Auth/useSignUp";
+import { useLocation } from "react-router-dom";
 
 type FormState = {
   fullName: string;
@@ -58,6 +59,9 @@ interface MultiStageSignUpFormProps {
 }
 
 export default function MultiStageSignUpForm({ onSuccess, className = "" }: MultiStageSignUpFormProps) {
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+  
   const [currentStage, setCurrentStage] = useState(1);
   const [form, setForm] = useState<FormState>({
     fullName: "",
@@ -374,7 +378,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
   }
 
   return (
-    <div className={`p-8 flex flex-col bg-[#333333] min-h-screen ${className}`}>
+    <div className={`p-8 flex flex-col bg-[#333333] ${isHomePage ? 'h-auto' : 'min-h-screen'} ${className}`}>
       {/* Progress Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">

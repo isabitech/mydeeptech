@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { endpoints } from "../../../../store/api/endpoints";
-import { apiGet, apiPost, getErrorMessage } from "../../../../service/apiUtils";
+import { apiGet, apiPatch, getErrorMessage } from "../../../../service/apiUtils";
 import {
   Application,
   ApplicationsResponse,
@@ -64,7 +64,7 @@ export const useAdminApplications = () => {
 
     try {
       const url = `${endpoints.adminProject.approveApplication}/${applicationId}/approve`;
-      const data: ApplicationResponse = await apiPost(url, approvalData);
+      const data: ApplicationResponse = await apiPatch(url, approvalData);
 
       if (data.success) {
         return { success: true, data: data.data };
@@ -91,7 +91,7 @@ export const useAdminApplications = () => {
 
     try {
       const url = `${endpoints.adminProject.rejectApplication}/${applicationId}/reject`;
-      const data: ApplicationResponse = await apiPost(url, rejectionData);
+      const data: ApplicationResponse = await apiPatch(url, rejectionData);
 
       if (data.success) {
         return { success: true, data: data.data };

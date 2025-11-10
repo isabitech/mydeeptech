@@ -13,10 +13,11 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import { Invoice } from "../../../../types/invoice.types";
+import {
+   UnpaidInvoice } from "../../../../hooks/Auth/User/Invoices/invoice-type";
 
 interface UnpaidProps {
-  invoices: Invoice[];
+  invoices: UnpaidInvoice[];
   loading: boolean;
   onRefresh: () => void;
 }
@@ -25,7 +26,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   invoices,
   loading,
 }) => {
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<UnpaidInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const getProjectName = (projectId: any): string => {
@@ -39,7 +40,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
     return now.isAfter(due) ? now.diff(due, "day") : 0;
   };
 
-  const columns: ColumnsType<Invoice> = [
+  const columns: ColumnsType<UnpaidInvoice> = [
     {
       title: "S/N",
       key: "index",
