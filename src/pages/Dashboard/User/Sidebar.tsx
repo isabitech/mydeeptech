@@ -74,6 +74,18 @@ const Sidebar = () => {
         ["overview", "settings"].includes(item.key)
       );
     }
+
+    if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
+      const filteredItems = [...menuItems];
+      // Remove items that are NOT overview or settings
+      for (let i = filteredItems.length - 1; i >= 0; i--) {
+        if (["assessment"].includes(filteredItems[i].key)) {
+          filteredItems.splice(i, 1);
+        }
+      }
+      return filteredItems;
+    }
+
     
 
     // Otherwise show all items

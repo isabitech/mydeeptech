@@ -79,8 +79,6 @@ const Payment = () => {
     message.success("Data refreshed");
     
   };
-
-  // Debug: Log dashboard data structure
   useEffect(() => {
     if (dashboardData) {
       console.log("Dashboard Data Structure:", dashboardData);
