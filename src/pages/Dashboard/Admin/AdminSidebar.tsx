@@ -68,12 +68,12 @@ const AdminSidebar = () => {
       path: "/invoices",
     },
 
-    {
-      key: "users",
-      label: "Users",
-      icon: <UserOutlined />,
-      path: "/users",
-    },
+    // {
+    //   key: "users",
+    //   label: "Users",
+    //   icon: <UserOutlined />,
+    //   path: "/users",
+    // },
     {
       key: "settings",
       label: "Settings",
@@ -128,7 +128,7 @@ const AdminSidebar = () => {
 
       {/* Footer (Optional) */}
       <div className="p-4 border-t border-gray-700 text-sm text-center">
-        © 2024 My Deep Tech
+        © {new Date().getFullYear()} My Deep Tech
       </div>
 
       <PageModal
