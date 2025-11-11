@@ -16,6 +16,9 @@ import {
   Alert,
   Spin,
   Descriptions,
+  Steps,
+  Dropdown,
+  Menu,
 } from "antd";
 import {
   PlusSquareOutlined,
@@ -23,8 +26,13 @@ import {
   DeleteOutlined,
   EyeOutlined,
   ReloadOutlined,
+  ExclamationCircleOutlined,
+  SafetyCertificateOutlined,
+  UserOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import Header from "../../User/Header";
+import ProjectAnnotators from "./ProjectAnnotators";
 import moment from "moment";
 import dayjs from "dayjs";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
@@ -43,6 +51,7 @@ import PageModal from "../../../../components/Modal/PageModal";
 const { Option } = Select;
 const { Search } = Input;
 const { TextArea } = Input;
+const { Step } = Steps;
 
 // Project categories for the new system
 const PROJECT_CATEGORIES: ProjectCategory[] = [
@@ -78,19 +87,30 @@ const PROJECT_STATUSES: ProjectStatus[] = ["active", "completed", "paused", "can
 const ProjectManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isAnnotatorsModalVisible, setIsAnnotatorsModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProjectForAnnotators, setSelectedProjectForAnnotators] = useState<Project | null>(null);
   const [form] = Form.useForm();
+  const [deletionForm] = Form.useForm();
   const [projectId, setProjectId] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+  
+  // Deletion states
+  const [isDeletionModalVisible, setIsDeletionModalVisible] = useState(false);
+  const [deletionStep, setDeletionStep] = useState(0);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
 
   const {
     createProject,
     getAllProjects,
     updateProject,
     deleteProject,
+    requestDeletionOtp,
+    verifyDeletionOtp,
     loading,
     error,
     projects,
@@ -183,18 +203,112 @@ const ProjectManagement: React.FC = () => {
     }
   };
 
-  // Delete Project
-  const handleDeleteProject = async (id: string) => {
-    const result = await deleteProject(id);
-    if (result.success) {
-      notification.success({ message: "Project deleted successfully!" });
-      fetchProjects(); // Refresh the list
+  // Smart Delete Project - checks if project has applications
+  const handleDeleteProject = async (project: Project) => {
+    setProjectToDelete(project);
+    
+    // If project has active applications, use OTP flow
+    if (project.totalApplications > 0) {
+      setDeletionStep(0);
+      setIsDeletionModalVisible(true);
     } else {
-      notification.error({
-        message: "Error Deleting Project",
-        description: result.error,
+      // Direct deletion for projects without applications
+      Modal.confirm({
+        title: 'Delete Project',
+        icon: <ExclamationCircleOutlined />,
+        content: `Are you sure you want to delete "${project.projectName}"? This action cannot be undone.`,
+        okText: 'Delete',
+        cancelText: 'Cancel',
+        okButtonProps: { danger: true },
+        onOk: async () => {
+          const result = await deleteProject(project._id);
+          if (result.success) {
+            notification.success({ message: "Project deleted successfully!" });
+            fetchProjects();
+          } else {
+            notification.error({
+              message: "Error Deleting Project",
+              description: result.error,
+            });
+          }
+        },
       });
     }
+  };
+
+  // Handle OTP Request for Deletion
+  const handleRequestDeletionOtp = async () => {
+    try {
+      const values = await deletionForm.validateFields(['reason']);
+      if (!projectToDelete) return;
+
+      const result = await requestDeletionOtp(projectToDelete._id, values.reason);
+      if (result.success) {
+        notification.success({ 
+          message: "OTP Sent", 
+          description: "A deletion OTP has been sent to projects@mydeeptech.ng"
+        });
+        setOtpSent(true);
+        setDeletionStep(1);
+      } else {
+        notification.error({
+          message: "Error Requesting OTP",
+          description: result.error,
+        });
+      }
+    } catch (error: any) {
+      notification.error({
+        message: "Error",
+        description: error.message || "Failed to request deletion OTP",
+      });
+    }
+  };
+
+  // Handle OTP Verification and Final Deletion
+  const handleVerifyDeletionOtp = async () => {
+    try {
+      const values = await deletionForm.validateFields(['otp', 'confirmationMessage']);
+      if (!projectToDelete) return;
+
+      const result = await verifyDeletionOtp(
+        projectToDelete._id, 
+        values.otp, 
+        values.confirmationMessage
+      );
+      
+      if (result.success) {
+        notification.success({ 
+          message: "Project Deleted Successfully", 
+          description: "The project has been permanently deleted."
+        });
+        setIsDeletionModalVisible(false);
+        resetDeletionState();
+        fetchProjects();
+      } else {
+        notification.error({
+          message: "Error Verifying OTP",
+          description: result.error,
+        });
+      }
+    } catch (error: any) {
+      notification.error({
+        message: "Error",
+        description: error.message || "Failed to verify deletion OTP",
+      });
+    }
+  };
+
+  // Reset deletion modal state
+  const resetDeletionState = () => {
+    setProjectToDelete(null);
+    setDeletionStep(0);
+    setOtpSent(false);
+    deletionForm.resetFields();
+  };
+
+  const handleCancelDeletion = () => {
+    setIsDeletionModalVisible(false);
+    resetDeletionState();
   };
 
   const handleCancel = () => {
@@ -237,6 +351,12 @@ const ProjectManagement: React.FC = () => {
   const showProjectDetails = (project: Project) => {
     setSelectedProject(project);
     setIsDetailModalVisible(true);
+  };
+
+  // Show project annotators
+  const showProjectAnnotators = (project: Project) => {
+    setSelectedProjectForAnnotators(project);
+    setIsAnnotatorsModalVisible(true);
   };
 
   // Table columns
@@ -295,7 +415,9 @@ const ProjectManagement: React.FC = () => {
       dataIndex: "totalApplications",
       key: "totalApplications",
       render: (total: number, record: Project) => (
-        <span>{total} / {record.maxAnnotators || "∞"}</span>
+        <div className="flex items-center gap-2">
+          <span>{total} / {record.maxAnnotators || "∞"}</span>
+        </div>
       ),
     },
     {
@@ -307,35 +429,80 @@ const ProjectManagement: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: Project) => (
-        <Space size="small">
-          <Button 
-            type="primary" 
-            icon={<EyeOutlined />}
-            onClick={() => showProjectDetails(record)}
-            size="small"
+      render: (_: any, record: Project) => {
+        const menuItems = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'View Details',
+            onClick: () => showProjectDetails(record),
+          },
+          {
+            key: 'annotators',
+            icon: <UserOutlined />,
+            label: 'View Annotators',
+            onClick: () => showProjectAnnotators(record),
+            disabled: record.totalApplications === 0,
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Edit Project',
+            onClick: () => showModal(record),
+          },
+          {
+            type: 'divider' as const,
+          },
+          {
+            key: 'delete',
+            icon: record.totalApplications > 0 ? <SafetyCertificateOutlined /> : <DeleteOutlined />,
+            label: (
+              <span style={{ color: '#ff4d4f' }}>
+                Delete Project
+                {record.totalApplications > 0 && (
+                  <Tag color="orange" style={{ marginLeft: 8, fontSize: '12px', padding: '2px 6px' }}>
+                    OTP Required
+                  </Tag>
+                )}
+              </span>
+            ),
+            onClick: () => {
+              Modal.confirm({
+                title: 'Delete Project',
+                icon: <ExclamationCircleOutlined />,
+                content: record.totalApplications > 0 
+                  ? `This project has ${record.totalApplications} active applications. OTP verification will be required.`
+                  : `Are you sure you want to delete "${record.projectName}"? This action cannot be undone.`,
+                okText: 'Delete',
+                cancelText: 'Cancel',
+                okButtonProps: { danger: true },
+                onOk: () => handleDeleteProject(record),
+              });
+            },
+            danger: true,
+          },
+        ];
+
+        return (
+          <Dropdown
+            menu={{
+              items: menuItems,
+            }}
+            trigger={['click']}
+            placement="bottomRight"
           >
-            View
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => showModal(record)}
-            size="small"
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Are you sure you want to delete this project?"
-            onConfirm={() => handleDeleteProject(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button danger icon={<DeleteOutlined />} size="small">
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
+              style={{ 
+                border: 'none',
+                boxShadow: 'none',
+                background: 'transparent'
+              }}
+            />
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -755,6 +922,162 @@ const ProjectManagement: React.FC = () => {
           </div>
         )}
       </PageModal>
+
+      {/* Project Deletion Modal with OTP */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <DeleteOutlined className="text-red-500" />
+            <span>Delete Project with Active Applications</span>
+          </div>
+        }
+        open={isDeletionModalVisible}
+        onCancel={handleCancelDeletion}
+        width={600}
+        footer={null}
+      >
+        <div className="space-y-6">
+          <Alert
+            message="Security Verification Required"
+            description="This project has active applications. An OTP will be sent to projects@mydeeptech.ng for verification."
+            type="warning"
+            showIcon
+            icon={<ExclamationCircleOutlined />}
+          />
+
+          {projectToDelete && (
+            <Card size="small" className="bg-gray-50">
+              <div className="space-y-2">
+                <div><strong>Project:</strong> {projectToDelete.projectName}</div>
+                <div><strong>Applications:</strong> {projectToDelete.totalApplications}</div>
+                <div><strong>Status:</strong> 
+                  <Tag color="blue" className="ml-1">{projectToDelete.status.toUpperCase()}</Tag>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          <Steps current={deletionStep} className="mb-6">
+            <Step 
+              title="Request OTP" 
+              description="Provide reason and request OTP"
+              icon={<ExclamationCircleOutlined />}
+            />
+            <Step 
+              title="Verify OTP" 
+              description="Enter OTP and confirm deletion"
+              icon={<SafetyCertificateOutlined />}
+            />
+          </Steps>
+
+          <Form form={deletionForm} layout="vertical">
+            {deletionStep === 0 && (
+              <div className="space-y-4">
+                <Form.Item
+                  name="reason"
+                  label="Deletion Reason"
+                  rules={[
+                    { required: true, message: "Please provide a reason for deletion!" },
+                    { min: 10, message: "Reason must be at least 10 characters!" }
+                  ]}
+                >
+                  <TextArea
+                    placeholder="Please provide a detailed reason for deleting this project..."
+                    rows={4}
+                    maxLength={500}
+                    showCount
+                  />
+                </Form.Item>
+                
+                <div className="flex justify-end gap-2">
+                  <Button onClick={handleCancelDeletion}>Cancel</Button>
+                  <Button 
+                    type="primary" 
+                    danger
+                    onClick={handleRequestDeletionOtp}
+                    loading={loading}
+                  >
+                    Request OTP
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {deletionStep === 1 && (
+              <div className="space-y-4">
+                {otpSent && (
+                  <Alert
+                    message="OTP Sent"
+                    description="An OTP has been sent to projects@mydeeptech.ng. Please check your email."
+                    type="success"
+                    showIcon
+                    className="mb-4"
+                  />
+                )}
+
+                <Form.Item
+                  name="otp"
+                  label="OTP Code"
+                  rules={[
+                    { required: true, message: "Please enter the OTP!" },
+                    { len: 6, message: "OTP must be 6 digits!" },
+                    { pattern: /^\d+$/, message: "OTP must contain only numbers!" }
+                  ]}
+                >
+                  <Input
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                    size="large"
+                    style={{ textAlign: 'center', fontSize: '18px', letterSpacing: '5px' }}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="confirmationMessage"
+                  label="Confirmation Message"
+                  rules={[
+                    { required: true, message: "Please enter confirmation message!" },
+                    { min: 5, message: "Confirmation must be at least 5 characters!" }
+                  ]}
+                >
+                  <Input
+                    placeholder="Type 'Confirmed deletion' or your confirmation message"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <div className="flex justify-between">
+                  <Button onClick={() => setDeletionStep(0)}>Back</Button>
+                  <div className="space-x-2">
+                    <Button onClick={handleCancelDeletion}>Cancel</Button>
+                    <Button 
+                      type="primary" 
+                      danger
+                      onClick={handleVerifyDeletionOtp}
+                      loading={loading}
+                    >
+                      Confirm Deletion
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Form>
+        </div>
+      </Modal>
+
+      {/* Project Annotators Modal */}
+      {selectedProjectForAnnotators && (
+        <ProjectAnnotators
+          projectId={selectedProjectForAnnotators._id}
+          projectName={selectedProjectForAnnotators.projectName}
+          visible={isAnnotatorsModalVisible}
+          onClose={() => {
+            setIsAnnotatorsModalVisible(false);
+            setSelectedProjectForAnnotators(null);
+          }}
+        />
+      )}
     </div>
   );
 };

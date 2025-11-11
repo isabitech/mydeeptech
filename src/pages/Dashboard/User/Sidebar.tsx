@@ -153,7 +153,7 @@ const Sidebar = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-700 text-sm text-center">
-          © 2024 My Deep Tech
+          © {new Date().getFullYear()} My Deep Tech
         </div>
 
         {/* Logout Modal */}

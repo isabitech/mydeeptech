@@ -21,6 +21,11 @@ export const endpoints = {
     uploadIdDocument: "/auth/upload-id-document",
   },
 
+  // DTUser dashboard endpoint
+  userDashboard: {
+    getDashboard: "/auth/dashboard",
+  },
+
   userStatus: {
     updateUserStatus: "/auth/Dtuserstatusupdate",
     getSingleUser: "/auth/DTsingleuser"
@@ -48,8 +53,11 @@ export const endpoints = {
     createProject: "/admin/projects",
     getAllProjects: "/admin/projects",
     getProjectById: "/admin/projects",
+    getProjectAnnotators: "/admin/projects",
     updateProject: "/admin/projects",
     deleteProject: "/admin/projects",
+    requestDeletionOtp: "/admin/projects", // /:projectId/request-deletion-otp
+    verifyDeletionOtp: "/admin/projects", // /:projectId/verify-deletion-otp
     getAllApplications: "/admin/applications",
     approveApplication: "/admin/applications",
     rejectApplication: "/admin/applications",

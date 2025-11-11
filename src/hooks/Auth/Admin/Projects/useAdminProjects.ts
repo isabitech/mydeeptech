@@ -8,6 +8,7 @@ import {
   ProjectsResponse,
   ProjectResponse,
   HookOperationResult,
+  AnnotatorProjectResponse,
 } from "../../../../types/project.types";
 
 export const useAdminProjects = () => {
@@ -104,6 +105,30 @@ export const useAdminProjects = () => {
     }
   }, []);
 
+  const getProjectAnnotators = useCallback(async (projectId: string): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.getProjectAnnotators, projectId);
+      const data: AnnotatorProjectResponse = await apiGet(url);
+
+      if (data.success) {
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to fetch project annotators";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const updateProject = useCallback(async (
     projectId: string, 
     updateData: UpdateProjectForm
@@ -155,6 +180,58 @@ export const useAdminProjects = () => {
     }
   }, []);
 
+  const requestDeletionOtp = useCallback(async (projectId: string, reason: string): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.requestDeletionOtp, projectId) + "/request-deletion-otp";
+      const data = await apiPost(url, { reason });
+
+      if (data.success) {
+        return { success: true, data };
+      } else {
+        const errorMessage = data.message || "Failed to request deletion OTP";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const verifyDeletionOtp = useCallback(async (
+    projectId: string, 
+    otp: string, 
+    confirmationMessage: string
+  ): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.verifyDeletionOtp, projectId) + "/verify-deletion-otp";
+      const data = await apiPost(url, { otp, confirmationMessage });
+
+      if (data.success) {
+        return { success: true, data };
+      } else {
+        const errorMessage = data.message || "Failed to verify deletion OTP";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const resetState = useCallback(() => {
     setLoading(false);
     setError(null);
@@ -164,8 +241,11 @@ export const useAdminProjects = () => {
     createProject,
     getAllProjects,
     getProjectById,
+    getProjectAnnotators,
     updateProject,
     deleteProject,
+    requestDeletionOtp,
+    verifyDeletionOtp,
     loading,
     error,
     projects,
