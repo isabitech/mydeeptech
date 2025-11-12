@@ -319,3 +319,79 @@ export interface RecentApplication {
   __v: number;
   id: string;
 }
+
+// Removal functionality types
+export interface RemoveApplicantRequest {
+  removalReason: "performance_issues" | "project_cancelled" | "violates_guidelines" | "unavailable" | "quality_concerns" | "admin_decision" | "other";
+  removalNotes?: string;
+}
+
+export interface WorkPeriod {
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+}
+
+export interface RemovedBy {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ProjectUpdates {
+  currentAnnotators: number;
+  maxAnnotators: number;
+  spotsAvailable: number;
+}
+
+export interface NotificationsSent {
+  applicantNotified: boolean;
+  adminNotified: boolean;
+}
+
+export interface RemoveApplicantResponseData {
+  applicationId: string;
+  applicantName: string;
+  applicantEmail: string;
+  projectName: string;
+  previousStatus: string;
+  newStatus: string;
+  removalReason: string;
+  removalNotes: string;
+  workPeriod: WorkPeriod;
+  removedBy: RemovedBy;
+  removedAt: string;
+  projectUpdates: ProjectUpdates;
+  notificationsSent: NotificationsSent;
+}
+
+export interface RemoveApplicantResponse {
+  success: boolean;
+  message: string;
+  data: RemoveApplicantResponseData;
+}
+
+export interface RemovableApplicant {
+  applicationId: string;
+  applicantId: string;
+  applicantName: string;
+  applicantEmail: string;
+  approvedAt: string;
+  workStartedAt: string;
+  daysSinceApproval: number;
+  tasksCompleted: number;
+  qualityScore: number;
+}
+
+export interface RemovableApplicantsResponseData {
+  projectId: string;
+  projectName: string;
+  totalApprovedApplicants: number;
+  removableApplicants: RemovableApplicant[];
+}
+
+export interface RemovableApplicantsResponse {
+  success: boolean;
+  message: string;
+  data: RemovableApplicantsResponseData;
+}

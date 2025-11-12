@@ -18,6 +18,12 @@ import {
   Spin,
   Empty,
   Tooltip,
+  Dropdown,
+  Menu,
+  message,
+  Form,
+  Input,
+  Select,
 } from "antd";
 import {
   UserOutlined,
@@ -29,6 +35,9 @@ import {
   PhoneOutlined,
   CalendarOutlined,
   DollarOutlined,
+  MoreOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
@@ -36,10 +45,12 @@ import {
   AnnotatorProjectResponseData,
   RecentApplication,
   ApplicantId,
+  RemoveApplicantRequest,
 } from "../../../../types/project.types";
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 interface ProjectAnnotatorsProps {
   projectId: string;
@@ -57,9 +68,12 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const [data, setData] = useState<AnnotatorProjectResponseData | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<RecentApplication | null>(null);
   const [isApplicationModalVisible, setIsApplicationModalVisible] = useState(false);
+  const [isRemovalModalVisible, setIsRemovalModalVisible] = useState(false);
+  const [selectedForRemoval, setSelectedForRemoval] = useState<RecentApplication | null>(null);
+  const [removalForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState("1");
 
-  const { getProjectAnnotators, loading, error } = useAdminProjects();
+  const { getProjectAnnotators, removeApplicant, loading, error } = useAdminProjects();
 
   useEffect(() => {
     if (visible && projectId) {
@@ -77,6 +91,45 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const handleViewApplication = (application: RecentApplication) => {
     setSelectedApplication(application);
     setIsApplicationModalVisible(true);
+  };
+
+  const handleRemoveAnnotator = (application: RecentApplication) => {
+    setSelectedForRemoval(application);
+    setIsRemovalModalVisible(true);
+    removalForm.resetFields();
+  };
+
+  const handleConfirmRemoval = async () => {
+    if (!selectedForRemoval) return;
+
+    try {
+      const values = await removalForm.validateFields();
+      const removalData: RemoveApplicantRequest = {
+        removalReason: values.reason,
+        removalNotes: values.notes || '',
+      };
+
+      const result = await removeApplicant(selectedForRemoval._id, removalData);
+      
+      if (result.success) {
+        message.success('Annotator removed successfully');
+        setIsRemovalModalVisible(false);
+        setSelectedForRemoval(null);
+        removalForm.resetFields();
+        // Refresh the data
+        fetchProjectAnnotators();
+      } else {
+        message.error(result.error || 'Failed to remove annotator');
+      }
+    } catch (error) {
+      message.error('Please fill in all required fields');
+    }
+  };
+
+  const handleCancelRemoval = () => {
+    setIsRemovalModalVisible(false);
+    setSelectedForRemoval(null);
+    removalForm.resetFields();
   };
 
   const getStatusColor = (status: string) => {
@@ -154,16 +207,41 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     {
       title: "Actions",
       key: "actions",
-      render: (record: RecentApplication) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewApplication(record)}
-        >
-          View Details
-        </Button>
-      ),
+      render: (record: RecentApplication) => {
+        // Create dropdown menu based on the current tab
+        const getDropdownMenu = () => {
+          const items = [
+            {
+              key: 'view',
+              icon: <EyeOutlined />,
+              label: 'View Details',
+              onClick: () => handleViewApplication(record)
+            }
+          ];
+
+          // Only show remove option for approved applications
+          if (record.status === 'approved') {
+            items.push({
+              key: 'remove',
+              icon: <DeleteOutlined />,
+              label: 'Remove Annotator',
+              onClick: () => handleRemoveAnnotator(record)
+            });
+          }
+
+          return { items };
+        };
+
+        return (
+          <Dropdown menu={getDropdownMenu()} trigger={['click']}>
+            <Button 
+              type="text" 
+              icon={<MoreOutlined />} 
+              onClick={(e) => e.preventDefault()}
+            />
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -459,6 +537,103 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                 </Descriptions>
               </Card>
             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Annotator Removal Modal */}
+      <Modal
+        title={
+          <div className="flex items-center space-x-2 text-red-600">
+            <ExclamationCircleOutlined />
+            <span>Remove Annotator</span>
+          </div>
+        }
+        open={isRemovalModalVisible}
+        onCancel={handleCancelRemoval}
+        footer={[
+          <Button key="cancel" onClick={handleCancelRemoval}>
+            Cancel
+          </Button>,
+          <Button 
+            key="confirm" 
+            type="primary" 
+            danger 
+            loading={loading}
+            onClick={handleConfirmRemoval}
+          >
+            Remove Annotator
+          </Button>
+        ]}
+        width={600}
+      >
+        {selectedForRemoval && (
+          <div className="space-y-4">
+            {/* Warning Alert */}
+            <Alert
+              message="Warning: This action cannot be undone"
+              description="The annotator will be removed from the project and their access will be revoked immediately."
+              type="warning"
+              showIcon
+            />
+
+            {/* Annotator Information */}
+            <Card title="Annotator to Remove" size="small">
+              <Descriptions column={1} size="small">
+                <Descriptions.Item label="Name">
+                  {selectedForRemoval.applicantId.fullName}
+                </Descriptions.Item>
+                <Descriptions.Item label="Email">
+                  {selectedForRemoval.applicantId.email}
+                </Descriptions.Item>
+                <Descriptions.Item label="Work Started">
+                  {selectedForRemoval.workStartedAt 
+                    ? moment(selectedForRemoval.workStartedAt).format("MMM DD, YYYY HH:mm")
+                    : "Not started"
+                  }
+                </Descriptions.Item>
+                <Descriptions.Item label="Tasks Completed">
+                  {selectedForRemoval.tasksCompleted || 0}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            {/* Removal Form */}
+            <Form
+              form={removalForm}
+              layout="vertical"
+              initialValues={{
+                reason: undefined,
+                notes: ''
+              }}
+            >
+              <Form.Item
+                name="reason"
+                label="Removal Reason"
+                rules={[{ required: true, message: 'Please select a removal reason' }]}
+              >
+                <Select placeholder="Select a reason for removal">
+                  <Option value="performance_issues">Performance Issues</Option>
+                  <Option value="project_cancelled">Project Cancelled</Option>
+                  <Option value="violates_guidelines">Violates Guidelines</Option>
+                  <Option value="unavailable">Unavailable</Option>
+                  <Option value="quality_concerns">Quality Concerns</Option>
+                  <Option value="admin_decision">Admin Decision</Option>
+                  <Option value="other">Other</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="notes"
+                label="Additional Notes (Optional)"
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder="Provide additional context for the removal (optional)"
+                  maxLength={500}
+                />
+              </Form.Item>
+            </Form>
           </div>
         )}
       </Modal>

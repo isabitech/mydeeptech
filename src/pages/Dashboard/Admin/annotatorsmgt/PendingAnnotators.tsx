@@ -66,7 +66,7 @@ const PendingAnnotators = () => {
 
     const result = await approveUser({
       userId: selectedAnnotator._id,
-      status: 'approved'
+      status: 'approve'
     });
 
     if (result.success) {
@@ -83,7 +83,7 @@ const PendingAnnotators = () => {
 
     const result = await approveUser({
       userId: selectedAnnotator._id,
-      status: 'rejected'
+      status: 'reject'
     });
 
     if (result.success) {

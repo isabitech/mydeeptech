@@ -9,6 +9,9 @@ import {
   ProjectResponse,
   HookOperationResult,
   AnnotatorProjectResponse,
+  RemoveApplicantRequest,
+  RemoveApplicantResponse,
+  RemovableApplicantsResponse,
 } from "../../../../types/project.types";
 
 export const useAdminProjects = () => {
@@ -232,6 +235,59 @@ export const useAdminProjects = () => {
     }
   }, []);
 
+  const removeApplicant = useCallback(async (
+    applicationId: string,
+    removalData: RemoveApplicantRequest
+  ): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.removeApplicant, applicationId) + "/remove";
+      const data: RemoveApplicantResponse = await apiDelete(url, { 
+        data: removalData 
+      });
+
+      if (data.success) {
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to remove applicant";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getRemovableApplicants = useCallback(async (projectId: string): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.getRemovableApplicants, projectId) + "/removable-applicants";
+      const data: RemovableApplicantsResponse = await apiGet(url);
+
+      if (data.success) {
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to fetch removable applicants";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const resetState = useCallback(() => {
     setLoading(false);
     setError(null);
@@ -246,6 +302,8 @@ export const useAdminProjects = () => {
     deleteProject,
     requestDeletionOtp,
     verifyDeletionOtp,
+    removeApplicant,
+    getRemovableApplicants,
     loading,
     error,
     projects,

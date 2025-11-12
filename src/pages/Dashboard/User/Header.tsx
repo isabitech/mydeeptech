@@ -1,6 +1,7 @@
 import { BellOutlined, SearchOutlined } from "@ant-design/icons";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   title: string;
@@ -25,6 +26,7 @@ export type UserInfoProps = {
 
 const Header: React.FC<Props> = ({ title }) => {
   const [userInfo, setUserInfo] = useState<UserInfoProps | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -34,6 +36,12 @@ const Header: React.FC<Props> = ({ title }) => {
     };
     loadUser();
   }, []);
+
+  const handleOpenProfile = () => {
+    if(userInfo?.annotatorStatus) {
+      navigate('/dashboard/profile');
+    } 
+  }
 
   return (
     <div>
@@ -59,7 +67,7 @@ const Header: React.FC<Props> = ({ title }) => {
           </div>
 
           {/* UserProfile */}
-          <div className="h-[2rem] w-[10rem] border-secondary border-2 rounded-2xl flex gap-2">
+          <div className="h-[2rem] min-w-[10rem] border-secondary border-2 rounded-2xl flex gap-2">
             <img
               src="https://banner2.cleanpng.com/20180622/tqt/aazen4lhc.webp"
               className="rounded-full"

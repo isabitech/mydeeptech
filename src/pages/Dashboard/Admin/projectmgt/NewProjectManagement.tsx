@@ -421,6 +421,11 @@ const ProjectManagement: React.FC = () => {
       ),
     },
     {
+      title: "Approved Annotators",
+      dataIndex: "approvedAnnotators",
+      key: "approvedAnnotators",
+    },
+    {
       title: "Deadline",
       dataIndex: "deadline",
       key: "deadline",

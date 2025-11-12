@@ -1,17 +1,49 @@
 
-import { useState } from "react";
-import { Tabs } from "antd";
+import { useState, useEffect } from "react";
+import { Tabs, Badge } from "antd";
 import Header from "../../User/Header";
 import AllAnnotators from "./AllAnnotators";
 import ApprovedAnnotators from "./ApprovedAnnotators";
 import MicroTasker from "./MicroTasker";
 import PendingAnnotators from "./PendingAnnotators";
 import SubmittedAnnotators from "./SubmittedAnnotators";
+import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
 
 const { TabPane } = Tabs;
 
 const Annotators = () => {
   const [activeTab, setActiveTab] = useState("1");
+  const [counts, setCounts] = useState({
+    total: 0,
+    approved: 0,
+    microtasker: 0,
+    pending: 0,
+    submitted: 0,
+  });
+
+  const { getAllDTUsers, summary, loading } = useGetAllDtUsers();
+
+  // Fetch counts when component mounts
+  useEffect(() => {
+    fetchCounts();
+  }, []);
+
+  // Update counts when summary changes
+  useEffect(() => {
+    if (summary?.statusBreakdown) {
+      setCounts({
+        total: summary.totalUsers || 0,
+        approved: summary.statusBreakdown.approved || 0,
+        microtasker: summary.statusBreakdown.rejected || 0, // Assuming rejected users are microtaskers
+        pending: summary.statusBreakdown.pending || 0,
+        submitted: summary.statusBreakdown.submitted || 0,
+      });
+    }
+  }, [summary]);
+
+  const fetchCounts = async () => {
+    await getAllDTUsers({ page: 1, limit: 1 }); // Minimal fetch just to get summary
+  };
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -34,31 +66,131 @@ const Annotators = () => {
               className="w-full"
               tabBarStyle={{ borderBottom: "1px solid #e5e7eb" }}
             >
-              <TabPane tab="All Annotators" key="1">
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>All Annotators</span>
+                    <Badge 
+                      count={counts.total} 
+                      style={{ 
+                        backgroundColor: '#1890ff',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="1"
+              >
                 <div className="pt-4">
                   <AllAnnotators />
                 </div>
               </TabPane>
               
-              <TabPane tab="Approved Annotators" key="2">
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>Approved Annotators</span>
+                    <Badge 
+                      count={counts.approved} 
+                      style={{ 
+                        backgroundColor: '#52c41a',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="2"
+              >
                 <div className="pt-4">
                   <ApprovedAnnotators />
                 </div>
               </TabPane>
               
-              <TabPane tab="MicroTasker" key="3">
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>MicroTasker</span>
+                    <Badge 
+                      count={counts.microtasker} 
+                      style={{ 
+                        backgroundColor: '#722ed1',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="3"
+              >
                 <div className="pt-4">
                   <MicroTasker />
                 </div>
               </TabPane>
 
-               <TabPane tab="Pending Annotators" key="4">
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>Pending Annotators</span>
+                    <Badge 
+                      count={counts.pending} 
+                      style={{ 
+                        backgroundColor: '#fa8c16',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="4"
+              >
                 <div className="pt-4">
                   <PendingAnnotators />
                 </div>
               </TabPane>
               
-              <TabPane tab="Submitted Annotators" key="5">
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>Submitted Annotators</span>
+                    <Badge 
+                      count={counts.submitted} 
+                      style={{ 
+                        backgroundColor: '#13c2c2',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="5"
+              >
                 <div className="pt-4">
                   <SubmittedAnnotators />
                 </div>

@@ -84,7 +84,7 @@ const AdminOverview = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
             >
-              <OverviewCards data={dashboardData.overview} />
+              <OverviewCards data={dashboardData} />
             </motion.div>
 
             {/* User Statistics Charts */}

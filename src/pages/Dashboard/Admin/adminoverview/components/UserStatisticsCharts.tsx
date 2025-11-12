@@ -68,28 +68,46 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
       >
-        <Card title="Annotator Status Distribution" className="h-96">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={annotatorData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={renderCustomizedLabel}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                animationBegin={0}
-                animationDuration={1500}
-              >
-                {annotatorData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        <Card title="Annotator Status Distribution" className="h-auto">
+          <div className="space-y-4">
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+          <Pie
+            data={annotatorData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={renderCustomizedLabel}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+            animationBegin={0}
+            animationDuration={1500}
+          >
+            {annotatorData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            
+            {/* Annotator Data Text Summary */}
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              {annotatorData.map((item, index) => (
+          <div key={index} className="flex items-center justify-between p-2 border rounded">
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-sm font-medium">{item.name}</span>
+            </div>
+            <span className="text-sm font-bold">{item.value}</span>
+          </div>
+              ))}
+            </div>
+          </div>
         </Card>
       </motion.div>
 

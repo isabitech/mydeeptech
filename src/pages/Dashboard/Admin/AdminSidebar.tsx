@@ -25,6 +25,12 @@ const AdminSidebar = () => {
       path: "/overview",
     },
     {
+      key: "annotators",
+      label: "Annotators",
+      icon: <UserOutlined />,
+      path: "/annotators",
+    },
+    {
       key: "projects",
       label: "Projects",
       icon: <CodeSandboxOutlined />,
@@ -36,12 +42,7 @@ const AdminSidebar = () => {
       icon: <InboxOutlined />,
       path: "/applications",
     },
-    {
-      key: "annotators",
-      label: "Annotators",
-      icon: <UserOutlined />,
-      path: "/annotators",
-    },
+    
     // {
     //   key: "jobs",
     //   label: "Jobs",
@@ -143,7 +144,7 @@ const AdminSidebar = () => {
           <span className=" flex justify-end gap-4">
             <Button onClick={()=> {
               sessionStorage.clear()
-              navigate("/");
+              navigate("/auth/admin-login");
               
             }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes

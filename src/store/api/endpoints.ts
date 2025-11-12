@@ -61,6 +61,8 @@ export const endpoints = {
     getAllApplications: "/admin/applications",
     approveApplication: "/admin/applications",
     rejectApplication: "/admin/applications",
+    removeApplicant: "/admin/applications", // /:applicationId/remove
+    getRemovableApplicants: "/admin/projects", // /:projectId/removable-applicants
   },
 
   // User project endpoints  

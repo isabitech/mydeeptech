@@ -9,10 +9,11 @@ import {
   DollarOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
-import { Overview } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+import { AdminDashboardData, Overview } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+
 
 interface OverviewCardsProps {
-  data: Overview;
+  data: AdminDashboardData;
 }
 
 const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
@@ -21,32 +22,33 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
   const totalInvoicesRef = useRef<HTMLSpanElement>(null);
   const totalRevenueRef = useRef<HTMLSpanElement>(null);
   const pendingAppsRef = useRef<HTMLSpanElement>(null);
+  const submittedAnnotatorsRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     // Animate numbers when data is loaded
     if (data && totalUsersRef.current) {
-      new CountUp(totalUsersRef.current, data.totalUsers, {
+      new CountUp(totalUsersRef.current, data.overview.totalUsers, {
         duration: 2,
         separator: ',',
       }).start();
     }
     
     if (data && totalProjectsRef.current) {
-      new CountUp(totalProjectsRef.current, data.totalProjects, {
+      new CountUp(totalProjectsRef.current, data.overview.totalProjects, {
         duration: 2,
         separator: ',',
       }).start();
     }
     
     if (data && totalInvoicesRef.current) {
-      new CountUp(totalInvoicesRef.current, data.totalInvoices, {
+      new CountUp(totalInvoicesRef.current, data.overview.totalInvoices, {
         duration: 2,
         separator: ',',
       }).start();
     }
     
     if (data && totalRevenueRef.current) {
-      new CountUp(totalRevenueRef.current, data.totalRevenue, {
+      new CountUp(totalRevenueRef.current, data.overview.totalRevenue, {
         duration: 2.5,
         separator: ',',
         decimal: '.',
@@ -56,7 +58,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     }
     
     if (data && pendingAppsRef.current) {
-      new CountUp(pendingAppsRef.current, data.pendingApplications, {
+      new CountUp(pendingAppsRef.current, data.overview.pendingApplications, {
         duration: 2,
         separator: ',',
       }).start();
@@ -74,7 +76,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
   const cards = [
     {
       title: 'Total Users',
-      value: data?.totalUsers || 0,
+      value: data?.overview.totalUsers || 0,
       ref: totalUsersRef,
       icon: <UserOutlined />,
       color: 'bg-blue-500',
@@ -82,7 +84,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Projects',
-      value: data?.totalProjects || 0,
+      value: data?.overview.totalProjects || 0,
       ref: totalProjectsRef,
       icon: <ProjectOutlined />,
       color: 'bg-green-500',
@@ -90,7 +92,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Invoices',
-      value: data?.totalInvoices || 0,
+      value: data?.overview.totalInvoices || 0,
       ref: totalInvoicesRef,
       icon: <FileTextOutlined />,
       color: 'bg-purple-500',
@@ -98,7 +100,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Paid ',
-      value: data?.totalRevenue || 0,
+      value: data?.overview.totalRevenue || 0,
       ref: totalRevenueRef,
       icon: <DollarOutlined />,
       color: 'bg-yellow-500',
@@ -106,11 +108,19 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Pending Applications',
-      value: data?.pendingApplications || 0,
+      value: data?.overview.pendingApplications || 0,
       ref: pendingAppsRef,
       icon: <ClockCircleOutlined />,
       color: 'bg-red-500',
       textColor: 'text-red-600'
+    },
+    {
+      title: 'Submitted Annotators',
+      value: data?.dtUserStatistics.submittedAnnotators || 0,
+      ref: submittedAnnotatorsRef,
+      icon: <UserOutlined />,
+      color: 'bg-indigo-500',
+      textColor: 'text-indigo-600'
     }
   ];
 
@@ -125,7 +135,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
             whileHover={{ y: -5 }}
           >
             <Card
-              className="h-32 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
+              className="h-32 overflow-x-auto cursor-pointer hover:shadow-lg transition-shadow duration-300"
               bodyStyle={{ padding: '16px' }}
             >
               <div className="flex items-center justify-between h-full">

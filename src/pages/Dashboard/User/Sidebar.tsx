@@ -11,6 +11,7 @@ import {
   BookOutlined,
   MenuOutlined,
   CloseOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -53,40 +54,40 @@ const Sidebar = () => {
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
   ];
 
-  // Filter menu items based on user status
-  const getFilteredMenuItems = () => {
+  // Check if a menu item should be locked based on user status
+  const isMenuItemLocked = (itemKey: string) => {
     if (loading || !userInfo) {
-      // Show all items while loading or if user info is not available
-      return menuItems;
+      return false; // Don't lock anything while loading
     }
 
     const { annotatorStatus, microTaskerStatus } = userInfo;
     
-    // If either status is pending, show only overview, assessment, and settings
+    // If both statuses are pending, lock everything except overview, assessment, and settings
     if (annotatorStatus === "pending" && microTaskerStatus === "pending") {
-      return menuItems.filter(item => 
-        ["overview", "assessment", "settings"].includes(item.key)
-      );
+      return !["overview", "assessment", "settings"].includes(itemKey);
     }
 
+    // If annotator is submitted and microTasker is pending, lock everything except overview and settings
     if (annotatorStatus === "submitted" && microTaskerStatus === "pending") {
-      return menuItems.filter(item => 
-        ["overview", "settings"].includes(item.key)
-      );
+      return !["overview", "settings"].includes(itemKey);
     }
 
-    if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
-      const filteredItems = [...menuItems];
-      // Remove items that are NOT overview or settings
-      for (let i = filteredItems.length - 1; i >= 0; i--) {
-        if (["assessment"].includes(filteredItems[i].key)) {
-          filteredItems.splice(i, 1);
-        }
-      }
-      return filteredItems;
+    // Default: don't lock anything
+    return false;
+  };
+
+  // Filter menu items based on user status
+  const getFilteredMenuItems = () => {
+    if (loading || !userInfo) {
+      return menuItems; // Show all items while loading
     }
 
+    const { annotatorStatus, microTaskerStatus } = userInfo;
     
+    // If either status is approved, remove assessment from menu
+    if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
+      return menuItems.filter(item => item.key !== "assessment");
+    }
 
     // Otherwise show all items
     return menuItems;
@@ -126,22 +127,40 @@ const Sidebar = () => {
         {/* Navigation Links */}
         <div className="flex flex-col justify-between h-full mt-4">
           <ul className="space-y-2">
-            {filteredMenuItems.map((item) => (
-              <li key={item.key}>
-                <NavLink
-                  to={item.path}
-                  onClick={() => setIsOpen(false)} // close menu on mobile click
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-4 py-3 text-sm font-medium ${
-                      isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
-                    }`
-                  }
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
+            {filteredMenuItems.map((item) => {
+              const isLocked = isMenuItemLocked(item.key);
+              
+              if (isLocked) {
+                // Render locked item as non-clickable
+                return (
+                  <li key={item.key}>
+                    <div className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-400 cursor-not-allowed">
+                      {item.icon}
+                      {item.label}
+                      <LockOutlined className="ml-auto text-xs" />
+                    </div>
+                  </li>
+                );
+              }
+
+              // Render normal clickable item
+              return (
+                <li key={item.key}>
+                  <NavLink
+                    to={item.path}
+                    onClick={() => setIsOpen(false)} // close menu on mobile click
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-4 py-3 text-sm font-medium ${
+                        isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
+                      }`
+                    }
+                  >
+                    {item.icon}
+                    {item.label}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
           <button
             onClick={() => setOpenModal(true)}
@@ -170,7 +189,7 @@ const Sidebar = () => {
               <Button
                 onClick={() => {
                   sessionStorage.clear();
-                  navigate("/");
+                  navigate("/login");
                 }}
                 className="!font-[gilroy-regular] !bg-secondary !text-primary !border-none"
               >
