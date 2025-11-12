@@ -1,100 +1,215 @@
-import { DownloadOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import React, { useState } from "react";
+import {
+  Table,
+  Button,
+  Space,
+  Tag,
+  Modal,
+  Tooltip,
+  message,
+} from "antd";
+import {
+  DownloadOutlined,
+  EyeOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
+import { Invoice } from "../../../../types/invoice.types";
 
-const Paid = () => {
-  const paid = [
+interface PaidProps {
+  invoices: Invoice[];
+  loading: boolean;
+  onRefresh: () => void;
+}
+
+const Paid: React.FC<PaidProps> = ({
+  invoices,
+  loading,
+  onRefresh,
+}) => {
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const handleDownloadReceipt = (invoice: Invoice) => {
+    // TODO: Implement receipt download functionality
+    message.info(`Downloading receipt for invoice ${invoice.invoiceNumber}`);
+  };
+
+  const getDTUserName = (dtUserId: any): string => {
+    if (typeof dtUserId === "string") return dtUserId;
+    return dtUserId?.fullName || "Unknown User";
+  };
+
+  const getDTUserEmail = (dtUserId: any): string => {
+    if (typeof dtUserId === "string") return "N/A";
+    return dtUserId?.email || "N/A";
+  };
+
+  const getProjectName = (projectId: any): string => {
+    if (typeof projectId === "string") return projectId;
+    return projectId?.projectName || "Unknown Project";
+  };
+
+  const columns: ColumnsType<Invoice> = [
     {
-      id: 1,
-      invoiceNumber: "001",
-      invoiceAmount: "N150000",
-      invoicedDate: "2024-12-01",
-      guideline: "",
-      taskLink: "https://example.com/link",
-      taskName: "Image Annotation",
-      taskStatus: "Approved",
-      userEmail: "geee@co.uk",
+      title: "S/N",
+      key: "index",
+      width: 60,
+      render: (_, __, index) => index + 1,
     },
     {
-      id: 2,
-      invoiceNumber: "002",
-      invoiceAmount: "N200000",
-      invoicedDate: "2024-11-25",
-      guideline: "",
-      taskLink: "https://example.com/link",
-      taskName: "Image Annotation",
-      taskStatus: "Approved",
-      userEmail: "geee@co.uk",
+      title: "Invoice Number",
+      dataIndex: "invoiceNumber",
+      key: "invoiceNumber",
+      render: (text, record) => (
+        <Space direction="vertical" size={0}>
+          <span className="font-medium">{text}</span>
+          <span className="text-xs text-gray-500">
+            {dayjs(record.invoiceDate).format("MMM DD, YYYY")}
+          </span>
+        </Space>
+      ),
     },
     {
-      id: 3,
-      invoiceNumber: "003",
-      invoiceAmount: "N300000",
-      invoicedDate: "2024-12-10",
-      guideline: "",
-      taskLink: "https://example.com/link",
-      taskName: "Image Annotation",
-      taskStatus: "Approved",
-      userEmail: "geee@co.uk",
+      title: "Amount",
+      dataIndex: "invoiceAmount",
+      key: "invoiceAmount",
+      render: (amount, record) => (
+        <span className="font-medium">
+          {record.currency} {amount.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      title: "Paid Date",
+      dataIndex: "paidAt",
+      key: "paidAt",
+      render: (paidAt) => (
+        <span>{dayjs(paidAt).format("MMM DD, YYYY")}</span>
+      ),
+    },
+    {
+      title: "DTUser",
+      dataIndex: "dtUserId",
+      key: "dtUserId",
+      render: (dtUserId) => (
+        <Space direction="vertical" size={0}>
+          <span className="font-medium">{getDTUserName(dtUserId)}</span>
+          <span className="text-xs text-gray-500">{getDTUserEmail(dtUserId)}</span>
+        </Space>
+      ),
+    },
+    {
+      title: "Project",
+      dataIndex: "projectId",
+      key: "projectId",
+      render: (projectId) => (
+        <span className="text-sm">{getProjectName(projectId)}</span>
+      ),
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+      render: (method) => (
+        <Tag color="green">
+          {method ? method.replace('_', ' ').toUpperCase() : 'N/A'}
+        </Tag>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "paymentStatus",
+      key: "paymentStatus",
+      render: (status) => (
+        <Tag color="green" icon={<CheckCircleOutlined />}>
+          {status.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 150,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Download Receipt">
+            <Button
+              type="primary"
+              size="small"
+              icon={<DownloadOutlined />}
+              onClick={() => handleDownloadReceipt(record)}
+            >
+              Receipt
+            </Button>
+          </Tooltip>
+          <Tooltip title="View Details">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => {
+                setSelectedInvoice(record);
+                setShowDetails(true);
+              }}
+            />
+          </Tooltip>
+        </Space>
+      ),
     },
   ];
 
-  const date = new Date();
-  const todaysDate = date.getDate();
-  const month = date.getMonth();
-  const year = date.getFullYear();
   return (
     <div>
-      <p>
-        Your Paid Out Jobs as at {todaysDate} {"-"} {month} {"-"} {year}{" "}
+      <p className="mb-4">
+        Paid Invoices - {dayjs().format("MMMM DD, YYYY")}
       </p>
-      {/* Todays Payout */}
-      <div className="  w-full h-[70vh] overflow-y-auto flex flex-col gap-2 pt-4">
-        <p className="text-primary">paid Jobs</p>
+      
+      <Table
+        columns={columns}
+        dataSource={invoices}
+        loading={loading}
+        rowKey="_id"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `${range[0]}-${range[1]} of ${total} invoices`,
+        }}
+        scroll={{ x: 1200 }}
+      />
 
-        <table
-          className=" w-full  
-        "
-        >
-          <thead className=" text-left">
-            <tr className=" ">
-              <th className="p-2 font-normal">S/N</th>
-              <th className="p-2 font-normal">Invoice Number</th>
-              <th className="p-2 font-normal">Invoice Amount</th>
-              <th className="p-2 font-normal">Invoiced Date</th>
-              <th className="p-2 font-normal">Payment Status</th>
-              <th className="p-2 font-normal">Action</th>
-
-              <th className="p-2 font-normal">Task Status</th>
-              <th className="p-2 font-normal">Task Link</th>
-              <th className="p-2 font-normal">Task Name</th>
-              <th className="p-2 font-normal">User Email</th>
-            </tr>
-          </thead>
-          <tbody className=" h-full overflow-auto">
-            {/* Sample data rows */}
-            {paid.map((row, index) => (
-              <tr className=" " key={row.id}>
-                <td className="p-2 ">{index + 1}</td>
-                <td className="p-2 ">{row.invoiceNumber}</td>
-                <td className="p-2 ">{row.invoiceAmount}</td>
-                <td className="p-2 ">{row.invoicedDate}</td>
-                <td className="p-2  inline-flex gap-2">
-                  <span>paid</span>
-                </td>
-                <td className="p-2  ">
-                  <Button className="!bg-primary !text-white !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-                    Download Reciept <DownloadOutlined/>
-                  </Button>
-                </td>
-                <td className="p-2 ">{row.taskStatus}</td>
-                <td className="p-2 ">{row.taskLink}</td>
-                <td className="p-2 ">{row.taskName}</td>
-                <td className="p-2 ">{row.userEmail}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Invoice Details Modal */}
+      <Modal
+        title="Invoice Details"
+        open={showDetails}
+        onCancel={() => setShowDetails(false)}
+        footer={null}
+        width={600}
+      >
+        {selectedInvoice && (
+          <div>
+            <p><strong>Invoice Number:</strong> {selectedInvoice.invoiceNumber}</p>
+            <p><strong>Amount:</strong> {selectedInvoice.currency} {selectedInvoice.invoiceAmount.toFixed(2)}</p>
+            <p><strong>Paid Date:</strong> {selectedInvoice.paidAt ? dayjs(selectedInvoice.paidAt).format("MMMM DD, YYYY") : "N/A"}</p>
+            <p><strong>DTUser:</strong> {getDTUserName(selectedInvoice.dtUserId)}</p>
+            <p><strong>Project:</strong> {getProjectName(selectedInvoice.projectId)}</p>
+            <p><strong>Payment Method:</strong> {selectedInvoice.paymentMethod || "N/A"}</p>
+            <p><strong>Transaction Reference:</strong> {selectedInvoice.paymentReference || "N/A"}</p>
+            <p><strong>Description:</strong> {selectedInvoice.description || "No description"}</p>
+            {selectedInvoice.workDescription && (
+              <p><strong>Work Description:</strong> {selectedInvoice.workDescription}</p>
+            )}
+            {selectedInvoice.paymentNotes && (
+              <p><strong>Payment Notes:</strong> {selectedInvoice.paymentNotes}</p>
+            )}
+            {selectedInvoice.adminNotes && (
+              <p><strong>Admin Notes:</strong> {selectedInvoice.adminNotes}</p>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

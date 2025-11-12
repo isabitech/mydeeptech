@@ -1,27 +1,114 @@
+export const baseURL = import.meta.env.VITE_API_URL;
 export const endpoints = {
   auth: {
-    login: "https://my-deep-tech.onrender.com/api/auth/login",
-    signup: 'https://my-deep-tech.onrender.com/api/auth/signup',
+    login: "/auth/login",
+    signup: "/auth/signup",
+  },
+  authDT: {
+    createDTUser: "/auth/createDTuser",
+    getDTUser: "/auth/allDTusers",
+    submitResult: "/auth/submit-result",
+    verifyEmail: "/auth/verifyDTusermail",
+    setUpPassword: "/auth/setupPassword",
+    loginDTUser: "/auth/dtUserLogin",
+    resetPassword: "/auth/dtUserResetPassword",
   },
 
-  // admin
-  project : {
-    createProject : "https://my-deep-tech.onrender.com/api/auth/createProject",
-    getProject: "https://my-deep-tech.onrender.com/api/auth/getProject",
-    updateProject: "https://my-deep-tech.onrender.com/api/auth/updateProject",
-    deleteProject: "https://my-deep-tech.onrender.com/api/auth/deleteProject"
+  profileDT:{
+    getProfile: "/auth/dtUserProfile",
+    updateProfile: "/auth/dtUserProfile",
+    uploadResume: "/auth/upload-resume",
+    uploadIdDocument: "/auth/upload-id-document",
   },
-  tasks:{
-    createTask: "https://my-deep-tech.onrender.com/api/auth/createTasks",
-    assignTask: "https://my-deep-tech.onrender.com/api/auth/assignTask",
-    getAllTasks: "https://my-deep-tech.onrender.com/api/auth/getAllTasks",
+
+  // DTUser dashboard endpoint
+  userDashboard: {
+    getDashboard: "/auth/dashboard",
   },
-  users :{
-    getAllUsers: "https://my-deep-tech.onrender.com/api/auth/getAllUsers"
+
+  userStatus: {
+    updateUserStatus: "/auth/Dtuserstatusupdate",
+    getSingleUser: "/auth/DTsingleuser"
+  },
+
+  // admin authentication
+  adminAuth: {
+    signup: "/admin/create",
+    verifyOTP: "/admin/verify-otp",
+    login: "/admin/login",
+  },
+
+
+
+  // admin management
+  project: {
+    createProject: "/auth/createProject",
+    getProject: "/auth/getProject",
+    updateProject: "/auth/updateProject",
+    deleteProject: "/auth/deleteProject",
+  },
+
+  // Admin project management endpoints
+  adminProject: {
+    createProject: "/admin/projects",
+    getAllProjects: "/admin/projects",
+    getProjectById: "/admin/projects",
+    getProjectAnnotators: "/admin/projects",
+    updateProject: "/admin/projects",
+    deleteProject: "/admin/projects",
+    requestDeletionOtp: "/admin/projects", // /:projectId/request-deletion-otp
+    verifyDeletionOtp: "/admin/projects", // /:projectId/verify-deletion-otp
+    getAllApplications: "/admin/applications",
+    approveApplication: "/admin/applications",
+    rejectApplication: "/admin/applications",
+    removeApplicant: "/admin/applications", // /:applicationId/remove
+    getRemovableApplicants: "/admin/projects", // /:projectId/removable-applicants
+  },
+
+  // User project endpoints  
+  userProject: {
+    projects: "/auth/projects", // New unified endpoint that supports view and status parameters
+    browseProjects: "/auth/projects", // Legacy endpoint for backward compatibility  
+    applyToProject: "/auth/projects",
+    getActiveProjects: "/auth/activeProjects", // Legacy endpoint
+  },
+
+  adminActions:{
+    getAllDTUsers: "/admin/dtusers",
+    updateUserStatus: "/admin/dtusers",
+    getAdminUsers: "/admin/admin-users"
+  },
+
+  // Admin invoice management endpoints
+  adminInvoice: {
+    createInvoice: "/admin/invoices",
+    getAllInvoices: "/admin/invoices",
+    getInvoiceDetails: "/admin/invoices",
+    updatePaymentStatus: "/admin/invoices",
+    sendPaymentReminder: "/admin/invoices",
+    deleteInvoice: "/admin/invoices",
+  },
+
+  // User invoice endpoints  
+  userInvoice: {
+    getUserInvoices: "/auth/invoices",
+    getUnpaidInvoices: "/auth/invoices/unpaid",
+    getPaidInvoices: "/auth/invoices/paid",
+    getInvoiceDashboard: "/auth/invoices/dashboard",
+    getInvoiceDetails: "/auth/invoices",
+  },
+
+
+  tasks: {
+    createTask: "/auth/createTasks",
+    assignTask: "/auth/assignTask",
+    getAllTasks: "/auth/getAllTasks",
+  },
+  users: {
+    getAllUsers: "/auth/getAllUsers",
   },
   survey: {
-    verifyEmail: "https://deep-tech-survey.onrender.com/api/auth/validateuseremail",
+    verifyEmail: "auth/validateuseremail",
   },
-  addBulkEmails: "https://deep-tech-survey.onrender.com/api/auth/addbulkemails",
-  
+  addBulkEmails: "auth/addbulkemails",
 };

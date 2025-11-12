@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import Logo from "../../../assets/deeptech.png"; // Adjust the path as necessary
 import { notification } from "antd";
-import { endpoints } from "../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../store/api/endpoints";
 import "../../../components/Loader/loader.css";
 
 const Survey = () => {
@@ -16,7 +16,7 @@ const Survey = () => {
     setError("");
 
     try {
-      const response = await axios.post(`${endpoints.survey.verifyEmail}`, {
+      const response = await axios.post(`${baseURL}${endpoints.survey.verifyEmail}`, {
         email: email,
       });
       console.log(response.data);

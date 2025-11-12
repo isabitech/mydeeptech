@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { endpoints } from "../../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import { notification, Spin } from "antd";
 
 type UserListType = {
@@ -22,7 +22,7 @@ const UserList = () => {
     setIsLoading(!isLoading);
     const fetchUsers = async () => {
       try {
-        const response = await fetch(endpoints.users.getAllUsers, {
+        const response = await fetch(`${baseURL}${endpoints.users.getAllUsers}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

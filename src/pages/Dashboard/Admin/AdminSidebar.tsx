@@ -25,35 +25,56 @@ const AdminSidebar = () => {
       path: "/overview",
     },
     {
+      key: "annotators",
+      label: "Annotators",
+      icon: <UserOutlined />,
+      path: "/annotators",
+    },
+    {
       key: "projects",
       label: "Projects",
       icon: <CodeSandboxOutlined />,
       path: "/projects",
     },
     {
-      key: "jobs",
-      label: "Jobs",
+      key: "applications",
+      label: "Applications",
       icon: <InboxOutlined />,
-      path: "/jobs",
+      path: "/applications",
     },
-    {
-      key: "tasks",
-      label: "Tasks",
-      icon: <UnorderedListOutlined />,
-      path: "/tasks",
-    },
+    
+    // {
+    //   key: "jobs",
+    //   label: "Jobs",
+    //   icon: <InboxOutlined />,
+    //   path: "/jobs",
+    // },
+    // {
+    //   key: "tasks",
+    //   label: "Tasks",
+    //   icon: <UnorderedListOutlined />,
+    //   path: "/tasks",
+    // },
     {
       key: "payment",
       label: "Payment",
       icon: <WalletOutlined />,
       path: "/payments",
     },
+
     {
-      key: "users",
-      label: "Users",
-      icon: <UserOutlined />,
-      path: "/users",
+      key: "invoice",
+      label: "Invoice",
+      icon: <WalletOutlined />,
+      path: "/invoices",
     },
+
+    // {
+    //   key: "users",
+    //   label: "Users",
+    //   icon: <UserOutlined />,
+    //   path: "/users",
+    // },
     {
       key: "settings",
       label: "Settings",
@@ -108,7 +129,7 @@ const AdminSidebar = () => {
 
       {/* Footer (Optional) */}
       <div className="p-4 border-t border-gray-700 text-sm text-center">
-        © 2024 My Deep Tech
+        © {new Date().getFullYear()} My Deep Tech
       </div>
 
       <PageModal
@@ -123,7 +144,7 @@ const AdminSidebar = () => {
           <span className=" flex justify-end gap-4">
             <Button onClick={()=> {
               sessionStorage.clear()
-              navigate("/");
+              navigate("/auth/admin-login");
               
             }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes

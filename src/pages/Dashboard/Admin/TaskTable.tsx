@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, Modal, Form, Input, DatePicker, notification } from "antd";
 import { UserPlus } from "lucide-react";
 import { useUserContext } from "../../../UserContext";
-import { endpoints } from "../../../store/api/endpoints";
+import { baseURL, endpoints } from "../../../store/api/endpoints";
 import { PlusCircleFilled } from "@ant-design/icons";
 import useGetUsers from "../../../hooks/Auth/Admin/Users/useGetUsers";
 import Loader from "../../../components/Loader";
@@ -48,7 +48,7 @@ const TaskTable = () => {
         dueDate: values.dueDate.format("YYYY-MM-DD"),
       };
 
-      const response = await fetch(endpoints.tasks.createTask, {
+      const response = await fetch(`${baseURL}${endpoints.tasks.createTask}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,7 +88,7 @@ const TaskTable = () => {
         userId: selectedUser,
       };
 
-      const response = await fetch(endpoints.tasks.assignTask, {
+      const response = await fetch(`${baseURL}${endpoints.tasks.assignTask}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const TaskTable = () => {
     setIsLoading(!isLoading);
     const fetchAllTasks = async () => {
       try {
-        const response = await fetch(endpoints.tasks.getAllTasks, {
+        const response = await fetch(`${baseURL}${endpoints.tasks.getAllTasks}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -222,7 +222,7 @@ const TaskTable = () => {
                       taskGuidelineLink: task.taskGuidelineLink,
                       taskName: task.taskName,
                       dueDate: task.dueDate,
-                      userInfo: userInfo.userName,
+                      userInfo: userInfo.fullName,
                     });
                     setIsAssignTaskModalVisibile(true);
                     setSelectedTask(task._id); // Track the selected task
@@ -361,7 +361,7 @@ const TaskTable = () => {
               { required: true, message: "Please select the task name!" },
             ]}
           >
-            <Input value={userInfo.userName} />
+            <Input value={userInfo.fullName} />
           </Form.Item>
         </Form>
       </Modal>

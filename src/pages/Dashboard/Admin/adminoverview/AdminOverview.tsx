@@ -1,319 +1,186 @@
-import {
-  BarChartOutlined,
-  CodeSandboxOutlined,
-  ClockCircleOutlined,
-  InboxOutlined,
-  PlusSquareOutlined,
-} from "@ant-design/icons";
-import { Button, notification } from "antd";
+import React, { useEffect } from "react";
+import { Button, Spin, Alert } from "antd";
+import { PlusSquareOutlined, ReloadOutlined } from "@ant-design/icons";
+import { motion } from 'framer-motion';
 import Header from "../../User/Header";
-import { useEffect, useState } from "react";
-import { endpoints } from "../../../../store/api/endpoints";
 import { useNavigate } from "react-router-dom";
-import { ProjectType } from "../projectmgt/ProjectManagement";
-import { Project } from "../projectmgt/ProjectManagement";
-import {
-  differenceInDays,
-  differenceInMonths,
-  differenceInWeeks,
-} from "date-fns";
-import Loader from "../../../../components/Loader";
+import { useAdminDashboard } from "../../../../hooks/Auth/Admin/useAdminDashboard";
+import OverviewCards from "./components/OverviewCards";
+import UserStatisticsCharts from "./components/UserStatisticsCharts";
+import ProjectFinancialCharts from "./components/ProjectFinancialCharts";
+import RecentActivitiesComponent from "./components/RecentActivitiesComponent";
 
 const AdminOverview = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [totalUser, settotalUser] = useState<number>(0);
-  const [totalProject, settotalProject] = useState<number>(0);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [totalTask, settotalTask] = useState<number>(0);
-
-  const todayTasks = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "johndoe@gmail.com",
-      dueDate: "2024-12-01",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "janesmith@d.co",
-      dueDate: "2024-11-25",
-    },
-    {
-      id: 3,
-      name: "Robert Brown",
-      email: "robertbrown@g.co",
-      dueDate: "2024-12-10",
-    },
-  ];
-
   const navigate = useNavigate();
+  const { 
+    loading, 
+    error, 
+    dashboardData, 
+    getDashboardData, 
+    refreshDashboard 
+  } = useAdminDashboard();
+
   useEffect(() => {
-    setIsLoading(!isLoading);
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch(endpoints.users.getAllUsers, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch users");
-        }
-        const data = await response.json();
-        setIsLoading(false);
-        const result = data.data;
-        const totalUser = result.length;
-        settotalUser(totalUser);
-      } catch (error) {
-        console.error("An error occurred:", error);
-        notification.error({
-          message: "Error fetching users",
-          description:
-            "An error occurred while fetching the user list. Please try again.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    getDashboardData();
+  }, [getDashboardData]);
 
-    fetchUsers();
-
-    const fetchAllTasks = async () => {
-      try {
-        const response = await fetch(endpoints.tasks.getAllTasks, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch tasks");
-        }
-        const data = await response.json();
-        setIsLoading(false);
-        const result = data.data;
-        const totalTask = result.length;
-        settotalTask(totalTask);
-      } catch (error) {
-        console.error("An error occurred:", error);
-        notification.error({
-          message: "Error fetching tasks",
-          description:
-            "An error occurred while fetching the task list. Please try again.",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAllTasks();
-
-    const fetchProjects = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(endpoints.project.getProject, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch projects: ${response.statusText}`);
-        }
-
-        const data: ProjectType = await response.json();
-        const result = data.data;
-        const projectNumber = result.length;
-        settotalProject(projectNumber);
-        setProjects(result);
-
-        // Update state with fetched data
-      } catch (error: any) {
-        notification.error({
-          message: "Error Fetching Projects",
-          description: error.message,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
-
-  const calculateTimeLeft = (dueDate: string): string => {
-    const now = new Date();
-    const due = new Date(dueDate);
-
-    const monthsLeft = differenceInMonths(due, now);
-    const weeksLeft = differenceInWeeks(due, now) % 4;
-    const daysLeft = differenceInDays(due, now) % 7;
-
-    if (monthsLeft < 0 || weeksLeft < 0 || daysLeft < 0) {
-      return "Past Due";
-    }
-
-    return `${monthsLeft} months, ${weeksLeft} weeks, ${daysLeft} days left`;
+  const handleRefresh = async () => {
+    await refreshDashboard();
   };
 
+  if (error) {
+    return (
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+        <Header title="Admin Overview" />
+        <Alert
+          message="Error Loading Dashboard"
+          description={error}
+          type="error"
+          action={
+            <Button size="small" onClick={handleRefresh}>
+              Retry
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className=" h-full flex flex-col gap-4  font-[gilroy-regular]">
+    <div className="h-full flex flex-col gap-6 font-[gilroy-regular] p-6">
       {/* Header */}
-      <Header title=" Admin Overview" />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className=""
+      >
+        <Header title="Admin Overview" />
+      </motion.div>
+        <div className="flex gap-2">
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={handleRefresh}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+          <Button 
+            type="primary"
+            icon={<PlusSquareOutlined />}
+            onClick={() => navigate("/admin/projects")}
+          >
+            New Project
+          </Button>
+        </div>
 
-      <hr />
       {/* Content */}
-
-      {isLoading ? (
-        <div className="h-screen flex items-center justify-center">
-          <Loader />
-        </div>
-      ) : (
-        <div className=" h-full  flex flex-col gap-4">
-          {/* Cards */}
-          <div className=" flex gap-2 justify-between text-white">
-            {/* Revenue */}
-            <div className=" w-[15rem] h-[15rem] hover:ease-in-out hover:transition-all hover:translate-y-3 bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-              <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-                <BarChartOutlined />
-              </span>
-              <p className="text-[12px]">Total Paid Out</p>
-              <p className="text-[2rem]">$95,000.00</p>
-            </div>
-            {/* Projects */}
-            <div
-              onClick={() => {
-                navigate("/admin/projects");
-              }}
-              className=" cursor-pointer hover:ease-in-out hover:transition-all hover:translate-y-3 w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4"
+      <Spin spinning={loading} tip="Loading dashboard data...">
+        {dashboardData ? (
+          <div className="space-y-8">
+            {/* Overview Cards */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
             >
-              <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-                <CodeSandboxOutlined />
-              </span>
-              <p className="text-[12px]">Total Projects</p>
+              <OverviewCards data={dashboardData} />
+            </motion.div>
 
-              <p className="text-[2rem]">
-                {totalProject}
-                <span className="text-[18px]"></span>
-              </p>
-            </div>
+            {/* User Statistics Charts */}
+            {dashboardData.dtUserStatistics && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+              >
+                <UserStatisticsCharts data={dashboardData.dtUserStatistics} />
+              </motion.div>
+            )}
 
-            {/* Time spent */}
-            <div
-              onClick={() => {
-                navigate("/admin/users");
-              }}
-              className=" cursor-pointer hover:ease-in-out hover:transition-all hover:translate-y-3 w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4"
+            {/* Project and Financial Charts */}
+            {dashboardData.projectStatistics && dashboardData.invoiceStatistics && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+              >
+                <ProjectFinancialCharts 
+                  projectData={dashboardData.projectStatistics}
+                  invoiceData={dashboardData.invoiceStatistics}
+                  trendsData={dashboardData.trends}
+                />
+              </motion.div>
+            )}
+
+            {/* Recent Activities */}
+            {dashboardData.recentActivities && dashboardData.topPerformers && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+              >
+                <RecentActivitiesComponent 
+                  recentData={dashboardData.recentActivities}
+                  topPerformers={dashboardData.topPerformers}
+                />
+              </motion.div>
+            )}
+
+            {/* Insights Section */}
+            {dashboardData.insights && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.0, duration: 0.6 }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+              >
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Conversion Rates</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>Email Verification: {dashboardData.insights.conversionRates.emailVerificationRate}%</div>
+                    <div>Password Setup: {dashboardData.insights.conversionRates.passwordSetupRate}%</div>
+                    <div>Result Submission: {dashboardData.insights.conversionRates.resultSubmissionRate}%</div>
+                    <div>Approval Rate: {dashboardData.insights.conversionRates.approvalRate}%</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Financial Health</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>Payment Rate: {dashboardData.insights.financialHealth.paymentRate}%</div>
+                    <div>Avg Invoice: ${dashboardData.insights.financialHealth.averageInvoiceAmount}</div>
+                    <div>Outstanding: ${dashboardData.insights.financialHealth.outstandingBalance.toLocaleString()}</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Top Domains</h3>
+                  <div className="space-y-2 text-sm">
+                    {dashboardData.insights.domainDistribution.slice(0, 4).map((domain, index) => (
+                      <div key={index}>{domain._id}: {domain.count}</div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Footer Info */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              className="text-center text-gray-500 text-sm"
             >
-              <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-                <ClockCircleOutlined />
-              </span>
-              <p className="text-[12px]">Total Users</p>
-
-              <p className="text-[2rem]">
-                {totalUser}
-                <span className="text-[18px]"></span>
-              </p>
-            </div>
-
-            {/* Resources */}
-            <div className=" w-[15rem] h-[15rem] hover:ease-in-out hover:transition-all hover:translate-y-3 bg-primary flex shadow-primary shadow-lg justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-              <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-                <InboxOutlined />
-              </span>
-              <p className="text-[12px]">Total Tasks</p>
-              <p className="text-[2rem]">
-                {totalTask}
-                <span className="text-[12px]"> </span>
-              </p>
-            </div>
+              Last updated: {dashboardData.generatedAt ? new Date(dashboardData.generatedAt).toLocaleString() : 'N/A'}
+            </motion.div>
           </div>
-          {/* Active Projects */}
-          <div className=" bg-primary rounded-md shadow-primary shadow-md w-full h-[30vh] flex flex-col gap-2 pt-4">
-            <p className="text-white">Active Projects</p>
-
-            <div className=" h-[10rem] overflow-y-auto">
-              <table
-                className="text-white w-full border-collapse border border-white h-[15rem] overflow-y-auto
-      "
-              >
-                <thead className=" text-left">
-                  <tr className=" ">
-                    <th className="p-2 font-normal">S/N</th>
-                    <th className="p-2 font-normal">Name</th>
-                    <th className="p-2 font-normal">Company</th>
-                    <th className="p-2 font-normal">Due Date</th>
-                    {/* <th className="p-2 font-normal">Status</th> */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Sample data rows */}
-                  {projects.map((row, index) => (
-                    <tr className=" " key={row._id}>
-                      <td className="p-2 ">{index + 1}</td>
-                      <td className="p-2 ">{row.projectName}</td>
-                      <td className="p-2 ">{row.company}</td>
-                      <td className="p-2 ">{calculateTimeLeft(row.dueDate)}</td>
-                      {/* <td className="p-2 ">{row.status}</td> */}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-end mt-4">
-              <Button
-                onClick={() => {
-                  navigate("/admin/projects");
-                }}
-                className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md"
-              >
-                Create New Project <PlusSquareOutlined />{" "}
-              </Button>
-            </div>
+        ) : (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">No dashboard data available</div>
           </div>
-
-          {/* Todays Task */}
-          <div className=" bg-primary rounded-md w-full h-[30vh] shadow-primary shadow-md flex flex-col gap-2 pt-4">
-            <p className="text-white">Todays Assigned Tasks</p>
-
-            <div className=" h-[15rem] overflow-y-auto">
-              <table
-                className="text-white w-full border-collapse border border-white 
-      "
-              >
-                <thead className=" text-left">
-                  <tr className=" ">
-                    <th className="p-2 font-normal">S/N</th>
-                    <th className="p-2 font-normal">Task Name</th>
-                    <th className="p-2 font-normal">Assigned User Email</th>
-                    <th className="p-2 font-normal">Due Date</th>
-                    <th className="p-2 font-normal">Action</th>
-                  </tr>
-                </thead>
-                <tbody className=" h-full overflow-auto">
-                  {/* Sample data rows */}
-                  {todayTasks.map((row, index) => (
-                    <tr className=" " key={row.id}>
-                      <td className="p-2 ">{index + 1}</td>
-                      <td className="p-2 ">{row.name}</td>
-                      <td className="p-2 ">{row.email}</td>
-                      <td className="p-2 ">{row.dueDate}</td>
-                      <td className="p-2 flex gap-2 ">
-                        <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-                          Open Task <PlusSquareOutlined />{" "}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </Spin>
     </div>
   );
 };

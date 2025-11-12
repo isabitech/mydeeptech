@@ -37,7 +37,7 @@ const PageModal = ({
         backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened semi-transparent overlay
       }}
     >
-      <div className="h-[70svh] overflow-auto">{children}</div>
+      <div className="h-auto overflow-auto">{children}</div>
     </Modal>
   );
 };

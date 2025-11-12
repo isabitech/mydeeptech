@@ -1,6 +1,6 @@
 import { Form, Input, Button, notification } from "antd";
 import { useState } from "react";
-import { endpoints } from "../../store/api/endpoints";
+import { baseURL, endpoints } from "../../store/api/endpoints";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -18,7 +18,7 @@ const Signup = () => {
       : values.phone;
 
     try {
-      const response = await fetch(endpoints.auth.signup, {
+      const response = await fetch(`${baseURL}${endpoints.auth.signup}`, {
         method: "POST",
         body: JSON.stringify({
           firstname: values.firstName,

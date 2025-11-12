@@ -33,6 +33,11 @@ const config = {
           accent: "#2B2B2B", // Slightly lighter gray for containers
         },
       },
+      backgroundImage: {
+        'primary-gradient': 'linear-gradient(135deg, #333333 0%, #F6921E 100%)',
+        'secondary-gradient': 'linear-gradient(135deg, #F6921E 0%, #333333 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #F6921E 0%, #E6811B 50%, #333333 100%)',
+      },
       gradientColorStops: {
         primary: { start: "#333333", end: "#F6921E" }, // Primary gradient
         secondary: { start: "#333333", end: "#444444" }, // Secondary gradient

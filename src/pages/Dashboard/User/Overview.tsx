@@ -1,185 +1,235 @@
-import {
-  BarChartOutlined,
-  CodeSandboxOutlined,
-  ClockCircleOutlined,
-  InboxOutlined,
-  PlusSquareOutlined,
-} from "@ant-design/icons";
-import { Button } from "antd";
-import Header from "./Header";
+import React, { useEffect } from 'react';
+import { Row, Col, Spin, Alert, Button } from 'antd';
+import { ReloadOutlined, UserOutlined, DashboardOutlined } from '@ant-design/icons';
+import { motion } from 'framer-motion';
+import Header from './Header';
+import { useDTUserDashboard } from '../../../hooks/User/useDTUserDashboard';
+import ProfileCompletionCard from '../../../components/Dashboard/User/ProfileCompletionCard';
+import FinancialSummaryCards from '../../../components/Dashboard/User/FinancialSummaryCards';
+import ApplicationStatisticsCharts from '../../../components/Dashboard/User/ApplicationStatisticsCharts';
+import AvailableOpportunitiesComponent from '../../../components/Dashboard/User/AvailableOpportunitiesComponent';
+import RecentActivityTimeline from '../../../components/Dashboard/User/RecentActivityTimeline';
 
 const Overview = () => {
-  const activeProjects = [
-    {
-      id: 1,
-      name: "Image Annotation",
-      company: "CVAT",
-      dueDate: "2024-12-01",
-      status: "Pending",
+  const { data, loading, error, getDashboardData, refreshDashboard } = useDTUserDashboard();
+
+  // Fetch dashboard data on component mount
+  useEffect(() => {
+    getDashboardData();
+  }, [getDashboardData]);
+
+  const pageVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.1,
+      },
     },
-    {
-      id: 2,
-      name: "Text Annotation",
-      company: "e2f",
-      dueDate: "2024-11-25",
-      status: "Completed",
+  };
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5 },
     },
-    {
-      id: 3,
-      name: "Data Collection",
-      company: "Appen",
-      dueDate: "2024-12-10",
-      status: "In Progress",
-    },
-  ];
+  };
 
-  const todayTasks = [
-    {
-      id: 1,
-      name: "John Doe",
-      company: "TechCorp",
-      dueDate: "2024-12-01",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      company: "InnovateX",
-      dueDate: "2024-11-25",
-    },
-    {
-      id: 3,
-      name: "Robert Brown",
-      company: "NextGen Solutions",
-      dueDate: "2024-12-10",
-    },
-  ];
-  return (
-    <div className=" h-full flex flex-col gap-4  font-[gilroy-regular]">
-      {/* Header */}
-      <Header title="Overview" />
-
-      <hr />
-      {/* Content */}
-
-      <div className=" h-full  flex flex-col gap-4">
-        {/* Cards */}
-        <div className=" flex gap-2 justify-between text-white">
-          {/* Revenue */}
-          <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-            <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-              <BarChartOutlined />
-            </span>
-            <p className="text-[12px]">Total revenue</p>
-            <p className="text-[2rem]">$45,000.00</p>
-          </div>
-          {/* Projects */}
-          <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-            <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-              <CodeSandboxOutlined />
-            </span>
-            <p className="text-[12px]">Projects</p>
-            <p className="text-[2rem]">
-              1<span className="text-[18px]">{"/"} 10</span>
-            </p>
-          </div>
-
-          {/* Time spent */}
-          <div className=" w-[15rem] h-[15rem] bg-primary shadow-primary shadow-lg flex justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-            <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-              <ClockCircleOutlined />
-            </span>
-            <p className="text-[12px]">Time spent</p>
-            <p className="text-[2rem]">
-              102<span className="text-[18px]">{"/"} 40Hrs</span>
-            </p>
-          </div>
-
-          {/* Resources */}
-          <div className=" w-[15rem] h-[15rem] bg-primary flex shadow-primary shadow-lg justify-center flex-col rounded-lg gap-4 px-2 pl-4">
-            <span className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-              <InboxOutlined />
-            </span>
-            <p className="text-[12px]">Resources</p>
-            <p className="text-[2rem]">
-              10<span className="text-[12px]">{"/"} 120</span>
-            </p>
-          </div>
-        </div>
-        {/* Active Projects */}
-        <div className=" bg-primary rounded-md shadow-primary shadow-md w-full h-[30vh] flex flex-col gap-2 pt-4">
-          <p className="text-white">Active Projects</p>
-
-          <table
-            className="text-white w-full border-collapse border border-white 
-      "
-          >
-            <thead className=" text-left">
-              <tr className=" ">
-                <th className="p-2 font-normal">S/N</th>
-                <th className="p-2 font-normal">Name</th>
-                <th className="p-2 font-normal">Company</th>
-                <th className="p-2 font-normal">Due Date</th>
-                <th className="p-2 font-normal">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* Sample data rows */}
-              {activeProjects.map((row, index) => (
-                <tr className=" " key={row.id}>
-                  <td className="p-2 ">{index + 1}</td>
-                  <td className="p-2 ">{row.name}</td>
-                  <td className="p-2 ">{row.company}</td>
-                  <td className="p-2 ">{row.dueDate}</td>
-                  <td className="p-2 ">{row.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="flex justify-end mt-4">
-            <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-              Join New Project <PlusSquareOutlined />{" "}
-            </Button>
-          </div>
-        </div>
-
-        {/* Todays Task */}
-        <div className=" bg-primary rounded-md w-full h-[30vh] shadow-primary shadow-md flex flex-col gap-2 pt-4">
-          <p className="text-white">Todays Tasks</p>
-
-          <table
-            className="text-white w-full border-collapse border border-white 
-      "
-          >
-            <thead className=" text-left">
-              <tr className=" ">
-                <th className="p-2 font-normal">S/N</th>
-                <th className="p-2 font-normal">Name</th>
-                <th className="p-2 font-normal">Company</th>
-                <th className="p-2 font-normal">Due Date</th>
-                <th className="p-2 font-normal">Action</th>
-              </tr>
-            </thead>
-            <tbody className=" h-full overflow-auto">
-              {/* Sample data rows */}
-              {todayTasks.map((row, index) => (
-                <tr className=" " key={row.id}>
-                  <td className="p-2 ">{index + 1}</td>
-                  <td className="p-2 ">{row.name}</td>
-                  <td className="p-2 ">{row.company}</td>
-                  <td className="p-2 ">{row.dueDate}</td>
-                  <td className="p-2 ">
-                    <Button className="!bg-secondary !border-none !mr-3 !font-[gilroy-regular] rounded-md">
-                      Open Task <PlusSquareOutlined />{" "}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  if (loading) {
+    return (
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+        <Header title="DTUser Dashboard" />
+        <hr />
+        <div className="flex justify-center items-center h-64">
+          <Spin size="large" />
+          <span className="ml-3">Loading your dashboard...</span>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+        <Header title="DTUser Dashboard" />
+        <hr />
+        <div className="flex justify-center items-center h-64">
+          <Alert
+            message="Dashboard Error"
+            description={error}
+            type="error"
+            showIcon
+            action={
+              <Button 
+                size="small" 
+                icon={<ReloadOutlined />}
+                onClick={refreshDashboard}
+                type="primary"
+                className="bg-blue-500"
+              >
+                Retry
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+        <Header title="Your Dashboard" />
+        <hr />
+        <div className="flex justify-center items-center h-64">
+          <Alert
+            message="No Data Available"
+            description="Unable to load dashboard data at this time."
+            type="info"
+            showIcon
+            action={
+              <Button 
+                size="small" 
+                icon={<ReloadOutlined />}
+                onClick={refreshDashboard}
+                type="primary"
+                className="bg-blue-500"
+              >
+                Refresh
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div 
+      className="h-full flex flex-col gap-4 font-[gilroy-regular]"
+      initial="hidden"
+      animate="visible"
+      variants={pageVariants}
+    >
+      {/* Header */}
+      <motion.div variants={sectionVariants}>
+        <Header title={`Welcome back, ${data.userProfile.fullName}`} />
+      </motion.div>
+
+      <hr />
+
+      {/* Content */}
+      <div className="h-full flex flex-col gap-6 overflow-auto px-2">
+        {/* Profile Completion & Welcome Section */}
+        {/* <motion.div variants={sectionVariants}>
+          <Row gutter={[24, 24]}>
+            <Col xs={24} lg={8}>
+              <ProfileCompletionCard 
+                profileCompletion={data.profileCompletion}
+                recommendations={data.recommendations}
+              />
+            </Col>
+            <Col xs={24} lg={16}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg p-6 text-white h-full"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <UserOutlined className="text-2xl" />
+                  <div>
+                    <h2 className="text-xl font-bold">Account Overview</h2>
+                    <p className="text-blue-100">Your platform status and recent activity</p>
+                  </div>
+                </div>
+                
+                <Row gutter={[16, 16]} className="mt-4">
+                  <Col xs={12}>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-sm text-blue-100">Annotator Status</div>
+                      <div className="font-medium capitalize">{data.userProfile.annotatorStatus}</div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-sm text-blue-100">Member Since</div>
+                      <div className="font-medium">
+                        {new Date(data.userProfile.joinedDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-sm text-blue-100">Email Status</div>
+                      <div className="font-medium">
+                        {data.userProfile.isEmailVerified ? 'Verified' : 'Unverified'}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <div className="text-sm text-blue-100">MicroTasker Status</div>
+                      <div className="font-medium capitalize">{data.userProfile.microTaskerStatus}</div>
+                    </div>
+                  </Col>
+                </Row>
+              </motion.div>
+            </Col>
+          </Row>
+        </motion.div> */}
+
+        {/* Financial Summary */}
+        <motion.div variants={sectionVariants}>
+          <FinancialSummaryCards 
+            financialSummary={data.financialSummary}
+            performanceMetrics={data.performanceMetrics}
+          />
+        </motion.div>
+
+        {/* Statistics and Analytics */}
+        <motion.div variants={sectionVariants}>
+          <ApplicationStatisticsCharts 
+            applicationStatistics={data.applicationStatistics}
+            resultSubmissions={data.resultSubmissions}
+          />
+        </motion.div>
+
+        {/* Available Opportunities */}
+        <motion.div variants={sectionVariants}>
+          <AvailableOpportunitiesComponent 
+            opportunities={data.availableOpportunities}
+          />
+        </motion.div>
+
+        {/* Recent Activity Timeline */}
+        <motion.div variants={sectionVariants}>
+          <RecentActivityTimeline 
+            recentActivity={data.recentActivity}
+          />
+        </motion.div>
+
+        {/* Dashboard Info Footer */}
+        <motion.div 
+          variants={sectionVariants}
+          className="text-center text-sm text-gray-500 py-4 border-t"
+        >
+          <p>
+            Dashboard generated on {new Date(data.generatedAt).toLocaleString()} • 
+            Activity timeframe: {data.timeframe.recentActivity} • 
+            <Button type="link" size="small" onClick={refreshDashboard} className="p-0 ml-1">
+              <ReloadOutlined /> Refresh
+            </Button>
+          </p>
+        </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
