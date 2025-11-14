@@ -14,6 +14,8 @@ import {
   Descriptions,
   message,
   Popconfirm,
+  Dropdown,
+  Menu,
 } from "antd";
 import {
   EyeOutlined,
@@ -21,7 +23,18 @@ import {
   CloseOutlined,
   ReloadOutlined,
   SearchOutlined,
+  MoreOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
+import { Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { GlobalWorkerOptions } from 'pdfjs-dist';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+
+// Configure PDF.js worker for @react-pdf-viewer
+GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.279/pdf.worker.min.js';
+
 import Header from "../../User/Header";
 import moment from "moment";
 import { useAdminApplications } from "../../../../hooks/Auth/Admin/Projects/useAdminApplications";
@@ -46,10 +59,16 @@ const REJECTION_REASONS: { value: RejectionReason; label: string }[] = [
 ];
 
 const ApplicationManagement: React.FC = () => {
+  // Initialize PDF viewer plugin
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
+  const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [pdfViewerApplication, setPdfViewerApplication] = useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
   const [approvalForm] = Form.useForm();
@@ -121,6 +140,18 @@ const ApplicationManagement: React.FC = () => {
     setSelectedApplication(application);
     setIsRejectionModalVisible(true);
     rejectionForm.resetFields();
+  };
+
+  const viewResume = (resumeUrl: string, application?: Application) => {
+    setPdfUrl(resumeUrl);
+    setPdfViewerApplication(application || null);
+    setIsPdfModalVisible(true);
+  };
+
+  const closePdfModal = () => {
+    setIsPdfModalVisible(false);
+    setPdfUrl("");
+    setPdfViewerApplication(null);
   };
 
   const handleApprove = async () => {
@@ -263,40 +294,80 @@ const ApplicationManagement: React.FC = () => {
         moment(a.appliedAt).unix() - moment(b.appliedAt).unix(),
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_: any, record: Application) => (
-        <Space size="small">
+      title: "Resume",
+      dataIndex: "resumeUrl",
+      key: "resumeUrl",
+      render: (resumeUrl: string, record: Application) => (
+        resumeUrl ? (
           <Button
-            type="primary"
-            icon={<EyeOutlined />}
-            onClick={() => showApplicationDetails(record)}
+            type="link"
+            icon={<FilePdfOutlined />}
+            onClick={() => viewResume(resumeUrl, record)}
             size="small"
           >
             View
           </Button>
-          {record.status === "pending" && (
-            <>
-              <Button
-                type="primary"
-                icon={<CheckOutlined />}
-                onClick={() => showApprovalModal(record)}
-                size="small"
-                className="bg-green-500 border-green-500"
+        ) : (
+          <span className="text-gray-400">No resume</span>
+        )
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_: any, record: Application) => (
+        <Dropdown
+          overlay={
+            <Menu>
+              <Menu.Item 
+                key="view-details"
+                icon={<EyeOutlined />}
+                onClick={() => showApplicationDetails(record)}
               >
-                Approve
-              </Button>
-              <Button
-                danger
-                icon={<CloseOutlined />}
-                onClick={() => showRejectionModal(record)}
-                size="small"
-              >
-                Reject
-              </Button>
-            </>
-          )}
-        </Space>
+                View Details
+              </Menu.Item>
+              {record.resumeUrl && (
+                <Menu.Item 
+                  key="view-resume"
+                  icon={<FilePdfOutlined />}
+                  onClick={() => viewResume(record.resumeUrl!, record)}
+                >
+                  View Resume
+                </Menu.Item>
+              )}
+              {record.status === "pending" && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item 
+                    key="approve"
+                    icon={<CheckOutlined />}
+                    onClick={() => showApprovalModal(record)}
+                    className="text-green-600"
+                  >
+                    Approve
+                  </Menu.Item>
+                  <Menu.Item 
+                    key="reject"
+                    icon={<CloseOutlined />}
+                    onClick={() => showRejectionModal(record)}
+                    className="text-red-600"
+                  >
+                    Reject
+                  </Menu.Item>
+                </>
+              )}
+            </Menu>
+          }
+          trigger={['click']}
+        >
+          <Button 
+            type="text" 
+            icon={<MoreOutlined />}
+            className="hover:bg-gray-100"
+          >
+            Actions
+          </Button>
+        </Dropdown>
       ),
     },
   ];
@@ -503,6 +574,17 @@ const ApplicationManagement: React.FC = () => {
                 <Descriptions.Item label="Status">
                   {selectedApplication.status.toUpperCase()}
                 </Descriptions.Item>
+                {selectedApplication.resumeUrl && (
+                  <Descriptions.Item label="Resume" span={2}>
+                    <Button
+                      type="primary"
+                      icon={<FilePdfOutlined />}
+                      onClick={() => viewResume(selectedApplication.resumeUrl!)}
+                    >
+                      View Resume
+                    </Button>
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label="Cover Letter" span={2}>
                   <div className="bg-gray-50 p-3 rounded">
                     {selectedApplication.coverLetter}
@@ -672,6 +754,58 @@ const ApplicationManagement: React.FC = () => {
                 />
               </Form.Item>
             </Form>
+          </div>
+        )}
+      </Modal>
+
+      {/* PDF Viewer Modal */}
+      <Modal
+        title="Resume Preview"
+        open={isPdfModalVisible}
+        onCancel={closePdfModal}
+        width={900}
+        footer={[
+          pdfViewerApplication?.status === 'pending' && (
+            <div key="pdf-actions" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <Button
+                key="reject"
+                onClick={() => {
+                  setSelectedApplication(pdfViewerApplication);
+                  setIsRejectionModalVisible(true);
+                  closePdfModal();
+                }}
+              >
+                Reject
+              </Button>
+              <Button
+                key="approve"
+                type="primary"
+                onClick={() => {
+                  setSelectedApplication(pdfViewerApplication);
+                  setIsApprovalModalVisible(true);
+                  closePdfModal();
+                }}
+              >
+                Approve
+              </Button>
+            </div>
+          ),
+          <Button key="close" onClick={closePdfModal}>Close</Button>
+        ].filter(Boolean)}
+        styles={{
+          body: { 
+            height: '70vh', 
+            overflow: 'hidden',
+            padding: '8px'
+          }
+        }}
+      >
+        {pdfUrl && (
+          <div style={{ height: '100%' }}>
+            <Viewer 
+              fileUrl={pdfUrl}
+              plugins={[defaultLayoutPluginInstance]}
+            />
           </div>
         )}
       </Modal>

@@ -165,13 +165,17 @@ const ProjectManagement: React.FC = () => {
   const handleSubmitProject = async () => {
     try {
       const values = await form.validateFields();
+      
+      // Exclude status from payload when editing
+      const { status, ...formValues } = values;
+      
       const payload: CreateProjectForm = {
-        ...values,
-        deadline: dayjs(values.deadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
-        applicationDeadline: dayjs(values.applicationDeadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
-        requiredSkills: values.requiredSkills || [],
-        languageRequirements: values.languageRequirements || [],
-        tags: values.tags || [],
+        ...formValues,
+        deadline: dayjs(formValues.deadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
+        applicationDeadline: dayjs(formValues.applicationDeadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
+        requiredSkills: formValues.requiredSkills || [],
+        languageRequirements: formValues.languageRequirements || [],
+        tags: formValues.tags || [],
       };
 
       let result;
@@ -338,7 +342,10 @@ const ProjectManagement: React.FC = () => {
         languageRequirements: project.languageRequirements,
         tags: project.tags,
         applicationDeadline: project.applicationDeadline ? dayjs(project.applicationDeadline) : null,
-        status: project.status,
+        projectGuidelineLink: project.projectGuidelineLink,
+        projectGuidelineVideo: project.projectGuidelineVideo,
+        projectCommunityLink: project.projectCommunityLink,
+        projectTrackerLink: project.projectTrackerLink,
       });
     } else {
       form.resetFields();
@@ -820,18 +827,49 @@ const ProjectManagement: React.FC = () => {
             />
           </Form.Item>
 
-          {isEditMode && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Form.Item
-              name="status"
-              label="Project Status"
+              name="projectGuidelineLink"
+              label="Project Guidelines Link"
             >
-              <Select placeholder="Select status">
-                {PROJECT_STATUSES.map(status => (
-                  <Option key={status} value={status}>{status.toUpperCase()}</Option>
-                ))}
-              </Select>
+              <Input 
+                placeholder="https://example.com/guidelines"
+                type="url"
+              />
             </Form.Item>
-          )}
+
+            <Form.Item
+              name="projectGuidelineVideo"
+              label="Project Guidelines Video"
+            >
+              <Input 
+                placeholder="https://example.com/video"
+                type="url"
+              />
+            </Form.Item>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="projectCommunityLink"
+              label="Project Community Link"
+            >
+              <Input 
+                placeholder="https://example.com/community"
+                type="url"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="projectTrackerLink"
+              label="Project Tracker Link"
+            >
+              <Input 
+                placeholder="https://example.com/tracker"
+                type="url"
+              />
+            </Form.Item>
+          </div>
         </Form>
       </Modal>
 
@@ -883,6 +921,34 @@ const ProjectManagement: React.FC = () => {
                 <Descriptions.Item label="Created At">
                   {moment(selectedProject.createdAt).format("MMMM DD, YYYY HH:mm")}
                 </Descriptions.Item>
+                {selectedProject.projectGuidelineLink && (
+                  <Descriptions.Item label="Guidelines Link">
+                    <a href={selectedProject.projectGuidelineLink} target="_blank" rel="noopener noreferrer">
+                      View Guidelines
+                    </a>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectGuidelineVideo && (
+                  <Descriptions.Item label="Guidelines Video">
+                    <a href={selectedProject.projectGuidelineVideo} target="_blank" rel="noopener noreferrer">
+                      Watch Video
+                    </a>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectCommunityLink && (
+                  <Descriptions.Item label="Community Link">
+                    <a href={selectedProject.projectCommunityLink} target="_blank" rel="noopener noreferrer">
+                      Join Community
+                    </a>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectTrackerLink && (
+                  <Descriptions.Item label="Tracker Link">
+                    <a href={selectedProject.projectTrackerLink} target="_blank" rel="noopener noreferrer">
+                      View Tracker
+                    </a>
+                  </Descriptions.Item>
+                )}
               </Descriptions>
             </Card>
 

@@ -16,6 +16,10 @@ export interface Project {
   languageRequirements: string[];
   tags: string[];
   applicationDeadline: string;
+  projectGuidelineLink?: string;
+  projectGuidelineVideo?: string;
+  projectCommunityLink?: string;
+  projectTrackerLink?: string;
   status: ProjectStatus;
   createdBy: {
     _id: string;
@@ -41,6 +45,7 @@ export interface Application {
   availability: Availability;
   proposedRate?: number;
   estimatedCompletionTime?: string;
+  resumeUrl?: string;
   appliedAt: string;
   approvedAt?: string;
   rejectedAt?: string;
@@ -210,6 +215,10 @@ export interface CreateProjectForm {
   languageRequirements: string[];
   tags: string[];
   applicationDeadline: string;
+  projectGuidelineLink?: string;
+  projectGuidelineVideo?: string;
+  projectCommunityLink?: string;
+  projectTrackerLink?: string;
 }
 
 export interface UpdateProjectForm extends Partial<CreateProjectForm> {

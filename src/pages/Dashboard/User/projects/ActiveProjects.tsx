@@ -9,6 +9,8 @@ import {
   Descriptions,
   Empty,
   Progress,
+  Dropdown,
+  Menu,
 } from "antd";
 import {
   ArrowRightOutlined,
@@ -18,6 +20,11 @@ import {
   DollarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  FileTextOutlined,
+  PlayCircleOutlined,
+  MoreOutlined,
+  TeamOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
@@ -155,20 +162,72 @@ const ActiveProjects = () => {
                   key={project._id}
                   className="project-card hover:shadow-lg transition-shadow"
                   actions={[
-                    <Button
-                      type="text"
-                      icon={<EyeOutlined />}
-                      onClick={() => showProjectDetails(project)}
+                    <Dropdown
+                      overlay={
+                        <Menu>
+                          <Menu.Item 
+                            key="view-details"
+                            icon={<EyeOutlined />}
+                            onClick={() => showProjectDetails(project)}
+                          >
+                            View Details
+                          </Menu.Item>
+                          {project.projectGuidelineLink && (
+                            <Menu.Item 
+                              key="view-guidelines"
+                              icon={<FileTextOutlined />}
+                              onClick={() => window.open(project.projectGuidelineLink, '_blank')}
+                            >
+                              View Guidelines
+                            </Menu.Item>
+                          )}
+                          {project.projectGuidelineVideo && (
+                            <Menu.Item 
+                              key="watch-tutorial"
+                              icon={<PlayCircleOutlined />}
+                              onClick={() => window.open(project.projectGuidelineVideo, '_blank')}
+                            >
+                              Watch Tutorial
+                            </Menu.Item>
+                          )}
+                          {project.projectCommunityLink && (
+                            <Menu.Item 
+                              key="join-community"
+                              icon={<TeamOutlined />}
+                              onClick={() => window.open(project.projectCommunityLink, '_blank')}
+                            >
+                              Join Community
+                            </Menu.Item>
+                          )}
+                          {project.projectTrackerLink && (
+                            <Menu.Item 
+                              key="view-tracker"
+                              icon={<BarChartOutlined />}
+                              onClick={() => window.open(project.projectTrackerLink, '_blank')}
+                            >
+                              View Tracker
+                            </Menu.Item>
+                          )}
+                          {!project.projectGuidelineLink && !project.projectGuidelineVideo && !project.projectCommunityLink && !project.projectTrackerLink && (
+                            <Menu.Item 
+                              key="continue-work"
+                              icon={<ArrowRightOutlined />}
+                            >
+                              Continue Work
+                            </Menu.Item>
+                          )}
+                        </Menu>
+                      }
+                      trigger={['click']}
                     >
-                      View Details
-                    </Button>,
-                    <Button
-                      type="primary"
-                      icon={<ArrowRightOutlined />}
-                      className="!bg-secondary !border-secondary"
-                    >
-                      Continue Work
-                    </Button>,
+                      <Button 
+                        type="text" 
+                        icon={<MoreOutlined />}
+                        className="hover:bg-gray-100"
+                      >
+                        Actions
+                      </Button>
+                    </Dropdown>
                   ]}
                 >
                   <div className="mb-3">
@@ -264,6 +323,50 @@ const ActiveProjects = () => {
                 <Descriptions.Item label="Status">
                   <Tag color="green">ACTIVE</Tag>
                 </Descriptions.Item>
+                {selectedProject.projectGuidelineLink && (
+                  <Descriptions.Item label="Guidelines">
+                    <Button
+                      type="link"
+                      icon={<FileTextOutlined />}
+                      onClick={() => window.open(selectedProject.projectGuidelineLink, '_blank')}
+                    >
+                      View Guidelines
+                    </Button>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectGuidelineVideo && (
+                  <Descriptions.Item label="Tutorial Video">
+                    <Button
+                      type="link"
+                      icon={<PlayCircleOutlined />}
+                      onClick={() => window.open(selectedProject.projectGuidelineVideo, '_blank')}
+                    >
+                      Watch Tutorial
+                    </Button>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectCommunityLink && (
+                  <Descriptions.Item label="Community">
+                    <Button
+                      type="link"
+                      icon={<TeamOutlined />}
+                      onClick={() => window.open(selectedProject.projectCommunityLink, '_blank')}
+                    >
+                      Join Community
+                    </Button>
+                  </Descriptions.Item>
+                )}
+                {selectedProject.projectTrackerLink && (
+                  <Descriptions.Item label="Tracker">
+                    <Button
+                      type="link"
+                      icon={<BarChartOutlined />}
+                      onClick={() => window.open(selectedProject.projectTrackerLink, '_blank')}
+                    >
+                      View Tracker
+                    </Button>
+                  </Descriptions.Item>
+                )}
               </Descriptions>
             </Card>
 

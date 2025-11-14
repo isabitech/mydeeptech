@@ -12,6 +12,7 @@ import {
   MenuOutlined,
   CloseOutlined,
   LockOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -46,6 +47,7 @@ const Sidebar = () => {
   const menuItems = [
     { key: "overview", label: "Overview", icon: <HomeOutlined />, path: "/dashboard/overview" },
     { key: "assessment", label: "Assessment", icon: <BookOutlined />, path: "/dashboard/assessment" },
+    { key: "assessment-history", label: "Assessment History", icon: <HistoryOutlined />, path: "/dashboard/assessment-history" },
     { key: "projects", label: "Projects", icon: <CodeSandboxOutlined />, path: "/dashboard/projects" },
     // { key: "jobs", label: "Jobs", icon: <InboxOutlined />, path: "/dashboard/jobs" },
     // { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
@@ -84,13 +86,21 @@ const Sidebar = () => {
 
     const { annotatorStatus, microTaskerStatus } = userInfo;
     
+    // Filter logic for assessment and assessment history
+    let filteredItems = [...menuItems];
+    
     // If either status is approved, remove assessment from menu
     if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
-      return menuItems.filter(item => item.key !== "assessment");
+      filteredItems = filteredItems.filter(item => item.key !== "assessment");
+    }
+    
+    // Show assessment history only if user has completed at least one assessment
+    // (if either status is not "pending", it means they've taken an assessment)
+    if (annotatorStatus === "pending" && microTaskerStatus === "pending") {
+      filteredItems = filteredItems.filter(item => item.key !== "assessment-history");
     }
 
-    // Otherwise show all items
-    return menuItems;
+    return filteredItems;
   };
 
   const filteredMenuItems = getFilteredMenuItems();

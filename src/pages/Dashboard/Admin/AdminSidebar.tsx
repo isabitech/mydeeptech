@@ -8,6 +8,7 @@ import {
   LogoutOutlined,
   WalletOutlined,
   UnorderedListOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
@@ -29,6 +30,12 @@ const AdminSidebar = () => {
       label: "Annotators",
       icon: <UserOutlined />,
       path: "/annotators",
+    },
+    {
+      key: "assessments",
+      label: "Assessments",
+      icon: <BookOutlined />,
+      path: "/assessments",
     },
     {
       key: "projects",
