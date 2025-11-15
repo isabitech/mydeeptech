@@ -33,7 +33,9 @@ import Hiring from "./pages/Careers/Hiring";
 import UploadEmail from "./pages/Projects/SurveyProjects/UploadEmail";
 import MathTalent from "./pages/Careers/Talents/MathTalent";
 import Welcome from "./pages/Dashboard/User/Welcome";
-import Assessment from "./pages/Dashboard/User/assessment/Assessment";
+import Assessment from "./pages/Auth/Assessment";
+import AssessmentHistory from "./pages/Dashboard/User/AssessmentHistory";
+import AssessmentManagement from "./pages/Dashboard/Admin/AssessmentManagement";
 import CustomerService from "./components/CustomerService";
 import AdsLandingPage from "./pages/Ads/AdsLandingPage";
 import VerifyEmail from "./pages/Auth/VerifyEmail";
@@ -53,6 +55,7 @@ const AppRoutes = () => {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-email/:id" element={<VerifyEmail />} />
+        <Route path="/assessment" element={<Assessment />} />
         <Route path="/about-us" element={<AboutUs />} />
         <Route path="/new-projects" element={<NewProjects />} />
         {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
@@ -76,6 +79,7 @@ const AppRoutes = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="assessment" element={<Assessment />} />
+          <Route path="assessment-history" element={<AssessmentHistory />} />
 
 
         </Route>
@@ -90,6 +94,7 @@ const AppRoutes = () => {
             <Route path="overview" index element={<AdminOverview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="annotators" element={<Annotators />} />
+            <Route path="assessments" element={<AssessmentManagement />} />
             <Route path="projects" element={<ProjectManagement />} />
             <Route path="applications" element={<ApplicationManagement />} />
             <Route path="jobs" element={<JobManagement />} />

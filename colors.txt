@@ -92,4 +92,3 @@ Secondary Color: Incorporated #F6921E for accents, secondary buttons, and active
 Gradients: Updated with appropriate dark and vibrant tones for modern aesthetics.
 Hover Effects: Added darker/lighter variations for feedback.
 Palette Extensions: Defined colors for error, success, and informational states.
-Let me know if you need further refinements!

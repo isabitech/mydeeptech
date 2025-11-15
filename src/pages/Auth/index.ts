@@ -1,0 +1,11 @@
+export { default as Assessment } from './Assessment';
+export { default as AssessmentIntroduction } from './AssessmentIntroduction';
+export { default as AssessmentExam } from './AssessmentExam';
+export { default as AssessmentResults } from './AssessmentResults';
+export { default as ForgotPassword } from './ForgotPassword';
+export { default as LandingPage } from './LandingPage';
+export { default as Login } from './Login';
+export { default as LoginPage } from './LoginPage';
+export { default as Signup } from './Signup';
+export { default as SignupPage } from './SignupPage';
+export { default as VerifyEmail } from './VerifyEmail';

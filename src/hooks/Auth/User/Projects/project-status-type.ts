@@ -33,6 +33,10 @@ export interface Project {
   tags: any[]
   isPublic: boolean
   applicationDeadline: any
+  projectGuidelineLink?: string
+  projectGuidelineVideo?: string
+  projectCommunityLink?: string
+  projectTrackerLink?: string
   createdAt: string
   updatedAt: string
   __v: number
