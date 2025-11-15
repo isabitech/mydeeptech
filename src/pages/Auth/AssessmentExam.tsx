@@ -35,7 +35,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
         // Try to fetch from API first
         const questionsResult = await getAssessmentQuestions(5); // 5 questions per section
         
-        console.log(questionsResult);
+        // console.log(questionsResult);
 
         if (questionsResult.data) {
           // The questionsResult.data is already the AssessmentTypeResponse
@@ -43,7 +43,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
           
           if (apiResponse.success && apiResponse.data) {
             const apiQuestions = apiResponse.data.questions || [];
-            console.log("API Questions", apiQuestions);
+            // console.log("API Questions", apiQuestions);
             const convertedQuestions = apiQuestions.map(convertApiQuestionToComponent);
             setQuestions(convertedQuestions);
             
@@ -53,7 +53,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
           }
         } else {
           // Fallback to static data if API fails
-          console.log('API request failed, using fallback static questions');
+          // console.log('API request failed, using fallback static questions');
           const convertedQuestions = fallbackQuestions.map(convertApiQuestionToComponent);
           setQuestions(convertedQuestions);
           setSections(fallbackAssessmentInfo.sections);
