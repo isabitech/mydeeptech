@@ -26,14 +26,16 @@ import {
   MoreOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
-import { Viewer } from '@react-pdf-viewer/core';
-import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { GlobalWorkerOptions } from 'pdfjs-dist';
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import { Viewer } from "@react-pdf-viewer/core";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
+import { GlobalWorkerOptions } from "pdfjs-dist";
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+import * as pdfjsLib from "pdfjs-dist/build/pdf";
+import { Worker } from '@react-pdf-viewer/core';
 
 // Configure PDF.js worker for @react-pdf-viewer
-GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.279/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.279/pdf.worker.min.js`;
 
 import Header from "../../User/Header";
 import moment from "moment";
@@ -61,14 +63,16 @@ const REJECTION_REASONS: { value: RejectionReason; label: string }[] = [
 const ApplicationManagement: React.FC = () => {
   // Initialize PDF viewer plugin
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
-  
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+
+  const [selectedApplication, setSelectedApplication] =
+    useState<Application | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
   const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string>("");
-  const [pdfViewerApplication, setPdfViewerApplication] = useState<Application | null>(null);
+  const [pdfViewerApplication, setPdfViewerApplication] =
+    useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
   const [approvalForm] = Form.useForm();
@@ -86,10 +90,7 @@ const ApplicationManagement: React.FC = () => {
     resetState,
   } = useAdminApplications();
 
-  const {
-    getAllProjects,
-    projects,
-  } = useAdminProjects();
+  const { getAllProjects, projects } = useAdminProjects();
 
   useEffect(() => {
     fetchApplications();
@@ -163,7 +164,10 @@ const ApplicationManagement: React.FC = () => {
         reviewNotes: values.reviewNotes,
       };
 
-      const result = await approveApplication(selectedApplication._id, approvalData);
+      const result = await approveApplication(
+        selectedApplication._id,
+        approvalData
+      );
 
       if (result.success) {
         message.success("Application approved successfully!");
@@ -188,7 +192,10 @@ const ApplicationManagement: React.FC = () => {
         reviewNotes: values.reviewNotes,
       };
 
-      const result = await rejectApplication(selectedApplication._id, rejectionData);
+      const result = await rejectApplication(
+        selectedApplication._id,
+        rejectionData
+      );
 
       if (result.success) {
         message.success("Application rejected successfully!");
@@ -210,16 +217,14 @@ const ApplicationManagement: React.FC = () => {
       render: (record: Application) => (
         <div>
           <div className="font-medium">
-            {typeof record.applicantId === 'object' 
-              ? record.applicantId.fullName 
-              : 'Unknown User'
-            }
+            {typeof record.applicantId === "object"
+              ? record.applicantId.fullName
+              : "Unknown User"}
           </div>
           <div className="text-gray-500 text-sm">
-            {typeof record.applicantId === 'object' 
-              ? record.applicantId.email 
-              : ''
-            }
+            {typeof record.applicantId === "object"
+              ? record.applicantId.email
+              : ""}
           </div>
         </div>
       ),
@@ -230,16 +235,14 @@ const ApplicationManagement: React.FC = () => {
       render: (record: Application) => (
         <div>
           <div className="font-medium">
-            {typeof record.projectId === 'object' 
-              ? record.projectId.projectName 
-              : 'Unknown Project'
-            }
+            {typeof record.projectId === "object"
+              ? record.projectId.projectName
+              : "Unknown Project"}
           </div>
           <div className="text-gray-500 text-sm">
-            {typeof record.projectId === 'object' 
-              ? record.projectId.projectCategory 
-              : ''
-            }
+            {typeof record.projectId === "object"
+              ? record.projectId.projectCategory
+              : ""}
           </div>
         </div>
       ),
@@ -251,7 +254,7 @@ const ApplicationManagement: React.FC = () => {
       render: (status: string) => {
         const colors = {
           pending: "orange",
-          approved: "green", 
+          approved: "green",
           rejected: "red",
         };
         return (
@@ -263,7 +266,7 @@ const ApplicationManagement: React.FC = () => {
     },
     {
       title: "Availability",
-      dataIndex: "availability", 
+      dataIndex: "availability",
       key: "availability",
       render: (availability: string) => (
         <Tag color="blue">{availability.replace("_", " ").toUpperCase()}</Tag>
@@ -277,10 +280,10 @@ const ApplicationManagement: React.FC = () => {
         if (!rate) return "As Listed";
         return (
           <span>
-            {typeof record.projectId === 'object' 
-              ? record.projectId.payRateCurrency 
-              : ''
-            } {rate}
+            {typeof record.projectId === "object"
+              ? record.projectId.payRateCurrency
+              : ""}{" "}
+            {rate}
           </span>
         );
       },
@@ -290,14 +293,14 @@ const ApplicationManagement: React.FC = () => {
       dataIndex: "appliedAt",
       key: "appliedAt",
       render: (date: string) => moment(date).format("MMM DD, YYYY"),
-      sorter: (a: Application, b: Application) => 
+      sorter: (a: Application, b: Application) =>
         moment(a.appliedAt).unix() - moment(b.appliedAt).unix(),
     },
     {
       title: "Resume",
       dataIndex: "resumeUrl",
       key: "resumeUrl",
-      render: (resumeUrl: string, record: Application) => (
+      render: (resumeUrl: string, record: Application) =>
         resumeUrl ? (
           <Button
             type="link"
@@ -309,8 +312,7 @@ const ApplicationManagement: React.FC = () => {
           </Button>
         ) : (
           <span className="text-gray-400">No resume</span>
-        )
-      ),
+        ),
     },
     {
       title: "Actions",
@@ -319,7 +321,7 @@ const ApplicationManagement: React.FC = () => {
         <Dropdown
           overlay={
             <Menu>
-              <Menu.Item 
+              <Menu.Item
                 key="view-details"
                 icon={<EyeOutlined />}
                 onClick={() => showApplicationDetails(record)}
@@ -327,7 +329,7 @@ const ApplicationManagement: React.FC = () => {
                 View Details
               </Menu.Item>
               {record.resumeUrl && (
-                <Menu.Item 
+                <Menu.Item
                   key="view-resume"
                   icon={<FilePdfOutlined />}
                   onClick={() => viewResume(record.resumeUrl!, record)}
@@ -338,7 +340,7 @@ const ApplicationManagement: React.FC = () => {
               {record.status === "pending" && (
                 <>
                   <Menu.Divider />
-                  <Menu.Item 
+                  <Menu.Item
                     key="approve"
                     icon={<CheckOutlined />}
                     onClick={() => showApprovalModal(record)}
@@ -346,7 +348,7 @@ const ApplicationManagement: React.FC = () => {
                   >
                     Approve
                   </Menu.Item>
-                  <Menu.Item 
+                  <Menu.Item
                     key="reject"
                     icon={<CloseOutlined />}
                     onClick={() => showRejectionModal(record)}
@@ -358,10 +360,10 @@ const ApplicationManagement: React.FC = () => {
               )}
             </Menu>
           }
-          trigger={['click']}
+          trigger={["click"]}
         >
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             icon={<MoreOutlined />}
             className="hover:bg-gray-100"
           >
@@ -380,7 +382,13 @@ const ApplicationManagement: React.FC = () => {
           description={error}
           type="error"
           action={
-            <Button size="small" onClick={() => { resetState(); fetchApplications(); }}>
+            <Button
+              size="small"
+              onClick={() => {
+                resetState();
+                fetchApplications();
+              }}
+            >
               Retry
             </Button>
           }
@@ -501,7 +509,9 @@ const ApplicationManagement: React.FC = () => {
         {selectedApplication && (
           <div className="p-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">Application Details</h2>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Application Details
+              </h2>
               <Tag
                 color={
                   selectedApplication.status === "pending"
@@ -518,21 +528,26 @@ const ApplicationManagement: React.FC = () => {
             <Card className="mb-6">
               <Descriptions title="Applicant Information" bordered column={2}>
                 <Descriptions.Item label="Name">
-                  {typeof selectedApplication.applicantId === 'object' 
-                    ? selectedApplication.applicantId.fullName 
-                    : 'Unknown User'}
+                  {typeof selectedApplication.applicantId === "object"
+                    ? selectedApplication.applicantId.fullName
+                    : "Unknown User"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Email">
-                  {typeof selectedApplication.applicantId === 'object' 
-                    ? selectedApplication.applicantId.email 
-                    : 'N/A'}
+                  {typeof selectedApplication.applicantId === "object"
+                    ? selectedApplication.applicantId.email
+                    : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Skills" span={2}>
-                  {typeof selectedApplication.applicantId === 'object' && selectedApplication.applicantId.skills
-                    ? selectedApplication.applicantId.skills.map((skill, index) => (
-                        <Tag key={index} color="blue">{skill}</Tag>
-                      ))
-                    : 'No skills listed'}
+                  {typeof selectedApplication.applicantId === "object" &&
+                  selectedApplication.applicantId.skills
+                    ? selectedApplication.applicantId.skills.map(
+                        (skill, index) => (
+                          <Tag key={index} color="blue">
+                            {skill}
+                          </Tag>
+                        )
+                      )
+                    : "No skills listed"}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -540,22 +555,22 @@ const ApplicationManagement: React.FC = () => {
             <Card className="mb-6">
               <Descriptions title="Project Information" bordered column={2}>
                 <Descriptions.Item label="Project Name">
-                  {typeof selectedApplication.projectId === 'object' 
-                    ? selectedApplication.projectId.projectName 
-                    : 'Unknown Project'}
+                  {typeof selectedApplication.projectId === "object"
+                    ? selectedApplication.projectId.projectName
+                    : "Unknown Project"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Category">
-                  {typeof selectedApplication.projectId === 'object' 
-                    ? selectedApplication.projectId.projectCategory 
-                    : 'N/A'}
+                  {typeof selectedApplication.projectId === "object"
+                    ? selectedApplication.projectId.projectCategory
+                    : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Pay Rate">
-                  {typeof selectedApplication.projectId === 'object' 
-                    ? `${selectedApplication.projectId.payRateCurrency} ${selectedApplication.projectId.payRate}` 
-                    : 'N/A'}
+                  {typeof selectedApplication.projectId === "object"
+                    ? `${selectedApplication.projectId.payRateCurrency} ${selectedApplication.projectId.payRate}`
+                    : "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Proposed Rate">
-                  {selectedApplication.proposedRate || 'As Listed'}
+                  {selectedApplication.proposedRate || "As Listed"}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -563,13 +578,18 @@ const ApplicationManagement: React.FC = () => {
             <Card className="mb-6">
               <Descriptions title="Application Information" bordered column={2}>
                 <Descriptions.Item label="Applied Date">
-                  {moment(selectedApplication.appliedAt).format("MMMM DD, YYYY HH:mm")}
+                  {moment(selectedApplication.appliedAt).format(
+                    "MMMM DD, YYYY HH:mm"
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Availability">
-                  {selectedApplication.availability.replace("_", " ").toUpperCase()}
+                  {selectedApplication.availability
+                    .replace("_", " ")
+                    .toUpperCase()}
                 </Descriptions.Item>
                 <Descriptions.Item label="Estimated Completion">
-                  {selectedApplication.estimatedCompletionTime || 'Not specified'}
+                  {selectedApplication.estimatedCompletionTime ||
+                    "Not specified"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
                   {selectedApplication.status.toUpperCase()}
@@ -603,19 +623,26 @@ const ApplicationManagement: React.FC = () => {
                       </div>
                     </Descriptions.Item>
                   )}
-                  {selectedApplication.status === "approved" && selectedApplication.approvedAt && (
-                    <Descriptions.Item label="Approved Date">
-                      {moment(selectedApplication.approvedAt).format("MMMM DD, YYYY HH:mm")}
-                    </Descriptions.Item>
-                  )}
+                  {selectedApplication.status === "approved" &&
+                    selectedApplication.approvedAt && (
+                      <Descriptions.Item label="Approved Date">
+                        {moment(selectedApplication.approvedAt).format(
+                          "MMMM DD, YYYY HH:mm"
+                        )}
+                      </Descriptions.Item>
+                    )}
                   {selectedApplication.status === "rejected" && (
                     <>
                       <Descriptions.Item label="Rejection Reason">
-                        {selectedApplication.rejectionReason?.replace("_", " ").toUpperCase()}
+                        {selectedApplication.rejectionReason
+                          ?.replace("_", " ")
+                          .toUpperCase()}
                       </Descriptions.Item>
                       {selectedApplication.rejectedAt && (
                         <Descriptions.Item label="Rejected Date">
-                          {moment(selectedApplication.rejectedAt).format("MMMM DD, YYYY HH:mm")}
+                          {moment(selectedApplication.rejectedAt).format(
+                            "MMMM DD, YYYY HH:mm"
+                          )}
                         </Descriptions.Item>
                       )}
                     </>
@@ -670,15 +697,15 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to approve{" "}
               <strong>
-                {typeof selectedApplication.applicantId === 'object' 
-                  ? selectedApplication.applicantId.fullName 
-                  : 'Unknown User'}
+                {typeof selectedApplication.applicantId === "object"
+                  ? selectedApplication.applicantId.fullName
+                  : "Unknown User"}
               </strong>{" "}
               for the project{" "}
               <strong>
-                {typeof selectedApplication.projectId === 'object' 
-                  ? selectedApplication.projectId.projectName 
-                  : 'Unknown Project'}
+                {typeof selectedApplication.projectId === "object"
+                  ? selectedApplication.projectId.projectName
+                  : "Unknown Project"}
               </strong>
               .
             </p>
@@ -715,15 +742,15 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to reject{" "}
               <strong>
-                {typeof selectedApplication.applicantId === 'object' 
-                  ? selectedApplication.applicantId.fullName 
-                  : 'Unknown User'}
+                {typeof selectedApplication.applicantId === "object"
+                  ? selectedApplication.applicantId.fullName
+                  : "Unknown User"}
               </strong>
               's application for{" "}
               <strong>
-                {typeof selectedApplication.projectId === 'object' 
-                  ? selectedApplication.projectId.projectName 
-                  : 'Unknown Project'}
+                {typeof selectedApplication.projectId === "object"
+                  ? selectedApplication.projectId.projectName
+                  : "Unknown Project"}
               </strong>
               .
             </p>
@@ -732,7 +759,12 @@ const ApplicationManagement: React.FC = () => {
               <Form.Item
                 name="rejectionReason"
                 label="Rejection Reason"
-                rules={[{ required: true, message: "Please select a rejection reason" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select a rejection reason",
+                  },
+                ]}
               >
                 <Select placeholder="Select reason for rejection">
                   {REJECTION_REASONS.map((reason) => (
@@ -765,8 +797,17 @@ const ApplicationManagement: React.FC = () => {
         onCancel={closePdfModal}
         width={900}
         footer={[
-          pdfViewerApplication?.status === 'pending' && (
-            <div key="pdf-actions" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+          pdfViewerApplication?.status === "pending" && (
+            <div
+              key="pdf-actions"
+              style={{
+                display: "flex",
+                gap: "8px",
+                justifyContent: "flex-end",
+                marginRight: "16px",
+                marginBottom: "8px",
+              }}
+            >
               <Button
                 key="reject"
                 onClick={() => {
@@ -790,22 +831,26 @@ const ApplicationManagement: React.FC = () => {
               </Button>
             </div>
           ),
-          <Button key="close" onClick={closePdfModal}>Close</Button>
+          <Button key="close" onClick={closePdfModal}>
+            Close
+          </Button>,
         ].filter(Boolean)}
         styles={{
-          body: { 
-            height: '70vh', 
-            overflow: 'hidden',
-            padding: '8px'
-          }
+          body: {
+            height: "70vh",
+            overflow: "hidden",
+            padding: "8px",
+          },
         }}
       >
         {pdfUrl && (
-          <div style={{ height: '100%' }}>
-            <Viewer 
-              fileUrl={pdfUrl}
-              plugins={[defaultLayoutPluginInstance]}
-            />
+          <div style={{ height: "100%" }}>
+            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+              <Viewer
+                fileUrl={pdfUrl}
+                plugins={[defaultLayoutPluginInstance]}
+              />
+            </Worker>
           </div>
         )}
       </Modal>
