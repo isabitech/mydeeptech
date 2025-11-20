@@ -13,6 +13,7 @@ import {
   CloseOutlined,
   LockOutlined,
   HistoryOutlined,
+  CustomerServiceOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -52,6 +53,7 @@ const Sidebar = () => {
     // { key: "jobs", label: "Jobs", icon: <InboxOutlined />, path: "/dashboard/jobs" },
     // { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
     { key: "payment", label: "Payment", icon: <WalletOutlined />, path: "/dashboard/payment" },
+    { key: "support", label: "Support Center", icon: <CustomerServiceOutlined />, path: "/dashboard/support" },
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/dashboard/profile" },
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
   ];

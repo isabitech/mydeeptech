@@ -1,7 +1,8 @@
-import { BellOutlined, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import NotificationDropdown from "../../../components/NotificationDropdown";
 
 type Props = {
   title: string;
@@ -62,8 +63,8 @@ const Header: React.FC<Props> = ({ title }) => {
           </div>
 
           {/* Notification */}
-          <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-            <BellOutlined />
+          <div className="h-10 w-10 flex items-center justify-center">
+            <NotificationDropdown />
           </div>
 
           {/* UserProfile */}

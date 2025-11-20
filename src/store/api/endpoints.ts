@@ -111,4 +111,38 @@ export const endpoints = {
     verifyEmail: "auth/validateuseremail",
   },
   addBulkEmails: "auth/addbulkemails",
+
+  // Notification endpoints
+  notifications: {
+    getUserNotifications: "/notifications",
+    markAsRead: "/notifications",
+    markAllAsRead: "/notifications/mark-all-read",
+    deleteNotification: "/notifications",
+    getSummary: "/notifications/summary",
+  },
+
+  // Admin notification endpoints
+  adminNotifications: {
+    createNotification: "/admin/notifications",
+    getAllNotifications: "/admin/notifications",
+    updateNotification: "/admin/notifications",
+    deleteNotification: "/admin/notifications",
+    broadcast: "/admin/notifications/broadcast",
+    analytics: "/admin/notifications/analytics",
+  },
+
+  // Chat support endpoints
+  chat: {
+    start: "/chat/start",
+    history: "/chat/history",
+    getChat: "/chat",
+    sendMessage: "/chat",
+  },
+
+  // Admin chat endpoints
+  adminChat: {
+    getActiveChats: "/chat/admin/active",
+    joinChat: "/chat/admin/join",
+    closeChat: "/chat/admin/close",
+  },
 };

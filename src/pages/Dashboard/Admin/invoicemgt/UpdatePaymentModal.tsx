@@ -15,7 +15,8 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
-import { Invoice, PaymentStatus, DTUserInfo, ProjectInfo } from "../../../../types/invoice.types";
+import {  PaymentStatus, DTUserInfo, ProjectInfo } from "../../../../types/invoice.types";
+import { AdminInvoice } from "../../../../types/admin-invoice-type";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -25,7 +26,7 @@ interface UpdatePaymentModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  invoice: Invoice | null;
+  invoice: AdminInvoice | null;
 }
 
 const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
@@ -87,9 +88,10 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
     return dtUserId.fullName;
   };
 
-  const getProjectName = (projectId: string | ProjectInfo): string => {
+  const getProjectName = (projectId: string | ProjectInfo | null | undefined): string => {
+    if (!projectId) return "No Project";
     if (typeof projectId === "string") return "Project ID: " + projectId;
-    return projectId.projectName;
+    return projectId.projectName || "Unknown Project";
   };
 
   return (
@@ -127,7 +129,7 @@ const UpdatePaymentModal: React.FC<UpdatePaymentModalProps> = ({
               {getDTUserName(invoice.dtUserId)}
             </Descriptions.Item>
             <Descriptions.Item label="Current Status">
-              <Tag color={getStatusColor(invoice.paymentStatus)}>
+              <Tag color={getStatusColor(invoice.paymentStatus as PaymentStatus)}>
                 {invoice.paymentStatus?.toUpperCase()}
               </Tag>
             </Descriptions.Item>

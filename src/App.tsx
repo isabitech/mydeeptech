@@ -35,6 +35,7 @@ import MathTalent from "./pages/Careers/Talents/MathTalent";
 import Welcome from "./pages/Dashboard/User/Welcome";
 import Assessment from "./pages/Auth/Assessment";
 import AssessmentHistory from "./pages/Dashboard/User/AssessmentHistory";
+import SupportCenter from "./pages/Dashboard/User/SupportCenter";
 import AssessmentManagement from "./pages/Dashboard/Admin/AssessmentManagement";
 import CustomerService from "./components/CustomerService";
 import AdsLandingPage from "./pages/Ads/AdsLandingPage";
@@ -43,6 +44,8 @@ import SignupPage from "./pages/Auth/SignupPage";
 import AdminSignup from "./pages/Auth/Admin/AdminSignup";
 import AdminLogin from "./pages/Auth/Admin/AdminLogin";
 import InvoiceManagement from "./pages/Dashboard/Admin/invoicemgt/InvoiceManagement";
+import { NotificationManagement } from "./pages/Dashboard/Admin/notifications";
+import ChatManagement from "./pages/Dashboard/Admin/chat/ChatManagement";
 
 const AppRoutes = () => {
   return (
@@ -78,6 +81,7 @@ const AppRoutes = () => {
           <Route path="payment" element={<Payment />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="support" element={<SupportCenter />} />
           <Route path="assessment" element={<Assessment />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
 
@@ -101,7 +105,8 @@ const AppRoutes = () => {
             <Route path="tasks" element={<TaskManagement />} />
             <Route path="invoices" element={<InvoiceManagement />} />
             <Route path="payments" element={<PaymentManagement />} />
-            
+            <Route path="notifications" element={<NotificationManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
             <Route path="settings" element={<SettingsMgt />} />
           </Route>
 

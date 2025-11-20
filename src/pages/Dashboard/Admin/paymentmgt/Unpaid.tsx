@@ -19,9 +19,10 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Invoice, UpdatePaymentStatusForm } from "../../../../types/invoice.types";
+import { AdminInvoice } from "../../../../types/admin-invoice-type";
 
 interface UnpaidProps {
-  invoices: Invoice[];
+  invoices: AdminInvoice[];
   loading: boolean;
   onRefresh: () => void;
   onUpdatePayment: (invoiceId: string, paymentData: UpdatePaymentStatusForm) => Promise<any>;
@@ -109,7 +110,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
     return now.isAfter(due) ? now.diff(due, "day") : 0;
   };
 
-  const columns: ColumnsType<Invoice> = [
+  const columns: ColumnsType<AdminInvoice> = [
     {
       title: "S/N",
       key: "index",

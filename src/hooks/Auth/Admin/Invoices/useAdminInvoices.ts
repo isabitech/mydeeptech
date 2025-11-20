@@ -12,11 +12,15 @@ import {
   PaginationInfo,
   HookOperationResult,
 } from "../../../../types/invoice.types";
+import {
+  AdminInvoice,
+  AdminInvoiceResponse,
+} from "../../../../types/admin-invoice-type";
 
 export const useAdminInvoices = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<AdminInvoice[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [summary, setSummary] = useState<InvoicesSummary | null>(null);
 
@@ -59,7 +63,7 @@ export const useAdminInvoices = () => {
       if (filters?.endDate) queryParams.endDate = filters.endDate;
       if (filters?.invoiceType) queryParams.invoiceType = filters.invoiceType;
 
-      const data: InvoicesResponse = await apiGet(endpoints.adminInvoice.getAllInvoices, { params: queryParams });
+      const data: AdminInvoiceResponse = await apiGet(endpoints.adminInvoice.getAllInvoices, { params: queryParams });
 
       if (data.success) {
         setInvoices(data.data.invoices);
@@ -67,7 +71,7 @@ export const useAdminInvoices = () => {
         setSummary(data.data.summary);
         return { success: true, data: data.data };
       } else {
-        const errorMessage = data.message || "Failed to fetch invoices";
+        const errorMessage = "Failed to fetch invoices";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -85,8 +89,8 @@ export const useAdminInvoices = () => {
     setError(null);
 
     try {
-      const url = createApiUrl(endpoints.adminInvoice.getInvoiceDetails, invoiceId);
-      const data: InvoiceResponse = await apiGet(url);
+      const url = `${endpoints.adminInvoice.getInvoiceDetails}/${invoiceId}`;
+      const data: any = await apiGet(url);
 
       if (data.success) {
         return { success: true, data: data.data };
@@ -113,7 +117,7 @@ export const useAdminInvoices = () => {
 
     try {
       const url = `${endpoints.adminInvoice.updatePaymentStatus}/${invoiceId}/payment-status`;
-      const data: InvoiceResponse = await apiPatch(url, paymentData);
+      const data: any = await apiPatch(url, paymentData);
 
       if (data.success) {
         // Update the invoice in the local state
@@ -168,7 +172,7 @@ export const useAdminInvoices = () => {
     setError(null);
 
     try {
-      const url = createApiUrl(endpoints.adminInvoice.deleteInvoice, invoiceId);
+      const url = `${endpoints.adminInvoice.deleteInvoice}/${invoiceId}`;
       const data: any = await apiDelete(url);
 
       if (data.success) {
