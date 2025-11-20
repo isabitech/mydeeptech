@@ -9,6 +9,8 @@ import {
   WalletOutlined,
   UnorderedListOutlined,
   BookOutlined,
+  BellOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
@@ -74,6 +76,20 @@ const AdminSidebar = () => {
       label: "Invoice",
       icon: <WalletOutlined />,
       path: "/invoices",
+    },
+
+    {
+      key: "notifications",
+      label: "Notifications",
+      icon: <BellOutlined />,
+      path: "/notifications",
+    },
+
+    {
+      key: "chat",
+      label: "Support Chat",
+      icon: <MessageOutlined />,
+      path: "/chat",
     },
 
     // {

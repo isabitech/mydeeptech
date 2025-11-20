@@ -16,9 +16,10 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Invoice } from "../../../../types/invoice.types";
+import { AdminInvoice } from "../../../../types/admin-invoice-type";
 
 interface PaidProps {
-  invoices: Invoice[];
+  invoices: AdminInvoice[];
   loading: boolean;
   onRefresh: () => void;
 }
@@ -28,7 +29,7 @@ const Paid: React.FC<PaidProps> = ({
   loading,
   onRefresh,
 }) => {
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
   const handleDownloadReceipt = (invoice: Invoice) => {
@@ -51,7 +52,7 @@ const Paid: React.FC<PaidProps> = ({
     return projectId?.projectName || "Unknown Project";
   };
 
-  const columns: ColumnsType<Invoice> = [
+  const columns: ColumnsType<AdminInvoice> = [
     {
       title: "S/N",
       key: "index",

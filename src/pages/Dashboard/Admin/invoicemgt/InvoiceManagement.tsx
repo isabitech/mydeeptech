@@ -14,6 +14,8 @@ import {
   Badge,
   Select,
   DatePicker,
+  Dropdown,
+  Menu,
 } from "antd";
 import {
   PlusOutlined,
@@ -23,6 +25,7 @@ import {
   MailOutlined,
   DeleteOutlined,
   EyeOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -32,6 +35,10 @@ import {
   PaymentStatus,
   Currency,
 } from "../../../../types/invoice.types";
+import {
+  AdminInvoice,
+  AdminInvoiceResponse,
+} from "../../../../types/admin-invoice-type";
 import CreateInvoiceModal from "./CreateInvoiceModal";
 import UpdatePaymentModal from "./UpdatePaymentModal";
 import InvoiceDetailsModal from "./InvoiceDetailsModal";
@@ -57,7 +64,7 @@ const InvoiceManagement: React.FC = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [updatePaymentModalOpen, setUpdatePaymentModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 20,
@@ -87,11 +94,11 @@ const InvoiceManagement: React.FC = () => {
     message.success("Payment status updated successfully!");
   };
 
-  const handleSendReminder = async (invoice: Invoice) => {
+  const handleSendReminder = async (invoice: AdminInvoice) => {
     try {
       const result = await sendPaymentReminder(invoice._id);
       if (result.success) {
-        message.success(`Payment reminder sent to ${invoice.dtUserId}`);
+        message.success(`Payment reminder sent to ${invoice.dtUserId?.fullName || invoice.dtUserId?.email}`);
       } else {
         message.error(result.error || "Failed to send reminder");
       }
@@ -125,10 +132,10 @@ const InvoiceManagement: React.FC = () => {
     return colors[status] || "default";
   };
 
-  const formatCurrency = (amount: number, currency: Currency): string => {
+  const formatCurrency = (amount: number, currency: string): string => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency: currency as Currency,
     }).format(amount);
   };
 
@@ -138,13 +145,68 @@ const InvoiceManagement: React.FC = () => {
     return now.isAfter(due) ? now.diff(due, "day") : 0;
   };
 
-  const columns: ColumnsType<Invoice> = [
+  const getMenuItems = (record: AdminInvoice) => {
+    const items: any[] = [
+      {
+        key: "view-details",
+        label: "View Details",
+        icon: <EyeOutlined />,
+        onClick: () => {
+          setSelectedInvoice(record);
+          setDetailsModalOpen(true);
+        },
+      },
+      {
+        key: "update-payment",
+        label: "Update Payment",
+        icon: <DollarOutlined />,
+        onClick: () => {
+          setSelectedInvoice(record);
+          setUpdatePaymentModalOpen(true);
+        },
+      },
+    ];
+
+    // Add reminder option for unpaid invoices
+    if (record.paymentStatus === "unpaid") {
+      items.push({
+        key: "send-reminder",
+        label: "Send Reminder",
+        icon: <MailOutlined />,
+        onClick: () => handleSendReminder(record),
+      });
+    }
+
+    // Add delete option for unpaid invoices
+    if (record.paymentStatus === "unpaid") {
+      items.push({
+        type: "divider" as const,
+      });
+      items.push({
+        key: "delete",
+        label: "Delete Invoice",
+        icon: <DeleteOutlined />,
+        danger: true,
+        onClick: () => {
+          // Show confirmation modal
+          const confirmed = window.confirm("Are you sure you want to delete this invoice?");
+          if (confirmed) {
+            handleDeleteInvoice(record._id);
+          }
+        },
+      });
+    }
+
+    return items;
+  };
+
+  const columns: ColumnsType<AdminInvoice> = [
     {
       title: "Invoice #",
       dataIndex: "formattedInvoiceNumber",
       key: "invoiceNumber",
       width: 150,
-      render: (text: string, record: Invoice) => (
+      render: (text: string, record: AdminInvoice) => (
         <Button
           type="link"
           onClick={() => {
@@ -165,6 +227,7 @@ const InvoiceManagement: React.FC = () => {
         <div>
           <div className="font-medium">{dtUser?.fullName || "N/A"}</div>
           <div className="text-sm text-gray-500">{dtUser?.email}</div>
+          <div className="text-xs text-gray-400">{dtUser?.phone}</div>
         </div>
       ),
     },
@@ -185,10 +248,22 @@ const InvoiceManagement: React.FC = () => {
       dataIndex: "invoiceAmount",
       key: "amount",
       width: 120,
-      render: (amount: number, record: Invoice) => (
-        <span className="font-medium">
-          {formatCurrency(amount, record.currency)}
-        </span>
+      render: (amount: number, record: AdminInvoice) => (
+        <div>
+          <span className="font-medium">
+            {formatCurrency(amount, record.currency)}
+          </span>
+          {record.paidAmount && record.paidAmount > 0 && (
+            <div className="text-xs text-green-600">
+              Paid: {formatCurrency(record.paidAmount, record.currency)}
+            </div>
+          )}
+          {record.amountDue > 0 && (
+            <div className="text-xs text-orange-600">
+              Due: {formatCurrency(record.amountDue, record.currency)}
+            </div>
+          )}
+        </div>
       ),
       sorter: (a, b) => a.invoiceAmount - b.invoiceAmount,
     },
@@ -197,15 +272,19 @@ const InvoiceManagement: React.FC = () => {
       dataIndex: "paymentStatus",
       key: "paymentStatus",
       width: 120,
-      render: (status: PaymentStatus, record: Invoice) => {
-        const daysOverdue = calculateDaysOverdue(record.dueDate);
+      render: (status: PaymentStatus, record: AdminInvoice) => {
         return (
           <Space direction="vertical" size="small">
             <Tag color={getPaymentStatusColor(status)}>
               {status.toUpperCase()}
             </Tag>
-            {status === "unpaid" && daysOverdue > 0 && (
-              <Badge count={`${daysOverdue}d overdue`} size="small" />
+            {status === "unpaid" && record.daysOverdue > 0 && (
+              <Badge count={`${record.daysOverdue}d overdue`} size="small" />
+            )}
+            {record.paymentMethod && (
+              <div className="text-xs text-gray-500">
+                {record.paymentMethod}
+              </div>
             )}
           </Space>
         );
@@ -238,59 +317,23 @@ const InvoiceManagement: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      width: 150,
-      render: (_, record: Invoice) => (
-        <Space>
-          <Tooltip title="View Details">
-            <Button
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={() => {
-                setSelectedInvoice(record);
-                setDetailsModalOpen(true);
-              }}
-            />
-          </Tooltip>
-          
-          <Tooltip title="Update Payment">
-            <Button
-              icon={<DollarOutlined />}
-              size="small"
-              onClick={() => {
-                setSelectedInvoice(record);
-                setUpdatePaymentModalOpen(true);
-              }}
-            />
-          </Tooltip>
-
-          {record.paymentStatus === "unpaid" && (
-            <Tooltip title="Send Reminder">
-              <Button
-                icon={<MailOutlined />}
-                size="small"
-                onClick={() => handleSendReminder(record)}
-              />
-            </Tooltip>
-          )}
-
-          {record.paymentStatus === "unpaid" && (
-            <Popconfirm
-              title="Delete Invoice"
-              description="Are you sure you want to delete this invoice?"
-              onConfirm={() => handleDeleteInvoice(record._id)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Tooltip title="Delete">
-                <Button
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  danger
-                />
-              </Tooltip>
-            </Popconfirm>
-          )}
-        </Space>
+      width: 80,
+      render: (_, record: AdminInvoice) => (
+        <Dropdown
+          menu={{ items: getMenuItems(record) }}
+          trigger={["click"]}
+          placement="bottomRight"
+        >
+          <Button
+            type="text"
+            icon={<MoreOutlined />}
+            size="small"
+            style={{
+              border: "none",
+              boxShadow: "none",
+            }}
+          />
+        </Dropdown>
       ),
     },
   ];

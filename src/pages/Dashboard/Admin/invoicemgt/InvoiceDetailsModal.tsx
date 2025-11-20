@@ -27,16 +27,16 @@ import {
   PrinterOutlined,
   MailOutlined,
 } from "@ant-design/icons";
-import { Invoice, PaymentStatus, DTUserInfo, ProjectInfo } from "../../../../types/invoice.types";
-
+import { PaymentStatus, DTUserInfo, ProjectInfo, Invoice } from "../../../../types/invoice.types";
+import { AdminInvoice } from "../../../../types/admin-invoice-type";
 const { Title, Text, Paragraph } = Typography;
 
 interface InvoiceDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  invoice: Invoice | null;
-  onPrint?: (invoice: Invoice) => void;
-  onSendEmail?: (invoice: Invoice) => void;
+  invoice: AdminInvoice  | Invoice;
+  onPrint?: (invoice: AdminInvoice | Invoice ) => void;
+  onSendEmail?: (invoice: AdminInvoice | Invoice ) => void;
 }
 
 const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
@@ -86,12 +86,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     return dtUserId.email;
   };
 
-  const getProjectName = (projectId: string | ProjectInfo): string => {
+  const getProjectName = (projectId: string | ProjectInfo | null | undefined): string => {
+    if (!projectId) return "No Project";
     if (typeof projectId === "string") return "Project ID: " + projectId;
-    return projectId.projectName;
+    return projectId.projectName || "Unknown Project";
   };
 
-  const getProjectCategory = (projectId: string | ProjectInfo): string => {
+  const getProjectCategory = (projectId: string | ProjectInfo | null | undefined): string => {
+    if (!projectId) return "N/A";
     if (typeof projectId === "string") return "N/A";
     return projectId.projectCategory || "N/A";
   };
@@ -155,7 +157,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     return items;
   };
 
-  const daysOverdue = calculateDaysOverdue(invoice.dueDate, invoice.paymentStatus);
+  const daysOverdue = calculateDaysOverdue(invoice.dueDate, invoice.paymentStatus as PaymentStatus);
   const isOverdue = daysOverdue > 0;
 
   return (
@@ -164,7 +166,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         <Space>
           <FileTextOutlined />
           <span>Invoice Details - {invoice.formattedInvoiceNumber}</span>
-          <Tag color={getStatusColor(invoice.paymentStatus)} icon={getStatusIcon(invoice.paymentStatus)}>
+          <Tag color={getStatusColor(invoice.paymentStatus as PaymentStatus)} icon={getStatusIcon(invoice.paymentStatus as PaymentStatus)}>
             {invoice.paymentStatus.toUpperCase()}
           </Tag>
           {isOverdue && (
