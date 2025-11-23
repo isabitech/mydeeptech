@@ -48,6 +48,7 @@ import ChatManagement from "./pages/Dashboard/Admin/chat/ChatManagement";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
 import CustomerService from "./components/CustomerService";
+import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
 
 const AppRoutes = () => {
   return (
@@ -63,6 +64,8 @@ const AppRoutes = () => {
         <Route path="/verify-email/:id" element={<VerifyEmail />} />
         <Route path="/assessment" element={<Assessment />} />
         <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/new-projects" element={<NewProjects />} />
         {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
         <Route path="/careers" element={<Hiring/>} />
