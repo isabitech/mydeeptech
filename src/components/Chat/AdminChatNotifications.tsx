@@ -212,17 +212,17 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
       trigger={['click']}
       open={isOpen}
       onOpenChange={setIsOpen}
-      placement="bottomRight"
+      placement="topRight"
       className={className}
     >
       <Button
-        type="text"
-        className="flex items-center justify-center hover:bg-gray-100 transition-colors"
-        style={{ color: '#333333' }}
+      type="text"
+      className="flex items-center justify-center hover:bg-gray-100 transition-colors"
+      style={{ color: '#333333' }}
       >
-        <Badge count={unreadCount} size="small" offset={[8, -8]}>
-          <MessageOutlined className="text-lg" />
-        </Badge>
+      <Badge count={unreadCount} size="small" offset={[8, -8]}>
+        <MessageOutlined className="text-lg" />
+      </Badge>
       </Button>
     </Dropdown>
   );

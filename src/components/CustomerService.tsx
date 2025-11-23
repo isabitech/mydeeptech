@@ -1,44 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { CommentOutlined } from "@ant-design/icons";
 import { FloatButton } from "antd";
-import FloatingChat from './Chat/FloatingChat';
-import { retrieveTokenFromStorage } from '../helpers';
+import FloatingChat from "./Chat/FloatingChat";
+import { retrieveTokenFromStorage } from "../helpers";
+import AdminChatNotifications from "./Chat/AdminChatNotifications";
+import EnhancedUserChatWidget from "./Chat/EnhancedUserChatWidget";
 
 const CustomerService: React.FC = () => {
-  const [token, setToken] = useState<string>('');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [currentPath, setCurrentPath] = useState<string>(
+    window.location.pathname
+  );
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const retrievedToken = await retrieveTokenFromStorage();
-        if (retrievedToken) {
-          setToken(retrievedToken);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error('Failed to retrieve token:', error);
-        setIsAuthenticated(false);
-      }
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
     };
 
-    checkAuth();
+    window.addEventListener("popstate", handleLocationChange);
+    return () => window.removeEventListener("popstate", handleLocationChange);
   }, []);
 
-  // If user is authenticated, show floating chat
-  if (isAuthenticated && token) {
-    return <FloatingChat token={token} />;
-  }
+  const renderChatComponent = () => {
+    const isAdminRoute = currentPath.includes("/admin");
+    const isUserRoute = currentPath.includes("/dashboard");
+    const isHomePage = currentPath === "/";
 
-  // If user is not authenticated, show normal contact button
+    if (isAdminRoute && !isHomePage) {
+      return <AdminChatNotifications />;
+    }
+
+    if (isUserRoute && !isHomePage) {
+      return <EnhancedUserChatWidget />;
+    }
+    if (isHomePage) {
+      <FloatButton
+        icon={<CommentOutlined />}
+        tooltip={
+          <span className="!font-[gilory-regular]">Contact Support</span>
+        }
+        href="mailto:support@mydeeptech.ng"
+      />;
+    }
+    return <></>;
+  };
+
   return (
-    <FloatButton
-      icon={<CommentOutlined />}
-      tooltip={<span className="!font-[gilory-regular]">Contact Support</span>}
-      href="mailto:support@mydeeptech.ng"
-    />
+    <div className=" absolute bottom-4 right-4">{renderChatComponent()}</div>
   );
 };
 

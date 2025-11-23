@@ -37,7 +37,6 @@ import Assessment from "./pages/Auth/Assessment";
 import AssessmentHistory from "./pages/Dashboard/User/AssessmentHistory";
 import SupportCenter from "./pages/Dashboard/User/SupportCenter";
 import AssessmentManagement from "./pages/Dashboard/Admin/AssessmentManagement";
-import CustomerService from "./components/CustomerService";
 import AdsLandingPage from "./pages/Ads/AdsLandingPage";
 import VerifyEmail from "./pages/Auth/VerifyEmail";
 import SignupPage from "./pages/Auth/SignupPage";
@@ -46,17 +45,21 @@ import AdminLogin from "./pages/Auth/Admin/AdminLogin";
 import InvoiceManagement from "./pages/Dashboard/Admin/invoicemgt/InvoiceManagement";
 import { NotificationManagement } from "./pages/Dashboard/Admin/notifications";
 import ChatManagement from "./pages/Dashboard/Admin/chat/ChatManagement";
+import ResetPassword from "./pages/Auth/ResetPassword";
+import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
+import CustomerService from "./components/CustomerService";
 
 const AppRoutes = () => {
   return (
     <Router>
-      <CustomerService/>
+      <CustomerService />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-email/:id" element={<VerifyEmail />} />
         <Route path="/assessment" element={<Assessment />} />
         <Route path="/about-us" element={<AboutUs />} />

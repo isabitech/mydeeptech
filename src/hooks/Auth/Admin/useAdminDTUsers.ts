@@ -19,18 +19,38 @@ export const useAdminDTUsers = () => {
     setError(null);
 
     try {
-      const data: DTUsersResponse = await apiGet(endpoints.adminActions.getAllDTUsers);
+      console.log('🔗 Calling DTUsers API:', endpoints.adminActions.getAllDTUsers);
+      const data: any = await apiGet(endpoints.adminActions.getAllDTUsers);
+      
+      console.log('📦 DTUsers API Raw Response:', data);
 
       if (data.success) {
-        setDtUsers(data.data);
-        return { success: true, data: data.data };
+        // Handle different possible response structures
+        let usersData: DTUser[] = [];
+        
+        if (data.data) {
+          // If data.data exists, check if it's an array or has users property
+          if (Array.isArray(data.data)) {
+            usersData = data.data;
+          } else if (data.data.users && Array.isArray(data.data.users)) {
+            usersData = data.data.users;
+          } else {
+            console.warn('⚠️ Unexpected DTUsers response structure:', data.data);
+          }
+        }
+        
+        console.log('✅ Setting DTUsers:', usersData);
+        setDtUsers(usersData);
+        return { success: true, data: { users: usersData } };
       } else {
         const errorMessage = data.message || "Failed to fetch DTUsers";
+        console.error('❌ DTUsers API Error:', errorMessage);
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
+      console.error('❌ DTUsers API Exception:', err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

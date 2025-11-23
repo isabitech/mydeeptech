@@ -15,11 +15,14 @@ import {
   EditOutlined,
   MailOutlined,
   DeleteOutlined,
+  DownloadOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Invoice, UpdatePaymentStatusForm } from "../../../../types/invoice.types";
 import { AdminInvoice } from "../../../../types/admin-invoice-type";
+import { generatePaymentReceipt } from "../../../../utils/receiptGenerator";
 
 interface UnpaidProps {
   invoices: AdminInvoice[];
@@ -40,6 +43,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
 
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
@@ -86,6 +90,26 @@ const Unpaid: React.FC<UnpaidProps> = ({
       }
     } catch (error) {
       message.error("Failed to delete invoice");
+    }
+  };
+
+  const handleGenerateReceipt = async (invoice: AdminInvoice) => {
+    try {
+      setIsGeneratingReceipt(true);
+      message.loading({ content: 'Generating receipt...', key: 'receipt' });
+      
+      await generatePaymentReceipt(invoice, {
+        filename: `Receipt-${invoice.invoiceNumber}-${dayjs().format('YYYY-MM-DD')}.pdf`,
+        format: 'a4',
+        quality: 2,
+      });
+      
+      message.success({ content: 'Receipt downloaded successfully!', key: 'receipt' });
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      message.error({ content: 'Failed to generate receipt. Please try again.', key: 'receipt' });
+    } finally {
+      setIsGeneratingReceipt(false);
     }
   };
 
@@ -188,26 +212,45 @@ const Unpaid: React.FC<UnpaidProps> = ({
     {
       title: "Actions",
       key: "actions",
-      width: 200,
+      width: 250,
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Mark as Paid">
-            <Button
-              type="primary"
-              size="small"
-              icon={<DollarCircleOutlined />}
-              onClick={() => handleMarkAsPaid(record)}
-            >
-              Pay
-            </Button>
-          </Tooltip>
-          <Tooltip title="Send Reminder">
-            <Button
-              size="small"
-              icon={<MailOutlined />}
-              onClick={() => handleSendReminder(record._id)}
-            />
-          </Tooltip>
+          {record.paymentStatus !== 'paid' && (
+            <>
+              <Tooltip title="Mark as Paid">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<DollarCircleOutlined />}
+                  onClick={() => handleMarkAsPaid(record)}
+                >
+                  Pay
+                </Button>
+              </Tooltip>
+              <Tooltip title="Send Reminder">
+                <Button
+                  size="small"
+                  icon={<MailOutlined />}
+                  onClick={() => handleSendReminder(record._id)}
+                />
+              </Tooltip>
+            </>
+          )}
+          
+          {record.paymentStatus === 'paid' && (
+            <Tooltip title="Download Receipt">
+              <Button
+                type="primary"
+                size="small"
+                icon={<DownloadOutlined />}
+                loading={isGeneratingReceipt}
+                onClick={() => handleGenerateReceipt(record)}
+              >
+                Receipt
+              </Button>
+            </Tooltip>
+          )}
+          
           <Tooltip title="View Details">
             <Button
               size="small"
@@ -218,16 +261,19 @@ const Unpaid: React.FC<UnpaidProps> = ({
               }}
             />
           </Tooltip>
-          <Popconfirm
-            title="Are you sure you want to delete this invoice?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Tooltip title="Delete">
-              <Button size="small" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
+          
+          {record.paymentStatus !== 'paid' && (
+            <Popconfirm
+              title="Are you sure you want to delete this invoice?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Tooltip title="Delete">
+                <Button size="small" danger icon={<DeleteOutlined />} />
+              </Tooltip>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },

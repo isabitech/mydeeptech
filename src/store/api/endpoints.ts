@@ -12,6 +12,9 @@ export const endpoints = {
     setUpPassword: "/auth/setupPassword",
     loginDTUser: "/auth/dtUserLogin",
     resetPassword: "/auth/dtUserResetPassword",
+    forgotPassword: "/auth/dtuser-forgot-password",
+    resetPasswordWithToken: "/auth/dtuser-reset-password",
+    verifyResetToken: "/auth/verify-reset-token"
   },
 
   profileDT:{
@@ -131,18 +134,22 @@ export const endpoints = {
     analytics: "/admin/notifications/analytics",
   },
 
-  // Chat support endpoints
+  // Enhanced Chat support endpoints following the documentation
   chat: {
-    start: "/chat/start",
-    history: "/chat/history",
+    startChat: "/chat/start",
+    getActiveChats: "/chat/active",
+    getChatHistory: "/chat/history",
     getChat: "/chat",
     sendMessage: "/chat",
-  },
-
-  // Admin chat endpoints
-  adminChat: {
-    getActiveChats: "/chat/admin/active",
-    joinChat: "/chat/admin/join",
-    closeChat: "/chat/admin/close",
+    uploadFile: "/chat/upload",
+    admin: {
+      getActiveChats: "/chat/admin/active",
+      joinChat: "/chat/admin/join",
+      sendMessage: "/chat/admin/send-message",
+      closeChat: "/chat/admin/close",
+      getStats: "/chat/admin/stats",
+      assignAgent: "/chat/admin/assign",
+      getChatDetails: "/chat/admin",
+    }
   },
 };

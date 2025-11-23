@@ -64,7 +64,7 @@ const Header: React.FC<Props> = ({ title }) => {
 
           {/* Notification */}
           <div className="h-10 w-10 flex items-center justify-center">
-            <NotificationDropdown />
+            <NotificationDropdown /> 
           </div>
 
           {/* UserProfile */}

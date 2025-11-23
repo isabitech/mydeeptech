@@ -1,6 +1,5 @@
 import Sidebar from "./Sidebar";
 import { Outlet} from "react-router-dom";
-import FloatingChat from "../../../components/Chat/FloatingChat";
 import { retrieveTokenFromStorage } from "../../../helpers";
 import { useState, useEffect } from "react";
 
@@ -30,8 +29,6 @@ const DashboardLayout = () => {
         <Outlet />
       </div>
       
-      {/* Floating Chat Support */}
-      {token && <FloatingChat token={token} />}
     </div>
   );
 };
