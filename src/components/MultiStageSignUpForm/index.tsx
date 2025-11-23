@@ -335,6 +335,31 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
                 </motion.label>
               </div>
               {errors.consent && <p className="text-xs text-red-400 mt-2">{errors.consent}</p>}
+              
+              {/* Privacy Policy and Terms Acceptance */}
+              <div className="mt-4 p-3 bg-gray-700/30 rounded-lg border border-gray-600">
+                <p className="text-xs text-gray-300 leading-relaxed">
+                  By creating an account, you agree to our{' '}
+                  <a 
+                    href="/privacy-policy" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-secondary hover:text-secondary/80 underline"
+                  >
+                    Privacy Policy
+                  </a>{' '}
+                  and{' '}
+                  <a 
+                    href="/terms-of-service" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-secondary hover:text-secondary/80 underline"
+                  >
+                    Terms of Service
+                  </a>.
+                  We are committed to protecting your personal information and ensuring a safe platform.
+                </p>
+              </div>
             </div>
           </motion.div>
         );

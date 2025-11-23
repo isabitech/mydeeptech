@@ -207,7 +207,7 @@ useEffect(() => {
       } else {
         notification.error({
           message: "Update Failed",
-          description: result.error || "Failed to update profile. Please try again.",
+          description: result.data?.message || "Failed to update profile. Please try again.",
         });
       }
     } catch (error: any) {

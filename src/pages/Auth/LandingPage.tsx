@@ -595,6 +595,8 @@ const LandingPage = () => {
                     { name: "About Us", href: "#" },
                     { name: "How It Works", href: "#how-it-works" },
                     { name: "Projects", href: "#projects" },
+                    { name: "Privacy Policy", href: "/privacy-policy" },
+                    { name: "Terms of Service", href: "/terms-of-service" },
                   ].map((link, index) => (
                     <li key={index}>
                       <a 
@@ -663,11 +665,22 @@ const LandingPage = () => {
 
             {/* Bottom Bar */}
             <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
-              <p className="text-gray-400 text-sm flex items-center">
-                <span>© {new Date().getFullYear()} MyDeep Technologies LTD. All rights reserved.</span>
-                <span className="mx-3 text-gray-600">|</span>
-                <span className="text-[#F6921E]">Built with ❤️ in Africa</span>
-              </p>
+              <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0">
+                <p className="text-gray-400 text-sm flex items-center">
+                  <span>© {new Date().getFullYear()} MyDeep Technologies LTD. All rights reserved.</span>
+                  <span className="mx-3 text-gray-600">|</span>
+                  <span className="text-[#F6921E]">Built with ❤️ in Africa</span>
+                </p>
+                <div className="flex items-center space-x-4 text-sm md:ml-4">
+                  <a href="/privacy-policy" className="text-gray-400 hover:text-[#F6921E] transition-colors">
+                    Privacy Policy
+                  </a>
+                  <span className="text-gray-600">|</span>
+                  <a href="/terms-of-service" className="text-gray-400 hover:text-[#F6921E] transition-colors">
+                    Terms of Service
+                  </a>
+                </div>
+              </div>
               
               <div className="flex items-center space-x-6">
                 <div className="flex items-center space-x-2 text-sm text-gray-400">
