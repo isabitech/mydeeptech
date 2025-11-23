@@ -7,16 +7,22 @@ import {
   Modal,
   Tooltip,
   message,
+  Spin,
+  Divider,
 } from "antd";
 import {
   DownloadOutlined,
   EyeOutlined,
   CheckCircleOutlined,
+  FileTextOutlined,
+  PrinterOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Invoice } from "../../../../types/invoice.types";
 import { AdminInvoice } from "../../../../types/admin-invoice-type";
+import { generatePaymentReceipt } from "../../../../utils/receiptGenerator";
+import PaymentReceipt from "../../../../components/PaymentReceipt/PaymentReceipt";
 
 interface PaidProps {
   invoices: AdminInvoice[];
@@ -31,10 +37,32 @@ const Paid: React.FC<PaidProps> = ({
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+  const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
 
-  const handleDownloadReceipt = (invoice: Invoice) => {
-    // TODO: Implement receipt download functionality
-    message.info(`Downloading receipt for invoice ${invoice.invoiceNumber}`);
+  const handleDownloadReceipt = async (invoice: AdminInvoice) => {
+    try {
+      setIsGeneratingReceipt(true);
+      message.loading({ content: 'Generating receipt...', key: 'receipt' });
+      
+      await generatePaymentReceipt(invoice, {
+        filename: `Receipt-${invoice.invoiceNumber}-${dayjs().format('YYYY-MM-DD')}.pdf`,
+        format: 'a4',
+        quality: 2,
+      });
+      
+      message.success({ content: 'Receipt downloaded successfully!', key: 'receipt' });
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      message.error({ content: 'Failed to generate receipt. Please try again.', key: 'receipt' });
+    } finally {
+      setIsGeneratingReceipt(false);
+    }
+  };
+
+  const handlePreviewReceipt = (invoice: AdminInvoice) => {
+    setSelectedInvoice(invoice);
+    setShowReceiptPreview(true);
   };
 
   const getDTUserName = (dtUserId: any): string => {
@@ -132,23 +160,33 @@ const Paid: React.FC<PaidProps> = ({
     {
       title: "Actions",
       key: "actions",
-      width: 150,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Download Receipt">
+          <Tooltip title="Preview Receipt">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handlePreviewReceipt(record)}
+            >
+              Preview
+            </Button>
+          </Tooltip>
+          <Tooltip title="Download Receipt PDF">
             <Button
               type="primary"
               size="small"
               icon={<DownloadOutlined />}
+              loading={isGeneratingReceipt && selectedInvoice?._id === record._id}
               onClick={() => handleDownloadReceipt(record)}
             >
-              Receipt
+              PDF
             </Button>
           </Tooltip>
-          <Tooltip title="View Details">
+          <Tooltip title="View Invoice Details">
             <Button
               size="small"
-              icon={<EyeOutlined />}
+              icon={<FileTextOutlined />}
               onClick={() => {
                 setSelectedInvoice(record);
                 setShowDetails(true);
@@ -208,6 +246,47 @@ const Paid: React.FC<PaidProps> = ({
             {selectedInvoice.adminNotes && (
               <p><strong>Admin Notes:</strong> {selectedInvoice.adminNotes}</p>
             )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Receipt Preview Modal */}
+      <Modal
+        title="Payment Receipt Preview"
+        open={showReceiptPreview}
+        onCancel={() => {
+          setShowReceiptPreview(false);
+          setSelectedInvoice(null);
+        }}
+        width={900}
+        footer={[
+          <Button key="cancel" onClick={() => setShowReceiptPreview(false)}>
+            Close
+          </Button>,
+          <Button
+            key="print"
+            icon={<PrinterOutlined />}
+            onClick={() => window.print()}
+          >
+            Print
+          </Button>,
+          <Button
+            key="download"
+            type="primary"
+            icon={<DownloadOutlined />}
+            loading={isGeneratingReceipt}
+            onClick={() => selectedInvoice && handleDownloadReceipt(selectedInvoice)}
+          >
+            Download PDF
+          </Button>,
+        ]}
+        styles={{
+          body: { maxHeight: '70vh', overflow: 'auto' }
+        }}
+      >
+        {selectedInvoice && (
+          <div style={{ transform: 'scale(0.8)', transformOrigin: 'top left' }}>
+            <PaymentReceipt invoice={selectedInvoice} />
           </div>
         )}
       </Modal>

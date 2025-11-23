@@ -65,14 +65,26 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
 
       if (projectsResult.success) {
         setProjects(projectsResult.data.data.projects);
+        console.log('📋 Projects loaded:', projectsResult.data.data.projects);
       }
 
-      console.log(dtUsersResult.data)
+      console.log('👤 DTUsers API Response:', dtUsersResult);
 
       if (dtUsersResult.success) {
-        // Ensure dtUsers is always an array
-        const usersData = dtUsersResult.data.users;
-        setDtUsers( usersData || []);
+        // Handle different response structures
+        let usersData;
+        if (dtUsersResult.data.users) {
+          usersData = dtUsersResult.data.users;
+        } else if (Array.isArray(dtUsersResult.data)) {
+          usersData = dtUsersResult.data;
+        } else {
+          usersData = [];
+        }
+        
+        console.log('👤 Setting DTUsers:', usersData);
+        setDtUsers(usersData);
+      } else {
+        console.error('❌ Failed to load DTUsers:', dtUsersResult.error);
       }
     } catch (error) {
       message.error("Failed to load data");
@@ -83,41 +95,61 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   };
 
   const handleProjectChange = async (projectId: string) => {
+    console.log('🎯 Project selected:', projectId);
     setSelectedProjectId(projectId);
     setProjectDTUsers([]);
     
+    // Reset the DTUser field
+    form.setFieldValue('dtUserId', undefined);
+    
     try {
+      console.log('📋 Fetching applications for project:', projectId);
+      
       // Get approved applications for this project to find assigned DTUsers
       const applicationsResult = await getAllApplications({
         projectId,
         status: "approved",
       });
 
+      console.log('📋 Applications result:', applicationsResult);
+
       if (applicationsResult.success) {
         const applications = applicationsResult.data.data.applications;
+        console.log('📋 Approved applications found:', applications);
         
-        // Extract unique DTUsers from approved applications
-        const assignedDTUserIds = applications
+        if (!applications || applications.length === 0) {
+          console.log('⚠️ No approved applications found for this project');
+          message.info('No approved users found for this project');
+          return;
+        }
+        
+        // Extract DTUsers directly from approved applications
+        const assignedDTUsers = applications
           .map((app: Application) => {
-            // Handle both cases where applicantId might be a string or DTUser object
-            if (typeof app.applicantId === 'string') {
-              return app.applicantId;
-            } else {
-              return app.applicantId._id;
+            console.log('📋 Processing application:', app);
+            // The applicantId should contain the DTUser object or reference
+            if (typeof app.applicantId === 'object' && app.applicantId !== null) {
+              return app.applicantId as DTUser;
             }
+            return null;
           })
-          .filter((id: string) => id);
+          .filter((user: DTUser | null) => user !== null) as DTUser[];
 
-        // Filter DTUsers to show only those assigned to this project
-        const assignedDTUsers = Array.isArray(dtUsers) ? dtUsers.filter(user => 
-          assignedDTUserIds.includes(user._id)
-        ) : [];
-        
+        console.log('✅ Final assigned DTUsers:', assignedDTUsers);
         setProjectDTUsers(assignedDTUsers);
+        
+        if (assignedDTUsers.length === 0) {
+          message.warning('No DTUsers found in approved applications');
+        } else {
+          message.success(`Found ${assignedDTUsers.length} assigned user(s) for this project`);
+        }
+      } else {
+        console.error('❌ Failed to get applications:', applicationsResult.error);
+        message.error('Failed to load project applications: ' + (applicationsResult.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error("Error loading project DTUsers:", error);
-      message.error("Failed to load project users");
+      console.error('❌ Error loading project DTUsers:', error);
+      message.error('Failed to load project users: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -220,25 +252,44 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
             <Col span={12}>
               <Form.Item
                 name="dtUserId"
-                label="DTUser"
+                label={`DTUser ${selectedProjectId ? `(${projectDTUsers.length} available)` : ''}`}
                 rules={[{ required: true, message: "Please select a DTUser" }]}
+                extra={selectedProjectId && projectDTUsers.length === 0 ? 
+                  "No DTUsers are assigned to this project. Please assign users to the project first." : 
+                  selectedProjectId ? 
+                  `Select from ${projectDTUsers.length} user(s) assigned to this project` : 
+                  "Select a project first to see available DTUsers"
+                }
               >
                 <Select 
-                  placeholder={selectedProjectId ? "Select DTUser assigned to this project" : "Please select a project first"}
-                  disabled={!selectedProjectId || projectDTUsers.length === 0}
+                  placeholder={
+                    selectedProjectId 
+                      ? projectDTUsers.length > 0 
+                        ? "Select DTUser assigned to this project" 
+                        : "No DTUsers assigned to this project"
+                      : "Please select a project first"
+                  }
+                  disabled={!selectedProjectId}
                   showSearch
+                  loading={loadingData}
                   filterOption={(input, option) =>
                     String(option?.label || '').toLowerCase().includes(input.toLowerCase())
                   }
                   notFoundContent={
                     selectedProjectId && projectDTUsers.length === 0 
-                      ? "No DTUsers assigned to this project" 
+                      ? "No DTUsers assigned to this project. Please assign users in the project management section." 
                       : "No DTUsers found"
                   }
                 >
                   {projectDTUsers.map((user) => (
                     <Option key={user._id} value={user._id} label={`${user.fullName} (${user.email})`}>
-                      {user.fullName} ({user.email})
+                      <div>
+                        <div style={{ fontWeight: 'bold' }}>{user.fullName}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
+                        <div style={{ fontSize: '11px', color: '#999' }}>
+                          Status: {user.annotatorStatus || 'Unknown'}
+                        </div>
+                      </div>
                     </Option>
                   ))}
                 </Select>

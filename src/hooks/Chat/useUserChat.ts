@@ -23,7 +23,7 @@ export const useUserChat = () => {
     setError(null);
 
     try {
-      const response: StartChatResponse = await apiPost(endpoints.chat.start, data);
+      const response: StartChatResponse = await apiPost(endpoints.chat.startChat, data);
 
       if (response.success) {
         return { success: true, data: response.data };
@@ -47,7 +47,7 @@ export const useUserChat = () => {
 
     try {
       const response: ChatHistoryResponse = await apiGet(
-        `${endpoints.chat.history}?page=${page}&limit=${limit}`
+        `${endpoints.chat.getChatHistory}?page=${page}&limit=${limit}`
       );
 
       if (response.success) {

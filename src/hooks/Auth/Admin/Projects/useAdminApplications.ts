@@ -34,20 +34,26 @@ export const useAdminApplications = () => {
       if (params?.page) queryParams.page = params.page.toString();
       if (params?.limit) queryParams.limit = params.limit.toString();
 
+      console.log('🔗 Calling Applications API with params:', queryParams);
       const data: ApplicationsResponse = await apiGet(endpoints.adminProject.getAllApplications, { params: queryParams });
+      
+      console.log('📦 Applications API Response:', data);
 
       if (data.success) {
         setApplications(data.data.applications);
         setPagination(data.data.pagination);
         setSummary(data.data.summary);
+        console.log('✅ Applications loaded:', data.data.applications?.length || 0, 'applications');
         return { success: true, data };
       } else {
         const errorMessage = data.message || "Failed to fetch applications";
+        console.error('❌ Applications API Error:', errorMessage);
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
+      console.error('❌ Applications API Exception:', err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

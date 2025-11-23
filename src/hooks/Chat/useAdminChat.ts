@@ -22,7 +22,7 @@ export const useAdminChat = () => {
 
     try {
       const response: ActiveChatsResponse = await apiGet(
-        `${endpoints.adminChat.getActiveChats}?status=${status}`
+        `${endpoints.chat.admin.getActiveChats}?status=${status}`
       );
 
       if (response.success) {
@@ -48,7 +48,7 @@ export const useAdminChat = () => {
 
     try {
       const response: JoinChatResponse = await apiPost(
-        `${endpoints.adminChat.joinChat}/${ticketId}`,
+        `${endpoints.chat.admin.joinChat}/${ticketId}`,
         {}
       );
 
@@ -78,7 +78,7 @@ export const useAdminChat = () => {
 
     try {
       const response: CloseChatResponse = await apiPost(
-        `${endpoints.adminChat.closeChat}/${ticketId}`,
+        `${endpoints.chat.admin.closeChat}/${ticketId}`,
         data || {}
       );
 
@@ -138,6 +138,44 @@ export const useAdminChat = () => {
     }
   }, [selectedChat]);
 
+  const sendMessage = useCallback(async (
+    ticketId: string, 
+    message: string, 
+    attachments: any[] = []
+  ): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('📤 [useAdminChat] Sending message via API:', { ticketId, message });
+      const response = await apiPost(
+        endpoints.chat.admin.sendMessage,
+        {
+          ticketId,
+          message,
+          attachments
+        }
+      );
+
+      console.log('📤 [useAdminChat] Send message API response:', response);
+
+      if (response.success) {
+        return { success: true, data: response.data };
+      } else {
+        const errorMessage = response.message || 'Failed to send message';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      console.error('❌ [useAdminChat] Send message API error:', err);
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const clearError = useCallback(() => {
     setError(null);
   }, []);
@@ -157,6 +195,7 @@ export const useAdminChat = () => {
     getActiveChats,
     joinChat,
     closeChat,
+    sendMessage,
     updateChatInList,
     addMessageToSelectedChat,
     setSelectedChat,

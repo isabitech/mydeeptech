@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import AdminChatDashboard from '../../../../components/Chat/AdminChatDashboard';
+import EnhancedAdminChatDashboard from '../../../../components/Chat/EnhancedAdminChatDashboard';
 import { useUserContext } from '../../../../UserContext';
 import { retrieveTokenFromStorage } from '../../../../helpers';
+import AdminChatDashboard from '../../../../components/Chat/AdminChatDashboard';
 
 const ChatManagement: React.FC = () => {
   const [token, setToken] = useState<string>('');
@@ -22,6 +23,7 @@ const ChatManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+      {/* <EnhancedAdminChatDashboard adminToken={token} /> */}
       <AdminChatDashboard adminToken={token} />
     </div>
   );

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Avatar, Dropdown, Typography, Space, Divider } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined } from '@ant-design/icons';
-import AdminChatNotifications from '../Chat/AdminChatNotifications';
 import { retrieveUserInfoFromStorage } from '../../helpers';
 import { useNavigate } from 'react-router-dom';
 
@@ -73,7 +72,7 @@ const AdminHeader: React.FC = () => {
       
       <div className="flex items-center space-x-4">
         {/* Chat Notifications */}
-        <AdminChatNotifications />
+        
         
         <Divider type="vertical" />
         

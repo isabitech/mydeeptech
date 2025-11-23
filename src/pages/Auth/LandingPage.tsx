@@ -257,14 +257,12 @@ const LandingPage = () => {
           </div>
 
           {/* Trust Indicators */}
-          <div className={`grid grid-cols-2 md:grid-cols-4 gap-8 pt-16 transition-all duration-1000 delay-300 transform ${
+          <div className={`grid grid-cols-2 md:grid-cols-2 gap-8 pt-16 transition-all duration-1000 delay-300 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}>
             {[
               { number: "500+", label: "Active Freelancers" },
-              { number: "1M+", label: "Tasks Completed" },
-              { number: "50+", label: "Countries Served" },
-              { number: "99%", label: "Success Rate" }
+              { number: "50+", label: "Countries Served" }
             ].map((stat, index) => (
               <div key={index} className="text-center group">
                 <div className="text-4xl font-bold text-[#F6921E] mb-2 group-hover:scale-110 transition-transform duration-300">
@@ -324,7 +322,7 @@ const LandingPage = () => {
                 { 
                   icon: <DollarOutlined />, 
                   title: "Get Paid in Dollars", 
-                  desc: "Receive payments directly to your account in USD. Weekly payouts with full transparency.",
+                  desc: "Receive payments directly to your account in USD. Secure payouts with full transparency.",
                   color: "from-orange-500 to-orange-600" 
                 },
               ].map((step, index) => (
@@ -657,8 +655,8 @@ const LandingPage = () => {
 
                 {/* Quick Stats */}
                 <div className="bg-gradient-to-r from-[#F6921E]/10 to-transparent rounded-lg p-4 border border-[#F6921E]/20">
-                  <div className="text-2xl font-bold text-[#F6921E]">$2M+</div>
-                  <div className="text-sm text-gray-400">Total Paid to Freelancers</div>
+                  <div className="text-2xl font-bold text-[#F6921E]">100%</div>
+                  <div className="text-sm text-gray-400">Verified Projects</div>
                 </div>
               </div>
             </div>
