@@ -72,6 +72,7 @@ useEffect(() => {
           accountNumber: result.data?.paymentInfo?.accountNumber,
           bankName: result.data?.paymentInfo?.bankName,
           paymentMethod: result.data?.paymentInfo?.paymentMethod,
+          paymentCurrency: result.data?.paymentInfo?.paymentCurrency,
           educationField: result.data?.professionalBackground?.educationField,
           yearsOfExperience: result.data?.professionalBackground?.yearsOfExperience,
           // Skills & Experience
@@ -147,6 +148,7 @@ useEffect(() => {
           accountNumber: values.accountNumber,
           bankName: values.bankName,
           paymentMethod: values.paymentMethod,
+          paymentCurrency: values.paymentCurrency,
         },
         professionalBackground: {
           educationField: values.educationField,
@@ -194,6 +196,7 @@ useEffect(() => {
             accountNumber: refreshResult.data?.paymentInfo?.accountNumber,
             bankName: refreshResult.data?.paymentInfo?.bankName,
             paymentMethod: refreshResult.data?.paymentInfo?.paymentMethod,
+            paymentCurrency: refreshResult.data?.paymentInfo?.paymentCurrency,
             educationField: refreshResult.data?.professionalBackground?.educationField,
             yearsOfExperience: refreshResult.data?.professionalBackground?.yearsOfExperience,
             annotationSkills: refreshResult.data?.annotationSkills || [],
@@ -207,16 +210,31 @@ useEffect(() => {
       } else {
         notification.error({
           message: "Update Failed",
-          description: result.data?.message || "Failed to update profile. Please try again.",
+          description: result.data?.message || result.error || "Failed to update profile. Please try again.",
         });
       }
     } catch (error: any) {
-
       console.error("❌ Validation or update error:", error);
-      notification.error({
-        message: `Validation Error ${updateError ? "- Update Failed" : ""}`,
-        description: "Please check all required fields and try again.",
-      });
+      
+      // Check if it's a validation error or API error
+      if (error.errorFields && error.errorFields.length > 0) {
+        // Form validation error
+        notification.error({
+          message: "Validation Error",
+          description: "Please check all required fields and try again.",
+        });
+      } else {
+        // API error or other errors
+        const errorMessage = error.response?.data?.message || 
+                            error.message || 
+                            updateError || 
+                            "An unexpected error occurred. Please try again.";
+        
+        notification.error({
+          message: "Update Failed",
+          description: errorMessage,
+        });
+      }
     }
   };
 
@@ -234,6 +252,7 @@ useEffect(() => {
         accountNumber: profile?.paymentInfo?.accountNumber,
         bankName: profile?.paymentInfo?.bankName,
         paymentMethod: profile?.paymentInfo?.paymentMethod,
+        paymentCurrency: profile?.paymentInfo?.paymentCurrency,
         educationField: profile?.professionalBackground?.educationField,
         yearsOfExperience: profile?.professionalBackground?.yearsOfExperience,
         // Skills & Experience
@@ -509,6 +528,26 @@ useEffect(() => {
                       { value: "paypal", label: "PayPal" },
                       { value: "wise", label: "Wise" },
                       { value: "cryptocurrency", label: "Cryptocurrency" }
+                    ]}
+                  />
+                </Form.Item>
+
+                <Form.Item label="Payment Currency" name="paymentCurrency">
+                  <Select
+                    disabled={!isEditable}
+                    className="!font-[gilroy-regular]"
+                    placeholder="Select payment currency"
+                    options={[
+                      { value: "USD", label: "USD - US Dollar" },
+                      { value: "NGN", label: "NGN - Nigerian Naira" },
+                      { value: "EUR", label: "EUR - Euro" },
+                      { value: "GBP", label: "GBP - British Pound" },
+                      { value: "CAD", label: "CAD - Canadian Dollar" },
+                      { value: "AUD", label: "AUD - Australian Dollar" },
+                      { value: "ZAR", label: "ZAR - South African Rand" },
+                      { value: "KES", label: "KES - Kenyan Shilling" },
+                      { value: "GHS", label: "GHS - Ghanaian Cedi" },
+                      { value: "EGP", label: "EGP - Egyptian Pound" }
                     ]}
                   />
                 </Form.Item>

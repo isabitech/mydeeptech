@@ -36,10 +36,10 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import EnhancedChatSocketService from '../../services/EnhancedChatSocketService';
-import EnhancedChatAPI from '../../services/EnhancedChatAPI';
 import { ChatMessage, ChatTicket, ChatStats } from '../../types/enhanced-chat.types';
 import dayjs from 'dayjs';
+import AdminChatAPI from '../../services/AdminChatAPI';
+import AdminChatSocketService from '../../services/AdminChatSocketService';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -59,7 +59,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [userTyping, setUserTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState<ChatStats>({
     total: 0,
@@ -79,7 +79,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     }
 
     return () => {
-      EnhancedChatSocketService.disconnect();
+      AdminChatSocketService.disconnect();
     };
   }, [adminToken]);
 
@@ -88,14 +88,14 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
 
     // Connection events
     unsubscribers.push(
-      EnhancedChatSocketService.on('connection_status', ({ connected }: any) => {
+      AdminChatSocketService.on('connection_status', ({ connected }: any) => {
         setIsConnected(connected);
       })
     );
 
     // New chat notifications
     unsubscribers.push(
-      EnhancedChatSocketService.on('new_chat_ticket', (ticket: ChatTicket) => {
+      AdminChatSocketService.on('new_chat_ticket', (ticket: ChatTicket) => {
         console.log('🆕 New chat ticket:', ticket);
         setActiveChats(prev => [ticket, ...prev]);
         updateStats();
@@ -105,43 +105,67 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
 
     // Real-time message events
     unsubscribers.push(
-      EnhancedChatSocketService.on('new_message', (chatMessage: ChatMessage) => {
+      AdminChatSocketService.on('new_message', (chatMessage: any) => {
         console.log('💬 Admin received message:', chatMessage);
+        
+        // Use isAdminReply to determine message type
+        const isFromAdmin = chatMessage.isAdminReply === true;
+        const isFromUser = chatMessage.isAdminReply === false;
+        
+        console.log('🔍 Admin message analysis:', {
+          isAdminReply: chatMessage.isAdminReply,
+          isFromUser,
+          isFromAdmin,
+          messageId: chatMessage._id
+        });
         
         // Update messages if it's for selected chat
         if (selectedChat && chatMessage.ticketId === selectedChat._id) {
           setMessages(prev => {
             const exists = prev.find(m => m._id === chatMessage._id);
             if (!exists) {
-              // Remove pending messages and add confirmed
+              // Remove pending admin messages and add confirmed
               const filteredPrev = prev.filter(m => 
-                !(m.pending && m.message === chatMessage.message && m.isAdminReply)
+                !(m.pending && m.message === chatMessage.message && m.isAdminReply && isFromAdmin)
               );
-              return [...filteredPrev, chatMessage];
+              
+              // Create proper message object
+              const newMessage: ChatMessage = {
+                _id: chatMessage._id,
+                ticketId: chatMessage.ticketId,
+                senderName: isFromAdmin ? 'You (Admin)' : (chatMessage.senderName || 'Customer'),
+                message: chatMessage.message,
+                isAdminReply: isFromAdmin,
+                timestamp: new Date(chatMessage.timestamp)
+              };
+              
+              return [...filteredPrev, newMessage];
             }
             return prev;
           });
           scrollToBottom();
         }
         
-        // Update chat in the list
-        setActiveChats(prev => prev.map(chat => {
-          if (chat._id === chatMessage.ticketId) {
-            return { 
-              ...chat, 
-              messages: [...(chat.messages || []), chatMessage],
-              lastUpdated: new Date(),
-              hasNewMessage: selectedChat?._id !== chatMessage.ticketId
-            };
-          }
-          return chat;
-        }));
+        // Update chat in the list only for user messages
+        if (isFromUser) {
+          setActiveChats(prev => prev.map(chat => {
+            if (chat._id === chatMessage.ticketId) {
+              return { 
+                ...chat, 
+                messages: [...(chat.messages || []), chatMessage],
+                lastUpdated: new Date(),
+                hasNewMessage: selectedChat?._id !== chatMessage.ticketId
+              };
+            }
+            return chat;
+          }));
+        }
       })
     );
 
     // User typing events
     unsubscribers.push(
-      EnhancedChatSocketService.on('user_typing', (data: any) => {
+      AdminChatSocketService.on('user_typing', (data: any) => {
         if (selectedChat && data.ticketId === selectedChat._id) {
           setUserTyping(data.isTyping);
         }
@@ -150,7 +174,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
 
     // User message notifications
     unsubscribers.push(
-      EnhancedChatSocketService.on('user_message_notification', (data: any) => {
+      AdminChatSocketService.on('user_message_notification', (data: any) => {
         message.info(`New message from ${data.userName || 'User'}`);
         updateChatInList(data.ticketId, { hasNewMessage: true });
       })
@@ -158,7 +182,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
 
     // Chat status updates
     unsubscribers.push(
-      EnhancedChatSocketService.on('ticket_status_updated', (data: any) => {
+      AdminChatSocketService.on('ticket_status_updated', (data: any) => {
         updateChatInList(data.ticketId, { status: data.status });
         if (selectedChat && selectedChat._id === data.ticketId) {
           setSelectedChat(prev => prev ? { ...prev, status: data.status } : null);
@@ -175,7 +199,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     try {
       setIsLoading(true);
       console.log('🔌 Initializing admin chat service...');
-      await EnhancedChatSocketService.connect(adminToken, 'admin');
+      await AdminChatSocketService.connect(adminToken);
       await loadActiveChats();
     } catch (error) {
       console.error('Failed to initialize admin chat:', error);
@@ -187,7 +211,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
 
   const loadActiveChats = async () => {
     try {
-      const result = await EnhancedChatAPI.getAdminActiveChats(filter);
+      const result = await AdminChatAPI.getActiveChatTickets(filter);
       if (result.success) {
         setActiveChats(result.data.chats || []);
         updateStats(result.data.chats || []);
@@ -220,11 +244,11 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
       setIsChatModalVisible(true);
       
       // Join the chat as admin via API
-      const result = await EnhancedChatAPI.joinChatAsAdmin(chat._id);
+      const result = await AdminChatAPI.joinChat(chat._id);
       
       if (result.success) {
         // Join via Socket.IO for real-time updates
-        EnhancedChatSocketService.joinTicketAsAdmin(chat._id);
+        AdminChatSocketService.joinChatRoom(chat._id);
         
         // Update chat with server data
         const updatedChat: ChatTicket = {
@@ -269,7 +293,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     scrollToBottom();
     
     // Send via Socket.IO for real-time delivery
-    EnhancedChatSocketService.sendMessage(selectedChat._id, messageText);
+    AdminChatSocketService.sendMessage(selectedChat._id, messageText);
   };
 
   const closeChat = async () => {
@@ -296,8 +320,8 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
         });
         
         try {
-          await EnhancedChatAPI.closeChatAsAdmin(selectedChat._id, resolutionSummary);
-          EnhancedChatSocketService.closeChatAsAdmin(selectedChat._id, resolutionSummary);
+          await AdminChatAPI.closeChatSession(selectedChat._id, resolutionSummary);
+          AdminChatSocketService.closeChat(selectedChat._id, resolutionSummary);
           
           // Update chat status instead of removing
           setActiveChats(prev => prev.map(chat => 
@@ -327,7 +351,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
       content: 'This action will close all selected chats. Please provide a resolution summary.',
       onOk: async () => {
         try {
-          await EnhancedChatAPI.bulkCloseChats(selectedRowKeys, 'Bulk closed by admin');
+          await AdminChatAPI.bulkCloseChats(selectedRowKeys, 'Bulk closed by admin');
           message.success(`${selectedRowKeys.length} chats closed successfully`);
           setSelectedRowKeys([]);
           loadActiveChats();
@@ -526,44 +550,49 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     },
   ];
 
-  const renderMessage = (chatMessage: ChatMessage, index: number) => (
-    <div 
-      key={index} 
-      className={`flex ${chatMessage.isAdminReply ? 'justify-end' : 'justify-start'} mb-4`}
-    >
-      <div className={`max-w-md px-4 py-2 rounded-lg ${
-        chatMessage.isAdminReply 
-          ? 'text-white' 
-          : 'bg-gray-100 text-gray-800'
-      } ${chatMessage.pending ? 'opacity-60' : ''}`}
-      style={{
-        backgroundColor: chatMessage.isAdminReply ? '#F6921E' : undefined
-      }}>
-        <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs font-medium ${
-            chatMessage.isAdminReply ? 'text-orange-100' : 'text-gray-600'
-          }`} style={{ fontFamily: 'Gilroy-Medium' }}>
-            {chatMessage.isAdminReply ? 'You (Admin)' : (chatMessage.senderName || 'Customer')}
-          </span>
-          <span className={`text-xs ${
-            chatMessage.isAdminReply ? 'text-orange-100' : 'text-gray-500'
-          }`} style={{ fontFamily: 'Gilroy-Regular' }}>
-            {formatTime(chatMessage.timestamp)}
-          </span>
-        </div>
-        <div className="whitespace-pre-wrap" style={{ fontFamily: 'Gilroy-Regular' }}>
-          {chatMessage.message}
-        </div>
-        {chatMessage.pending && (
-          <div className={`text-xs mt-1 ${
-            chatMessage.isAdminReply ? 'text-orange-200' : 'text-gray-400'
-          }`} style={{ fontFamily: 'Gilroy-Regular' }}>
-            Sending...
+  const renderMessage = (chatMessage: ChatMessage, index: number) => {
+    // Use isAdminReply === true to identify admin messages
+    const isAdminMessage = chatMessage.isAdminReply === true;
+    
+    return (
+      <div 
+        key={index} 
+        className={`flex ${isAdminMessage ? 'justify-end' : 'justify-start'} mb-4`}
+      >
+        <div className={`max-w-md px-4 py-2 rounded-lg ${
+          isAdminMessage 
+            ? 'text-white' 
+            : 'bg-gray-100 text-gray-800'
+        } ${chatMessage.pending ? 'opacity-60' : ''}`}
+        style={{
+          backgroundColor: isAdminMessage ? '#F6921E' : undefined
+        }}>
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-xs font-medium ${
+              isAdminMessage ? 'text-orange-100' : 'text-gray-600'
+            }`} style={{ fontFamily: 'Gilroy-Medium' }}>
+              {isAdminMessage ? 'You (Admin)' : (chatMessage.senderName || 'Customer')}
+            </span>
+            <span className={`text-xs ${
+              isAdminMessage ? 'text-orange-100' : 'text-gray-500'
+            }`} style={{ fontFamily: 'Gilroy-Regular' }}>
+              {formatTime(chatMessage.timestamp)}
+            </span>
           </div>
-        )}
+          <div className="whitespace-pre-wrap" style={{ fontFamily: 'Gilroy-Regular' }}>
+            {chatMessage.message}
+          </div>
+          {chatMessage.pending && (
+            <div className={`text-xs mt-1 ${
+              isAdminMessage ? 'text-orange-200' : 'text-gray-400'
+            }`} style={{ fontFamily: 'Gilroy-Regular' }}>
+              Sending...
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderUserTypingIndicator = () => (
     <div className="flex justify-start mb-4">
@@ -681,7 +710,7 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
                 style={{ width: 140 }}
                 size="small"
               >
-                <Option value="all">All Status</Option>
+                <Option value="active">Active</Option>
                 <Option value="open">New</Option>
                 <Option value="in_progress">In Progress</Option>
                 <Option value="waiting_for_user">Waiting</Option>

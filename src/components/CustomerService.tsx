@@ -25,11 +25,11 @@ const CustomerService: React.FC = () => {
     const isUserRoute = currentPath.includes("/dashboard");
     const isHomePage = currentPath === "/";
 
-    if (isAdminRoute && !isHomePage) {
-      return <AdminChatNotifications />;
+    if (isAdminRoute) {
+      return <AdminChatNotifications  />;
     }
 
-    if (isUserRoute && !isHomePage) {
+    if (isUserRoute) {
       return <EnhancedUserChatWidget />;
     }
     if (isHomePage) {

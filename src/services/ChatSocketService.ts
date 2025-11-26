@@ -36,18 +36,19 @@ class ChatSocketService {
           this.disconnect();
         }
 
-        const serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+        const serverUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
         
-        console.log('🔗 Connecting to Socket.IO server:', serverUrl);
+        console.log('🔗 Connecting to chat socket server:', serverUrl);
 
-        this.socket = io(serverUrl, {
-          auth: {
-            token,
-            userType
-          },
+        this.socket = io(`${serverUrl}`, { // Use correct namespace
+          auth: { token },
+          query: { userType },
           transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
-          timeout: 20000, // 20 second timeout
-          forceNew: true, // Force new connection
+          timeout: 30000, // 30 second timeout
+          reconnectionDelay: 2000,
+          reconnectionDelayMax: 5000,
+          reconnectionAttempts: this.maxReconnectAttempts,
+          randomizationFactor: 0.5,
           autoConnect: false // Don't auto-connect, we'll connect manually
         });
 
@@ -59,8 +60,11 @@ class ChatSocketService {
           this.emit('connection_status', { connected: true });
           this.addSocketListeners();
           
-          // Request active tickets for users when connected
-          if (userType === 'user') {
+          // Join appropriate room based on user type
+          if (userType === 'admin') {
+            console.log('👨‍💼 Admin connected, joining admin room');
+            this.socket?.emit('join_admin_room');
+          } else {
             console.log('👤 User connected, requesting active tickets');
             this.socket?.emit('get_active_tickets');
           }
@@ -215,13 +219,15 @@ class ChatSocketService {
   /**
    * Join chat room
    */
-  joinChatRoom(ticketId: string) {
+  joinChatRoom(ticketId: string, isAdmin: boolean = false) {
     if (this.isSocketConnected()) {
       console.log('🏠 Joining chat room:', ticketId);
-      this.socket?.emit('join_chat_room', { ticketId });
       
-      // Also emit user_join_room for better compatibility
-      this.socket?.emit('user_join_room', { ticketId });
+      if (isAdmin) {
+        this.socket?.emit('join_ticket', { ticketId });
+      } else {
+        this.socket?.emit('join_chat_room', { ticketId });
+      }
     } else {
       console.error('❌ Cannot join chat room: Socket not connected');
     }
@@ -230,10 +236,26 @@ class ChatSocketService {
   /**
    * Send chat message
    */
-  sendMessage(ticketId: string, message: string, attachments: any[] = []) {
+  sendMessage(ticketId: string, message: string, attachments: any[] = [], isAdmin: boolean = false) {
     if (this.isSocketConnected()) {
-      console.log('📤 Sending message:', { ticketId, message });
-      this.socket?.emit('send_message', { ticketId, message, attachments });
+      console.log('📤 Sending message:', { ticketId, message, isAdmin });
+      
+      if (isAdmin) {
+        this.socket?.emit('admin_send_message', {
+          ticketId,
+          message,
+          attachments,
+          isAdminReply: true,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        this.socket?.emit('send_message', {
+          ticketId,
+          message,
+          attachments,
+          timestamp: new Date().toISOString()
+        });
+      }
     } else {
       console.error('❌ Cannot send message: Socket not connected');
       throw new Error('Socket not connected');

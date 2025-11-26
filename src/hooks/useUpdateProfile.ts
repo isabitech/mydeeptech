@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { endpoints } from "../store/api/endpoints";
 import { retrieveTokenFromStorage } from "../helpers";
+import { getErrorMessage } from "../service/apiUtils";
 
 export interface UpdateProfilePayload {
   personalInfo?: {
@@ -75,7 +76,15 @@ export const useUpdateProfile = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+        // Try to get the error message from response body
+        let errorMessage = `Request failed with status ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          // If can't parse JSON, use default message
+        }
+        throw new Error(errorMessage);
       }
 
       const data: UpdateProfileResponse = await response.json();
@@ -88,7 +97,7 @@ export const useUpdateProfile = () => {
         return { success: false, error: errorMessage };
       }
     } catch (err: any) {
-      const errorMessage = err.message || "An error occurred while updating profile. Please try again.";
+      const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

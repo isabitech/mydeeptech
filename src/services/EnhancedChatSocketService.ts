@@ -35,8 +35,9 @@ class EnhancedChatSocketService implements IChatSocketService {
       
       this.userType = userType;
       
-      this.socket = io(url, {
+      this.socket = io(url, { // Use correct namespace
         auth: { token },
+        query: { userType },
         transports: ['polling', 'websocket'],
         timeout: 30000,
         reconnectionDelay: 2000,
@@ -98,7 +99,7 @@ class EnhancedChatSocketService implements IChatSocketService {
         data.tickets.forEach((ticket: ChatTicket) => {
           this.currentTickets.set(ticket._id, ticket);
         });
-        this.emit('active_tickets_loaded', data.tickets);
+        this.emit('active_tickets', data.tickets);
       }
     });
 
@@ -252,13 +253,14 @@ class EnhancedChatSocketService implements IChatSocketService {
       message,
       attachments,
       timestamp: new Date(),
+      isAdminReply: false  // Always false for user messages from this service
     };
 
     if (this.isConnected && this.socket) {
-      console.log('📤 Sending message via Socket.IO:', messageData);
+      console.log('📤 Sending user message via Socket.IO:', messageData);
       this.socket.emit('send_message', messageData);
     } else {
-      console.warn('📥 Queueing message for later delivery:', messageData);
+      console.warn('📥 Queueing user message for later delivery:', messageData);
       this.messageQueue.push(messageData);
       this.emit('message_queued', messageData);
     }
@@ -268,7 +270,12 @@ class EnhancedChatSocketService implements IChatSocketService {
   startChat(message: string, category: ChatCategory = 'general_inquiry', priority: ChatPriority = 'medium'): void {
     if (this.isConnected && this.socket) {
       console.log('🚀 Starting new chat via Socket.IO');
-      this.socket.emit('start_chat', { message, category, priority });
+      this.socket.emit('start_chat', { 
+        message, 
+        category, 
+        priority, 
+        isAdminReply: false  // User starting chat, not admin
+      });
     } else {
       this.emit('connection_error', { message: 'Not connected to chat server' });
     }

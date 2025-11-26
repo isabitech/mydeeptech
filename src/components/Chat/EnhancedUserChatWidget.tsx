@@ -14,8 +14,8 @@ import {
   UserOutlined,
   CustomerServiceOutlined
 } from '@ant-design/icons';
-import EnhancedChatSocketService from '../../services/EnhancedChatSocketService';
-import EnhancedChatAPI from '../../services/EnhancedChatAPI';
+import UserChatSocketService from '../../services/UserChatSocketService';
+import UserChatAPI from '../../services/UserChatAPI';
 import { ChatMessage, ChatTicket } from '../../types/enhanced-chat.types';
 import { 
   UserChatHistoryResponse, 
@@ -58,7 +58,7 @@ const EnhancedUserChatWidget: React.FC = () => {
     initializeChat();
 
     return () => {
-      EnhancedChatSocketService.disconnect();
+      UserChatSocketService.disconnect();
     };
   }, []);
 
@@ -68,7 +68,7 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     // Connection events
     unsubscribers.push(
-      EnhancedChatSocketService.on('connection_status', ({ connected, reason }: any) => {
+      UserChatSocketService.on('connection_status', ({ connected, reason }: any) => {
         setIsConnected(connected);
         if (!connected) {
           setConnectionError(`Disconnected: ${reason || 'Unknown reason'}`);
@@ -80,7 +80,7 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     // Chat session events
     unsubscribers.push(
-      EnhancedChatSocketService.on('active_tickets_loaded', (tickets: ChatTicket[]) => {
+      UserChatSocketService.on('active_tickets', (tickets: ChatTicket[]) => {
         console.log('📋 Loading active tickets:', tickets);
         setActiveTickets(tickets);
         if (tickets.length > 0 && !currentTicket) {
@@ -90,7 +90,7 @@ const EnhancedUserChatWidget: React.FC = () => {
     );
 
     unsubscribers.push(
-      EnhancedChatSocketService.on('chat_started', (ticket: ChatTicket) => {
+      UserChatSocketService.on('chat_started', (ticket: ChatTicket) => {
         console.log('🚀 Chat started:', ticket);
         setActiveTickets(prev => {
           const existing = prev.find(t => t._id === ticket._id);
@@ -108,55 +108,157 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     // CRITICAL: Real-time message handling
     unsubscribers.push(
-      EnhancedChatSocketService.on('new_message', (message: ChatMessage) => {
+      UserChatSocketService.on('new_message', (message: any) => {
         console.log('💬 Received new message:', message);
+        console.log('🔍 Message details:', {
+          ticketId: message.ticketId,
+          isAdminReply: message.isAdminReply,
+          senderEmail: message.senderEmail,
+          senderName: message.senderName,
+          messageId: message._id,
+          currentTicketId: currentTicket?._id
+        });
         
         // Update messages if it's for current ticket
-        if (currentTicket && message.ticketId === currentTicket._id) {
-          setMessages(prev => {
-            const exists = prev.find(m => m._id === message._id);
-            if (!exists) {
-              // Remove pending message with same content and replace with confirmed message
-              const filteredPrev = prev.filter(m => 
-                !(m.pending && m.message === message.message && !m.isAdminReply)
-              );
-              return [...filteredPrev, message];
-            }
-            return prev;
+        // Check both ticketId and _id fields since backend might send either
+        const messageTicketId = message.ticketId || message._id;
+        const currentTicketId = currentTicket?._id || currentTicket?.ticketId;
+        
+        if (currentTicket && (messageTicketId === currentTicketId || message.ticketId === currentTicket._id || message.ticketId === currentTicket.ticketId)) {
+          console.log('✅ Message is for current ticket, updating UI');
+          
+          // Use isAdminReply === true to determine if message is from admin
+          const isFromAdmin = message.isAdminReply === true;
+          
+          console.log('🔍 Message analysis:', {
+            isAdminReply: message.isAdminReply,
+            senderEmail: message.senderEmail || message.userEmail,
+            finalIsAdmin: isFromAdmin,
+            messageId: message._id,
+            sender: message.sender
           });
-          scrollToBottom();
+          
+          if (isFromAdmin) {
+            // This is a genuine admin message
+            console.log('📨 Adding admin message to chat from Admin');
+            setMessages(prev => {
+              const exists = prev.find(m => m._id === message._id);
+              if (!exists) {
+                const adminMessage: ChatMessage = {
+                  _id: message._id || `msg-${Date.now()}`,
+                  ticketId: messageTicketId || currentTicket._id,
+                  senderName: message.senderName || 'Support Agent',
+                  message: message.message,
+                  isAdminReply: true,
+                  timestamp: new Date(message.timestamp || new Date().toISOString())
+                };
+                return [...prev, adminMessage];
+              }
+              return prev;
+            });
+            scrollToBottom();
+            
+            // Set unread messages if chat is not visible
+            if (!isOpen || isMinimized) {
+              setHasUnreadMessages(true);
+              const adminMessage: ChatMessage = {
+                _id: message._id || `msg-${Date.now()}`,
+                ticketId: messageTicketId || currentTicket._id,
+                senderName: message.senderName || 'Support Agent',
+                message: message.message,
+                isAdminReply: true,
+                timestamp: new Date(message.timestamp || new Date().toISOString())
+              };
+              showMessageNotification(adminMessage);
+            } else {
+              setHasUnreadMessages(false);
+            }
+          } else {
+            // This is a user message echo back - update pending message to confirmed
+            console.log('📤 Updating pending user message to confirmed');
+            setMessages(prev => prev.map(msg => {
+              // Match by message content and check if it's pending
+              if (msg.pending && msg.message === message.message && !msg.isAdminReply) {
+                return { ...msg, pending: false, _id: message._id || msg._id };
+              }
+              return msg;
+            }));
+          }
+        } else {
+          console.log('⚠️ Message not for current ticket:', { messageTicketId, currentTicketId });
+          
+          // Still update ticket list for admin messages to show unread indicator
+          if (message.isAdminReply === true) {
+            setActiveTickets(prev => prev.map(ticket => {
+              const ticketId = ticket._id || ticket.ticketId;
+              if (ticketId === messageTicketId || ticket._id === messageTicketId) {
+                return { 
+                  ...ticket, 
+                  hasNewMessage: true,
+                  lastUpdated: new Date()
+                };
+              }
+              return ticket;
+            }));
+            
+            // Show global notification for admin message in other tickets
+            setHasUnreadMessages(true);
+          }
         }
         
-        // Update ticket in active tickets list
-        setActiveTickets(prev => prev.map(ticket => {
-          if (ticket._id === message.ticketId) {
-            const updatedTicket = { 
-              ...ticket, 
-              messages: [...(ticket.messages || []), message],
-              lastUpdated: new Date()
-            };
-            return updatedTicket;
-          }
-          return ticket;
-        }));
+        // Update ticket in active tickets list - only for genuine admin messages
+        const isGenuineAdminMessage = message.isAdminReply === true;
         
-        // Show notification if chat is not open or minimized
-        if (!isOpen || isMinimized) {
+        if (isGenuineAdminMessage) {
+          setActiveTickets(prev => prev.map(ticket => {
+            const ticketId = ticket._id || ticket.ticketId;
+            if (ticketId === messageTicketId || ticket._id === messageTicketId) {
+              // Add the admin message to ticket
+              const adminMessage: ChatMessage = {
+                _id: message._id || `msg-${Date.now()}`,
+                ticketId: messageTicketId || ticket._id,
+                senderName: message.senderName || 'Support Agent',
+                message: message.message,
+                isAdminReply: true,
+                timestamp: new Date(message.timestamp || new Date().toISOString())
+              };
+              
+              const updatedTicket = { 
+                ...ticket, 
+                messages: [...(ticket.messages || []), adminMessage],
+                lastUpdated: new Date()
+              };
+              return updatedTicket;
+            }
+            return ticket;
+          }));
+        }
+        
+        // Show notification if chat is not open or minimized - only for genuine admin messages
+        if (isGenuineAdminMessage && (!isOpen || isMinimized)) {
           setHasUnreadMessages(true);
-          showMessageNotification(message);
+          const adminMessage: ChatMessage = {
+            _id: message._id || `msg-${Date.now()}`,
+            ticketId: messageTicketId || '',
+            senderName: message.senderName || 'Support Agent',
+            message: message.message,
+            isAdminReply: true,
+            timestamp: new Date(message.timestamp || new Date().toISOString())
+          };
+          showMessageNotification(adminMessage);
         }
       })
     );
 
     unsubscribers.push(
-      EnhancedChatSocketService.on('agent_joined', (data: any) => {
+      UserChatSocketService.on('agent_joined', (data: any) => {
         console.log('👨‍💼 Agent joined:', data);
         showNotification(`Agent ${data.agentName || 'Support'} joined the conversation`, 'info');
       })
     );
 
     unsubscribers.push(
-      EnhancedChatSocketService.on('agent_typing', (data: any) => {
+      UserChatSocketService.on('agent_typing', (data: any) => {
         if (currentTicket && data.ticketId === currentTicket._id) {
           setAgentTyping(data.isTyping);
         }
@@ -164,7 +266,7 @@ const EnhancedUserChatWidget: React.FC = () => {
     );
 
     unsubscribers.push(
-      EnhancedChatSocketService.on('chat_closed', (data: any) => {
+      UserChatSocketService.on('chat_closed', (data: any) => {
         console.log('📪 Chat closed:', data);
         if (currentTicket && data.ticketId === currentTicket._id) {
           showNotification('Chat session has been closed by support', 'success');
@@ -182,7 +284,7 @@ const EnhancedUserChatWidget: React.FC = () => {
     );
 
     unsubscribers.push(
-      EnhancedChatSocketService.on('ticket_status_updated', (data: any) => {
+      UserChatSocketService.on('ticket_status_updated', (data: any) => {
         console.log('📊 Ticket status updated:', data);
         setActiveTickets(prev => prev.map(ticket => 
           ticket._id === data.ticketId 
@@ -195,8 +297,43 @@ const EnhancedUserChatWidget: React.FC = () => {
       })
     );
 
+    // Add admin message event listener specifically
     unsubscribers.push(
-      EnhancedChatSocketService.on('message_sent', (data: any) => {
+      UserChatSocketService.on('admin_message', (data: any) => {
+        console.log('👨‍💼 Direct admin message received:', data);
+        
+        if (currentTicket && (data.ticketId === currentTicket._id || data.ticketId === currentTicket.ticketId)) {
+          console.log('✅ Admin message is for current ticket, adding to UI');
+          
+          const adminMessage: ChatMessage = {
+            _id: data._id || `msg-${Date.now()}`,
+            ticketId: data.ticketId || currentTicket._id,
+            senderName: data.senderName || 'Support Agent',
+            message: data.message,
+            isAdminReply: true,
+            timestamp: new Date(data.timestamp || new Date().toISOString())
+          };
+          
+          setMessages(prev => {
+            const exists = prev.find(m => m._id === adminMessage._id);
+            if (!exists) {
+              return [...prev, adminMessage];
+            }
+            return prev;
+          });
+          
+          scrollToBottom();
+          setHasUnreadMessages(!isOpen || isMinimized);
+          
+          if (!isOpen || isMinimized) {
+            showMessageNotification(adminMessage);
+          }
+        }
+      })
+    );
+
+    unsubscribers.push(
+      UserChatSocketService.on('message_sent', (data: any) => {
         console.log('✅ Message delivery confirmed:', data);
         // Update pending message to confirmed
         setMessages(prev => prev.map(msg => 
@@ -222,13 +359,18 @@ const EnhancedUserChatWidget: React.FC = () => {
       }
 
       console.log('🔌 Initializing chat service...');
-      await EnhancedChatSocketService.connect(token, 'user');
+      const connected = await UserChatSocketService.connect(token);
+      console.log('🔗 Socket connection result:', connected);
       
       // Load existing active chats
-      const result = await EnhancedChatAPI.getActiveChats();
+      const result = await UserChatAPI.getActiveChats();
+      console.log('📋 Active chats API result:', result);
+      
       if (result.success && result.data.activeChats) {
+        console.log('✅ Setting active tickets:', result.data.activeChats.length, 'tickets');
         setActiveTickets(result.data.activeChats);
         if (result.data.activeChats.length > 0) {
+          console.log('🎯 Auto-selecting first ticket:', result.data.activeChats[0]);
           selectTicket(result.data.activeChats[0]);
         }
       }
@@ -238,14 +380,31 @@ const EnhancedUserChatWidget: React.FC = () => {
     }
   };
 
-  // Select ticket and rejoin
+  // Select ticket and join room for real-time updates
   const selectTicket = useCallback((ticket: ChatTicket) => {
     console.log('🎯 Selecting ticket:', ticket.ticketNumber);
     setCurrentTicket(ticket);
     setMessages(ticket.messages || []);
     
-    // Rejoin ticket room for real-time updates
-    EnhancedChatSocketService.rejoinTicket(ticket._id);
+    // Join ticket room for real-time updates - use multiple methods for better compatibility
+    const socket = UserChatSocketService.getSocket();
+    if (socket && UserChatSocketService.isSocketConnected()) {
+      console.log('🏠 Joining chat room for ticket:', ticket._id);
+      
+      // Method 1: Direct socket emit
+      socket.emit('join_chat_room', { ticketId: ticket._id });
+      
+      // Method 2: Also try with ticketId field for backend compatibility
+      socket.emit('join_room', { ticketId: ticket._id });
+      
+      // Method 3: Use the service method
+      UserChatSocketService.rejoinTicket(ticket._id);
+      
+      console.log('✅ Attempted to join room with multiple methods for ticket:', ticket._id);
+    } else {
+      console.warn('⚠️ Socket not connected, cannot join room');
+    }
+    
     scrollToBottom();
     setHasUnreadMessages(false);
   }, []);
@@ -259,11 +418,11 @@ const EnhancedUserChatWidget: React.FC = () => {
     
     try {
       // Start via Socket.IO for real-time experience
-      EnhancedChatSocketService.startChat(messageText, 'general_inquiry', 'medium');
+      UserChatSocketService.startChat(messageText, 'general_inquiry', 'medium');
       setNewMessage('');
       
       // Also start via API for consistency
-      await EnhancedChatAPI.startChat(messageText);
+      await UserChatAPI.startChat(messageText);
     } catch (error) {
       console.error('Failed to start chat:', error);
       showNotification('Failed to start chat session', 'error');
@@ -292,7 +451,7 @@ const EnhancedUserChatWidget: React.FC = () => {
     scrollToBottom();
     
     // Send via Socket.IO for real-time delivery
-    EnhancedChatSocketService.sendMessage(currentTicket._id, messageText);
+    UserChatSocketService.sendMessage(currentTicket._id, messageText);
     
     // Focus input
     chatInputRef.current?.focus();
@@ -301,14 +460,14 @@ const EnhancedUserChatWidget: React.FC = () => {
   // Typing indicator
   const handleTyping = useCallback(() => {
     if (!currentTicket) return;
-    EnhancedChatSocketService.sendTypingIndicator(currentTicket._id, true);
+    UserChatSocketService.sendTypingIndicator(currentTicket._id, true);
   }, [currentTicket]);
 
   // Load chat history with proper type handling
   const loadChatHistory = async () => {
     try {
       setHistoryLoading(true);
-      const result = await EnhancedChatAPI.getChatHistory(1, 50);
+      const result = await UserChatAPI.getChatHistory(1, 50);
       console.log('📚 Chat history response:', result);
       
       if (result.success && result.data) {
@@ -476,41 +635,46 @@ const EnhancedUserChatWidget: React.FC = () => {
   };
 
   // Render message component
-  const renderMessage = (chatMessage: ChatMessage, index: number) => (
-    <div 
-      key={index} 
-      className={`flex ${chatMessage.isAdminReply ? 'justify-start' : 'justify-end'} mb-4`}
-    >
-      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-        chatMessage.isAdminReply 
-          ? 'bg-gray-100 text-gray-800' 
-          : 'bg-[#F6921E] text-white'
-      } ${chatMessage.pending ? 'opacity-60' : ''}`}>
-        <div className="flex items-center justify-between mb-1">
-          <span className={`text-xs font-medium ${
-            chatMessage.isAdminReply ? 'text-gray-600' : 'text-orange-100'
-          }`} style={{ fontFamily: 'Gilroy-Medium' }}>
-            {chatMessage.senderName || (chatMessage.isAdminReply ? 'Support Agent' : 'You')}
-          </span>
-          <span className={`text-xs ${
-            chatMessage.isAdminReply ? 'text-gray-500' : 'text-orange-100'
-          }`}>
-            {formatTime(chatMessage.timestamp)}
-          </span>
-        </div>
-        <div className="whitespace-pre-wrap" style={{ fontFamily: 'Gilroy-Regular' }}>
-          {chatMessage.message}
-        </div>
-        {chatMessage.pending && (
-          <div className={`text-xs mt-1 ${
-            chatMessage.isAdminReply ? 'text-gray-400' : 'text-orange-200'
-          }`} style={{ fontFamily: 'Gilroy-Regular' }}>
-            Sending...
+  const renderMessage = (chatMessage: ChatMessage, index: number) => {
+    // Use isAdminReply === true to identify admin messages
+    const isAdminMessage = chatMessage.isAdminReply === true;
+    
+    return (
+      <div 
+        key={index} 
+        className={`flex ${isAdminMessage ? 'justify-start' : 'justify-end'} mb-4`}
+      >
+        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+          isAdminMessage 
+            ? 'bg-gray-100 text-gray-800' 
+            : 'bg-[#F6921E] text-white'
+        } ${chatMessage.pending ? 'opacity-60' : ''}`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className={`text-xs font-medium ${
+              isAdminMessage ? 'text-gray-600' : 'text-orange-100'
+            }`} style={{ fontFamily: 'Gilroy-Medium' }}>
+              {chatMessage.senderName || (isAdminMessage ? 'Support Agent' : 'You')}
+            </span>
+            <span className={`text-xs ${
+              isAdminMessage ? 'text-gray-500' : 'text-orange-100'
+            }`}>
+              {formatTime(chatMessage.timestamp)}
+            </span>
           </div>
-        )}
+          <div className="whitespace-pre-wrap" style={{ fontFamily: 'Gilroy-Regular' }}>
+            {chatMessage.message}
+          </div>
+          {chatMessage.pending && (
+            <div className={`text-xs mt-1 ${
+              isAdminMessage ? 'text-gray-400' : 'text-orange-200'
+            }`} style={{ fontFamily: 'Gilroy-Regular' }}>
+              Sending...
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render typing indicator
   const renderTypingIndicator = () => (

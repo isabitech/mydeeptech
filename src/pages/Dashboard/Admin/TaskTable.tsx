@@ -6,6 +6,7 @@ import { baseURL, endpoints } from "../../../store/api/endpoints";
 import { PlusCircleFilled } from "@ant-design/icons";
 import useGetUsers from "../../../hooks/Auth/Admin/Users/useGetUsers";
 import Loader from "../../../components/Loader";
+import { getErrorMessage } from "../../../service/apiUtils";
 
 export type ResponseType = TaskType[];
 
@@ -71,9 +72,10 @@ const TaskTable = () => {
       form.resetFields();
       setIsModalVisible(false);
     } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
       notification.error({
         message: "Error Creating Project",
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
@@ -110,9 +112,10 @@ const TaskTable = () => {
       form.resetFields();
       setIsAssignTaskModalVisibile(false);
     } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
       notification.error({
         message: "Error Assigning Task",
-        description: error.message,
+        description: errorMessage,
       });
     }
   };
@@ -147,10 +150,10 @@ const TaskTable = () => {
         settotalTask(totalTask);
       } catch (error) {
         console.error("An error occurred:", error);
+        const errorMessage = getErrorMessage(error);
         notification.error({
           message: "Error fetching tasks",
-          description:
-            "An error occurred while fetching the task list. Please try again.",
+          description: errorMessage,
         });
       } finally {
         setIsLoading(false);
