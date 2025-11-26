@@ -1,35 +1,63 @@
-import { useState, useCallback } from 'react';
-import { endpoints } from '../../store/api/endpoints';
-import { apiGet, apiPost, getErrorMessage } from '../../service/apiUtils';
+import { useState, useCallback, useEffect } from 'react';
+import AdminChatAPI from '../../services/AdminChatAPI';
+import AdminChatSocketService from '../../services/AdminChatSocketService';
+import { getErrorMessage } from '../../service/apiUtils';
 import {
-  ActiveChatsResponse,
+  AdminActiveChatsResponse,
   JoinChatResponse,
-  CloseChatRequest,
-  CloseChatResponse,
   ChatTicket,
-  HookOperationResult,
-} from '../../types/chat.types';
+  ChatMessage
+} from '../../types/enhanced-chat.types';
+
+export interface HookOperationResult {
+  success: boolean;
+  error?: string;
+  data?: any;
+}
+
+export interface CloseChatRequest {
+  resolutionSummary?: string;
+}
 
 export const useAdminChat = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeChats, setActiveChats] = useState<ChatTicket[]>([]);
   const [selectedChat, setSelectedChat] = useState<ChatTicket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Initialize admin socket connection
+  const initializeAdminConnection = useCallback(async (token: string): Promise<HookOperationResult> => {
+    try {
+      await AdminChatSocketService.connect(token);
+      setIsConnected(true);
+      setConnectionError(null);
+      
+      // Join admin room
+      AdminChatSocketService.joinAdminRoom();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('[useAdminChat] Failed to initialize admin connection:', error);
+      setConnectionError(getErrorMessage(error));
+      setIsConnected(false);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  }, []);
 
   const getActiveChats = useCallback(async (status = 'active'): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
 
     try {
-      const response: ActiveChatsResponse = await apiGet(
-        `${endpoints.chat.admin.getActiveChats}?status=${status}`
-      );
+      const response: AdminActiveChatsResponse = await AdminChatAPI.getActiveChatTickets(status);
 
-      if (response.success) {
-        setActiveChats(response.data.chats);
+      if (response.success && response.data) {
+        setActiveChats(response.data.chats || []);
         return { success: true, data: response.data };
       } else {
-        const errorMessage = response.message || 'Failed to get active chats';
+        const errorMessage = 'Failed to get active chats';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -47,16 +75,19 @@ export const useAdminChat = () => {
     setError(null);
 
     try {
-      const response: JoinChatResponse = await apiPost(
-        `${endpoints.chat.admin.joinChat}/${ticketId}`,
-        {}
-      );
+      const response: JoinChatResponse = await AdminChatAPI.joinChat(ticketId);
 
-      if (response.success) {
+      if (response.success && response.data) {
         setSelectedChat(response.data as any);
+        
+        // Join socket room for real-time updates
+        if (isConnected) {
+          AdminChatSocketService.joinChatRoom(ticketId);
+        }
+        
         return { success: true, data: response.data };
       } else {
-        const errorMessage = response.message || 'Failed to join chat';
+        const errorMessage = 'Failed to join chat';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -67,7 +98,7 @@ export const useAdminChat = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isConnected]);
 
   const closeChat = useCallback(async (
     ticketId: string, 
@@ -77,9 +108,9 @@ export const useAdminChat = () => {
     setError(null);
 
     try {
-      const response: CloseChatResponse = await apiPost(
-        `${endpoints.chat.admin.closeChat}/${ticketId}`,
-        data || {}
+      const response = await AdminChatAPI.closeChatSession(
+        ticketId, 
+        data?.resolutionSummary || 'Chat session completed successfully'
       );
 
       if (response.success) {
@@ -89,9 +120,15 @@ export const useAdminChat = () => {
         if (selectedChat?._id === ticketId) {
           setSelectedChat(null);
         }
+        
+        // Notify via socket if connected
+        if (isConnected) {
+          AdminChatSocketService.closeChat(ticketId, data?.resolutionSummary);
+        }
+        
         return { success: true, data: response.data };
       } else {
-        const errorMessage = response.message || 'Failed to close chat';
+        const errorMessage = 'Failed to close chat';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -102,41 +139,7 @@ export const useAdminChat = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedChat]);
-
-  const updateChatInList = useCallback((ticketId: string, lastMessage: string) => {
-    setActiveChats(prev => 
-      prev.map(chat => {
-        if (chat._id === ticketId) {
-          return {
-            ...chat,
-            lastUpdated: new Date().toISOString(),
-            messages: [
-              ...chat.messages,
-              {
-                _id: Date.now().toString(),
-                sender: '',
-                senderModel: 'DTUser' as const,
-                message: lastMessage,
-                isAdminReply: false,
-                timestamp: new Date().toISOString(),
-              }
-            ]
-          };
-        }
-        return chat;
-      })
-    );
-  }, []);
-
-  const addMessageToSelectedChat = useCallback((message: any) => {
-    if (selectedChat) {
-      setSelectedChat(prev => prev ? {
-        ...prev,
-        messages: [...prev.messages, message]
-      } : null);
-    }
-  }, [selectedChat]);
+  }, [selectedChat, isConnected]);
 
   const sendMessage = useCallback(async (
     ticketId: string, 
@@ -147,59 +150,105 @@ export const useAdminChat = () => {
     setError(null);
 
     try {
-      console.log('📤 [useAdminChat] Sending message via API:', { ticketId, message });
-      const response = await apiPost(
-        endpoints.chat.admin.sendMessage,
-        {
-          ticketId,
-          message,
-          attachments
-        }
-      );
-
-      console.log('📤 [useAdminChat] Send message API response:', response);
-
-      if (response.success) {
-        return { success: true, data: response.data };
+      console.log('📤 [useAdminChat] Sending admin message via socket:', { ticketId, message });
+      
+      // Send via socket for real-time delivery (now returns a Promise)
+      // The backend identifies admin messages by the @mydeeptech.ng email domain
+      if (isConnected) {
+        await AdminChatSocketService.sendMessage(ticketId, message, attachments);
+        console.log('✅ [useAdminChat] Admin message sent via socket successfully');
+        return { success: true, data: { message: 'Message sent successfully' } };
       } else {
-        const errorMessage = response.message || 'Failed to send message';
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+        throw new Error('Socket not connected');
       }
     } catch (err: any) {
-      console.error('❌ [useAdminChat] Send message API error:', err);
+      console.error('❌ [useAdminChat] Send message error:', err);
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }
+  }, [isConnected]);
+
+  const getActiveTickets = useCallback((status?: string) => {
+    if (isConnected) {
+      AdminChatSocketService.getActiveTickets(status);
+    }
+  }, [isConnected]);
+
+  const assignAgent = useCallback(async (ticketId: string, agentId: string): Promise<HookOperationResult> => {
+    try {
+      const response = await AdminChatAPI.assignAgent(ticketId, agentId);
+      
+      if (response.success) {
+        return { success: true, data: response.data };
+      } else {
+        const errorMessage = 'Failed to assign agent';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
+  const getChatStats = useCallback(async (): Promise<HookOperationResult> => {
+    try {
+      const response = await AdminChatAPI.getChatStats();
+      
+      if (response.success) {
+        return { success: true, data: response.data };
+      } else {
+        const errorMessage = 'Failed to get chat stats';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
   }, []);
 
   const clearError = useCallback(() => {
     setError(null);
+    setConnectionError(null);
   }, []);
 
   const resetState = useCallback(() => {
     setLoading(false);
     setError(null);
+    setConnectionError(null);
     setActiveChats([]);
     setSelectedChat(null);
+    setIsConnected(false);
   }, []);
 
   return {
+    // State
     loading,
     error,
+    connectionError,
     activeChats,
     selectedChat,
+    isConnected,
+    
+    // Actions
+    initializeAdminConnection,
     getActiveChats,
     joinChat,
     closeChat,
     sendMessage,
-    updateChatInList,
-    addMessageToSelectedChat,
-    setSelectedChat,
+    getActiveTickets,
+    assignAgent,
+    getChatStats,
     clearError,
     resetState,
+    
+    // Setters
+    setSelectedChat
   };
 };

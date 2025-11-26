@@ -15,7 +15,7 @@ class EnhancedChatAPI implements IChatAPI {
 
   async startChat(message: string, category: string = 'general_inquiry', priority: string = 'medium'): Promise<StartChatResponse> {
     try {
-      const response = await apiPost(endpoints.chat.startChat, {
+      const response = await apiPost('/chat/start', {
         message,
         category,
         priority
@@ -31,7 +31,7 @@ class EnhancedChatAPI implements IChatAPI {
 
   async getActiveChats(): Promise<ActiveChatsResponse> {
     try {
-      const response = await apiGet(endpoints.chat.getActiveChats);
+      const response = await apiGet('/chat/active?status=active');
       console.log('📋 Active chats fetched:', response);
       return response;
     } catch (error) {
@@ -40,9 +40,9 @@ class EnhancedChatAPI implements IChatAPI {
     }
   }
 
-  async getChatHistory(page: number = 1, limit: number = 10): Promise<ChatHistoryResponse> {
+  async getChatHistory(page: number = 1, limit: number = 50): Promise<ChatHistoryResponse> {
     try {
-      const response = await apiGet(`${endpoints.chat.getChatHistory}?page=${page}&limit=${limit}`);
+      const response = await apiGet(`/api/chat/history?page=${page}&limit=${limit}`);
       console.log('📚 Chat history fetched:', response);
       return response;
     } catch (error) {
@@ -64,7 +64,7 @@ class EnhancedChatAPI implements IChatAPI {
 
   async sendMessage(ticketId: string, message: string, attachments: any[] = []) {
     try {
-      const response = await apiPost(`${endpoints.chat.sendMessage}/${ticketId}/message`, {
+      const response = await apiPost(`/api/chat/${ticketId}/message`, {
         message,
         attachments
       });

@@ -131,6 +131,7 @@ export interface MessageQueueItem {
   message: string;
   attachments?: any[];
   timestamp: Date;
+  isAdminReply: boolean;
 }
 
 export interface EventSubscription {

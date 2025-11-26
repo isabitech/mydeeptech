@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { baseURL, endpoints } from "../../../../store/api/endpoints";
 import { notification, Spin } from "antd";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 type UserListType = {
   role: string;
@@ -39,9 +40,10 @@ const UserList = () => {
         });
       } catch (error) {
         console.error("An error occurred:", error);
+        const errorMessage = getErrorMessage(error);
         notification.error({
           message: "Error fetching users",
-          description: "An error occurred while fetching the user list. Please try again.",
+          description: errorMessage,
         });
       }
     };
