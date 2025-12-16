@@ -31,6 +31,7 @@ interface UnpaidProps {
   onUpdatePayment: (invoiceId: string, paymentData: UpdatePaymentStatusForm) => Promise<any>;
   onSendReminder: (invoiceId: string) => Promise<any>;
   onDelete: (invoiceId: string) => Promise<any>;
+  onShowPaymentModal: (invoice: any) => void;
 }
 
 const Unpaid: React.FC<UnpaidProps> = ({
@@ -40,6 +41,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   onUpdatePayment,
   onSendReminder,
   onDelete,
+  onShowPaymentModal,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -217,12 +219,12 @@ const Unpaid: React.FC<UnpaidProps> = ({
         <Space size="small">
           {record.paymentStatus !== 'paid' && (
             <>
-              <Tooltip title="Mark as Paid">
+              <Tooltip title="Authorize Payment">
                 <Button
                   type="primary"
                   size="small"
                   icon={<DollarCircleOutlined />}
-                  onClick={() => handleMarkAsPaid(record)}
+                  onClick={() => onShowPaymentModal(record)}
                 >
                   Pay
                 </Button>

@@ -49,7 +49,16 @@ export interface AdminInvoice {
   id: string
 }
 
+export interface PaymentInfo {
+  account_name: string
+  account_number: string
+  bank_name: string
+  payment_currency: string
+  payment_method: string
+}
+
 export interface DtUserId {
+  payment_info?: PaymentInfo
   _id: string
   fullName: string
   phone: string
