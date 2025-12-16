@@ -489,10 +489,30 @@ const ApplicationManagement: React.FC = () => {
           dataSource={applications}
           rowKey="_id"
           pagination={{
+            current: pagination?.currentPage || 1,
+            pageSize: pagination?.limit || 50,
+            total: pagination?.totalApplications || 0,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} applications`,
+            pageSizeOptions: ['10', '25', '50', '100'],
+            onChange: (page, pageSize) => {
+              getAllApplications({
+                status: statusFilter || undefined,
+                projectId: projectFilter || undefined,
+                page,
+                limit: pageSize,
+              });
+            },
+            onShowSizeChange: (current, size) => {
+              getAllApplications({
+                status: statusFilter || undefined,
+                projectId: projectFilter || undefined,
+                page: 1,
+                limit: size,
+              });
+            },
           }}
           scroll={{ x: 1200 }}
         />

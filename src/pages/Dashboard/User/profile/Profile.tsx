@@ -24,6 +24,10 @@ const Profile = () => {
   const { updateProfile, loading: updateLoading, error: updateError } = useUpdateProfile();
   const { uploadFile, uploading } = useUploadFile();
 
+  // Watch form values at the top level to avoid conditional hooks
+  const paymentCurrency = Form.useWatch('paymentCurrency', form);
+  const paymentMethod = Form.useWatch('paymentMethod', form);
+
   // Load user from storage (if not already in context)
   useEffect(() => {
     const loadUser = async () => {
@@ -495,51 +499,23 @@ useEffect(() => {
             {/* Payment Information Section */}
             <div className="lg:col-span-1">
               <Card title="Payment Information" className="mb-6">
-                <Form.Item label="Account Name" name="accountName">
-                  <Input
-                    disabled={!isEditable}
-                    className="!font-[gilroy-regular]"
-                    placeholder="Enter account name"
-                  />
-                </Form.Item>
-
-                <Form.Item label="Account Number" name="accountNumber">
-                  <Input
-                    disabled={!isEditable}
-                    className="!font-[gilroy-regular]"
-                    placeholder="Enter account number"
-                  />
-                </Form.Item>
-
-                <Form.Item label="Bank Name" name="bankName">
-                  <Input
-                    disabled={!isEditable}
-                    className="!font-[gilroy-regular]"
-                    placeholder="Enter bank name"
-                  />
-                </Form.Item>
-
-                <Form.Item label="Payment Method" name="paymentMethod">
-                  <Select
-                    disabled={!isEditable}
-                    placeholder="Select payment method"
-                    options={[
-                      { value: "bank_transfer", label: "Bank Transfer" },
-                      { value: "paypal", label: "PayPal" },
-                      { value: "wise", label: "Wise" },
-                      { value: "cryptocurrency", label: "Cryptocurrency" }
-                    ]}
-                  />
-                </Form.Item>
-
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
                     disabled={!isEditable}
                     className="!font-[gilroy-regular]"
-                    placeholder="Select payment currency"
+                    placeholder="Select payment currency first"
+                    onChange={(value) => {
+                      // Reset payment fields when currency changes
+                      form.setFieldsValue({
+                        accountName: '',
+                        accountNumber: '',
+                        bankName: '',
+                        paymentMethod: ''
+                      });
+                    }}
                     options={[
-                      { value: "USD", label: "USD - US Dollar" },
                       { value: "NGN", label: "NGN - Nigerian Naira" },
+                      { value: "USD", label: "USD - US Dollar" },
                       { value: "EUR", label: "EUR - Euro" },
                       { value: "GBP", label: "GBP - British Pound" },
                       { value: "CAD", label: "CAD - Canadian Dollar" },
@@ -551,6 +527,440 @@ useEffect(() => {
                     ]}
                   />
                 </Form.Item>
+
+                {/* Currency-specific forms */}
+                {paymentCurrency && (
+                  <>
+                    {/* Nigerian Naira (NGN) Form */}
+                    {paymentCurrency === 'NGN' && (
+                      <>
+                        <Form.Item label="Account Name" name="accountName" rules={[{ required: true, message: 'Account name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter account name as it appears on your bank"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Account Number" name="accountNumber" rules={[
+                          { required: true, message: 'Account number is required' },
+                          { pattern: /^\d{10}$/, message: 'Account number must be 10 digits' }
+                        ]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter 10-digit account number"
+                            maxLength={10}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Bank Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                          <Select
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Select your bank"
+                            showSearch
+                            filterOption={(input, option) =>
+                              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                            }
+                            options={[
+                              { value: "Access Bank", label: "Access Bank" },
+                              { value: "Fidelity Bank", label: "Fidelity Bank" },
+                              { value: "First Bank of Nigeria", label: "First Bank of Nigeria" },
+                              { value: "Guaranty Trust Bank", label: "Guaranty Trust Bank (GTBank)" },
+                              { value: "United Bank for Africa", label: "United Bank for Africa (UBA)" },
+                              { value: "Zenith Bank", label: "Zenith Bank" },
+                              { value: "Ecobank Nigeria", label: "Ecobank Nigeria" },
+                              { value: "Union Bank of Nigeria", label: "Union Bank of Nigeria" },
+                              { value: "Stanbic IBTC Bank", label: "Stanbic IBTC Bank" },
+                              { value: "Sterling Bank", label: "Sterling Bank" },
+                              { value: "Wema Bank", label: "Wema Bank" },
+                              { value: "Polaris Bank", label: "Polaris Bank" },
+                              { value: "Kuda Bank", label: "Kuda Bank" },
+                              { value: "VFD Microfinance Bank", label: "VFD Microfinance Bank" },
+                              { value: "Opay", label: "Opay" },
+                              { value: "PalmPay", label: "PalmPay" },
+                              { value: "Moniepoint", label: "Moniepoint" }
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            options={[
+                              { value: "bank_transfer", label: "Bank Transfer" },
+                              { value: "mobile_money", label: "Mobile Money" }
+                            ]}
+                          />
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {/* US Dollar (USD) Form */}
+                    {paymentCurrency === 'USD' && (
+                      <>
+                        <Form.Item label="Payment Method" name="paymentMethod" rules={[{ required: true, message: 'Payment method is required' }]}>
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            onChange={(value) => {
+                              // Reset fields when method changes
+                              form.setFieldsValue({
+                                accountName: '',
+                                accountNumber: '',
+                                bankName: ''
+                              });
+                            }}
+                            options={[
+                              { value: "paypal", label: "PayPal" },
+                              { value: "wise", label: "Wise (formerly TransferWise)" },
+                              { value: "bank_transfer", label: "US Bank Transfer" },
+                              { value: "cryptocurrency", label: "Cryptocurrency" }
+                            ]}
+                          />
+                        </Form.Item>
+
+                        {paymentMethod === 'paypal' && (
+                          <Form.Item label="PayPal Email" name="accountNumber" rules={[
+                            { required: true, message: 'PayPal email is required' },
+                            { type: 'email', message: 'Please enter a valid email' }
+                          ]}>
+                            <Input
+                              disabled={!isEditable}
+                              className="!font-[gilroy-regular]"
+                              placeholder="Enter your PayPal email address"
+                              type="email"
+                            />
+                          </Form.Item>
+                        )}
+
+                        {paymentMethod === 'wise' && (
+                          <>
+                            <Form.Item label="Wise Email" name="accountNumber" rules={[
+                              { required: true, message: 'Wise email is required' },
+                              { type: 'email', message: 'Please enter a valid email' }
+                            ]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter your Wise email address"
+                                type="email"
+                              />
+                            </Form.Item>
+                            <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter account holder name"
+                              />
+                            </Form.Item>
+                          </>
+                        )}
+
+                        {paymentMethod === 'bank_transfer' && (
+                          <>
+                            <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter full name on account"
+                              />
+                            </Form.Item>
+                            <Form.Item label="Routing Number" name="accountNumber" rules={[
+                              { required: true, message: 'Routing number is required' },
+                              { pattern: /^\d{9}$/, message: 'Routing number must be 9 digits' }
+                            ]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter 9-digit routing number"
+                                maxLength={9}
+                              />
+                            </Form.Item>
+                            <Form.Item label="Bank Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter bank name"
+                              />
+                            </Form.Item>
+                          </>
+                        )}
+
+                        {paymentMethod === 'cryptocurrency' && (
+                          <>
+                            <Form.Item label="Wallet Address" name="accountNumber" rules={[{ required: true, message: 'Wallet address is required' }]}>
+                              <Input
+                                disabled={!isEditable}
+                                className="!font-[gilroy-regular]"
+                                placeholder="Enter your wallet address"
+                              />
+                            </Form.Item>
+                            <Form.Item label="Cryptocurrency Type" name="bankName" rules={[{ required: true, message: 'Cryptocurrency type is required' }]}>
+                              <Select
+                                disabled={!isEditable}
+                                placeholder="Select cryptocurrency"
+                                options={[
+                                  { value: "Bitcoin (BTC)", label: "Bitcoin (BTC)" },
+                                  { value: "Ethereum (ETH)", label: "Ethereum (ETH)" },
+                                  { value: "USDT", label: "USDT" },
+                                  { value: "USDC", label: "USDC" }
+                                ]}
+                              />
+                            </Form.Item>
+                          </>
+                        )}
+                      </>
+                    )}
+
+                    {/* Euro (EUR) Form */}
+                    {paymentCurrency === 'EUR' && (
+                      <>
+                        <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter full name as on account"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="IBAN" name="accountNumber" rules={[
+                          { required: true, message: 'IBAN is required' },
+                          { pattern: /^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/, message: 'Please enter a valid IBAN' }
+                        ]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter IBAN (e.g., DE89370400440532013000)"
+                            style={{ textTransform: 'uppercase' }}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Bank Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter bank name"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            options={[
+                              { value: "sepa_transfer", label: "SEPA Transfer" },
+                              { value: "wise", label: "Wise" },
+                              { value: "paypal", label: "PayPal" }
+                            ]}
+                          />
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {/* British Pound (GBP) Form */}
+                    {paymentCurrency === 'GBP' && (
+                      <>
+                        <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter full name as on account"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Sort Code" name="accountNumber" rules={[
+                          { required: true, message: 'Sort code is required' },
+                          { pattern: /^\d{2}-\d{2}-\d{2}$/, message: 'Sort code format: XX-XX-XX' }
+                        ]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter sort code (e.g., 12-34-56)"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Bank Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter bank name"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            options={[
+                              { value: "bank_transfer", label: "UK Bank Transfer" },
+                              { value: "wise", label: "Wise" },
+                              { value: "paypal", label: "PayPal" }
+                            ]}
+                          />
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {/* South African Rand (ZAR) Form */}
+                    {paymentCurrency === 'ZAR' && (
+                      <>
+                        <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter account holder name"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Account Number" name="accountNumber" rules={[{ required: true, message: 'Account number is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter account number"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Bank Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                          <Select
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Select your bank"
+                            showSearch
+                            options={[
+                              { value: "ABSA Bank", label: "ABSA Bank" },
+                              { value: "Standard Bank", label: "Standard Bank" },
+                              { value: "First National Bank", label: "First National Bank (FNB)" },
+                              { value: "Nedbank", label: "Nedbank" },
+                              { value: "Capitec Bank", label: "Capitec Bank" },
+                              { value: "Discovery Bank", label: "Discovery Bank" },
+                              { value: "African Bank", label: "African Bank" }
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            options={[
+                              { value: "bank_transfer", label: "Bank Transfer" },
+                              { value: "wise", label: "Wise" }
+                            ]}
+                          />
+                        </Form.Item>
+                      </>
+                    )}
+
+                    {/* Kenyan Shilling (KES) Form - MPESA */}
+                    {paymentCurrency === 'KES' && (
+                      <>
+                        <Form.Item label="Full Name" name="accountName" rules={[{ required: true, message: 'Full name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter your full name as registered on MPESA"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="MPESA Phone Number" name="accountNumber" rules={[
+                          { required: true, message: 'MPESA phone number is required' },
+                          { pattern: /^254[0-9]{9}$/, message: 'Please enter a valid Kenyan phone number (254XXXXXXXXX)' }
+                        ]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter phone number (e.g., 254712345678)"
+                            maxLength={12}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Service" name="bankName">
+                          <Select
+                            disabled={true}
+                            className="!font-[gilroy-regular]"
+                            value="MPESA"
+                            options={[
+                              { value: "MPESA", label: "MPESA" }
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={true}
+                            value="mobile_money"
+                            options={[
+                              { value: "mobile_money", label: "Mobile Money" }
+                            ]}
+                          />
+                        </Form.Item>
+
+                        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                          <div className="flex">
+                            <div className="flex-shrink-0">
+                              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="ml-3">
+                              <h3 className="text-sm font-medium text-blue-800">MPESA Payment Information</h3>
+                              <div className="mt-2 text-sm text-blue-700">
+                                <p>• Ensure your phone number is registered with MPESA</p>
+                                <p>• Use the format: 254XXXXXXXXX (country code + phone number)</p>
+                                <p>• Payments will be sent directly to your MPESA account</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Generic form for other currencies */}
+                    {!['NGN', 'USD', 'EUR', 'GBP', 'ZAR', 'KES'].includes(paymentCurrency) && paymentCurrency && (
+                      <>
+                        <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter account holder name"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Account Details" name="accountNumber" rules={[{ required: true, message: 'Account details are required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter account number or relevant details"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Bank/Institution Name" name="bankName" rules={[{ required: true, message: 'Bank name is required' }]}>
+                          <Input
+                            disabled={!isEditable}
+                            className="!font-[gilroy-regular]"
+                            placeholder="Enter bank or financial institution name"
+                          />
+                        </Form.Item>
+
+                        <Form.Item label="Payment Method" name="paymentMethod">
+                          <Select
+                            disabled={!isEditable}
+                            placeholder="Select payment method"
+                            options={[
+                              { value: "bank_transfer", label: "Bank Transfer" },
+                              { value: "wise", label: "Wise" },
+                              { value: "paypal", label: "PayPal" },
+                              { value: "mobile_money", label: "Mobile Money" }
+                            ]}
+                          />
+                        </Form.Item>
+                      </>
+                    )}
+                  </>
+                )}
 
                 <Divider />
 
