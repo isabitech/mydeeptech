@@ -30,6 +30,7 @@ import {
   SafetyCertificateOutlined,
   UserOutlined,
   MoreOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import Header from "../../User/Header";
 import ProjectAnnotators from "./ProjectAnnotators";
@@ -47,6 +48,8 @@ import {
   ProjectStatus,
 } from "../../../../types/project.types";
 import PageModal from "../../../../components/Modal/PageModal";
+import { retrieveTokenFromStorage } from "../../../../helpers";
+import { baseURL } from "../../../../store/api/endpoints";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -97,6 +100,7 @@ const ProjectManagement: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+   const [token, setToken] = useState<string | null>(null);
   
   // Deletion states
   const [isDeletionModalVisible, setIsDeletionModalVisible] = useState(false);
@@ -132,6 +136,14 @@ const ProjectManagement: React.FC = () => {
       search: searchText || undefined,
     });
   };
+
+   useEffect(() => {
+      const getToken = async () => {
+        const retrievedToken = await retrieveTokenFromStorage();
+        setToken(retrievedToken);
+      };
+      getToken();
+    }, []);
 
   // Handle search and filters
   const handleSearch = (value: string) => {
@@ -315,6 +327,91 @@ const ProjectManagement: React.FC = () => {
     resetDeletionState();
   };
 
+  // Export approved annotators to CSV
+  const handleExportApprovedAnnotators = async (project: Project) => {
+    try {
+      
+      if (!token) {
+        notification.error({
+          message: 'Authentication Error',
+          description: 'Please log in again to export data.',
+        });
+        return;
+      }
+
+      // Show loading notification
+      const loadingKey = 'exporting';
+      notification.info({
+        key: loadingKey,
+        message: 'Exporting CSV',
+        description: 'Preparing approved annotators data...',
+        duration: 0,
+      });
+
+      // Use the proper base URL for the API call
+      const apiBaseUrl = baseURL || 'http://localhost:5000'; // Fallback URL
+      const apiUrl = `${apiBaseUrl}/admin/projects/${project._id}/export-approved-csv`;
+      console.log('🚀 baseURL:', baseURL);
+      console.log('🚀 Final API URL:', apiUrl);
+
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      // Close loading notification
+      notification.destroy(loadingKey);
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response headers:', [...response.headers.entries()]);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ API Error:', errorData);
+        throw new Error(errorData.message || 'Failed to export CSV');
+      }
+
+      // Get filename from response headers
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `${project.projectName}_approved_annotators.csv`;
+      if (contentDisposition) {
+        const matches = /filename="([^"]*)"/.exec(contentDisposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1];
+        }
+      }
+
+      console.log('📄 Filename:', filename);
+
+      // Create blob and download
+      const blob = await response.blob();
+      console.log('📦 Blob size:', blob.size, 'Type:', blob.type);
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      notification.success({
+        message: 'CSV Exported Successfully',
+        description: `Approved annotators data for "${project.projectName}" has been downloaded.`,
+      });
+    } catch (error: any) {
+      console.error('❌ Error exporting CSV:', error);
+      notification.error({
+        message: 'Export Failed',
+        description: error.message || 'Failed to export approved annotators CSV',
+      });
+    }
+  };
+
   const handleCancel = () => {
     form.resetFields();
     setIsModalVisible(false);
@@ -455,6 +552,16 @@ const ProjectManagement: React.FC = () => {
             label: 'View Annotators',
             onClick: () => showProjectAnnotators(record),
             disabled: record.totalApplications === 0,
+          },
+          {
+            key: 'export',
+            icon: <DownloadOutlined />,
+            label: 'Export Approved Annotators',
+            onClick: () => handleExportApprovedAnnotators(record),
+            disabled: record.approvedAnnotators === 0,
+          },
+          {
+            type: 'divider' as const,
           },
           {
             key: 'edit',
