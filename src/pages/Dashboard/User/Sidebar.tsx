@@ -14,6 +14,8 @@ import {
   LockOutlined,
   HistoryOutlined,
   CustomerServiceOutlined,
+  PlayCircleOutlined,
+  UnorderedListOutlined as AssessmentListOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -45,7 +47,8 @@ const Sidebar = () => {
     loadUserInfo();
   }, []);
 
-  const menuItems = [
+  // Base menu items
+  const baseMenuItems = [
     { key: "overview", label: "Overview", icon: <HomeOutlined />, path: "/dashboard/overview" },
     { key: "assessment", label: "Assessment", icon: <BookOutlined />, path: "/dashboard/assessment" },
     { key: "assessment-history", label: "Assessment History", icon: <HistoryOutlined />, path: "/dashboard/assessment-history" },
@@ -58,21 +61,76 @@ const Sidebar = () => {
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
   ];
 
+  // Dynamic menu items based on user status
+  const getDynamicMenuItems = () => {
+    if (!userInfo) return baseMenuItems;
+
+    const { qaStatus, annotatorStatus } = userInfo;
+    let dynamicItems = [...baseMenuItems];
+
+    // If qaStatus === "approved", add QA Review Dashboard
+    if (qaStatus === "approved") {
+      const qaMenuItem = {
+        key: "qa-review",
+        label: "QA Review",
+        icon: <PlayCircleOutlined />,
+        path: "/dashboard/assessment/qa-review"
+      };
+      // Insert after assessment-history
+      const assessmentHistoryIndex = dynamicItems.findIndex(item => item.key === "assessment-history");
+      if (assessmentHistoryIndex !== -1) {
+        dynamicItems.splice(assessmentHistoryIndex + 1, 0, qaMenuItem);
+      } else {
+        dynamicItems.splice(2, 0, qaMenuItem);
+      }
+    }
+
+    // If annotatorStatus === "approved", add Assessment List
+    if (annotatorStatus === "approved") {
+      const assessmentListMenuItem = {
+        key: "assessments-list",
+        label: "Assessments",
+        icon: <AssessmentListOutlined />,
+        path: "/dashboard/assessments"
+      };
+      // Insert after assessment-history or qa-review
+      const lastAssessmentIndex = Math.max(
+        dynamicItems.findIndex(item => item.key === "assessment-history"),
+        dynamicItems.findIndex(item => item.key === "qa-review")
+      );
+      if (lastAssessmentIndex !== -1) {
+        dynamicItems.splice(lastAssessmentIndex + 1, 0, assessmentListMenuItem);
+      } else {
+        dynamicItems.splice(2, 0, assessmentListMenuItem);
+      }
+    }
+
+    return dynamicItems;
+  };
+
+  const menuItems = getDynamicMenuItems();
+
   // Check if a menu item should be locked based on user status
   const isMenuItemLocked = (itemKey: string) => {
     if (loading || !userInfo) {
       return false; // Don't lock anything while loading
     }
 
-    const { annotatorStatus, microTaskerStatus } = userInfo;
+    const { annotatorStatus, microTaskerStatus, qaStatus } = userInfo;
+    
+    // QA Review and Assessments List are never locked if user has the right status
+    if ((itemKey === "qa-review" && qaStatus === "approved") || 
+        (itemKey === "assessments-list" && annotatorStatus === "approved")) {
+      return false;
+    }
     
     // If both statuses are pending, lock everything except overview, assessment, and settings
-    if (annotatorStatus === "pending" && microTaskerStatus === "pending") {
+    if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus !== "approved") {
       return !["overview", "assessment", "settings"].includes(itemKey);
     }
 
     // If annotator is submitted and microTasker is pending, lock everything except overview and settings
-    if (annotatorStatus === "submitted" && microTaskerStatus === "pending") {
+    if (annotatorStatus === "submitted" && microTaskerStatus === "pending" && qaStatus !== "approved") {
       return !["overview", "settings"].includes(itemKey);
     }
 
@@ -86,7 +144,7 @@ const Sidebar = () => {
       return menuItems; // Show all items while loading
     }
 
-    const { annotatorStatus, microTaskerStatus } = userInfo;
+    const { annotatorStatus, microTaskerStatus, qaStatus } = userInfo;
     
     // Filter logic for assessment and assessment history
     let filteredItems = [...menuItems];
@@ -98,7 +156,7 @@ const Sidebar = () => {
     
     // Show assessment history only if user has completed at least one assessment
     // (if either status is not "pending", it means they've taken an assessment)
-    if (annotatorStatus === "pending" && microTaskerStatus === "pending") {
+    if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus !== "approved") {
       filteredItems = filteredItems.filter(item => item.key !== "assessment-history");
     }
 

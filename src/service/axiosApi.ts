@@ -1,6 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import { retrieveTokenFromStorage, RESPONSE_CODE } from "../helpers";
 import { baseURL } from "../store/api/endpoints";
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from "./apiUtils";
 
 // Create axios instance
 const axiosInstance = axios.create({
@@ -135,4 +136,146 @@ export const apiRequest = async <T = any>(
   } catch (error: any) {
     throw error; // Re-throw the enhanced error from interceptor
   }
+};
+
+// Multimedia Assessment API Service Functions
+export const multimediaAssessmentApi = {
+  // Assessment Session Management (Annotator)
+  startAssessment: async (assessmentId: string) => {
+    return apiPost(`/assessments/multimedia/${assessmentId}/start`);
+  },
+
+  getAssessmentSession: async (submissionId: string) => {
+    return apiGet(`/assessments/multimedia/session/${submissionId}`);
+  },
+
+  saveTaskProgress: async (submissionId: string, taskData: any) => {
+    return apiPost(`/assessments/multimedia/${submissionId}/save-progress`, taskData);
+  },
+
+  submitTask: async (submissionId: string, taskData: any) => {
+    return apiPost(`/assessments/multimedia/${submissionId}/submit-task`, taskData);
+  },
+
+  controlTimer: async (submissionId: string, action: 'start' | 'pause' | 'resume') => {
+    return apiPost(`/assessments/multimedia/${submissionId}/timer`, { action });
+  },
+
+  submitFinalAssessment: async (submissionId: string) => {
+    return apiPost(`/assessments/multimedia/${submissionId}/submit`);
+  },
+
+  getAvailableReels: async (assessmentId: string, params?: { niche?: string; limit?: number }) => {
+    return apiGet(`/assessments/multimedia/reels/${assessmentId}`, { params });
+  },
+
+  // QA Review System
+  getPendingSubmissions: async (params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    filterBy?: string;
+  }) => {
+    return apiGet('/qa/submissions/pending', { params });
+  },
+
+  getSubmissionForReview: async (submissionId: string) => {
+    return apiGet(`/qa/submissions/${submissionId}/review`);
+  },
+
+  reviewTask: async (reviewData: {
+    submissionId: string;
+    taskIndex: number;
+    score: number;
+    feedback: string;
+    qualityRating: string;
+    notes?: string;
+  }) => {
+    return apiPost('/qa/submissions/review-task', reviewData);
+  },
+
+  submitFinalReview: async (reviewData: {
+    submissionId: string;
+    overallScore: number;
+    overallFeedback: string;
+    decision: 'Approve' | 'Reject' | 'Request Revision';
+    privateNotes?: string;
+  }) => {
+    return apiPost('/qa/submissions/final-review', reviewData);
+  },
+
+  getQADashboard: async () => {
+    return apiGet('/qa/dashboard');
+  },
+
+  // Admin Assessment Management
+  createAssessmentConfig: async (configData: any) => {
+    return apiPost('/admin/assessments/config', configData);
+  },
+
+  getAssessmentConfigs: async (params?: { projectId?: string; isActive?: boolean }) => {
+    return apiGet('/admin/assessments/config', { params });
+  },
+
+  updateAssessmentConfig: async (assessmentId: string, configData: any) => {
+    return apiPatch(`/admin/assessments/config/${assessmentId}`, configData);
+  },
+
+  // Video Reel Management (Admin)
+  addVideoReel: async (reelData: {
+    youtubeUrl: string;
+    title?: string;
+    description?: string;
+    niche: string;
+    tags?: string[];
+    contentWarnings?: string[];
+  }) => {
+    return apiPost('/admin/multimedia-assessments/reels/add', reelData);
+  },
+
+  bulkAddVideoReels: async (bulkData: {
+    youtubeUrls: string[];
+    defaultNiche: string;
+    defaultTags?: string[];
+  }) => {
+    return apiPost('/admin/multimedia-assessments/reels/bulk-add', bulkData);
+  },
+
+  getAllVideoReels: async (params?: {
+    page?: number;
+    limit?: number;
+    niche?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    search?: string;
+    isActive?: boolean;
+  }) => {
+    return apiGet('/admin/multimedia-assessments/reels', { params });
+  },
+
+  updateVideoReel: async (reelId: string, reelData: any) => {
+    return apiPut(`/admin/multimedia-assessments/reels/${reelId}`, reelData);
+  },
+
+  deleteVideoReel: async (reelId: string) => {
+    return apiDelete(`/admin/multimedia-assessments/reels/${reelId}`);
+  },
+
+  // Analytics & Reporting
+  getAssessmentAnalytics: async (params?: {
+    period?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    return apiGet('/analytics/assessment/dashboard', { params });
+  },
+
+  getReelAnalytics: async (params?: { period?: string }) => {
+    return apiGet('/analytics/reels', { params });
+  },
+
+  getUserAnalytics: async (params?: { period?: string }) => {
+    return apiGet('/analytics/users', { params });
+  },
 };

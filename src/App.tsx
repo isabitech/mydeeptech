@@ -49,6 +49,13 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
 import CustomerService from "./components/CustomerService";
 import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
+import MultimediaAssessmentDemo from "./components/Assessment/MultimediaAssessmentDemo";
+import { AssessmentSession } from "./components/Assessment/AssessmentSession";
+import { AdminAssessmentManager } from "./components/Assessment/AdminAssessmentManager";
+import { QAReviewDashboard } from "./components/Assessment/QAReviewDashboard";
+// import AssessmentSession from "./components/Assessment/AssessmentSession";
+// import QAReviewDashboard from "./components/Assessment/QAReviewDashboard";
+// import AdminAssessmentManager from "./components/Assessment/AdminAssessmentManager";
 
 const AppRoutes = () => {
   return (
@@ -70,6 +77,7 @@ const AppRoutes = () => {
         {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
         <Route path="/careers" element={<Hiring/>} />
         <Route path="/careers/math-ai-trainer" element={<MathTalent/>} />
+        <Route path="/demo/multimedia-assessment" element={<MultimediaAssessmentDemo />} />
 
         <Route path="/uploadEmail" element={<UploadEmail />} />
         <Route path="/apply" element={<AdsLandingPage />} />
@@ -89,6 +97,9 @@ const AppRoutes = () => {
           <Route path="settings" element={<Settings />} />
           <Route path="support" element={<SupportCenter />} />
           <Route path="assessment" element={<Assessment />} />
+          <Route path="assessment/multimedia" element={<AssessmentSession assessmentId="" />} />
+          <Route path="assessment/qa-review" element={<QAReviewDashboard />} />
+          <Route path="assessments" element={<AdminAssessmentManager />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
 
 
@@ -105,6 +116,8 @@ const AppRoutes = () => {
             <Route path="users" element={<UserManagement />} />
             <Route path="annotators" element={<Annotators />} />
             <Route path="assessments" element={<AssessmentManagement />} />
+            <Route path="assessments/multimedia" element={<AdminAssessmentManager />} />
+            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
             <Route path="projects" element={<ProjectManagement />} />
             <Route path="applications" element={<ApplicationManagement />} />
             <Route path="jobs" element={<JobManagement />} />
