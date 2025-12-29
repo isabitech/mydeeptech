@@ -21,6 +21,7 @@ import {
 import { motion } from 'framer-motion';
 import { useUserChat } from '../../../hooks/Chat/useUserChat';
 import { ChatTicket } from '../../../types/chat.types';
+import {toast} from "sonner";
 
 const { Title, Text } = Typography;
 
@@ -48,7 +49,7 @@ const SupportCenter: React.FC = () => {
         setCurrentPage(page);
       }
     } catch (error) {
-      message.error('Failed to load chat history');
+      toast.error('Failed to load chat history');
     }
   };
 

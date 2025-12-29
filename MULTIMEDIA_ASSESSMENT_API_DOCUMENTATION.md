@@ -40,7 +40,7 @@ Authorization: Bearer <admin_token>
 **Request Body:**
 ```json
 {
-  "youtubeUrl": "https://www.youtube.com/shorts/VIDEO_ID", // Required: YouTube Shorts URL
+  "youtubeUrl": "https://www.youtube.com/embed/VIDEO_ID", // Required: YouTube embed URL
   "title": "String (optional)", // Auto-extracted from YouTube if not provided
   "description": "String (optional)", // Auto-extracted from YouTube if not provided
   "niche": "String", // Required: technology, lifestyle, education, etc.
@@ -50,9 +50,11 @@ Authorization: Bearer <admin_token>
 ```
 
 **Supported YouTube URL Formats:**
-- `https://www.youtube.com/shorts/VIDEO_ID`
-- `https://youtu.be/VIDEO_ID`
-- `https://www.youtube.com/watch?v=VIDEO_ID`
+The system accepts these formats and automatically converts them to embed URLs:
+- `https://www.youtube.com/embed/VIDEO_ID` (preferred)
+- `https://www.youtube.com/shorts/VIDEO_ID` (auto-converted)
+- `https://youtu.be/VIDEO_ID` (auto-converted)
+- `https://www.youtube.com/watch?v=VIDEO_ID` (auto-converted)
 
 **Response:**
 ```json
@@ -63,7 +65,7 @@ Authorization: Bearer <admin_token>
     "videoReel": {
       "_id": "64f7a1b2e8c9d4567890abcd",
       "title": "Tech Tutorial Clip",
-      "youtubeUrl": "https://www.youtube.com/shorts/VIDEO_ID",
+      "youtubeUrl": "https://www.youtube.com/embed/VIDEO_ID",
       "youtubeVideoId": "VIDEO_ID",
       "thumbnailUrl": "https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg",
       "highResThumbnailUrl": "https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg",
@@ -98,7 +100,7 @@ Authorization: Bearer <admin_token>
 ```json
 {
   "youtubeUrls": [
-    "https://www.youtube.com/shorts/VIDEO_ID_1",
+    "https://www.youtube.com/embed/VIDEO_ID_1",
     "https://www.youtube.com/shorts/VIDEO_ID_2",
     "https://youtu.be/VIDEO_ID_3"
   ],
@@ -106,6 +108,8 @@ Authorization: Bearer <admin_token>
   "defaultTags": ["assessment", "bulk-import"]
 }
 ```
+
+**Note**: The system accepts various YouTube URL formats and automatically converts them to embed URLs for CORS compatibility.
 
 **Response:**
 ```json
@@ -119,7 +123,7 @@ Authorization: Bearer <admin_token>
         "title": "Video Title 1",
         "niche": "technology",
         "duration": 30,
-        "youtubeUrl": "https://www.youtube.com/shorts/VIDEO_ID_1"
+        "youtubeUrl": "https://www.youtube.com/embed/VIDEO_ID_1"
       }
     ],
     "failed": [
@@ -1107,10 +1111,13 @@ YOUTUBE_API_REQUESTS_PER_SECOND=1
 
 ### Video Requirements
 
+- **URL Format**: YouTube embed URLs (`https://www.youtube.com/embed/VIDEO_ID`) are preferred for CORS compatibility
+- **Auto-Conversion**: System automatically converts Shorts, watch, and youtu.be URLs to embed format
 - **Duration**: Maximum 60 seconds (YouTube Shorts requirement)
 - **Accessibility**: Must be public videos (not private/unlisted)
 - **Content**: No age-restricted content for assessments
 - **Aspect Ratio**: Preferably 9:16 (portrait) for mobile viewing
+- **CORS Policy**: Embed URLs resolve frontend CORS policy issues
 
 ### Rate Limiting
 
@@ -1142,7 +1149,7 @@ All endpoints return consistent error responses:
 - `RESOURCE_NOT_FOUND` (404): Requested resource doesn't exist
 - `ASSESSMENT_COOLDOWN_ACTIVE` (400): User in retake cooldown period
 - `ASSESSMENT_TIME_EXPIRED` (400): Assessment time limit exceeded
-- `INVALID_YOUTUBE_URL` (400): YouTube URL format is invalid
+- `INVALID_YOUTUBE_URL` (400): YouTube URL format is invalid or cannot be converted to embed format
 - `YOUTUBE_VIDEO_NOT_FOUND` (400): YouTube video is private, deleted, or not found
 - `DUPLICATE_YOUTUBE_URL` (409): Video with this YouTube URL already exists
 - `YOUTUBE_API_ERROR` (400): Failed to extract data from YouTube
@@ -1156,7 +1163,7 @@ All endpoints return consistent error responses:
 {
   "success": false,
   "message": "Validation error",
-  "errors": ["Invalid YouTube Shorts URL format"]
+  "errors": ["Invalid YouTube embed URL format"]
 }
 ```
 

@@ -20,7 +20,7 @@ export const useSubmitFinalReview = () => {
   const submitFinalReview = async (reviewData: {
     submissionId: string;
     overallScore: number;
-    overallFeedback: string;
+    overallFeedback?: string;
     decision: 'Approve' | 'Reject' | 'Request Revision';
     privateNotes?: string;
   }): Promise<SubmitFinalReviewResult> => {
@@ -30,8 +30,8 @@ export const useSubmitFinalReview = () => {
     try {
       const response = await multimediaAssessmentApi.submitFinalReview(reviewData);
       
-      if (response.data?.success) {
-        return { success: true, data: response.data.data };
+      if (response.success) {
+        return { success: true, data: response?.data };
       } else {
         const errorMessage = response.data?.message || "Failed to submit final review";
         setError(errorMessage);

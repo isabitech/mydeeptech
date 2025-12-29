@@ -67,6 +67,7 @@ const Sidebar = () => {
 
     const { qaStatus, annotatorStatus } = userInfo;
     let dynamicItems = [...baseMenuItems];
+    console.log("qa status", qaStatus)
 
     // If qaStatus === "approved", add QA Review Dashboard
     if (qaStatus === "approved") {
@@ -74,7 +75,7 @@ const Sidebar = () => {
         key: "qa-review",
         label: "QA Review",
         icon: <PlayCircleOutlined />,
-        path: "/dashboard/assessment/qa-review"
+        path: "/dashboard/qa-review"
       };
       // Insert after assessment-history
       const assessmentHistoryIndex = dynamicItems.findIndex(item => item.key === "assessment-history");
@@ -125,12 +126,12 @@ const Sidebar = () => {
     }
     
     // If both statuses are pending, lock everything except overview, assessment, and settings
-    if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus !== "approved") {
+    if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus === "pending") {
       return !["overview", "assessment", "settings"].includes(itemKey);
     }
 
     // If annotator is submitted and microTasker is pending, lock everything except overview and settings
-    if (annotatorStatus === "submitted" && microTaskerStatus === "pending" && qaStatus !== "approved") {
+    if (annotatorStatus === "submitted" && microTaskerStatus === "pending" && qaStatus === "pending") {
       return !["overview", "settings"].includes(itemKey);
     }
 

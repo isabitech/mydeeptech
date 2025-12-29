@@ -1,12 +1,20 @@
 import { useState, useCallback } from 'react';
-import { apiGet, apiPost, apiPatch, getErrorMessage } from '../../../service/apiUtils';
+import { multimediaAssessmentApi } from '../../../service/axiosApi';
+import { apiGet, apiPatch, apiPost, getErrorMessage } from '../../../service/apiUtils';
 import { 
   VideoReelsResponse,
   AssessmentSessionResponse,
   MultimediaAssessmentSubmission,
   MultimediaAssessmentConfig,
   AssessmentTask,
-  HookOperationResult
+  HookOperationResult,
+  AddVideoReelRequest,
+  BulkAddVideoReelsRequest,
+  AssessmentConfig,
+  QAReviewTaskData,
+  FinalReviewData,
+  ApiError,
+  YouTubeErrorCode
 } from '../../../types/multimedia-assessment.types';
 
 export const useMultimediaAssessment = () => {
@@ -26,15 +34,15 @@ export const useMultimediaAssessment = () => {
       const params: any = { page, limit };
       if (niche) params.niche = niche;
 
-      const response = await apiGet('/assessments/multimedia/reels', { params });
+      const response = await multimediaAssessmentApi.getAllVideoReels(params);
       
-      if (response.success) {
+      if (response.data?.success) {
         return { 
           success: true, 
-          data: response.data 
+          data: response.data.data 
         };
       } else {
-        const errorMessage = response.message || 'Failed to fetch video reels';
+        const errorMessage = response.data?.message || 'Failed to fetch video reels';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -214,15 +222,140 @@ export const useMultimediaAssessment = () => {
     }
   }, []);
 
+  // Admin Functions - Video Reel Management
+  const addVideoReel = useCallback(async (reelData: AddVideoReelRequest): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await multimediaAssessmentApi.addVideoReel(reelData);
+      
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        const errorMessage = response.data?.message || 'Failed to add video reel';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const bulkAddVideoReels = useCallback(async (bulkData: BulkAddVideoReelsRequest): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await multimediaAssessmentApi.bulkAddVideoReels(bulkData);
+      
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        const errorMessage = response.data?.message || 'Failed to bulk add video reels';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // QA Review Functions
+  const getPendingSubmissions = useCallback(async (params?: any): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await multimediaAssessmentApi.getPendingSubmissions(params);
+      
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        const errorMessage = response.data?.message || 'Failed to get pending submissions';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const reviewTask = useCallback(async (reviewData: any): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await multimediaAssessmentApi.reviewTask(reviewData);
+      
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        const errorMessage = response.data?.message || 'Failed to review task';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const submitFinalReview = useCallback(async (reviewData: FinalReviewData): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await multimediaAssessmentApi.submitFinalReview(reviewData);
+      
+      if (response.data?.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        const errorMessage = response.data?.message || 'Failed to submit final review';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
+    // Assessment Functions
     getVideoReels,
     startAssessmentSession,
     saveAssessmentProgress,
     submitTask,
     submitFinalAssessment,
     controlTimer,
-    getCurrentSession
+    getCurrentSession,
+    // Admin Functions
+    addVideoReel,
+    bulkAddVideoReels,
+    // QA Functions
+    getPendingSubmissions,
+    reviewTask,
+    submitFinalReview
   };
 };

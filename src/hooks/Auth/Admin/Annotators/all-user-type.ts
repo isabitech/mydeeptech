@@ -29,6 +29,7 @@ export interface User {
   isEmailVerified: boolean
   annotatorStatus: string
   microTaskerStatus: string
+  qaStatus?: string  // Added QA status field
   resultLink: string
   tool_experience: any[]
   annotation_skills: any[]

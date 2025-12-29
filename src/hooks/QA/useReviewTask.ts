@@ -8,7 +8,7 @@ interface ReviewTaskResult {
       taskIndex: number;
       score: number;
       feedback: string;
-      qualityRating: string;
+      qualityRating: 'Excellent' | 'Good' | 'Fair' | 'Poor';
       reviewedAt: string;
     };
     totalTasksReviewed: number;
@@ -24,8 +24,8 @@ export const useReviewTask = () => {
     submissionId: string;
     taskIndex: number;
     score: number;
-    feedback: string;
-    qualityRating: string;
+    feedback?: string;
+    qualityRating: 'Excellent' | 'Good' | 'Fair' | 'Poor';
     notes?: string;
   }): Promise<ReviewTaskResult> => {
     setLoading(true);
@@ -34,8 +34,8 @@ export const useReviewTask = () => {
     try {
       const response = await multimediaAssessmentApi.reviewTask(reviewData);
       
-      if (response.data?.success) {
-        return { success: true, data: response.data.data };
+      if (response?.success) {
+        return { success: true, data: response.data };
       } else {
         const errorMessage = response.data?.message || "Failed to submit task review";
         setError(errorMessage);

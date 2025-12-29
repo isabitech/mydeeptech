@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
-import { Card, Button, Slider, Input, Tag, Space, Typography, Divider, Modal, message } from 'antd';
+import { Card, Button, Slider, Input, Tag, Space, Typography, Divider, Modal } from 'antd';
+import { toast } from 'sonner';
 import { 
   PlayCircleOutlined, 
   PauseCircleOutlined, 
@@ -24,9 +25,9 @@ const { TextArea } = Input;
 const { Text, Title } = Typography;
 
 interface ConversationBuilderProps {
-  selectedReel: VideoReel;
+  selectedReel: any;
   onSaveConversation: (conversation: MultimediaConversation) => void;
-  initialConversation?: MultimediaConversation;
+  initialConversation?: any;
   isReadOnly?: boolean;
 }
 
@@ -41,6 +42,7 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [volume, setVolume] = useState(0.8);
   
   // Conversation state
   const [turns, setTurns] = useState<ConversationTurn[]>(initialConversation?.turns || []);
@@ -96,12 +98,12 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
   const startSegmentCreation = () => {
     setSegmentStartTime(currentTime);
     setIsCreatingSegment(true);
-    message.info('Click "End Segment" when you reach the desired end point');
+    toast.info('Click "End Segment" when you reach the desired end point');
   };
 
   const endSegmentCreation = () => {
     if (segmentStartTime >= currentTime) {
-      message.error('End time must be after start time');
+      toast.error('End time must be after start time');
       return;
     }
     
@@ -117,12 +119,12 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
   // Turn management
   const addTurn = () => {
     if (!userPrompt.trim()) {
-      message.error('Please enter a user prompt');
+      toast.error('Please enter a user prompt');
       return;
     }
 
     if (!selectedSegment) {
-      message.error('Please create a video segment for the AI response');
+      toast.error('Please create a video segment for the AI response');
       return;
     }
 
@@ -149,18 +151,18 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
     setAiResponseText('');
     setSelectedSegment(null);
     
-    message.success(`Turn ${currentTurn} added successfully!`);
+    toast.success(`Turn ${currentTurn} added successfully!`);
   };
 
   const removeTurn = (turnNumber: number) => {
     setTurns(prev => prev.filter(turn => turn.turnNumber !== turnNumber));
-    message.success(`Turn ${turnNumber} removed`);
+    toast.success(`Turn ${turnNumber} removed`);
   };
 
   // Save conversation
   const handleSaveConversation = () => {
     if (turns.length === 0) {
-      message.error('Please add at least one conversation turn');
+      toast.error('Please add at least one conversation turn');
       return;
     }
 
@@ -208,12 +210,12 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
           </Text>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Video Player Section */}
           <Card className="shadow-lg border-0 rounded-xl">
             <div className="space-y-4">
               {/* Video Player */}
-              <div className="relative aspect-[9/16] bg-black rounded-lg overflow-hidden">
+              <div className="relative h-80 bg-black rounded-lg overflow-hidden">
                 <Suspense fallback={
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white">
                     <div className="text-center">
@@ -224,7 +226,7 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
                 }>
                   <VPlayer
                     playerRef={playerRef}
-                    url={selectedReel.videoUrl}
+                    url={selectedReel.youtubeUrl}
                     width="100%"
                     height="100%"
                     playing={isPlaying}
@@ -235,7 +237,7 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
                     onPause={() => setIsPlaying(false)}
                     onError={(error: any) => {
                       console.error('Video loading error:', error);
-                      message.error('Failed to load video. Please try another video.');
+                      toast.error('Failed to load video. Please try another video.');
                     }}
                     style={{ borderRadius: '8px' }}
                   />
@@ -279,6 +281,29 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
                       formatter: (value) => formatTime(value || 0)
                     }}
                   />
+                )}
+
+                {/* Volume Control */}
+                {videoLoaded && (
+                  <div className="flex items-center space-x-2">
+                    <Text className="text-sm font-medium min-w-[50px]">Volume:</Text>
+                    <Slider
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={volume}
+                      onChange={(value) => {
+                        setVolume(value);
+                        if (playerRef.current && playerRef.current.setVolume) {
+                          playerRef.current.setVolume(value);
+                        }
+                      }}
+                      tooltip={{
+                        formatter: (value) => `${Math.round((value || 0) * 100)}%`
+                      }}
+                      className="flex-1"
+                    />
+                  </div>
                 )}
 
                 {/* Control Buttons */}
@@ -499,6 +524,123 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
               )}
             </div>
           </Card>
+
+          {/* Chat Simulation Section */}
+          <Card className="shadow-lg border-0 rounded-xl">
+            <div className="space-y-4">
+              <Title level={4} className="!text-[#333333] font-[gilroy-regular] !mb-4">
+                💬 Chat Simulation
+              </Title>
+              
+              <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto border">
+                {turns.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
+                      <Text className="font-[gilroy-regular] text-sm">
+                        Start creating conversation turns to see the chat simulation
+                      </Text>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {turns.map((turn, index) => (
+                      <div key={turn.turnNumber} className="space-y-2">
+                        {/* User Message */}
+                        <div className="flex justify-end">
+                          <div className="bg-blue-500 text-white rounded-lg px-4 py-2 max-w-[80%] shadow-sm">
+                            <Text className="text-white text-sm font-[gilroy-regular]">
+                              {turn.userPrompt}
+                            </Text>
+                          </div>
+                        </div>
+                        
+                        {/* AI Response */}
+                        <div className="flex justify-start">
+                          <div className="bg-white border rounded-lg px-4 py-2 max-w-[80%] shadow-sm">
+                            <div className="space-y-2">
+                              <Text className="text-gray-800 text-sm font-[gilroy-regular]">
+                                {turn.aiResponse.responseText}
+                              </Text>
+                              <div className="flex items-center gap-2">
+                                <div className="bg-gray-100 rounded px-2 py-1">
+                                  <Text className="text-xs text-gray-600 font-[gilroy-regular]">
+                                    📹 {formatTime(turn.aiResponse.videoSegment.startTime)} - {formatTime(turn.aiResponse.videoSegment.endTime)}
+                                  </Text>
+                                </div>
+                                <Button
+                                  size="small"
+                                  type="link"
+                                  icon={<EyeOutlined />}
+                                  onClick={() => previewSegment(turn.aiResponse.videoSegment)}
+                                  className="p-0 h-auto font-[gilroy-regular] text-xs"
+                                >
+                                  Play
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {index < turns.length - 1 && (
+                          <div className="flex justify-center">
+                            <div className="w-px h-4 bg-gray-300"></div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {/* Current turn being created */}
+                    {!isReadOnly && (userPrompt.trim() || aiResponseText.trim() || selectedSegment) && (
+                      <div className="space-y-2 opacity-60">
+                        <div className="text-center">
+                          <Text className="text-xs text-gray-500 font-[gilroy-regular]">
+                            ✏️ Turn {currentTurn} (in progress)
+                          </Text>
+                        </div>
+                        
+                        {userPrompt.trim() && (
+                          <div className="flex justify-end">
+                            <div className="bg-blue-300 text-white rounded-lg px-4 py-2 max-w-[80%] shadow-sm">
+                              <Text className="text-white text-sm font-[gilroy-regular]">
+                                {userPrompt}
+                              </Text>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(aiResponseText.trim() || selectedSegment) && (
+                          <div className="flex justify-start">
+                            <div className="bg-gray-200 border-2 border-dashed border-gray-400 rounded-lg px-4 py-2 max-w-[80%]">
+                              <div className="space-y-2">
+                                <Text className="text-gray-600 text-sm font-[gilroy-regular]">
+                                  {aiResponseText.trim() || 'AI response text...'}
+                                </Text>
+                                {selectedSegment && (
+                                  <div className="bg-gray-300 rounded px-2 py-1">
+                                    <Text className="text-xs text-gray-700 font-[gilroy-regular]">
+                                      📹 {formatTime(selectedSegment.startTime)} - {formatTime(selectedSegment.endTime)}
+                                    </Text>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {turns.length > 0 && (
+                <div className="text-center pt-2 border-t">
+                  <Text className="text-xs text-gray-500 font-[gilroy-regular]">
+                    {turns.length} conversation turn{turns.length !== 1 ? 's' : ''} created
+                  </Text>
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
 
         {/* Segment Creation Modal */}
@@ -507,7 +649,7 @@ const ConversationBuilder: React.FC<ConversationBuilderProps> = ({
           open={isSegmentModalVisible}
           onOk={() => {
             setIsSegmentModalVisible(false);
-            message.success('Video segment selected for AI response');
+            toast.success('Video segment selected for AI response');
           }}
           onCancel={() => {
             setSelectedSegment(null);

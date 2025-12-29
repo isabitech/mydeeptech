@@ -34,6 +34,7 @@ export interface User {
   resultLink: string;
   createdAt: string;
   updatedAt: string;
+  qaStatus: string;
 
 }
 
@@ -93,6 +94,7 @@ export const useLogin = () => {
           annotatorStatus: data.user.annotatorStatus,
           microTaskerStatus: data.user.microTaskerStatus,
           resultLink: data.user.resultLink,
+          qaStatus: data.user.qaStatus,
         };
 
         setUserInfo(userInfo);

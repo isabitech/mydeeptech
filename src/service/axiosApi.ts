@@ -153,8 +153,8 @@ export const multimediaAssessmentApi = {
     return apiPost(`/assessments/multimedia/${submissionId}/save-progress`, taskData);
   },
 
-  submitTask: async (submissionId: string, taskData: any) => {
-    return apiPost(`/assessments/multimedia/${submissionId}/submit-task`, taskData);
+  submitTask: async (submissionId: string, taskNumber: number, taskData: any) => {
+    return apiPost(`/assessments/multimedia/${submissionId}/submit-task/${taskNumber}`, taskData);
   },
 
   controlTimer: async (submissionId: string, action: 'start' | 'pause' | 'resume') => {
@@ -176,8 +176,35 @@ export const multimediaAssessmentApi = {
     sortBy?: string;
     sortOrder?: string;
     filterBy?: string;
+    search?: string;
   }) => {
     return apiGet('/qa/submissions/pending', { params });
+  },
+
+  getApprovedSubmissions: async (params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    filterBy?: string;
+    search?: string;
+  }) => {
+    return apiGet('/qa/submissions/approved', { params });
+  },
+
+  getRejectedSubmissions: async (params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    filterBy?: string;
+    search?: string;
+  }) => {
+    return apiGet('/qa/submissions/rejected', { params });
+  },
+
+  getSubmissionStats: async () => {
+    return apiGet('/qa/submissions/stats');
   },
 
   getSubmissionForReview: async (submissionId: string) => {
@@ -188,8 +215,8 @@ export const multimediaAssessmentApi = {
     submissionId: string;
     taskIndex: number;
     score: number;
-    feedback: string;
-    qualityRating: string;
+    feedback?: string;
+    qualityRating: 'Excellent' | 'Good' | 'Fair' | 'Poor';
     notes?: string;
   }) => {
     return apiPost('/qa/submissions/review-task', reviewData);
@@ -198,7 +225,7 @@ export const multimediaAssessmentApi = {
   submitFinalReview: async (reviewData: {
     submissionId: string;
     overallScore: number;
-    overallFeedback: string;
+    overallFeedback?: string;
     decision: 'Approve' | 'Reject' | 'Request Revision';
     privateNotes?: string;
   }) => {
@@ -207,6 +234,20 @@ export const multimediaAssessmentApi = {
 
   getQADashboard: async () => {
     return apiGet('/qa/dashboard');
+  },
+
+  // Batch review multiple submissions
+  batchReviewSubmissions: async (batchData: {
+    submissionIds: string[];
+    decision: 'Approve' | 'Reject' | 'Request Revision';
+    overallFeedback?: string;
+  }) => {
+    return apiPost('/qa/submissions/batch-review', batchData);
+  },
+
+  // Get QA analytics
+  getQAAnalytics: async () => {
+    return apiGet('/qa/analytics');
   },
 
   // Admin Assessment Management
@@ -277,5 +318,37 @@ export const multimediaAssessmentApi = {
 
   getUserAnalytics: async (params?: { period?: string }) => {
     return apiGet('/analytics/users', { params });
+  },
+
+  // Assessment Submission Viewing
+  getAssessmentSubmissions: async (assessmentType: string, assessmentId?: string, params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
+    userId?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }) => {
+    // For specific assessment ID (multimedia assessments)
+    if (assessmentId) {
+      return apiGet(`/assessments/${assessmentId}/submissions`, { params });
+    }
+    // For assessment type (english-proficiency, general, etc.)
+    return apiGet(`/assessments/${assessmentType}/submissions`, { params });
+  },
+
+  // Get available assessments for users
+  getAvailableAssessments: async () => {
+    return apiGet('/assessments/available');
+  },
+
+  // Start assessment for users  
+  startUserAssessment: async (assessmentId: string) => {
+    return apiPost(`/assessments/multimedia/${assessmentId}/start`, { assessmentId });
+  },
+
+  // Get assessment overview for admin dashboard
+  getAssessmentOverview: async () => {
+    return apiGet('/admin/assessments/overview');
   },
 };

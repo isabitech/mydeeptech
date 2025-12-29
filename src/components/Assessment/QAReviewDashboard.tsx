@@ -16,6 +16,8 @@ import {
   Tooltip,
   Avatar,
   Rate,
+  Form,
+  message,
 } from 'antd';
 import {
   EyeOutlined,
@@ -28,10 +30,13 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import { useGetPendingSubmissions } from '../../hooks/QA/useGetPendingSubmissions';
+import { useBatchReview } from '../../hooks/QA/useBatchReview';
 import { TaskReviewForm } from './TaskReviewForm';
+import { QAReviewMultimediaResponseType, Submission } from './QAReviews/qa-review-multimedia-response-type';
+import { multimediaAssessmentApi } from '../../service/axiosApi';
 
 const { Title, Text } = Typography;
-const { Search } = Input;
+const { Search, TextArea } = Input;
 const { Option } = Select;
 
 interface QAReviewDashboardProps {
@@ -42,9 +47,14 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
   onReviewComplete,
 }) => {
   const { getPendingSubmissions, loading, submissions, pagination } = useGetPendingSubmissions();
+  const { batchReview, loading: batchLoading } = useBatchReview();
   
-  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [activeStatusTab, setActiveStatusTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [submissionStats, setSubmissionStats] = useState({ pending: 0, approved: 0, rejected: 0 });
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -52,32 +62,113 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
     sortOrder: 'desc' as 'asc' | 'desc',
     filterBy: 'all',
     search: '',
+    status: 'pending',
   });
 
-  // Load submissions on component mount and filter changes
+  const loadSubmissions = useCallback(async () => {
+    const searchFilters = { ...filters, status: activeStatusTab };
+    
+    try {
+      if (!searchFilters.search) {
+        const { search, ...otherFilters } = searchFilters;
+        await getPendingSubmissions(otherFilters);
+      } else {
+        await getPendingSubmissions(searchFilters);
+      }
+      
+    } catch (error) {
+      console.error(`Failed to load ${activeStatusTab} submissions:`, error);
+      message.error(`Failed to load ${activeStatusTab} submissions`);
+    }
+  }, [getPendingSubmissions]); // Remove filters and activeStatusTab from dependencies
+
+  // Load submissions when component mounts
   useEffect(() => {
     loadSubmissions();
-  }, [filters]);
+  }, []); // Only run on mount
 
-  const loadSubmissions = useCallback(async () => {
-    const searchFilters = { ...filters };
-    if (!searchFilters.search) {
-      const { search, ...otherFilters } = searchFilters;
-      await getPendingSubmissions(otherFilters);
-    } else {
-      await getPendingSubmissions(searchFilters);
+  // Load submissions when filters change (excluding status which is handled separately)
+  useEffect(() => {
+    loadSubmissions();
+  }, [filters.page, filters.limit, filters.sortBy, filters.sortOrder, filters.filterBy, filters.search]);
+
+  // Load submissions when active tab changes
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, status: activeStatusTab, page: 1 }));
+    loadSubmissions();
+  }, [activeStatusTab]);
+
+  // Update stats when submissions change
+  useEffect(() => {
+    const stats = submissions.reduce((acc, sub) => {
+      const status = sub.status === 'submitted' ? 'pending' : sub.status;
+      acc[status as keyof typeof acc] = (acc[status as keyof typeof acc] || 0) + 1;
+      return acc;
+    }, { pending: 0, approved: 0, rejected: 0 });
+    setSubmissionStats(stats);
+  }, [submissions]);
+
+  // Handle batch review
+  const handleBatchReview = useCallback(async (decision: 'Approve' | 'Reject' | 'Request Revision', feedback?: string) => {
+    try {
+      const result = await batchReview({
+        submissionIds: selectedRowKeys,
+        decision,
+        overallFeedback: feedback
+      });
+      
+      if (result.success) {
+        setSelectedRowKeys([]);
+        setShowBatchModal(false);
+        // Manually call loadSubmissions instead of depending on it
+        const searchFilters = { ...filters, status: activeStatusTab };
+        if (!searchFilters.search) {
+          const { search, ...otherFilters } = searchFilters;
+          await getPendingSubmissions(otherFilters);
+        } else {
+          await getPendingSubmissions(searchFilters);
+        }
+        Modal.success({
+          title: 'Batch Review Complete',
+          content: `Successfully processed ${result.data?.processedCount || selectedRowKeys.length} submissions.`,
+        });
+      } else {
+        Modal.error({
+          title: 'Batch Review Failed',
+          content: result.error || 'Failed to process batch review',
+        });
+      }
+    } catch (error) {
+      Modal.error({
+        title: 'Batch Review Error',
+        content: 'An unexpected error occurred during batch review',
+      });
     }
-  }, [filters, getPendingSubmissions]);
+  }, [selectedRowKeys, batchReview, filters, activeStatusTab, getPendingSubmissions]);
 
   // Handle review submission completion
   const handleReviewComplete = useCallback((submissionId: string, decision: string) => {
     setShowReviewModal(false);
     setSelectedSubmission(null);
-    loadSubmissions(); // Refresh the list
+    // Manually refresh submissions instead of depending on loadSubmissions
+    const refreshSubmissions = async () => {
+      const searchFilters = { ...filters, status: activeStatusTab };
+      try {
+        if (!searchFilters.search) {
+          const { search, ...otherFilters } = searchFilters;
+          await getPendingSubmissions(otherFilters);
+        } else {
+          await getPendingSubmissions(searchFilters);
+        }
+      } catch (error) {
+        console.error('Failed to refresh submissions:', error);
+      }
+    };
+    refreshSubmissions();
     if (onReviewComplete) {
       onReviewComplete(submissionId, decision);
     }
-  }, [onReviewComplete, loadSubmissions]);
+  }, [onReviewComplete, filters, activeStatusTab, getPendingSubmissions]);
 
   // Table columns configuration
   const columns = [
@@ -89,8 +180,8 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
         <div className="flex items-center gap-3">
           <Avatar icon={<UserOutlined />} />
           <div>
-            <div className="font-medium">{name}</div>
-            <Text type="secondary" className="text-xs">{record.userEmail}</Text>
+            <div className="font-medium">{name || record.userName || 'Unknown'}</div>
+            <Text type="secondary" className="text-xs">{record.userEmail || ''}</Text>
           </div>
         </div>
       ),
@@ -110,12 +201,12 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <CheckCircleOutlined className="text-green-500" />
-            <Text className="text-sm">{record.tasksCompleted}/{record.totalTasks} tasks</Text>
+            <Text className="text-sm">{record.tasksCompleted ?? 0}/{record.totalTasks ?? record.tasksCompleted ?? 0} tasks</Text>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
               className="bg-blue-500 h-2 rounded-full" 
-              style={{ width: `${(record.tasksCompleted / record.totalTasks) * 100}%` }}
+              style={{ width: `${record.totalTasks ? ((record.tasksCompleted ?? 0) / record.totalTasks) * 100 : 100}%` }}
             />
           </div>
         </div>
@@ -128,7 +219,7 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
       render: (score: number) => (
         <div className="text-center">
           <Rate disabled defaultValue={score / 2} allowHalf className="text-xs" />
-          <div className="text-sm font-medium">{score.toFixed(1)}/10</div>
+          <div className="text-sm font-medium">{ score && score.toFixed(1)}/10</div>
         </div>
       ),
     },
@@ -202,14 +293,28 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
       key: 'actions',
       render: (record: any) => (
         <Button
-          type="primary"
+          type={activeStatusTab === 'pending' ? 'primary' : 'default'}
           icon={<EyeOutlined />}
-          onClick={() => {
-            setSelectedSubmission(record);
-            setShowReviewModal(true);
+          onClick={async () => {
+            try {
+              // Fetch full submission details from backend before opening modal
+              const resp = await multimediaAssessmentApi.getSubmissionForReview(record._id);
+              if (resp?.success && resp.data?.submission) {
+                setSelectedSubmission(resp.data.submission as Submission);
+              } else {
+                // Fallback to the lightweight record if backend didn't return full details
+                setSelectedSubmission(record as any);
+              }
+            } catch (err) {
+              console.error('Failed to fetch submission details:', err);
+              setSelectedSubmission(record as any);
+            } finally {
+              setShowReviewModal(true);
+            }
           }}
         >
-          Review
+          {activeStatusTab === 'pending' ? 'Review' : 
+           activeStatusTab === 'approved' ? 'View Details' : 'View Review'}
         </Button>
       ),
     },
@@ -218,9 +323,9 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
   // Quick stats calculation
   const quickStats = {
     totalPending: submissions.length,
-    highPriority: submissions.filter(s => s.waitingTime > 24 * 3600000).length,
-    avgScore: submissions.length > 0 ? submissions.reduce((sum, s) => sum + s.avgScore, 0) / submissions.length : 0,
-    retakes: submissions.filter(s => s.attemptNumber > 1).length,
+    highPriority: submissions.filter(s => (s.waitingTime ?? 0) > 24 * 3600000).length,
+    avgScore: submissions.length > 0 ? submissions.reduce((sum, s) => sum + (s.avgScore ?? 0), 0) / submissions.length : 0,
+    retakes: submissions.filter(s => (s.attemptNumber ?? 0) > 1).length,
   };
 
   return (
@@ -232,13 +337,25 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
       >
         <div className="flex justify-between items-center mb-6">
           <Title level={2}>QA Review Dashboard</Title>
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={loadSubmissions}
-            loading={loading}
-          >
-            Refresh
-          </Button>
+          <Space>
+            {selectedRowKeys.length > 0 && (
+              <Button 
+                type="primary"
+                ghost
+                onClick={() => setShowBatchModal(true)}
+                loading={batchLoading}
+              >
+                Batch Review ({selectedRowKeys.length})
+              </Button>
+            )}
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={loadSubmissions}
+              loading={loading}
+            >
+              Refresh
+            </Button>
+          </Space>
         </div>
 
         {/* Quick Stats */}
@@ -286,6 +403,98 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
             </Card>
           </Col>
         </Row>
+
+        {/* Status Bar with Tabs */}
+        <Card className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <Title level={4} className="!mb-0">Submission Status Overview</Title>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={loadSubmissions}
+              loading={loading}
+              size="small"
+            >
+              Refresh Stats
+            </Button>
+          </div>
+          <Row gutter={[16, 16]}>
+            <Col xs={24} sm={8}>
+              <Card 
+                className={`cursor-pointer transition-all ${
+                  activeStatusTab === 'pending' 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'hover:border-blue-300'
+                }`}
+                onClick={() => {
+                  setActiveStatusTab('pending');
+                }}
+              >
+                <Statistic
+                  title="Pending Reviews"
+                  value={submissionStats.pending}
+                  prefix={<ExclamationCircleOutlined />}
+                  valueStyle={{ 
+                    color: activeStatusTab === 'pending' ? '#1890ff' : '#666',
+                    fontSize: '24px'
+                  }}
+                />
+                {activeStatusTab === 'pending' && (
+                  <Tag color="blue" className="mt-2">Currently Viewing</Tag>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Card 
+                className={`cursor-pointer transition-all ${
+                  activeStatusTab === 'approved' 
+                    ? 'border-green-500 bg-green-50' 
+                    : 'hover:border-green-300'
+                }`}
+                onClick={() => {
+                  setActiveStatusTab('approved');
+                }}
+              >
+                <Statistic
+                  title="Approved Submissions"
+                  value={submissionStats.approved}
+                  prefix={<CheckCircleOutlined />}
+                  valueStyle={{ 
+                    color: activeStatusTab === 'approved' ? '#52c41a' : '#666',
+                    fontSize: '24px'
+                  }}
+                />
+                {activeStatusTab === 'approved' && (
+                  <Tag color="green" className="mt-2">Currently Viewing</Tag>
+                )}
+              </Card>
+            </Col>
+            <Col xs={24} sm={8}>
+              <Card 
+                className={`cursor-pointer transition-all ${
+                  activeStatusTab === 'rejected' 
+                    ? 'border-red-500 bg-red-50' 
+                    : 'hover:border-red-300'
+                }`}
+                onClick={() => {
+                  setActiveStatusTab('rejected');
+                }}
+              >
+                <Statistic
+                  title="Rejected Submissions"
+                  value={submissionStats.rejected}
+                  prefix={<ExclamationCircleOutlined />}
+                  valueStyle={{ 
+                    color: activeStatusTab === 'rejected' ? '#ff4d4f' : '#666',
+                    fontSize: '24px'
+                  }}
+                />
+                {activeStatusTab === 'rejected' && (
+                  <Tag color="red" className="mt-2">Currently Viewing</Tag>
+                )}
+              </Card>
+            </Col>
+          </Row>
+        </Card>
       </motion.div>
 
       {/* Filters */}
@@ -354,6 +563,13 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
         transition={{ delay: 0.2 }}
       >
         <Card>
+          <div className="mb-4">
+            <Title level={4}>
+              {activeStatusTab === 'pending' && 'Pending Submissions'}
+              {activeStatusTab === 'approved' && 'Approved Submissions'}
+              {activeStatusTab === 'rejected' && 'Rejected Submissions'}
+            </Title>
+          </div>
           {submissions.length === 0 && !loading ? (
             <Alert
               message="No Pending Submissions"
@@ -367,6 +583,14 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
               columns={columns}
               dataSource={submissions}
               loading={loading}
+              rowSelection={{
+                type: 'checkbox',
+                selectedRowKeys,
+                onChange: (keys) => setSelectedRowKeys(keys as string[]),
+                getCheckboxProps: (record) => ({
+                  disabled: record.status === 'reviewed' || record.status === 'approved',
+                }),
+              }}
               pagination={{
                 current: pagination?.currentPage || 1,
                 pageSize: filters.limit,
@@ -377,7 +601,7 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
                   `${range[0]}-${range[1]} of ${total} submissions`,
                 onChange: (page) => setFilters({ ...filters, page }),
               }}
-              rowKey={(record) => `${record.userId}-${record.submittedAt}`}
+              rowKey={(record) => record._id || record.annotatorId || `${record.userName || 'unknown'}-${record.submittedAt || ''}`}
               scroll={{ x: 1200 }}
             />
           )}
@@ -386,7 +610,7 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
 
       {/* Review Modal */}
       <Modal
-        title={`Review Submission - ${selectedSubmission?.userName}`}
+        title={`Review Submission - ${selectedSubmission?.annotatorId?.fullName || 'Submission'}`}
         open={showReviewModal}
         onCancel={() => {
           setShowReviewModal(false);
@@ -399,14 +623,77 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
       >
         {selectedSubmission && (
           <TaskReviewForm
-            submissionId={`${selectedSubmission.userId}-${selectedSubmission.submittedAt}`}
+            submissionId={selectedSubmission._id}
             onComplete={handleReviewComplete}
+            submission={selectedSubmission}
             onCancel={() => {
               setShowReviewModal(false);
               setSelectedSubmission(null);
             }}
           />
         )}
+      </Modal>
+
+      {/* Batch Review Modal */}
+      <Modal
+        title={`Batch Review - ${selectedRowKeys.length} Submissions`}
+        open={showBatchModal}
+        onCancel={() => setShowBatchModal(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-4">
+          <Alert
+            message="Batch Review"
+            description={`You are about to review ${selectedRowKeys.length} submissions. This action will apply the same decision and feedback to all selected submissions.`}
+            type="info"
+            showIcon
+          />
+          
+          <Form
+            layout="vertical"
+            onFinish={(values) => {
+              handleBatchReview(values.decision, values.feedback);
+            }}
+          >
+            <Form.Item
+              name="decision"
+              label="Decision"
+              rules={[{ required: true, message: 'Please select a decision' }]}
+            >
+              <Select placeholder="Select decision for all submissions">
+                <Option value="Approve">Approve All</Option>
+                <Option value="Reject">Reject All</Option>
+                <Option value="Request Revision">Request Revision for All</Option>
+              </Select>
+            </Form.Item>
+            
+            <Form.Item
+              name="feedback"
+              label="Overall Feedback (Optional)"
+            >
+              <TextArea 
+                rows={4} 
+                placeholder="Enter feedback that will be applied to all selected submissions..."
+                maxLength={2000}
+              />
+            </Form.Item>
+            
+            <div className="flex justify-end space-x-2">
+              <Button onClick={() => setShowBatchModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                loading={batchLoading}
+                danger={Form.useWatch('decision', {}) === 'Reject'}
+              >
+                Apply to {selectedRowKeys.length} Submissions
+              </Button>
+            </div>
+          </Form>
+        </div>
       </Modal>
     </div>
   );

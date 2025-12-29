@@ -10,9 +10,9 @@ import {
   Divider,
   Avatar,
   Space,
-  Tag,
-  message 
+  Tag
 } from "antd";
+import { toast } from 'sonner';
 import { 
   BellOutlined, 
   CheckOutlined, 
@@ -106,7 +106,7 @@ const NotificationDropdown: React.FC = () => {
         getSummary();
       }
     } catch (error) {
-      message.error("Failed to mark notification as read");
+      toast.error("Failed to mark notification as read");
     }
   };
 
@@ -115,12 +115,12 @@ const NotificationDropdown: React.FC = () => {
     try {
       const result = await deleteNotification(notificationId);
       if (result.success) {
-        message.success("Notification deleted");
+        toast.success("Notification deleted");
         // Update summary
         getSummary();
       }
     } catch (error) {
-      message.error("Failed to delete notification");
+      toast.error("Failed to delete notification");
     }
   };
 
@@ -128,13 +128,13 @@ const NotificationDropdown: React.FC = () => {
     try {
       const result = await markAllAsRead();
       if (result.success) {
-        message.success("All notifications marked as read");
+        toast.success("All notifications marked as read");
         // Refresh notifications and summary
         getUserNotifications({ limit: 10, page: 1 });
         getSummary();
       }
     } catch (error) {
-      message.error("Failed to mark all notifications as read");
+      toast.error("Failed to mark all notifications as read");
     }
   };
 

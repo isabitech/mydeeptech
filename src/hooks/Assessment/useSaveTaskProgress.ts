@@ -16,13 +16,23 @@ export const useSaveTaskProgress = () => {
     taskData: {
       taskNumber: number;
       conversation: {
+        originalVideoId: string;
+        startingPoint: 'video' | 'prompt';
         turns: Array<{
-          speaker: 'user' | 'assistant';
-          message: string;
-          timestamp: string;
+          turnNumber: number;
+          userPrompt: string;
+          aiResponse: {
+            responseText: string;
+            videoSegment: {
+              startTime: number;
+              endTime: number;
+              segmentUrl: string;
+              content: string;
+              role?: 'ai_response';
+            };
+          };
         }>;
       };
-      notes?: string;
     }
   ): Promise<SaveProgressResult> => {
     setLoading(true);
@@ -31,8 +41,8 @@ export const useSaveTaskProgress = () => {
     try {
       const response = await multimediaAssessmentApi.saveTaskProgress(submissionId, taskData);
       
-      if (response.data?.success) {
-        return { success: true, data: response.data.data };
+      if (response?.success) {
+        return { success: true, data: response.data };
       } else {
         const errorMessage = response.data?.message || "Failed to save progress";
         setError(errorMessage);

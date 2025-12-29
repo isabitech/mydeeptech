@@ -3,15 +3,23 @@ export interface VideoReel {
   _id: string;
   title: string;
   description: string;
-  videoUrl: string;
+  videoUrl: string; // Will be YouTube embed URL format
+  youtubeUrl?: string; // Original YouTube URL
+  youtubeVideoId?: string; // Extracted video ID
   thumbnailUrl: string;
+  highResThumbnailUrl?: string; // maxresdefault.jpg version
   niche: string;
   duration: number; // in seconds
   aspectRatio?: 'portrait' | 'landscape' | 'square';
   metadata?: {
-    resolution: string;
-    fileSize: number;
-    format: string;
+    viewCount?: number;
+    likeCount?: number;
+    publishedAt?: string;
+    channelTitle?: string;
+    tags?: string[];
+    resolution?: string;
+    fileSize?: number;
+    format?: string;
   };
   uploadedBy?: {
     _id: string;
@@ -26,16 +34,19 @@ export interface VideoReel {
     isVerified: boolean;
   };
   tags?: string[];
+  contentWarnings?: string[]; // New field for content warnings
   metrics?: {
     viewCount: number;
     likeCount: number;
     commentCount: number;
     shareCount: number;
   };
+  usageCount?: number; // How many times used in assessments
   uploadedAt?: string;
   isAvailable?: boolean;
-  qualityScore?: number;
   isActive?: boolean;
+  isApproved?: boolean; // New approval field
+  qualityScore?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -260,3 +271,124 @@ export type QAReviewStep =
   | 'task_review'
   | 'scoring'
   | 'final_decision';
+
+// New API Request/Response Types based on updated documentation
+
+// Video Reel Management
+export interface AddVideoReelRequest {
+  youtubeUrl: string; // YouTube embed URL (preferred) or any supported format
+  title?: string; // Auto-extracted if not provided
+  description?: string; // Auto-extracted if not provided
+  niche: string; // Required
+  tags?: string[];
+  contentWarnings?: string[];
+}
+
+export interface BulkAddVideoReelsRequest {
+  youtubeUrls: string[];
+  defaultNiche: string;
+  defaultTags?: string[];
+}
+
+export interface BulkAddVideoReelsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    successful: Array<{
+      id: string;
+      title: string;
+      niche: string;
+      duration: number;
+      youtubeUrl: string;
+    }>;
+    failed: Array<{
+      url: string;
+      error: string;
+    }>;
+    summary: {
+      total: number;
+      successful: number;
+      failed: number;
+    };
+  };
+}
+
+// Assessment Configuration
+export interface AssessmentConfig {
+  id: string;
+  title: string;
+  description: string;
+  projectId: string;
+  numberOfTasks: number;
+  estimatedDuration: number;
+  timeLimit: number;
+  requirements: {
+    allowPausing: boolean;
+    requireAllTasks: boolean;
+    randomizeReels: boolean;
+  };
+  scoringWeights: {
+    conversationQuality: number;
+    creativityAndEngagement: number;
+    technicalAccuracy: number;
+    timeManagement: number;
+  };
+  passingScore: number;
+  maxRetries: number;
+  retakeCooldownHours: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// QA Review Types
+export interface QAReviewTaskData {
+  submissionId: string;
+  taskIndex: number;
+  score: number;
+  feedback: string;
+  qualityRating: 'Poor' | 'Fair' | 'Good' | 'Very Good' | 'Excellent';
+  notes?: string;
+}
+
+export interface FinalReviewData {
+  submissionId: string;
+  overallScore: number;
+  overallFeedback: string;
+  decision: 'Approve' | 'Reject' | 'Request Revision';
+  privateNotes?: string;
+}
+
+// Analytics Types
+export interface AssessmentAnalytics {
+  overview: {
+    totalSubmissions: number;
+    completedSubmissions: number;
+    pendingReviews: number;
+    totalReviews: number;
+    totalUsers: number;
+    totalReels: number;
+    completionRate: number;
+    avgReviewTimeHours: number;
+  };
+  trends: any[];
+  assessmentPerformance: any[];
+  qaPerformance: any[];
+}
+
+// Error Response Types
+export interface ApiError {
+  success: false;
+  message: string;
+  error?: string;
+  code?: string;
+  errors?: string[];
+}
+
+// YouTube-specific error codes from API documentation
+export type YouTubeErrorCode = 
+  | 'INVALID_YOUTUBE_URL'
+  | 'YOUTUBE_VIDEO_NOT_FOUND'
+  | 'DUPLICATE_YOUTUBE_URL'
+  | 'YOUTUBE_API_ERROR'
+  | 'YOUTUBE_API_QUOTA_EXCEEDED';

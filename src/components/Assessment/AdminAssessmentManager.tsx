@@ -22,6 +22,7 @@ import {
   Tooltip,
   Popconfirm,
 } from 'antd';
+import { toast } from 'sonner';
 import {
   PlusOutlined,
   EditOutlined,
@@ -42,17 +43,120 @@ const { TextArea } = Input;
 const { TabPane } = Tabs;
 const { Option } = Select;
 
-interface AdminAssessmentManagerProps {
+interface Project {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface RetakePolicy {
+  allowed: boolean;
+  maxAttempts: number;
+  cooldownHours: number;
+}
+
+interface AssessmentRequirements {
+  retakePolicy: RetakePolicy;
+  tasksPerAssessment: number;
+  timeLimit: number;
+  allowPausing: boolean;
+}
+
+interface AssessmentStatistics {
+  totalAttempts: number;
+  totalCompletions: number;
+  averageScore: number;
+  averageTimeSpent: number;
+  passRate: number;
+}
+
+interface CreatedBy {
+  _id: string;
+  fullName: string;
+  email: string;
+}
+
+interface AssessmentConfig {
+  id: string;
+  title: string;
+  description: string;
+  project: Project;
+  requirements: AssessmentRequirements;
+  totalConfiguredReels: number;
+  completionRate: number;
+  statistics: AssessmentStatistics;
+  isActive: boolean;
+  createdBy: CreatedBy;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+interface AssessmentConfigResponse {
+  success: boolean;
+  message: string;
+  data: {
+    assessmentConfigs: AssessmentConfig[];
+    pagination: Pagination;
+  };
+}
+
+interface VideoReel {
+  _id: string;
+  title: string;
+  description: string;
+  youtubeUrl: string;
+  thumbnailUrl: string;
+  niche: string;
+  duration: number;
+  usageCount: number;
+  isActive: boolean;
+  qualityScore: number;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ReelStatistics {
+  nicheBreakdown: Array<{
+    niche: string;
+    count: number;
+  }>;
+  totalActiveReels: number;
+  totalApprovedReels: number;
+  totalReels: number;
+}
+
+interface VideoReelsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    videoReels: VideoReel[];
+    pagination: Pagination;
+    statistics: ReelStatistics;
+  };
+}
+
+interface AdminReelAssessmentManagerProps {
   onAssessmentCreated?: (assessment: any) => void;
 }
 
-export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
+export const AdminReelAssessmentManager: React.FC<AdminReelAssessmentManagerProps> = ({
   onAssessmentCreated,
 }) => {
   // State management
   const [activeTab, setActiveTab] = useState('assessments');
-  const [assessments, setAssessments] = useState([]);
-  const [videoReels, setVideoReels] = useState([]);
+  const [assessments, setAssessments] = useState<AssessmentConfig[]>([]);
+  const [videoReels, setVideoReels] = useState<VideoReel[]>([]);
+  const [reelStatistics, setReelStatistics] = useState<ReelStatistics | null>(null);
   const [loading, setLoading] = useState(false);
   
   // Modal states
@@ -60,7 +164,7 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
   const [showReelModal, setShowReelModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [editingAssessment, setEditingAssessment] = useState<any>(null);
-  const [editingReel, setEditingReel] = useState<any>(null);
+  const [editingReel, setEditingReel] = useState<VideoReel | null>(null);
 
   // Form instances
   const [assessmentForm] = Form.useForm();
@@ -77,9 +181,9 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
   const loadAssessments = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await multimediaAssessmentApi.getAssessmentConfigs();
-      if (response.data?.success) {
-        setAssessments(response.data.data || []);
+      const response: AssessmentConfigResponse = await multimediaAssessmentApi.getAssessmentConfigs();
+      if (response.success && response.data) {
+        setAssessments(response.data.assessmentConfigs || []);
       }
     } catch (error) {
       console.error('Failed to load assessments:', error);
@@ -91,9 +195,10 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
   const loadVideoReels = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await multimediaAssessmentApi.getAllVideoReels();
-      if (response.data?.success) {
-        setVideoReels(response.data.data?.videoReels || []);
+      const response: VideoReelsResponse = await multimediaAssessmentApi.getAllVideoReels();
+      if (response.success && response.data) {
+        setVideoReels(response.data.videoReels || []);
+        setReelStatistics(response.data.statistics);
       }
     } catch (error) {
       console.error('Failed to load video reels:', error);
@@ -149,22 +254,59 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
     }
   }, [loadAssessments]);
 
-  // Video reel management functions
+  // Video reel management functions with enhanced error handling
   const handleAddVideoReel = useCallback(async (values: any) => {
     try {
+      setLoading(true);
       const response = await multimediaAssessmentApi.addVideoReel(values);
       if (response.data?.success) {
         await loadVideoReels();
         setShowReelModal(false);
         reelForm.resetFields();
+        toast.success(response.data.message || 'Video reel added successfully!');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add video reel:', error);
+      
+      // Handle YouTube-specific errors
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to add video reel';
+      const errorCode = error.response?.data?.code;
+      
+      let title = 'Error Adding Video';
+      let content = errorMessage;
+      
+      switch (errorCode) {
+        case 'INVALID_YOUTUBE_URL':
+          title = 'Invalid YouTube URL';
+          content = 'Please provide a valid YouTube URL. Supported formats: embed, shorts, watch, or youtu.be URLs.';
+          break;
+        case 'YOUTUBE_VIDEO_NOT_FOUND':
+          title = 'Video Not Found';
+          content = 'The YouTube video could not be found. It may be private, deleted, or the URL is incorrect.';
+          break;
+        case 'DUPLICATE_YOUTUBE_URL':
+          title = 'Duplicate Video';
+          content = 'This video has already been added to the system.';
+          break;
+        case 'YOUTUBE_API_ERROR':
+          title = 'YouTube API Error';
+          content = 'Failed to extract video information from YouTube. Please try again later.';
+          break;
+        case 'YOUTUBE_API_QUOTA_EXCEEDED':
+          title = 'API Limit Reached';
+          content = 'YouTube API quota exceeded. Please try again later.';
+          break;
+      }
+      
+      toast.error(`${title}: ${content}`);
+    } finally {
+      setLoading(false);
     }
   }, [reelForm, loadVideoReels]);
 
   const handleBulkAddReels = useCallback(async (values: any) => {
     try {
+      setLoading(true);
       const urls = values.urls.split('\n').map((url: string) => url.trim()).filter(Boolean);
       
       const response = await multimediaAssessmentApi.bulkAddVideoReels({
@@ -172,21 +314,31 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
         defaultNiche: values.defaultNiche,
         defaultTags: values.defaultTags?.split(',').map((tag: string) => tag.trim()) || [],
       });
+
+      console.log(response);
       
-      if (response.data?.success) {
+      if (response.success) {
+        const result = response.data
+        
         await loadVideoReels();
         setShowBulkUploadModal(false);
         bulkUploadForm.resetFields();
+        
+        // Show detailed results
+        toast.success(response.data?.message || `Successfully processed ${result.summary.successful} videos. ${result.summary.failed > 0 ? `${result.summary.failed} failed.` : ''}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to bulk add reels:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to process bulk upload');
+    } finally {
+      setLoading(false);
     }
   }, [bulkUploadForm, loadVideoReels]);
 
   const handleUpdateVideoReel = useCallback(async (reelId: string, values: any) => {
     try {
       const response = await multimediaAssessmentApi.updateVideoReel(reelId, values);
-      if (response.data?.success) {
+      if (response?.success) {
         await loadVideoReels();
         setShowReelModal(false);
         setEditingReel(null);
@@ -214,30 +366,49 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
       title: 'Assessment Title',
       dataIndex: 'title',
       key: 'title',
-      render: (title: string, record: any) => (
+      render: (title: string, record: AssessmentConfig) => (
         <div>
           <div className="font-medium">{title}</div>
           <Text type="secondary" className="text-xs">{record.description}</Text>
+          <div className="mt-1">
+            <Tag color="blue" className="text-xs">
+              {record.project.name}
+            </Tag>
+          </div>
         </div>
       ),
     },
     {
       title: 'Tasks',
-      dataIndex: 'numberOfTasks',
-      key: 'numberOfTasks',
-      render: (count: number) => <Tag color="blue">{count} tasks</Tag>,
+      key: 'tasks',
+      render: (record: AssessmentConfig) => (
+        <Tag color="blue">{record.requirements.tasksPerAssessment} tasks</Tag>
+      ),
     },
     {
       title: 'Duration',
-      dataIndex: 'timeLimit',
-      key: 'timeLimit',
-      render: (minutes: number) => <Text>{minutes} min</Text>,
+      key: 'duration',
+      render: (record: AssessmentConfig) => (
+        <Text>{record.requirements.timeLimit} min</Text>
+      ),
     },
     {
-      title: 'Passing Score',
-      dataIndex: 'passingScore',
-      key: 'passingScore',
-      render: (score: number) => <Text>{score}/10</Text>,
+      title: 'Max Attempts',
+      key: 'maxAttempts',
+      render: (record: AssessmentConfig) => (
+        <Text>{record.requirements.retakePolicy.maxAttempts}</Text>
+      ),
+    },
+    {
+      title: 'Configured Reels',
+      dataIndex: 'totalConfiguredReels',
+      key: 'totalConfiguredReels',
+      render: (count: number) => (
+        <div className="text-center">
+          <div className="text-lg font-bold text-blue-500">{count}</div>
+          <Text type="secondary" className="text-xs">reels</Text>
+        </div>
+      ),
     },
     {
       title: 'Status',
@@ -250,19 +421,35 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
       ),
     },
     {
-      title: 'Usage',
-      key: 'usage',
-      render: (record: any) => (
+      title: 'Statistics',
+      key: 'statistics',
+      render: (record: AssessmentConfig) => (
         <div className="text-center">
-          <div className="text-lg font-bold">{record.usageCount || 0}</div>
-          <Text type="secondary" className="text-xs">submissions</Text>
+          <div className="text-lg font-bold">{record.statistics.totalAttempts}</div>
+          <Text type="secondary" className="text-xs">attempts</Text>
+          <div className="text-sm text-gray-500">
+            {record.statistics.passRate.toFixed(1)}% pass rate
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Created By',
+      key: 'createdBy',
+      render: (record: AssessmentConfig) => (
+        <div>
+          <div className="font-medium text-sm">{record.createdBy.fullName}</div>
+          <Text type="secondary" className="text-xs">{record.createdBy.email}</Text>
+          <div className="text-xs text-gray-500">
+            {new Date(record.createdAt).toLocaleDateString()}
+          </div>
         </div>
       ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (record: any) => (
+      render: (record: AssessmentConfig) => (
         <Space>
           <Tooltip title="Edit Assessment">
             <Button
@@ -270,7 +457,16 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
               icon={<EditOutlined />}
               onClick={() => {
                 setEditingAssessment(record);
-                assessmentForm.setFieldsValue(record);
+                // Map the API data structure to form fields
+                assessmentForm.setFieldsValue({
+                  title: record.title,
+                  description: record.description,
+                  numberOfTasks: record.requirements.tasksPerAssessment,
+                  timeLimit: record.requirements.timeLimit,
+                  maxRetries: record.requirements.retakePolicy.maxAttempts,
+                  allowPausing: record.requirements.allowPausing,
+                  isActive: record.isActive,
+                });
                 setShowAssessmentModal(true);
               }}
             />
@@ -301,7 +497,7 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
     {
       title: 'Video',
       key: 'video',
-      render: (record: any) => (
+      render: (record: VideoReel) => (
         <div className="flex items-center gap-3">
           <img
             src={record.thumbnailUrl}
@@ -365,7 +561,7 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
     {
       title: 'Actions',
       key: 'actions',
-      render: (record: any) => (
+      render: (record: VideoReel) => (
         <Space>
           <Tooltip title="Preview Video">
             <Button
@@ -380,7 +576,14 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
               icon={<EditOutlined />}
               onClick={() => {
                 setEditingReel(record);
-                reelForm.setFieldsValue(record);
+                reelForm.setFieldsValue({
+                  title: record.title,
+                  description: record.description,
+                  youtubeUrl: record.youtubeUrl,
+                  niche: record.niche,
+                  tags: record.tags?.join(', ') || '',
+                  isActive: record.isActive,
+                });
                 setShowReelModal(true);
               }}
             />
@@ -507,7 +710,7 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
               <Card>
                 <Statistic
                   title="Total Submissions"
-                  value={(assessments as any[]).reduce((sum: number, a: any) => sum + (a.usageCount || 0), 0)}
+                  value={assessments.reduce((sum, a) => sum + a.statistics.totalAttempts, 0)}
                   prefix={<BarChartOutlined />}
                 />
               </Card>
@@ -515,10 +718,13 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
             <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
-                  title="Avg Quality Score"
-                  value={4.2}
+                  title="Avg Pass Rate"
+                  value={assessments.length > 0 
+                    ? (assessments.reduce((sum, a) => sum + a.statistics.passRate, 0) / assessments.length).toFixed(1)
+                    : 0
+                  }
                   precision={1}
-                  suffix="/5"
+                  suffix="%"
                   prefix={<EyeOutlined />}
                 />
               </Card>
@@ -662,6 +868,7 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
           <Form.Item
             label="YouTube URL"
             name="youtubeUrl"
+            extra="Supported formats: embed, shorts, watch, or youtu.be URLs. System will auto-convert to embed format."
             rules={[
               { required: true, message: 'Please enter YouTube URL' },
               { 
@@ -671,10 +878,23 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
             ]}
           >
             <Input 
-              placeholder="https://www.youtube.com/shorts/VIDEO_ID"
+              placeholder="https://www.youtube.com/embed/VIDEO_ID"
               prefix={<YoutubeOutlined />}
+              addonAfter={
+                <Tooltip title="The system accepts various YouTube URL formats and automatically converts them to embed URLs for better compatibility">
+                  <LinkOutlined />
+                </Tooltip>
+              }
             />
           </Form.Item>
+
+          <Alert
+            message="YouTube URL Information"
+            description="You can use any YouTube URL format. The system will automatically extract video metadata (title, description, duration) and convert URLs to embed format for optimal playback."
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
 
           <Row gutter={[16, 0]}>
             <Col xs={24} sm={12}>
@@ -773,8 +993,8 @@ export const AdminAssessmentManager: React.FC<AdminAssessmentManagerProps> = ({
           >
             <TextArea
               rows={8}
-              placeholder={`https://www.youtube.com/shorts/VIDEO_ID_1
-https://www.youtube.com/shorts/VIDEO_ID_2
+              placeholder={`https://www.youtube.com/embed/VIDEO_ID_1
+https://www.youtube.com/embed/VIDEO_ID_2
 https://youtu.be/VIDEO_ID_3`}
             />
           </Form.Item>

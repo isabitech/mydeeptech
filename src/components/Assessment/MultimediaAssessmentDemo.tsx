@@ -10,10 +10,10 @@ import {
 } from '@ant-design/icons';
 import VideoReelMarketplace from './VideoReelMarketplace';
 import ConversationBuilder from './ConversationBuilder';
-import { AssessmentSession } from './AssessmentSession';
 import { QAReviewDashboard } from './QAReviewDashboard';
-import { AdminAssessmentManager } from './AdminAssessmentManager';
+import { AdminReelAssessmentManager } from './AdminAssessmentManager';
 import { VideoReel, MultimediaConversation } from '../../types/multimedia-assessment.types';
+import AssessmentSession from './AssessmentSession';
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -60,7 +60,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'fitness_1',
     title: 'Ultimate Core Workout',
     description: 'Quick and effective core strengthening exercises for all fitness levels',
-    videoUrl: 'https://www.youtube.com/shorts/hnAOu6PMhnY',
+    videoUrl: 'https://www.youtube.com/embed/hnAOu6PMhnY',
     thumbnailUrl: 'https://img.youtube.com/vi/hnAOu6PMhnY/maxresdefault.jpg',
     duration: 60,
     creatorInfo: {
@@ -86,7 +86,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'fitness_2',
     title: 'Morning Stretch Routine',
     description: 'Perfect morning stretches to wake up your body and improve flexibility',
-    videoUrl: 'https://www.youtube.com/shorts/n-c0aFZhnF8',
+    videoUrl: 'https://www.youtube.com/embed/n-c0aFZhnF8',
     thumbnailUrl: 'https://img.youtube.com/vi/n-c0aFZhnF8/maxresdefault.jpg',
     duration: 45,
     creatorInfo: {
@@ -112,7 +112,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'fitness_3',
     title: 'HIIT Cardio Blast',
     description: 'High-intensity interval training for maximum calorie burn in minimal time',
-    videoUrl: 'https://www.youtube.com/shorts/EWhMxVsIfPY',
+    videoUrl: 'https://www.youtube.com/embed/EWhMxVsIfPY',
     thumbnailUrl: 'https://img.youtube.com/vi/EWhMxVsIfPY/maxresdefault.jpg',
     duration: 55,
     creatorInfo: {
@@ -138,7 +138,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'fitness_4',
     title: 'Leg Day Essentials',
     description: 'Must-do leg exercises for building strength and muscle definition',
-    videoUrl: 'https://www.youtube.com/shorts/W4Ezk6M-RjU',
+    videoUrl: 'https://www.youtube.com/embed/W4Ezk6M-RjU',
     thumbnailUrl: 'https://img.youtube.com/vi/W4Ezk6M-RjU/maxresdefault.jpg',
     duration: 50,
     creatorInfo: {
@@ -165,7 +165,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'sport_1',
     title: 'Basketball Skills Training',
     description: 'Essential basketball drills to improve your game and ball handling',
-    videoUrl: 'https://www.youtube.com/shorts/sA_FtB4Etlg',
+    videoUrl: 'https://www.youtube.com/embed/sA_FtB4Etlg',
     thumbnailUrl: 'https://img.youtube.com/vi/sA_FtB4Etlg/maxresdefault.jpg',
     duration: 58,
     creatorInfo: {
@@ -191,7 +191,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'sport_2',
     title: 'Soccer Footwork Drills',
     description: 'Improve your soccer skills with these essential footwork exercises',
-    videoUrl: 'https://www.youtube.com/shorts/zCCSXzc5iq0',
+    videoUrl: 'https://www.youtube.com/embed/zCCSXzc5iq0',
     thumbnailUrl: 'https://img.youtube.com/vi/zCCSXzc5iq0/maxresdefault.jpg',
     duration: 42,
     creatorInfo: {
@@ -217,7 +217,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'sport_3',
     title: 'Tennis Technique Tips',
     description: 'Master your tennis technique with professional coaching tips',
-    videoUrl: 'https://www.youtube.com/shorts/_rr4iYgpd4k',
+    videoUrl: 'https://www.youtube.com/embed/_rr4iYgpd4k',
     thumbnailUrl: 'https://img.youtube.com/vi/_rr4iYgpd4k/maxresdefault.jpg',
     duration: 48,
     creatorInfo: {
@@ -244,7 +244,7 @@ const MOCK_REELS: VideoReel[] = [
     _id: 'fashion_1',
     title: 'Styling Tips & Trends',
     description: 'Latest fashion trends and styling tips for a modern wardrobe',
-    videoUrl: 'https://www.youtube.com/shorts/DjPSLobtRVw',
+    videoUrl: 'https://www.youtube.com/embed/DjPSLobtRVw',
     thumbnailUrl: 'https://img.youtube.com/vi/DjPSLobtRVw/maxresdefault.jpg',
     duration: 52,
     creatorInfo: {
@@ -463,7 +463,7 @@ const MultimediaAssessmentDemo: React.FC = () => {
         return <QAReviewDashboard onReviewComplete={handleReviewComplete} />;
 
       case 'admin':
-        return <AdminAssessmentManager onAssessmentCreated={(assessment) => {
+        return <AdminReelAssessmentManager onAssessmentCreated={(assessment) => {
           message.success(`Assessment created: ${assessment.title}`);
         }} />;
 

@@ -26,16 +26,27 @@ export const useSubmitTask = () => {
     taskData: {
       taskNumber: number;
       conversation: {
+        originalVideoId: string;
+        startingPoint: 'video' | 'prompt';
         turns: Array<{
-          speaker: 'user' | 'assistant';
-          message: string;
-          timestamp: string;
+          turnNumber: number;
+          userPrompt: string;
+          aiResponse: {
+            responseText: string;
+            videoSegment: {
+                startTime: number;
+                endTime: number;
+                segmentUrl?: string;
+                content?: string;
+                role?: 'ai_response';
+              };
+          } | string;
         }>;
       };
       videoSegments?: Array<{
         startTime: number;
         endTime: number;
-        description: string;
+        description?: string;
       }>;
     }
   ): Promise<SubmitTaskResult> => {
@@ -43,12 +54,14 @@ export const useSubmitTask = () => {
     setError(null);
 
     try {
-      const response = await multimediaAssessmentApi.submitTask(submissionId, taskData);
+      // Extract taskNumber from taskData and pass it separately
+      const { taskNumber, ...restTaskData } = taskData;
+      const response = await multimediaAssessmentApi.submitTask(submissionId, taskNumber, restTaskData);
       
-      if (response.data?.success) {
-        return { success: true, data: response.data.data };
+      if (response?.success) {
+        return { success: true, data: response.data };
       } else {
-        const errorMessage = response.data?.message || "Failed to submit task";
+        const errorMessage = response?.message || "Failed to submit task";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }

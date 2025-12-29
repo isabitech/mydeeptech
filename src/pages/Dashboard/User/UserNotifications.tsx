@@ -13,9 +13,9 @@ import {
   Statistic,
   Avatar,
   Select,
-  message,
   Popconfirm,
 } from "antd";
+import { toast } from 'sonner';
 import {
   BellOutlined,
   CheckOutlined,
@@ -89,11 +89,11 @@ const UserNotifications: React.FC = () => {
     try {
       const result = await markAsRead(notificationId);
       if (result.success) {
-        message.success("Notification marked as read");
+        toast.success("Notification marked as read");
         loadSummary();
       }
     } catch (error) {
-      message.error("Failed to mark notification as read");
+      toast.error("Failed to mark notification as read");
     }
   };
 
@@ -101,12 +101,12 @@ const UserNotifications: React.FC = () => {
     try {
       const result = await markAllAsRead();
       if (result.success) {
-        message.success("All notifications marked as read");
+        toast.success("All notifications marked as read");
         loadNotifications();
         loadSummary();
       }
     } catch (error) {
-      message.error("Failed to mark all notifications as read");
+      toast.error("Failed to mark all notifications as read");
     }
   };
 
@@ -114,12 +114,12 @@ const UserNotifications: React.FC = () => {
     try {
       const result = await deleteNotification(notificationId);
       if (result.success) {
-        message.success("Notification deleted");
+        toast.success("Notification deleted");
         loadNotifications();
         loadSummary();
       }
     } catch (error) {
-      message.error("Failed to delete notification");
+      toast.error("Failed to delete notification");
     }
   };
 
