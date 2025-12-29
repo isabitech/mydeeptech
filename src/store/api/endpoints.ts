@@ -134,6 +134,15 @@ export const endpoints = {
     analytics: "/admin/notifications/analytics",
   },
 
+  // User Assessment endpoints
+  assessments: {
+    available: "/api/assessments/available",
+    start: "/api/assessments/start",
+    session: "/api/assessments/session",
+    submit: "/api/assessments/submit",
+    progress: "/api/assessments/progress",
+  },
+
   // Enhanced Chat support endpoints following the documentation
   chat: {
     startChat: "/chat/start",

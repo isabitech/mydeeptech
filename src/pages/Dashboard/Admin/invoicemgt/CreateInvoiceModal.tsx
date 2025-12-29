@@ -109,6 +109,7 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       const applicationsResult = await getAllApplications({
         projectId,
         status: "approved",
+        limit: 1000,
       });
 
       console.log('📋 Applications result:', applicationsResult);

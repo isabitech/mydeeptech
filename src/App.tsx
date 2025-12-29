@@ -36,7 +36,7 @@ import Welcome from "./pages/Dashboard/User/Welcome";
 import Assessment from "./pages/Auth/Assessment";
 import AssessmentHistory from "./pages/Dashboard/User/AssessmentHistory";
 import SupportCenter from "./pages/Dashboard/User/SupportCenter";
-import AssessmentManagement from "./pages/Dashboard/Admin/AssessmentManagement";
+import AssessmentManagementList from "./pages/Dashboard/Admin/assessmentmgt/AssessmentManagementList";
 import AdsLandingPage from "./pages/Ads/AdsLandingPage";
 import VerifyEmail from "./pages/Auth/VerifyEmail";
 import SignupPage from "./pages/Auth/SignupPage";
@@ -49,11 +49,25 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
 import CustomerService from "./components/CustomerService";
 import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
+import MultimediaAssessmentDemo from "./components/Assessment/MultimediaAssessmentDemo";
+import AssessmentSession from "./components/Assessment/AssessmentSession";
+import {QAReviewDashboard} from "./components/Assessment/QAReviewDashboard";
+import {AdminReelAssessmentManager} from "./components/Assessment/AdminAssessmentManager";
+import AssessmentList from "./components/Assessment/AssessmentList";
+import VideoTest from "./components/VideoTest";
+import { Toaster } from 'sonner';
 
 const AppRoutes = () => {
   return (
     <Router>
       <CustomerService />
+      <Toaster 
+        position="top-right" 
+        richColors 
+        closeButton 
+        expand={true}
+        duration={4000}
+      />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
@@ -70,6 +84,8 @@ const AppRoutes = () => {
         {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
         <Route path="/careers" element={<Hiring/>} />
         <Route path="/careers/math-ai-trainer" element={<MathTalent/>} />
+        <Route path="/demo/multimedia-assessment" element={<MultimediaAssessmentDemo />} />
+        <Route path="/video-test" element={<VideoTest />} />
 
         <Route path="/uploadEmail" element={<UploadEmail />} />
         <Route path="/apply" element={<AdsLandingPage />} />
@@ -89,6 +105,9 @@ const AppRoutes = () => {
           <Route path="settings" element={<Settings />} />
           <Route path="support" element={<SupportCenter />} />
           <Route path="assessment" element={<Assessment />} />
+          <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
+          <Route path="qa-review" element={<QAReviewDashboard />} />
+          <Route path="assessments" element={<AssessmentList />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
 
 
@@ -104,7 +123,9 @@ const AppRoutes = () => {
             <Route path="overview" index element={<AdminOverview />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="annotators" element={<Annotators />} />
-            <Route path="assessments" element={<AssessmentManagement />} />
+            <Route path="assessments" element={<AssessmentManagementList />} />
+            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
             <Route path="projects" element={<ProjectManagement />} />
             <Route path="applications" element={<ApplicationManagement />} />
             <Route path="jobs" element={<JobManagement />} />
