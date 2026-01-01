@@ -135,7 +135,11 @@ const AssessmentList: React.FC = () => {
   const handleStartAssessment = async (assessment: Assessment) => {
     if (assessment.type === 'multimedia_assessment') {
       navigate(`/dashboard/assessment/multimedia/${assessment.id}`);
-    } else {
+    } else if (assessment.type === 'spidey_assessment') {
+      navigate(`/dashboard/assessment/spidey/${assessment.id}`);
+    }
+    
+    else {
       // For other assessment types, navigate to general assessment page
       navigate(`/dashboard/assessment?type=${assessment.type}&id=${assessment.id}`);
     }

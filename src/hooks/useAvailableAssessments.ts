@@ -5,12 +5,12 @@ export interface Assessment {
   id: string;
   title: string;
   description: string;
-  type: 'multimedia' | 'english_proficiency' | 'general';
-  numberOfTasks: number;
+  type: 'multimedia' | 'english_proficiency' | 'general' | 'spidey_assessment';
+  numberOfTasks?: number;
   estimatedDuration: number; // in minutes
-  timeLimit: number; // in minutes
+  timeLimit?: number; // in minutes
   passingScore: number;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'expert';
   isActive: boolean;
   userStatus?: 'not_started' | 'in_progress' | 'completed' | 'passed' | 'failed';
   lastAttempt?: {
@@ -24,6 +24,18 @@ export interface Assessment {
   currentAttempts?: number;
   instructions?: string;
   prerequisites?: string[];
+  // Spidey-specific properties
+  category?: string;
+  totalStages?: number;
+  stageLimits?: {
+    stage1: number;
+    stage2: number;
+    stage3: number;
+    stage4: number;
+  };
+  cooldownDays?: number;
+  requirements?: string[];
+  warnings?: string[];
 }
 
 interface AvailableAssessmentsResult {

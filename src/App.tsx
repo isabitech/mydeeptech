@@ -55,6 +55,7 @@ import {QAReviewDashboard} from "./components/Assessment/QAReviewDashboard";
 import {AdminReelAssessmentManager} from "./components/Assessment/AdminAssessmentManager";
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
+import { SpideyAssessment } from "./components/Assessment/SpideyAssessment";
 import { Toaster } from 'sonner';
 
 const AppRoutes = () => {
@@ -106,6 +107,7 @@ const AppRoutes = () => {
           <Route path="support" element={<SupportCenter />} />
           <Route path="assessment" element={<Assessment />} />
           <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
+          <Route path="assessment/spidey/:assessmentId" element={<SpideyAssessment />} />
           <Route path="qa-review" element={<QAReviewDashboard />} />
           <Route path="assessments" element={<AssessmentList />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
@@ -125,6 +127,7 @@ const AppRoutes = () => {
             <Route path="annotators" element={<Annotators />} />
             <Route path="assessments" element={<AssessmentManagementList />} />
             <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+            <Route path="assessments/spidey" element={<SpideyAssessment />} />
             <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
             <Route path="projects" element={<ProjectManagement />} />
             <Route path="applications" element={<ApplicationManagement />} />
