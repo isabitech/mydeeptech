@@ -50,7 +50,10 @@ const PaymentManagement = () => {
     loading, 
     updatePaymentStatus,
     sendPaymentReminder,
-    deleteInvoice 
+    deleteInvoice,
+    bulkAuthorizePayment,
+    generatePaystackCSV,
+    generateMpesaCSV,
   } = useAdminInvoices();
 
   useEffect(() => {
@@ -226,6 +229,9 @@ const PaymentManagement = () => {
                   onSendReminder={sendPaymentReminder}
                   onDelete={deleteInvoice}
                   onShowPaymentModal={showPaymentModal}
+                  onBulkAuthorizePayment={bulkAuthorizePayment}
+                  onGeneratePaystackCSV={(invoiceIds) => generatePaystackCSV(invoiceIds)}
+                  onGenerateMpesaCSV={(invoiceIds) => generateMpesaCSV(invoiceIds)}
                 />
               ),
             },
