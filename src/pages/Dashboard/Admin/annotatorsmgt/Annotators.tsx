@@ -7,6 +7,7 @@ import ApprovedAnnotators from "./ApprovedAnnotators";
 import MicroTasker from "./MicroTasker";
 import PendingAnnotators from "./PendingAnnotators";
 import SubmittedAnnotators from "./SubmittedAnnotators";
+import QAAnnotators from "./QAAnnotators";
 import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
 
 const { TabPane } = Tabs;
@@ -19,6 +20,7 @@ const Annotators = () => {
     microtasker: 0,
     pending: 0,
     submitted: 0,
+    qa: 0,
   });
 
   const { getAllDTUsers, summary, loading } = useGetAllDtUsers();
@@ -37,6 +39,7 @@ const Annotators = () => {
         microtasker: summary.statusBreakdown.rejected || 0, // Assuming rejected users are microtaskers
         pending: summary.statusBreakdown.pending || 0,
         submitted: summary.statusBreakdown.submitted || 0,
+        qa: summary.qaBreakdown?.approved || 0, // Add QA count from qaBreakdown
       });
     }
   }, [summary]);
@@ -147,6 +150,32 @@ const Annotators = () => {
               <TabPane 
                 tab={
                   <div className="flex items-center gap-2">
+                    <span>QA Annotators</span>
+                    <Badge 
+                      count={counts.qa} 
+                      style={{ 
+                        backgroundColor: '#1890ff',
+                        color: 'white',
+                        fontSize: '12px',
+                        minWidth: '20px',
+                        height: '20px',
+                        lineHeight: '20px',
+                        padding: '0 6px',
+                        borderRadius: '10px'
+                      }} 
+                    />
+                  </div>
+                } 
+                key="4"
+              >
+                <div className="pt-4">
+                  <QAAnnotators />
+                </div>
+              </TabPane>
+
+              <TabPane 
+                tab={
+                  <div className="flex items-center gap-2">
                     <span>Pending Annotators</span>
                     <Badge 
                       count={counts.pending} 
@@ -163,7 +192,7 @@ const Annotators = () => {
                     />
                   </div>
                 } 
-                key="4"
+                key="5"
               >
                 <div className="pt-4">
                   <PendingAnnotators />
@@ -189,7 +218,7 @@ const Annotators = () => {
                     />
                   </div>
                 } 
-                key="5"
+                key="6"
               >
                 <div className="pt-4">
                   <SubmittedAnnotators />

@@ -75,6 +75,7 @@ useEffect(() => {
           accountName: result.data?.paymentInfo?.accountName,
           accountNumber: result.data?.paymentInfo?.accountNumber,
           bankName: result.data?.paymentInfo?.bankName,
+          bankCode: result.data?.paymentInfo?.bankCode,
           paymentMethod: result.data?.paymentInfo?.paymentMethod,
           paymentCurrency: result.data?.paymentInfo?.paymentCurrency,
           educationField: result.data?.professionalBackground?.educationField,
@@ -151,6 +152,7 @@ useEffect(() => {
           accountName: values.accountName,
           accountNumber: values.accountNumber,
           bankName: values.bankName,
+          bankCode: values.bankCode,
           paymentMethod: values.paymentMethod,
           paymentCurrency: values.paymentCurrency,
         },
@@ -199,6 +201,7 @@ useEffect(() => {
             accountName: refreshResult.data?.paymentInfo?.accountName,
             accountNumber: refreshResult.data?.paymentInfo?.accountNumber,
             bankName: refreshResult.data?.paymentInfo?.bankName,
+            bankCode: refreshResult.data?.paymentInfo?.bankCode,
             paymentMethod: refreshResult.data?.paymentInfo?.paymentMethod,
             paymentCurrency: refreshResult.data?.paymentInfo?.paymentCurrency,
             educationField: refreshResult.data?.professionalBackground?.educationField,
@@ -255,6 +258,7 @@ useEffect(() => {
         accountName: profile?.paymentInfo?.accountName,
         accountNumber: profile?.paymentInfo?.accountNumber,
         bankName: profile?.paymentInfo?.bankName,
+        bankCode: profile?.paymentInfo?.bankCode,
         paymentMethod: profile?.paymentInfo?.paymentMethod,
         paymentCurrency: profile?.paymentInfo?.paymentCurrency,
         educationField: profile?.professionalBackground?.educationField,
@@ -560,29 +564,38 @@ useEffect(() => {
                             className="!font-[gilroy-regular]"
                             placeholder="Select your bank"
                             showSearch
+                            onChange={(value, option) => {
+                              // Auto-set bank code for Nigerian banks
+                              if (option && typeof option === 'object' && 'bankCode' in option) {
+                                form.setFieldsValue({ bankCode: option.bankCode });
+                              }
+                            }}
                             filterOption={(input, option) =>
                               (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
                             }
                             options={[
-                              { value: "Access Bank", label: "Access Bank" },
-                              { value: "Fidelity Bank", label: "Fidelity Bank" },
-                              { value: "First Bank of Nigeria", label: "First Bank of Nigeria" },
-                              { value: "Guaranty Trust Bank", label: "Guaranty Trust Bank (GTBank)" },
-                              { value: "United Bank for Africa", label: "United Bank for Africa (UBA)" },
-                              { value: "Zenith Bank", label: "Zenith Bank" },
-                              { value: "Ecobank Nigeria", label: "Ecobank Nigeria" },
-                              { value: "Union Bank of Nigeria", label: "Union Bank of Nigeria" },
-                              { value: "Stanbic IBTC Bank", label: "Stanbic IBTC Bank" },
-                              { value: "Sterling Bank", label: "Sterling Bank" },
-                              { value: "Wema Bank", label: "Wema Bank" },
-                              { value: "Polaris Bank", label: "Polaris Bank" },
-                              { value: "Kuda Bank", label: "Kuda Bank" },
-                              { value: "VFD Microfinance Bank", label: "VFD Microfinance Bank" },
-                              { value: "Opay", label: "Opay" },
-                              { value: "PalmPay", label: "PalmPay" },
-                              { value: "Moniepoint", label: "Moniepoint" }
+                              { value: "Access Bank", label: "Access Bank", bankCode: "access-bank" },
+                              { value: "Fidelity Bank", label: "Fidelity Bank", bankCode: "fidelity-bank" },
+                              { value: "First Bank of Nigeria", label: "First Bank of Nigeria", bankCode: "first-bank-of-nigeria" },
+                              { value: "Guaranty Trust Bank", label: "Guaranty Trust Bank (GTBank)", bankCode: "guaranty-trust-bank" },
+                              { value: "United Bank for Africa", label: "United Bank for Africa (UBA)", bankCode: "united-bank-for-africa" },
+                              { value: "Zenith Bank", label: "Zenith Bank", bankCode: "zenith-bank" },
+                              { value: "Ecobank Nigeria", label: "Ecobank Nigeria", bankCode: "ecobank-nigeria" },
+                              { value: "Union Bank of Nigeria", label: "Union Bank of Nigeria", bankCode: "union-bank-of-nigeria" },
+                              { value: "Stanbic IBTC Bank", label: "Stanbic IBTC Bank", bankCode: "union-bank-of-nigeria" },
+                              { value: "Sterling Bank", label: "Sterling Bank", bankCode: "sterling-bank" },
+                              { value: "Wema Bank", label: "Wema Bank", bankCode: "wema-bank" },
+                              { value: "Polaris Bank", label: "Polaris Bank", bankCode: "polaris-bank" },
+                              { value: "Kuda Bank", label: "Kuda Bank", bankCode: "kuda-bank" },
+                              { value: "VFD Microfinance Bank", label: "VFD Microfinance Bank", bankCode: "vfd" },
+
                             ]}
                           />
+                        </Form.Item>
+
+                        {/* Hidden field to store bank code for Paystack integration */}
+                        <Form.Item name="bankCode" style={{ display: 'none' }}>
+                          <Input type="hidden" />
                         </Form.Item>
 
                         <Form.Item label="Payment Method" name="paymentMethod">

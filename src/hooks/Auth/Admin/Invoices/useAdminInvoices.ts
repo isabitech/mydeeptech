@@ -234,6 +234,113 @@ export const useAdminInvoices = () => {
     return await getAllInvoices(filters);
   }, [getAllInvoices]);
 
+  // Bulk Authorize Payment
+  const bulkAuthorizePayment = useCallback(async (): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data: any = await apiPost(endpoints.adminInvoice.bulkAuthorizePayment, {});
+
+      if (data.success) {
+        // Refresh the invoices after bulk authorization
+        await getAllInvoices();
+        return { 
+          success: true, 
+          data: data.data 
+        };
+      } else {
+        const errorMessage = data.message || "Failed to authorize bulk payments";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [getAllInvoices]);
+
+  // Generate Paystack CSV
+  const generatePaystackCSV = useCallback(async (invoiceIds?: string[] | null): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let url = endpoints.adminInvoice.generatePaystackCSV;
+      
+      // Add invoice IDs as query parameters if provided
+      if (invoiceIds && invoiceIds.length > 0) {
+        const params = new URLSearchParams();
+        invoiceIds.forEach(id => params.append('invoiceIds[]', id));
+        url += `?${params.toString()}`;
+      }
+
+      const data: any = await apiGet(url);
+
+      if (data.success) {
+        return { 
+          success: true, 
+          data: data.data 
+        };
+      } else {
+        const errorMessage = data.message || "Failed to generate Paystack CSV";
+        setError(errorMessage);
+        return { 
+          success: false, 
+          error: errorMessage
+        };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Generate MPESA CSV
+  const generateMpesaCSV = useCallback(async (invoiceIds?: string[] | null): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let url = endpoints.adminInvoice.generateMpesaCSV;
+      
+      // Add invoice IDs as query parameters if provided
+      if (invoiceIds && invoiceIds.length > 0) {
+        const params = new URLSearchParams();
+        invoiceIds.forEach(id => params.append('invoiceIds[]', id));
+        url += `?${params.toString()}`;
+      }
+
+      const data: any = await apiGet(url);
+
+      if (data.success) {
+        return { 
+          success: true, 
+          data: data.data 
+        };
+      } else {
+        const errorMessage = data.message || "Failed to generate MPESA CSV";
+        setError(errorMessage);
+        return { 
+          success: false, 
+          error: errorMessage
+        };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     // State
     loading,
@@ -250,6 +357,9 @@ export const useAdminInvoices = () => {
     sendPaymentReminder,
     deleteInvoice,
     bulkUpdatePaymentStatus,
+    bulkAuthorizePayment,
+    generatePaystackCSV,
+    generateMpesaCSV,
     refreshInvoices,
     
     // State setters for manual control if needed
