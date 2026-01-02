@@ -90,6 +90,9 @@ export const endpoints = {
     updatePaymentStatus: "/admin/invoices",
     sendPaymentReminder: "/admin/invoices",
     deleteInvoice: "/admin/invoices",
+    bulkAuthorizePayment: "/admin/invoices/bulk-authorize-payment",
+    generatePaystackCSV: "/admin/invoices/generate-paystack-csv",
+    generateMpesaCSV: "/admin/invoices/generate-mpesa-csv",
   },
 
   // User invoice endpoints  
