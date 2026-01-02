@@ -290,9 +290,7 @@ export const useAdminInvoices = () => {
         setError(errorMessage);
         return { 
           success: false, 
-          error: errorMessage, 
-          message: data.message,
-          details: data.details
+          error: errorMessage
         };
       }
     } catch (err: any) {
@@ -331,9 +329,7 @@ export const useAdminInvoices = () => {
         setError(errorMessage);
         return { 
           success: false, 
-          error: errorMessage, 
-          message: data.message,
-          details: data.details
+          error: errorMessage
         };
       }
     } catch (err: any) {
