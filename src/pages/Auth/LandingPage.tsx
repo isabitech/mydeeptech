@@ -81,8 +81,8 @@ const LandingPage = () => {
           <nav className={`flex justify-between items-center px-6 py-6 relative z-10 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
           }`}>
-            <div className="h-[50px] transform hover:scale-110 transition-transform duration-300">
-              <img className="h-full rounded-md shadow-lg" src={Logo} alt="MyDeepTech Logo" />
+            <div className="h-[50px] w-auto transform hover:scale-110 transition-transform duration-300">
+              <img className="h-auto w-[65px] rounded-md shadow-lg" src={Logo} alt="MyDeepTech Logo" />
             </div>
             <ul className="flex gap-8 font-medium">
               <li className="cursor-pointer hover:text-[#F6921E] transition-colors duration-300 relative group">

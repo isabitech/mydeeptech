@@ -167,7 +167,7 @@ const AdminSignup: React.FC = () => {
         className="w-full max-w-md"
       >
         <div className=" w-full flex justify-center items-center">
-            <img src={mydeepTechLogo} alt="Logo" className="h-16 w-auto mb-6 rounded-md"/>
+            <img src={mydeepTechLogo} alt="Logo" className="h-26 w-auto mb-6 rounded-md"/>
         </div>
         <Card className="shadow-2xl border-0 font-[gilroy-regular]">
           {currentStep === "signup" ? (

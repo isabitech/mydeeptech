@@ -5,7 +5,7 @@ const Hiring = () => {
     <section className="w-full px-4 py-10 flex flex-col items-center bg-gray-50 font-[gilroy-regular] text-gray-800">
       <div className="h-[50px] mb-4">
         <a href="/">
-          <img className="h-full rounded-md" src={Logo} alt="Logo" />
+          <img className="h-full w-auto rounded-md" src={Logo} alt="Logo" />
         </a>
       </div>
       <div className="max-w-3xl text-center">
