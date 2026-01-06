@@ -120,7 +120,7 @@ const AdminLogin: React.FC = () => {
           <img
             src={mydeepTechLogo}
             alt="Logo"
-            className="h-16 w-auto mb-6 rounded-md"
+            className="h-auto w-[65px] mb-6 rounded-md"
           />
         </div>
         <Card className="shadow-2xl border-0 font-[gilroy-regular]">

@@ -4,7 +4,7 @@ const AboutUs = () => {
   return (
     <div className="min-h-screen px-6 py-10 bg-white text-[#333333] font-[gilroy-regular]">
      <div className="h-[50px]">
-              <a href="/"><img className="h-full rounded-md" src={Logo} alt="Logo" /></a>
+              <a href="/"><img className="h-auto w-[65px] rounded-md" src={Logo} alt="Logo" /></a>
             </div>
       <div className="max-w-5xl mx-auto space-y-12">
         {/* Header */}
