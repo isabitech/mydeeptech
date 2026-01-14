@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpideyAssessment, SpideySession } from '../../hooks/Assessment/useSpideyAssessment';
+import { StartSpideyAssessmentResponseData, StartSpideyAssessmentResponseType } from '../../hooks/Assessment/start-spidey-assessment-response-type';
 import { Stage1Quiz } from './Spidey/Stage1Quiz';
 import { Stage2TaskValidation } from './Spidey/Stage2TaskValidation';
 import { Stage3GoldenSolution } from './Spidey/Stage3GoldenSolution';
@@ -62,7 +63,6 @@ export const SpideyAssessment: React.FC<SpideyAssessmentProps> = ({
     submitStage3,
     submitStage4,
     getAssessmentStatus,
-    autoSaveProgress,
     getAvailableSpideyAssessments,
     startSpideyAssessment
   } = useSpideyAssessment();
@@ -78,19 +78,8 @@ export const SpideyAssessment: React.FC<SpideyAssessmentProps> = ({
     }
   }, [assessmentId]);
 
-  // Auto-save progress every 30 seconds
-  useEffect(() => {
-    if (submissionId && sessionData && ['stage1', 'stage2', 'stage3', 'stage4'].includes(assessmentStatus)) {
-      const interval = setInterval(() => {
-        autoSaveProgress(submissionId, assessmentStatus, { 
-          currentStage: assessmentStatus,
-          timestamp: new Date().toISOString()
-        });
-      }, 30000);
-
-      return () => clearInterval(interval);
-    }
-  }, [submissionId, assessmentStatus, sessionData, autoSaveProgress]);
+  // Auto-save disabled for Spidey assessments - not supported by API
+  // Spidey assessments use discrete stage submissions instead
 
   const loadAssessmentStatus = async () => {
     if (!submissionId) return;
@@ -175,10 +164,36 @@ export const SpideyAssessment: React.FC<SpideyAssessmentProps> = ({
       console.log(result)
       
       if (result.success && result.data) {
-        // Set session data, submissionId, and move to stage 1
-        setSessionData(result.data.sessionData || result.data);
-        setSubmissionId(result.data.submissionId || result.data.id);
-        setAssessmentStatus('stage1');
+        // Handle the nested response structure: result.data.data contains the actual response
+        const apiData = result.data as StartSpideyAssessmentResponseData;
+        
+        
+        // Map the API response to SpideySession format
+        const sessionData: SpideySession = {
+          submissionId: apiData.submissionId,
+          assessmentTitle: apiData.assessmentTitle,
+          currentStage: apiData.currentStage as 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'completed',
+          stage1Config: apiData.currentStage === 'stage1' ? {
+            name: apiData.stageConfig.name,
+            timeLimit: apiData.stageConfig.timeLimit,
+            passingScore: apiData.stageConfig.passingScore,
+            questions: apiData.stageConfig.questions.map(q => ({
+              questionId: q.questionId,
+              questionText: q.questionText,
+              questionType: q.questionType as 'multiple_choice',
+              options: q.options,
+              isCritical: q.isCritical,
+              points: q.points
+            }))
+          } : undefined,
+          instructions: apiData.assessmentInfo?.description || '',
+          sessionId: apiData.submissionId // Using submissionId as sessionId for now
+        };
+        
+        // Set session data and submissionId
+        setSessionData(sessionData);
+        setSubmissionId(apiData.submissionId);
+        setAssessmentStatus(apiData.currentStage as AssessmentStatus);
       } else {
         setAssessmentStatus('failed');
         setFailureReason(result.error || 'Failed to start assessment');
@@ -194,7 +209,10 @@ export const SpideyAssessment: React.FC<SpideyAssessmentProps> = ({
     if (!submissionId) return;
 
     try {
-      const result = await submitStage1(submissionId, { responses, timeSpent });
+      const result = await submitStage1(submissionId, { 
+        submissionData: { responses }, 
+        timeSpent 
+      });
       
       if (result.success) {
         if (result.data?.nextStage) {

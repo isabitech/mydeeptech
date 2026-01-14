@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Radio, Typography, Progress, Alert, Space, Modal } from 'antd';
+import { Card, Button, Radio, Typography, Progress, Alert, Space, Modal, Input } from 'antd';
 import { 
   ExclamationCircleOutlined,
   CheckCircleOutlined,
@@ -56,10 +56,13 @@ export const Stage1Quiz: React.FC<Stage1QuizProps> = ({
   };
 
   const handleNext = () => {
-    if (!responses[currentQuestion.questionId]) {
+    const currentAnswer = responses[currentQuestion.questionId];
+    if (!currentAnswer || (typeof currentAnswer === 'string' && currentAnswer.trim() === '')) {
       Modal.error({
         title: 'Answer Required',
-        content: 'You must select an answer before proceeding.',
+        content: currentQuestion.questionType === 'text_input' 
+          ? 'You must provide a written answer before proceeding.'
+          : 'You must select an answer before proceeding.',
         className: 'font-[gilroy-regular]'
       });
       return;
@@ -106,6 +109,62 @@ export const Stage1Quiz: React.FC<Stage1QuizProps> = ({
     return stage1Config.questions
       .filter(q => !responses[q.questionId])
       .map(q => q.questionId);
+  };
+
+  // Helper function to convert option index to letter (a, b, c, d)
+  const getOptionLetter = (index: number): string => {
+    return String.fromCharCode(97 + index); // 97 is 'a' in ASCII
+  };
+
+  // Render different question types
+  const renderQuestionInput = () => {
+    if (currentQuestion.questionType === 'text_input') {
+      return (
+        <div className="space-y-3">
+          <Input.TextArea
+            value={responses[currentQuestion.questionId] || ''}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            placeholder="Enter your answer here..."
+            rows={4}
+            className="font-[gilroy-regular]"
+            maxLength={1000}
+          />
+          <div className="text-right">
+            <Text className="text-gray-500 text-xs font-[gilroy-regular]">
+              {(responses[currentQuestion.questionId] || '').length}/1000 characters
+            </Text>
+          </div>
+        </div>
+      );
+    } else if (currentQuestion.questionType === 'multiple_choice') {
+      return (
+        <div className="space-y-3">
+          <Radio.Group
+            value={responses[currentQuestion.questionId]}
+            onChange={(e) => handleAnswerChange(e.target.value)}
+            className="w-full"
+          >
+            <div className="space-y-2">
+              {currentQuestion.options.map((option, index) => (
+                <Radio
+                  key={option.optionId}
+                  value={option.optionId}
+                  className="w-full font-[gilroy-regular]"
+                >
+                  <div className="flex items-center p-3 bg-white border rounded hover:bg-blue-50 transition-colors">
+                    <span className="font-semibold mr-2 text-blue-600">
+                      {getOptionLetter(index).toUpperCase()}.
+                    </span>
+                    <span className="flex-1">{option.optionText}</span>
+                  </div>
+                </Radio>
+              ))}
+            </div>
+          </Radio.Group>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -198,30 +257,9 @@ export const Stage1Quiz: React.FC<Stage1QuizProps> = ({
                 </Title>
               </div>
 
-              {/* Answer Options */}
+              {/* Answer Input */}
               <div className="space-y-3">
-                <Radio.Group
-                  value={responses[currentQuestion.questionId]}
-                  onChange={(e) => handleAnswerChange(e.target.value)}
-                  className="w-full"
-                >
-                  <div className="space-y-2">
-                    {currentQuestion.options.map((option) => (
-                      <Radio
-                        key={option.optionId}
-                        value={option.optionId}
-                        className="w-full font-[gilroy-regular]"
-                      >
-                        <div className="flex items-center p-3 bg-white border rounded hover:bg-blue-50 transition-colors">
-                          <span className="font-semibold mr-2 text-blue-600">
-                            {option.optionId}.
-                          </span>
-                          <span className="flex-1">{option.optionText}</span>
-                        </div>
-                      </Radio>
-                    ))}
-                  </div>
-                </Radio.Group>
+                {renderQuestionInput()}
               </div>
 
               {/* Navigation */}
@@ -235,17 +273,23 @@ export const Stage1Quiz: React.FC<Stage1QuizProps> = ({
                 </Button>
 
                 <div className="flex items-center gap-4">
-                  {!responses[currentQuestion.questionId] && (
+                  {(!responses[currentQuestion.questionId] || 
+                    (typeof responses[currentQuestion.questionId] === 'string' && 
+                     responses[currentQuestion.questionId].trim() === '')) && (
                     <Text className="text-red-500 font-[gilroy-regular] text-sm">
                       <ExclamationCircleOutlined className="mr-1" />
-                      Please select an answer
+                      {currentQuestion.questionType === 'text_input' 
+                        ? 'Please provide a written answer'
+                        : 'Please select an answer'}
                     </Text>
                   )}
                   
                   <Button
                     type="primary"
                     onClick={handleNext}
-                    disabled={!responses[currentQuestion.questionId]}
+                    disabled={!responses[currentQuestion.questionId] || 
+                             (typeof responses[currentQuestion.questionId] === 'string' && 
+                              responses[currentQuestion.questionId].trim() === '')}
                     className="bg-blue-500 border-blue-500 hover:bg-blue-600 font-[gilroy-regular] font-semibold"
                   >
                     {isLastQuestion ? 'Review & Submit' : 'Next Question'}
