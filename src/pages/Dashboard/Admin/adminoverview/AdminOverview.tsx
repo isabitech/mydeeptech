@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Button, Spin, Alert } from "antd";
 import { PlusSquareOutlined, ReloadOutlined } from "@ant-design/icons";
 import { motion } from 'framer-motion';
@@ -12,12 +12,12 @@ import RecentActivitiesComponent from "./components/RecentActivitiesComponent";
 
 const AdminOverview = () => {
   const navigate = useNavigate();
-  const { 
-    loading, 
-    error, 
-    dashboardData, 
-    getDashboardData, 
-    refreshDashboard 
+  const {
+    loading,
+    error,
+    dashboardData,
+    getDashboardData,
+    refreshDashboard
   } = useAdminDashboard();
 
   useEffect(() => {
@@ -55,24 +55,23 @@ const AdminOverview = () => {
         transition={{ duration: 0.6 }}
         className=""
       >
-        <Header title="Admin Overview" />
       </motion.div>
-        <div className="flex gap-2">
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={handleRefresh}
-            loading={loading}
-          >
-            Refresh
-          </Button>
-          <Button 
-            type="primary"
-            icon={<PlusSquareOutlined />}
-            onClick={() => navigate("/admin/projects")}
-          >
-            New Project
-          </Button>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={handleRefresh}
+          loading={loading}
+        >
+          Refresh
+        </Button>
+        <Button
+          type="primary"
+          icon={<PlusSquareOutlined />}
+          onClick={() => navigate("/admin/projects")}
+        >
+          New Project
+        </Button>
+      </div>
 
       {/* Content */}
       <Spin spinning={loading} tip="Loading dashboard data...">
@@ -105,7 +104,7 @@ const AdminOverview = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.6 }}
               >
-                <ProjectFinancialCharts 
+                <ProjectFinancialCharts
                   projectData={dashboardData.projectStatistics}
                   invoiceData={dashboardData.invoiceStatistics}
                   trendsData={dashboardData.trends}
@@ -120,7 +119,7 @@ const AdminOverview = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8, duration: 0.6 }}
               >
-                <RecentActivitiesComponent 
+                <RecentActivitiesComponent
                   recentData={dashboardData.recentActivities}
                   topPerformers={dashboardData.topPerformers}
                 />
@@ -144,7 +143,7 @@ const AdminOverview = () => {
                     <div>Approval Rate: {dashboardData.insights.conversionRates.approvalRate}%</div>
                   </div>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-2">Financial Health</h3>
                   <div className="space-y-2 text-sm">
@@ -153,7 +152,7 @@ const AdminOverview = () => {
                     <div>Outstanding: ${dashboardData.insights.financialHealth.outstandingBalance.toLocaleString()}</div>
                   </div>
                 </div>
-                
+
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-2">Top Domains</h3>
                   <div className="space-y-2 text-sm">

@@ -14,10 +14,10 @@ export const endpoints = {
     resetPassword: "/auth/dtUserResetPassword",
     forgotPassword: "/auth/dtuser-forgot-password",
     resetPasswordWithToken: "/auth/dtuser-reset-password",
-    verifyResetToken: "/auth/verify-reset-token"
+    verifyResetToken: "/auth/verify-reset-token",
   },
 
-  profileDT:{
+  profileDT: {
     getProfile: "/auth/dtUserProfile",
     updateProfile: "/auth/dtUserProfile",
     uploadResume: "/auth/upload-resume",
@@ -31,7 +31,7 @@ export const endpoints = {
 
   userStatus: {
     updateUserStatus: "/auth/Dtuserstatusupdate",
-    getSingleUser: "/auth/DTsingleuser"
+    getSingleUser: "/auth/DTsingleuser",
   },
 
   // admin authentication
@@ -40,8 +40,6 @@ export const endpoints = {
     verifyOTP: "/admin/verify-otp",
     login: "/admin/login",
   },
-
-
 
   // admin management
   project: {
@@ -68,18 +66,18 @@ export const endpoints = {
     getRemovableApplicants: "/admin/projects", // /:projectId/removable-applicants
   },
 
-  // User project endpoints  
+  // User project endpoints
   userProject: {
     projects: "/auth/projects", // New unified endpoint that supports view and status parameters
-    browseProjects: "/auth/projects", // Legacy endpoint for backward compatibility  
+    browseProjects: "/auth/projects", // Legacy endpoint for backward compatibility
     applyToProject: "/auth/projects",
     getActiveProjects: "/auth/activeProjects", // Legacy endpoint
   },
 
-  adminActions:{
+  adminActions: {
     getAllDTUsers: "/admin/dtusers",
     updateUserStatus: "/admin/dtusers",
-    getAdminUsers: "/admin/admin-users"
+    getAdminUsers: "/admin/admin-users",
   },
 
   // Admin invoice management endpoints
@@ -95,7 +93,7 @@ export const endpoints = {
     generateMpesaCSV: "/admin/invoices/generate-mpesa-csv",
   },
 
-  // User invoice endpoints  
+  // User invoice endpoints
   userInvoice: {
     getUserInvoices: "/auth/invoices",
     getUnpaidInvoices: "/auth/invoices/unpaid",
@@ -103,7 +101,6 @@ export const endpoints = {
     getInvoiceDashboard: "/auth/invoices/dashboard",
     getInvoiceDetails: "/auth/invoices",
   },
-
 
   tasks: {
     createTask: "/auth/createTasks",
@@ -162,6 +159,6 @@ export const endpoints = {
       getStats: "/chat/admin/stats",
       assignAgent: "/chat/admin/assign",
       getChatDetails: "/chat/admin",
-    }
+    },
   },
 };

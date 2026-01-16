@@ -51,8 +51,8 @@ import CustomerService from "./components/CustomerService";
 import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
 import MultimediaAssessmentDemo from "./components/Assessment/MultimediaAssessmentDemo";
 import AssessmentSession from "./components/Assessment/AssessmentSession";
-import {QAReviewDashboard} from "./components/Assessment/QAReviewDashboard";
-import {AdminReelAssessmentManager} from "./components/Assessment/AdminAssessmentManager";
+import { QAReviewDashboard } from "./components/Assessment/QAReviewDashboard";
+import { AdminReelAssessmentManager } from "./components/Assessment/AdminAssessmentManager";
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
@@ -61,10 +61,10 @@ const AppRoutes = () => {
   return (
     <Router>
       <CustomerService />
-      <Toaster 
-        position="top-right" 
-        richColors 
-        closeButton 
+      <Toaster
+        position="top-right"
+        richColors
+        closeButton
         expand={true}
         duration={4000}
       />
@@ -82,8 +82,8 @@ const AppRoutes = () => {
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/new-projects" element={<NewProjects />} />
         {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
-        <Route path="/careers" element={<Hiring/>} />
-        <Route path="/careers/math-ai-trainer" element={<MathTalent/>} />
+        <Route path="/careers" element={<Hiring />} />
+        <Route path="/careers/math-ai-trainer" element={<MathTalent />} />
         <Route path="/demo/multimedia-assessment" element={<MultimediaAssessmentDemo />} />
         <Route path="/video-test" element={<VideoTest />} />
 
@@ -109,8 +109,6 @@ const AppRoutes = () => {
           <Route path="qa-review" element={<QAReviewDashboard />} />
           <Route path="assessments" element={<AssessmentList />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
-
-
         </Route>
 
         {/* Admin auth */}
@@ -118,24 +116,24 @@ const AppRoutes = () => {
         <Route path="/auth/admin-signup" element={<AdminSignup />} />
         <Route path="/auth/admin-login" element={<AdminLogin />} />
 
-          {/* Admin Dashboard */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="overview" index element={<AdminOverview />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="annotators" element={<Annotators />} />
-            <Route path="assessments" element={<AssessmentManagementList />} />
-            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
-            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
-            <Route path="projects" element={<ProjectManagement />} />
-            <Route path="applications" element={<ApplicationManagement />} />
-            <Route path="jobs" element={<JobManagement />} />
-            <Route path="tasks" element={<TaskManagement />} />
-            <Route path="invoices" element={<InvoiceManagement />} />
-            <Route path="payments" element={<PaymentManagement />} />
-            <Route path="notifications" element={<NotificationManagement />} />
-            <Route path="chat" element={<ChatManagement />} />
-            <Route path="settings" element={<SettingsMgt />} />
-          </Route>
+        {/* Admin Dashboard */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="overview" index element={<AdminOverview />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="annotators" element={<Annotators />} />
+          <Route path="assessments" element={<AssessmentManagementList />} />
+          <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+          <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
+          <Route path="projects" element={<ProjectManagement />} />
+          <Route path="applications" element={<ApplicationManagement />} />
+          <Route path="jobs" element={<JobManagement />} />
+          <Route path="tasks" element={<TaskManagement />} />
+          <Route path="invoices" element={<InvoiceManagement />} />
+          <Route path="payments" element={<PaymentManagement />} />
+          <Route path="notifications" element={<NotificationManagement />} />
+          <Route path="chat" element={<ChatManagement />} />
+          <Route path="settings" element={<SettingsMgt />} />
+        </Route>
 
         {/* Redirect unmatched routes */}
         <Route path="*" element={<Navigate to="/" replace />} />

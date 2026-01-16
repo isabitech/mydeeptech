@@ -116,12 +116,9 @@ const AdminLogin: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className=" w-full flex justify-center items-center">
-          <img
-            src={mydeepTechLogo}
-            alt="Logo"
-            className="h-auto w-[65px] mb-6 rounded-md"
-          />
+
+        <div className="flex justify-center items-center w-28 mx-auto">
+          <img src={mydeepTechLogo} alt="Logo" className="h-full w-full mb-6 rounded-md" />
         </div>
         <Card className="shadow-2xl border-0 font-[gilroy-regular]">
           <div className="text-center mb-6">

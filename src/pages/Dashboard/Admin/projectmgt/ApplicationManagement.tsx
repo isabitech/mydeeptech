@@ -16,6 +16,7 @@ import {
   Popconfirm,
   Dropdown,
   Menu,
+  TableColumnsType,
 } from "antd";
 import {
   EyeOutlined,
@@ -50,6 +51,7 @@ import {
 } from "../../../../types/project.types";
 import PageModal from "../../../../components/Modal/PageModal";
 
+
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -59,6 +61,8 @@ const REJECTION_REASONS: { value: RejectionReason; label: string }[] = [
   { value: "qualifications_mismatch", label: "Qualifications Mismatch" },
   { value: "other", label: "Other" },
 ];
+
+
 
 const ApplicationManagement: React.FC = () => {
   // Initialize PDF viewer plugin
@@ -210,10 +214,12 @@ const ApplicationManagement: React.FC = () => {
     }
   };
 
-  const columns = [
+  const columns: TableColumnsType<Application> = [
     {
       title: "Applicant",
       key: "applicant",
+      width: 200,
+      // fixed: 'left' as any,
       render: (record: Application) => (
         <div>
           <div className="font-medium">
@@ -232,6 +238,7 @@ const ApplicationManagement: React.FC = () => {
     {
       title: "Project",
       key: "project",
+      width: 200,
       render: (record: Application) => (
         <div>
           <div className="font-medium">
@@ -317,6 +324,8 @@ const ApplicationManagement: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
+      // fixed: 'right' as any,
+      width: 100,
       render: (_: any, record: Application) => (
         <Dropdown
           overlay={
@@ -374,6 +383,8 @@ const ApplicationManagement: React.FC = () => {
     },
   ];
 
+
+
   if (error) {
     return (
       <div className="p-4">
@@ -400,12 +411,12 @@ const ApplicationManagement: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Application Management" />
+    <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
+      {/* <Header title="Application Management" /> */}
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -492,6 +503,7 @@ const ApplicationManagement: React.FC = () => {
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,
             total: pagination?.totalApplications || 0,
+            position: ["bottomCenter"],
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
@@ -514,7 +526,8 @@ const ApplicationManagement: React.FC = () => {
               });
             },
           }}
-          scroll={{ x: 1200 }}
+          // scroll={{ x: 500 }}
+          scroll={{ x: 'max-content' }}
         />
       </Spin>
 
@@ -537,8 +550,8 @@ const ApplicationManagement: React.FC = () => {
                   selectedApplication.status === "pending"
                     ? "orange"
                     : selectedApplication.status === "approved"
-                    ? "green"
-                    : "red"
+                      ? "green"
+                      : "red"
                 }
               >
                 {selectedApplication.status.toUpperCase()}
@@ -559,14 +572,14 @@ const ApplicationManagement: React.FC = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Skills" span={2}>
                   {typeof selectedApplication.applicantId === "object" &&
-                  selectedApplication.applicantId.skills
+                    selectedApplication.applicantId.skills
                     ? selectedApplication.applicantId.skills.map(
-                        (skill, index) => (
-                          <Tag key={index} color="blue">
-                            {skill}
-                          </Tag>
-                        )
+                      (skill, index) => (
+                        <Tag key={index} color="blue">
+                          {skill}
+                        </Tag>
                       )
+                    )
                     : "No skills listed"}
                 </Descriptions.Item>
               </Descriptions>

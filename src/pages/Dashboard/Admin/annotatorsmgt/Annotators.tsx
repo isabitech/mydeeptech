@@ -55,13 +55,13 @@ const Annotators = () => {
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
       {/* Header Component */}
-      <Header title="Annotators Management" />
-      
-      <div className="p-6">
-        <div className="bg-white rounded-lg shadow-sm">
+      {/* <Header title="Annotators Management" /> */}
+
+      <div className=" w-full">
+        <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Annotators Management</h1>
-            
+
             {/* Tabs for different annotator views */}
             <Tabs
               activeKey={activeTab}
@@ -69,13 +69,13 @@ const Annotators = () => {
               className="w-full"
               tabBarStyle={{ borderBottom: "1px solid #e5e7eb" }}
             >
-              <TabPane 
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>All Annotators</span>
-                    <Badge 
-                      count={counts.total} 
-                      style={{ 
+                    <Badge
+                      count={counts.total}
+                      style={{
                         backgroundColor: '#1890ff',
                         color: 'white',
                         fontSize: '12px',
@@ -84,24 +84,24 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="1"
               >
                 <div className="pt-4">
                   <AllAnnotators />
                 </div>
               </TabPane>
-              
-              <TabPane 
+
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>Approved Annotators</span>
-                    <Badge 
-                      count={counts.approved} 
-                      style={{ 
+                    <Badge
+                      count={counts.approved}
+                      style={{
                         backgroundColor: '#52c41a',
                         color: 'white',
                         fontSize: '12px',
@@ -110,24 +110,24 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="2"
               >
                 <div className="pt-4">
                   <ApprovedAnnotators />
                 </div>
               </TabPane>
-              
-              <TabPane 
+
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>MicroTasker</span>
-                    <Badge 
-                      count={counts.microtasker} 
-                      style={{ 
+                    <Badge
+                      count={counts.microtasker}
+                      style={{
                         backgroundColor: '#722ed1',
                         color: 'white',
                         fontSize: '12px',
@@ -136,10 +136,10 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="3"
               >
                 <div className="pt-4">
@@ -147,13 +147,13 @@ const Annotators = () => {
                 </div>
               </TabPane>
 
-              <TabPane 
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>QA Annotators</span>
-                    <Badge 
-                      count={counts.qa} 
-                      style={{ 
+                    <Badge
+                      count={counts.qa}
+                      style={{
                         backgroundColor: '#1890ff',
                         color: 'white',
                         fontSize: '12px',
@@ -162,10 +162,10 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="4"
               >
                 <div className="pt-4">
@@ -173,13 +173,13 @@ const Annotators = () => {
                 </div>
               </TabPane>
 
-              <TabPane 
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>Pending Annotators</span>
-                    <Badge 
-                      count={counts.pending} 
-                      style={{ 
+                    <Badge
+                      count={counts.pending}
+                      style={{
                         backgroundColor: '#fa8c16',
                         color: 'white',
                         fontSize: '12px',
@@ -188,24 +188,24 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="5"
               >
                 <div className="pt-4">
                   <PendingAnnotators />
                 </div>
               </TabPane>
-              
-              <TabPane 
+
+              <TabPane
                 tab={
                   <div className="flex items-center gap-2">
                     <span>Submitted Annotators</span>
-                    <Badge 
-                      count={counts.submitted} 
-                      style={{ 
+                    <Badge
+                      count={counts.submitted}
+                      style={{
                         backgroundColor: '#13c2c2',
                         color: 'white',
                         fontSize: '12px',
@@ -214,10 +214,10 @@ const Annotators = () => {
                         lineHeight: '20px',
                         padding: '0 6px',
                         borderRadius: '10px'
-                      }} 
+                      }}
                     />
                   </div>
-                } 
+                }
                 key="6"
               >
                 <div className="pt-4">

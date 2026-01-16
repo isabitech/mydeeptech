@@ -1,5 +1,5 @@
 import Sidebar from "./Sidebar";
-import { Outlet} from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { retrieveTokenFromStorage } from "../../../helpers";
 import { useState, useEffect } from "react";
 
@@ -28,7 +28,7 @@ const DashboardLayout = () => {
       <div className="flex-1 bg-gray-100 p-6 overflow-y-auto">
         <Outlet />
       </div>
-      
+
     </div>
   );
 };

@@ -72,7 +72,7 @@ const AllAnnotators = () => {
   // Debounced search for real-time typing
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
-    
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -133,9 +133,9 @@ const AllAnnotators = () => {
 
     try {
       const status = 'approve';
-      const result = await approveUser({ 
-        userId: selectedAnnotator._id, 
-        status 
+      const result = await approveUser({
+        userId: selectedAnnotator._id,
+        status
       });
 
       if (result.success) {
@@ -177,9 +177,9 @@ const AllAnnotators = () => {
 
     try {
       const status = 'reject';
-      const result = await approveUser({ 
-        userId: selectedAnnotator._id, 
-        status 
+      const result = await approveUser({
+        userId: selectedAnnotator._id,
+        status
       });
 
       if (result.success) {
@@ -405,35 +405,35 @@ const AllAnnotators = () => {
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
-        title: "Assessment Result",
-        dataIndex: "resultLink",
-        key: "resultLink",
-        render: (link: string, record: DTUser) => (
-          link ? 
-            <Button 
-              type="link" 
-              icon={<FileImageOutlined />}
-              onClick={() => handleViewResult(record)}
-            >
-              View Result
-            </Button> 
-            : "No Result"
-        )
+      title: "Assessment Result",
+      dataIndex: "resultLink",
+      key: "resultLink",
+      render: (link: string, record: DTUser) => (
+        link ?
+          <Button
+            type="link"
+            icon={<FileImageOutlined />}
+            onClick={() => handleViewResult(record)}
+          >
+            View Result
+          </Button>
+          : "No Result"
+      )
     },
     {
-        title: "Action",
-        key: "action",
-        render: (_: any, record: DTUser) => (
-          <Space size="middle">
-            <Button 
-              type="primary" 
-              icon={<EyeOutlined />}
-              onClick={() => handleViewDetails(record)}
-            >
-              View Details
-            </Button>
-          </Space>
-        ),
+      title: "Action",
+      key: "action",
+      render: (_: any, record: DTUser) => (
+        <Space size="middle">
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewDetails(record)}
+          >
+            View Details
+          </Button>
+        </Space>
+      ),
     }
   ];
 
@@ -472,7 +472,7 @@ const AllAnnotators = () => {
             style={{ width: 300 }}
             prefix={<SearchOutlined />}
           />
-          
+
           <Select
             value={statusFilter}
             onChange={handleStatusFilter}
@@ -484,9 +484,9 @@ const AllAnnotators = () => {
             <Option value="rejected">Rejected</Option>
             <Option value="submitted">Submitted</Option>
           </Select>
-          
-          <Button 
-            icon={<ReloadOutlined />} 
+
+          <Button
+            icon={<ReloadOutlined />}
             onClick={handleRefresh}
             loading={loading}
           >
@@ -506,7 +506,8 @@ const AllAnnotators = () => {
             total: pagination?.totalUsers || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            position: ['bottomCenter'],
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} items`,
             onChange: (page, size) => {
               setCurrentPage(page);
@@ -532,16 +533,16 @@ const AllAnnotators = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">Annotator Details</h2>
               <div className="flex gap-2">
-                <Tag color={selectedAnnotator.annotatorStatus === 'approved' ? 'green' : 
-                           selectedAnnotator.annotatorStatus === 'pending' ? 'orange' : 'red'}>
+                <Tag color={selectedAnnotator.annotatorStatus === 'approved' ? 'green' :
+                  selectedAnnotator.annotatorStatus === 'pending' ? 'orange' : 'red'}>
                   Annotator: {selectedAnnotator.annotatorStatus?.toUpperCase()}
                 </Tag>
-                <Tag color={selectedAnnotator.microTaskerStatus === 'approved' ? 'green' : 
-                           selectedAnnotator.microTaskerStatus === 'pending' ? 'orange' : 'red'}>
+                <Tag color={selectedAnnotator.microTaskerStatus === 'approved' ? 'green' :
+                  selectedAnnotator.microTaskerStatus === 'pending' ? 'orange' : 'red'}>
                   MicroTasker: {selectedAnnotator.microTaskerStatus?.toUpperCase()}
                 </Tag>
-                <Tag color={selectedAnnotator.qaStatus === 'approved' ? 'green' : 
-                           selectedAnnotator.qaStatus === 'pending' ? 'orange' : 'red'}>
+                <Tag color={selectedAnnotator.qaStatus === 'approved' ? 'green' :
+                  selectedAnnotator.qaStatus === 'pending' ? 'orange' : 'red'}>
                   QA: {selectedAnnotator.qaStatus?.toUpperCase() || 'PENDING'}
                 </Tag>
               </div>
@@ -694,7 +695,7 @@ const AllAnnotators = () => {
                     Reject Annotator
                   </Button>
                 </Space>
-                
+
                 <Space>
                   {selectedAnnotator.qaStatus !== 'approved' ? (
                     <Button

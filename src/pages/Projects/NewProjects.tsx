@@ -44,7 +44,6 @@ const NewProjects = () => {
   // const [applied, setApplied] = useState<number | null>(null);
 
   const [open, setOpen] = useState<number | null>(null);
-
   const [openModal, setOpenModal] = useState(false);
 
   // const handleApply = (id: number) => {
@@ -83,11 +82,10 @@ const NewProjects = () => {
                     <CheckCircleOutlined className="text-green-500" />
                     Status:{" "}
                     <span
-                      className={`font-semibold ${
-                        project.status === "Active"
-                          ? "text-green-600"
-                          : "text-gray-500"
-                      }`}
+                      className={`font-semibold ${project.status === "Active"
+                        ? "text-green-600"
+                        : "text-gray-500"
+                        }`}
                     >
                       {project.status}
                     </span>
@@ -110,11 +108,10 @@ const NewProjects = () => {
                       Read More
                     </p>
                     <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                        open === project.id
-                          ? "max-h-40 opacity-100 mt-2"
-                          : "max-h-0 opacity-0"
-                      } p-4 bg-gray-100 rounded-md`}
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${open === project.id
+                        ? "max-h-40 opacity-100 mt-2"
+                        : "max-h-0 opacity-0"
+                        } p-4 bg-gray-100 rounded-md`}
                       style={{
                         transitionProperty: "max-height, opacity, margin-top",
                       }}
@@ -128,20 +125,17 @@ const NewProjects = () => {
               </div>
 
               <div className="mt-4 md:mt-0">
-                  <Button
-                  onClick={()=> setOpenModal(!openModal)}
-                    disabled={project.status !== "Active"}
-                    className={`!rounded-md !h-10 !px-5 !font-[gilroy-regular] ${
-                      project.status !== "Active" && "!bg-gray-300"
-                    } ${
-                      project.status === "Active"
-                        ? "!bg-green-600 !text-white"
-                        : "!bg-[#333333] !text-white"
+                <Button
+                  onClick={() => setOpenModal(!openModal)}
+                  disabled={project.status !== "Active"}
+                  className={`!rounded-md !h-10 !px-5 !font-[gilroy-regular] ${project.status !== "Active" && "!bg-gray-300"
+                    } ${project.status === "Active"
+                      ? "!bg-green-600 !text-white"
+                      : "!bg-[#333333] !text-white"
                     }`}
-                  >
-                    {project.status === "Active" ? "Join Now" : "Coming Soon"}
-                  </Button>
-               
+                >
+                  {project.status === "Active" ? "Join Now" : "Coming Soon"}
+                </Button>
               </div>
             </div>
           ))}

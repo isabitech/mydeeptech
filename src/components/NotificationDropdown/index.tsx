@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { 
-  Dropdown, 
-  Badge, 
-  Button, 
-  List, 
-  Typography, 
-  Empty, 
-  Spin, 
+import {
+  Dropdown,
+  Badge,
+  Button,
+  List,
+  Typography,
+  Empty,
+  Spin,
   Divider,
   Avatar,
   Space,
   Tag
 } from "antd";
 import { toast } from 'sonner';
-import { 
-  BellOutlined, 
-  CheckOutlined, 
+import {
+  BellOutlined,
+  CheckOutlined,
   DeleteOutlined,
   ExclamationCircleOutlined,
   InfoCircleOutlined,
@@ -77,7 +77,7 @@ const NotificationDropdown: React.FC = () => {
   const getPriorityColor = (priority: Priority) => {
     const colorMap = {
       high: "#ff4d4f",
-      medium: "#fa8c16", 
+      medium: "#fa8c16",
       low: "#52c41a",
     };
     return colorMap[priority];
@@ -148,16 +148,16 @@ const NotificationDropdown: React.FC = () => {
     if (notification.actionUrl) {
       window.location.href = notification.actionUrl;
     }
-    
+
     setDropdownOpen(false);
   };
 
   const dropdownContent = (
     <div style={{ width: 380, maxHeight: 500, overflow: 'hidden' }}>
       {/* Header */}
-      <div 
-        style={{ 
-          padding: '12px 16px', 
+      <div
+        style={{
+          padding: '12px 16px',
           borderBottom: '1px solid #f0f0f0',
           display: 'flex',
           justifyContent: 'space-between',
@@ -166,9 +166,9 @@ const NotificationDropdown: React.FC = () => {
       >
         <Text strong>Notifications</Text>
         {summary && summary.unreadCount > 0 && (
-          <Button 
-            type="link" 
-            size="small" 
+          <Button
+            type="link"
+            size="small"
             onClick={handleMarkAllAsRead}
             style={{ padding: 0 }}
           >
@@ -185,7 +185,7 @@ const NotificationDropdown: React.FC = () => {
           </div>
         ) : notifications.length === 0 ? (
           <div style={{ padding: '20px' }}>
-            <Empty 
+            <Empty
               description="No notifications"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
@@ -233,7 +233,7 @@ const NotificationDropdown: React.FC = () => {
                   avatar={
                     <Avatar
                       icon={getNotificationIcon(notification.type)}
-                      style={{ 
+                      style={{
                         backgroundColor: getNotificationColor(notification.type),
                         color: '#ffffff'
                       }}
@@ -242,9 +242,9 @@ const NotificationDropdown: React.FC = () => {
                   }
                   title={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Text 
-                        strong={!notification.isRead} 
-                        style={{ 
+                      <Text
+                        strong={!notification.isRead}
+                        style={{
                           fontSize: '14px',
                           lineHeight: '1.4',
                           marginBottom: '4px'
@@ -254,8 +254,8 @@ const NotificationDropdown: React.FC = () => {
                       </Text>
                       <Tag
                         color={getPriorityColor(notification.priority)}
-                        style={{ 
-                          fontSize: '11px', 
+                        style={{
+                          fontSize: '11px',
                           lineHeight: '16px',
                           marginLeft: '8px',
                           flexShrink: 0
@@ -267,9 +267,9 @@ const NotificationDropdown: React.FC = () => {
                   }
                   description={
                     <div>
-                      <Text 
-                        type="secondary" 
-                        style={{ 
+                      <Text
+                        type="secondary"
+                        style={{
                           fontSize: '12px',
                           lineHeight: '1.4',
                           display: 'block',
@@ -278,8 +278,8 @@ const NotificationDropdown: React.FC = () => {
                       >
                         {notification.message}
                       </Text>
-                      <Text 
-                        type="secondary" 
+                      <Text
+                        type="secondary"
                         style={{ fontSize: '11px' }}
                       >
                         {dayjs(notification.createdAt).fromNow()}
@@ -297,8 +297,8 @@ const NotificationDropdown: React.FC = () => {
       {notifications.length > 0 && (
         <>
           <Divider style={{ margin: 0 }} />
-          <div 
-            style={{ 
+          <div
+            style={{
               padding: '8px 16px',
               textAlign: 'center'
             }}
@@ -324,18 +324,19 @@ const NotificationDropdown: React.FC = () => {
     <Dropdown
       overlay={dropdownContent}
       trigger={['click']}
-      placement="bottomRight"
+      placement="topCenter"
       open={dropdownOpen}
       onOpenChange={setDropdownOpen}
-      overlayStyle={{ 
+      overlayStyle={{
         boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.08)',
-        borderRadius: '8px'
+        borderRadius: '8px',
+        backgroundColor: '#ffffff',
       }}
     >
-      <Badge 
-        count={summary?.unreadCount || 0} 
+      <Badge
+        count={summary?.unreadCount || 0}
         size="small"
-        style={{ 
+        style={{
           backgroundColor: '#ff4d4f',
           fontSize: '10px'
         }}

@@ -40,7 +40,7 @@ const Welcome = () => {
             <Link to={"/dashboard/assessment"}>
               <Button
                 className="!font-[gilroy-regular] !bg-secondary !border-none  !text-[#FFFFFF]  !flex !h-10 !items-center !justify-center !rounded-xl hover:!bg-[#393735] hover:!text-secondary"
-                // onClick={openDashboard}
+              // onClick={openDashboard}
               >
                 Take Assesment
               </Button>
@@ -50,7 +50,7 @@ const Welcome = () => {
       </div>
     );
   }
-   if (
+  if (
     (userInfo?.annotatorStatus === "submitted" &&
       userInfo?.microTaskerStatus === "pending") ||
     resultSubmitted
