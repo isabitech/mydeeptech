@@ -1,46 +1,46 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import { useLogin } from "../../hooks/Auth/useLogin";
 
 const Login = () => {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const { login, loading, error } = useLogin();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Enter a valid email address";
     }
-    
+
     if (!formData.password) {
       newErrors.password = "Password is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     const result = await login(formData);
-    
+
     if (!result.success) {
       // Error is already handled by the hook
       console.error("Login failed:", result.error);
@@ -71,9 +71,9 @@ const Login = () => {
               <div className="absolute top-0 left-0 w-72 h-72 bg-white rounded-full -translate-x-36 -translate-y-36"></div>
               <div className="absolute bottom-0 right-0 w-72 h-72 bg-white rounded-full translate-x-36 translate-y-36"></div>
             </div>
-            
+
             <div className="relative z-10">
-              <motion.h1 
+              <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
@@ -81,8 +81,23 @@ const Login = () => {
               >
                 Welcome Back to MyDeepTech
               </motion.h1>
-              
-              <motion.p 
+
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+                className="mb-8"
+              >
+                <Link
+                  to="/"
+                  className="inline-flex items-center text-orange-100 hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Link>
+              </motion.div>
+
+              <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
@@ -90,7 +105,7 @@ const Login = () => {
               >
                 Continue your AI training journey
               </motion.p>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -110,8 +125,8 @@ const Login = () => {
                   <span>Track your progress</span>
                 </div>
               </motion.div>
-              
-              <motion.p 
+
+              <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
@@ -175,9 +190,8 @@ const Login = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className={`w-full rounded-lg border ${
-                    errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-secondary'
-                  } px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors`}
+                  className={`w-full rounded-lg border ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-secondary'
+                    } px-4 py-3 focus:outline-none focus:ring-2 focus:border-transparent transition-colors`}
                   placeholder="Enter your email address"
                 />
                 {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
@@ -194,9 +208,8 @@ const Login = () => {
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    className={`w-full rounded-lg border ${
-                      errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-secondary'
-                    } px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:border-transparent transition-colors`}
+                    className={`w-full rounded-lg border ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-secondary'
+                      } px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:border-transparent transition-colors`}
                     placeholder="Enter your password"
                   />
                   <button

@@ -15,10 +15,12 @@ import {
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
-import { Button } from "antd";
+import { Button, Drawer } from "antd";
+import { useSidebarContext } from "./_context/SidebarContext";
 
-const AdminSidebar = () => {
-  const [openModal, setOpenModal] = useState(false);
+
+const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; handleLogOutModal: () => void }) => {
+  const { handleCloseSidebar } = useSidebarContext();
 
   const menuItems = [
     {
@@ -51,7 +53,7 @@ const AdminSidebar = () => {
       icon: <InboxOutlined />,
       path: "/applications",
     },
-    
+
     // {
     //   key: "jobs",
     //   label: "Jobs",
@@ -107,22 +109,18 @@ const AdminSidebar = () => {
     // { key: "logout", label: "Logout", icon: <LogoutOutlined />, path: "" }, // Example logout redirection
   ];
 
-  const handleLogOutModal = () => {
-    setOpenModal(!openModal);
-  };
-
-  const navigate = useNavigate()
 
   return (
-    <div className="h-full font-[gilroy-regular] bg-primary text-white w-[250px] flex flex-col">
-      {/* Logo */}
-      <div className="p-4 text-center flex gap-2 items-center font-bold text-xl border-b border-gray-700">
-        <div className="h-[70%]">
-          <img className="h-full rounded-md" src={Logo} alt="" />
+    //    {/* Logo */}
+    <div className="flex flex-col flex-1">
+      <div className="p-4 text-center  flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
+        <div className="h-[80px]">
+          <img className="h-full w-full rounded-md pointer-events-none" src={Logo} alt="" />
         </div>
-        Admin Dashboard
+        <span className="text-white text-sm font-semibold opacity-55">
+          Admin Dashboard
+        </span>
       </div>
-
       {/* Navigation Links */}
       <div className="flex flex-col justify-between h-full mt-4">
         <ul className="space-y-2 ">
@@ -130,9 +128,9 @@ const AdminSidebar = () => {
             <li key={item.key}>
               <NavLink
                 to={`/admin${item.path}`}
+                onClick={handleCloseSidebar}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 text-sm font-medium ${
-                    isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
+                  `flex items-center gap-3 px-4 py-3 text-sm font-medium ${isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
                   }`
                 }
               >
@@ -143,17 +141,51 @@ const AdminSidebar = () => {
           ))}
         </ul>
         <button
-          onClick={() => setOpenModal(!openModal)}
-          className=" flex items-center gap-2 pl-4 mb-2 cursor-po"
+          onClick={handleLogOutModal}
+          className=" flex items-center gap-2 pl-4 mb-2 cursor-pointer hover:bg-gray-800 py-3"
         >
-          <LogoutOutlined /> Logout
+          <LogoutOutlined className="scale-90" /> Logout
         </button>
       </div>
-
-      {/* Footer (Optional) */}
-      <div className="p-4 border-t border-gray-700 text-sm text-center">
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-700 text-xs opacity-50 text-center">
         © {new Date().getFullYear()} My Deep Tech
       </div>
+    </div>
+  )
+}
+
+const AdminSidebar = () => {
+  const [openModal, setOpenModal] = useState(false);
+  const { sidebarCollapsed, toggleSidebar } = useSidebarContext();
+
+  const handleLogOutModal = () => {
+    setOpenModal(!openModal);
+  };
+
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <Drawer
+        width={300}
+        placement="left"
+        onClose={toggleSidebar}
+        open={sidebarCollapsed}
+        title={null}
+        closable={false}
+        className="!bg-primary text-white [&_.ant-drawer-close]:text-white [&_.ant-drawer-close:hover]:text-gray-200"
+        bodyStyle={{ padding: 5 }}
+      >
+        <SidebarMenus
+          openModal={openModal}
+          handleLogOutModal={handleLogOutModal}
+        />
+      </Drawer>
+      <div className="hidden h-full font-[gilroy-regular] bg-primary text-white w-[250px] lg:flex flex-col p-1">
+        <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
+      </div>
+
 
       <PageModal
         openModal={openModal}
@@ -165,10 +197,10 @@ const AdminSidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button onClick={()=> {
+            <Button onClick={() => {
               sessionStorage.clear()
               navigate("/auth/admin-login");
-              
+
             }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
@@ -178,7 +210,7 @@ const AdminSidebar = () => {
           </span>
         </div>
       </PageModal>
-    </div>
+    </>
   );
 };
 

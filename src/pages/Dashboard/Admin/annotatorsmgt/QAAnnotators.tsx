@@ -45,12 +45,12 @@ const QAAnnotators = () => {
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
-    
+
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Set new timeout for debounced search
     searchTimeoutRef.current = setTimeout(() => {
       fetchQAUsers(value, 1, pageSize);
@@ -235,7 +235,7 @@ const QAAnnotators = () => {
             Quality Assurance Team
           </Tag>
         </div>
-        
+
         <Space>
           <Button
             icon={<ReloadOutlined />}
@@ -266,7 +266,8 @@ const QAAnnotators = () => {
             total: pagination?.totalUsers || 0,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            position: ['bottomCenter'],
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} QA annotators`,
           }}
           onChange={handleTableChange}

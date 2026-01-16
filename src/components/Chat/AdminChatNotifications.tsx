@@ -79,17 +79,17 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
     // Handle new_message events - filter for user messages (non-@mydeeptech.ng emails)
     const handleNewMessage = (data: any) => {
       console.log('💬 [AdminChatNotifications] New message received:', data);
-      
+
       // Use email to identify if it's a user message (NOT @mydeeptech.ng domain)
       const senderEmail = data.senderEmail || data.userEmail || '';
       const isFromAdmin = senderEmail.includes('@mydeeptech.ng');
-      
+
       console.log('🔍 [AdminChatNotifications] Message identification:', {
         senderEmail,
         isFromAdmin,
         messageType: isFromAdmin ? 'ADMIN MESSAGE - SKIP' : 'USER MESSAGE - NOTIFY'
       });
-      
+
       // Only create notifications for user messages (non-admin)
       if (!isFromAdmin) {
         const notification: ChatNotification = {
@@ -104,18 +104,18 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
         // Check for duplicates before adding
         setNotifications(prev => {
-          const exists = prev.find(n => 
-            n.ticketId === notification.ticketId && 
+          const exists = prev.find(n =>
+            n.ticketId === notification.ticketId &&
             n.message === notification.message &&
             Math.abs(new Date(n.timestamp).getTime() - new Date(notification.timestamp).getTime()) < 2000
           );
-          
+
           if (!exists) {
             console.log('📨 [AdminChatNotifications] Adding user message notification:', notification);
             setUnreadCount(prevCount => prevCount + 1);
             return [notification, ...prev.slice(0, 9)];
           }
-          
+
           console.log('⚠️ [AdminChatNotifications] Duplicate notification detected, skipping');
           return prev;
         });
@@ -150,12 +150,12 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
   const handleNotificationClick = (notification: ChatNotification) => {
     // Mark as read
-    setNotifications(prev => 
-      prev.map(n => 
+    setNotifications(prev =>
+      prev.map(n =>
         n.id === notification.id ? { ...n, isRead: true } : n
       )
     );
-    
+
     // Decrease unread count
     if (!notification.isRead) {
       setUnreadCount(prev => Math.max(0, prev - 1));
@@ -178,11 +178,11 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    
+
     return date.toLocaleDateString();
   };
 
@@ -193,10 +193,10 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
       <div className="p-4 border-b bg-gradient-to-r from-[#333333] to-[#F6921E] text-white">
         <Text className="font-['gilroy-semibold'] text-white">Chat Notifications</Text>
       </div>
-      
+
       <div className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
-          <Empty 
+          <Empty
             description="No new chat notifications"
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             className="py-8"
@@ -210,18 +210,17 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
                 transition={{ duration: 0.2 }}
               >
                 <List.Item
-                  className={`cursor-pointer px-4 py-3 border-l-4 ${
-                    !notification.isRead 
-                      ? 'border-l-[#F6921E] bg-orange-50' 
-                      : 'border-l-transparent'
-                  }`}
+                  className={`cursor-pointer px-4 py-3 border-l-4 ${!notification.isRead
+                    ? 'border-l-[#F6921E] bg-orange-50'
+                    : 'border-l-transparent'
+                    }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <List.Item.Meta
                     avatar={
                       <Badge dot={!notification.isRead} offset={[-5, 5]}>
-                        <Avatar 
-                          icon={<UserOutlined />} 
+                        <Avatar
+                          icon={<UserOutlined />}
                           style={{ backgroundColor: '#333333' }}
                           size="small"
                         />
@@ -229,9 +228,8 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
                     }
                     title={
                       <div className="flex justify-between items-start">
-                        <span className={`text-sm ${
-                          notification.isRead ? 'font-normal' : 'font-semibold'
-                        }`}>
+                        <span className={`text-sm ${notification.isRead ? 'font-normal' : 'font-semibold'
+                          }`}>
                           {notification.userName}
                         </span>
                         <span className="text-xs text-gray-500">
@@ -256,12 +254,12 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
           />
         )}
       </div>
-      
+
       {notifications.length > 0 && (
         <div className="p-3 border-t bg-gray-50">
-          <Button 
-            type="link" 
-            block 
+          <Button
+            type="link"
+            block
             onClick={handleViewAllChats}
             className="text-[#F6921E] font-['gilroy-medium']"
           >
@@ -279,16 +277,16 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
       open={isOpen}
       onOpenChange={setIsOpen}
       placement="topRight"
-      className={className}
+      className={`${className} z-50`}
     >
       <Button
-      type="text"
-      className="flex items-center justify-center hover:bg-gray-100 transition-colors"
-      style={{ color: '#333333' }}
+        type="text"
+        className="flex size-8 items-center justify-center hover:bg-gray-100 transition-colors"
+        style={{ color: '#333333' }}
       >
-      <Badge count={unreadCount} size="small" offset={[8, -8]}>
-        <MessageOutlined className="text-lg" />
-      </Badge>
+        <Badge count={unreadCount} size="small" offset={[8, -8]}>
+          <MessageOutlined className="text-lg" />
+        </Badge>
       </Button>
     </Dropdown>
   );

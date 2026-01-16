@@ -144,8 +144,8 @@ const MicroTasker = () => {
                 Total: {microTaskers.length} active micro-taskers
               </p>
             </div>
-            <Button 
-              icon={<ReloadOutlined />} 
+            <Button
+              icon={<ReloadOutlined />}
               onClick={handleRefresh}
               loading={loading}
               type="primary"
@@ -174,7 +174,8 @@ const MicroTasker = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            position: ['bottomCenter'],
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} micro-taskers`,
           }}
           scroll={{ x: 1000 }}

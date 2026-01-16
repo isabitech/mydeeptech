@@ -24,7 +24,6 @@ import {
   CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
-import Header from "../../User/Header";
 import Unpaid from "./Unpaid";
 import Paid from "./Paid";
 
@@ -43,11 +42,11 @@ const PaymentManagement = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
 
-  const { 
-    getAllInvoices, 
-    invoices, 
-    summary, 
-    loading, 
+  const {
+    getAllInvoices,
+    invoices,
+    summary,
+    loading,
     updatePaymentStatus,
     sendPaymentReminder,
     deleteInvoice,
@@ -100,7 +99,7 @@ const PaymentManagement = () => {
     setIsAuthorizing(true);
     try {
       const result = await updatePaymentStatus(selectedInvoice._id, { paymentStatus: 'paid' });
-      
+
       if (result.success) {
         message.success('Payment authorized successfully!');
         handleClosePaymentModal();
@@ -118,7 +117,6 @@ const PaymentManagement = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Payment Management" />
 
       {/* Summary Statistics */}
       <Row gutter={16}>

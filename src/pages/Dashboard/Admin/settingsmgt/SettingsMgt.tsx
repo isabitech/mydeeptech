@@ -1,4 +1,3 @@
-import Header from "../../User/Header";
 import Reset from "../../User/settings/Reset";
 import { Card, Button, Divider } from 'antd';
 import { FileTextOutlined, SafetyOutlined, DownloadOutlined, UserOutlined } from '@ant-design/icons';
@@ -6,18 +5,17 @@ import { FileTextOutlined, SafetyOutlined, DownloadOutlined, UserOutlined } from
 const SettingsMgt = () => {
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Settings" />
+      {/* <Header title="Settings" /> */}
 
       <Reset />
-      
       {/* Admin Privacy & Legal Section */}
-      <Card 
+      <Card
         title={<span className="flex items-center gap-2"><SafetyOutlined className="text-[#F6921E]" />Privacy & Legal Management</span>}
         className="shadow-sm"
       >
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
+            <Button
               icon={<FileTextOutlined />}
               href="/privacy-policy"
               target="_blank"
@@ -25,7 +23,7 @@ const SettingsMgt = () => {
             >
               Review Privacy Policy
             </Button>
-            <Button 
+            <Button
               icon={<FileTextOutlined />}
               href="/terms-of-service"
               target="_blank"
@@ -33,7 +31,7 @@ const SettingsMgt = () => {
             >
               Review Terms of Service
             </Button>
-            <Button 
+            <Button
               icon={<UserOutlined />}
               className="flex items-center gap-2 hover:border-[#F6921E] hover:text-[#F6921E]"
               onClick={() => {

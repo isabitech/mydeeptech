@@ -1,8 +1,12 @@
-import { SearchOutlined } from "@ant-design/icons";
+import { LogoutOutlined, SearchOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../../../components/NotificationDropdown";
+import Dropdown from "antd/es/dropdown/dropdown";
+import { Avatar, Typography } from "antd";
+
+const { Text } = Typography;
 
 type Props = {
   title: string;
@@ -29,6 +33,44 @@ const Header: React.FC<Props> = ({ title }) => {
   const [userInfo, setUserInfo] = useState<UserInfoProps | null>(null);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    // Clear session storage
+    sessionStorage.removeItem('ACCESS_TOKEN');
+    sessionStorage.removeItem('userInfo');
+
+    // Navigate to login
+    navigate('/login');
+  };
+
+  const userMenuItems = [
+    {
+      key: "email-address",
+      disabled: true,
+      label: (
+        <div className="px-2 py-1">
+          <div className="font-medium text-sm">
+            {userInfo?.email || ''}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+      onClick: () => navigate('/dashboard/settings')
+    },
+    {
+      type: 'divider' as const
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout
+    }
+  ];
+
   useEffect(() => {
     const loadUser = async () => {
       const user = await retrieveUserInfoFromStorage();
@@ -39,50 +81,47 @@ const Header: React.FC<Props> = ({ title }) => {
   }, []);
 
   const handleOpenProfile = () => {
-    if(userInfo?.annotatorStatus) {
+    if (userInfo?.annotatorStatus) {
       navigate('/dashboard/profile');
-    } 
+    }
   }
 
   return (
-    <div>
-      <div className="h-[3rem] flex px-2 items-center justify-between w-full">
-        <div>
-          <p>{title}</p>
-        </div>
-
-        <div className="flex justify-around items-center gap-4">
-          {/* Search box */}
-          <div className="h-[2rem] w-[15rem] border-secondary border-2 rounded-2xl relative">
-            <SearchOutlined className="absolute left-2 top-2" />
-            <input
-              type="text"
-              className="h-full w-full p-2 border-none rounded-2xl pl-6 text-[14px]"
-              placeholder="Search anything"
-            />
-          </div>
-
-          {/* Notification */}
-          <div className="h-10 w-10 flex items-center justify-center">
-            <NotificationDropdown /> 
-          </div>
-
-          {/* UserProfile */}
-          <div className="h-[2rem] min-w-[10rem] border-secondary border-2 rounded-2xl flex gap-2">
-            <img
-              src="https://banner2.cleanpng.com/20180622/tqt/aazen4lhc.webp"
-              className="rounded-full"
-              alt="user avatar"
-            />
-            <span>
-              <p className="text-[10px]">
-                {userInfo?.fullName} 
-              </p>
-              <p className="text-[9px]">{userInfo?.email}</p>
-            </span>
-          </div>
-        </div>
+    // 
+    <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center -mx-6 -mt-6">
+      <div className="pl-10 lg:pl-0">
+        <h2 className="font-bold text-lg">{title}</h2>
       </div>
+
+      <div className="flex items-center space-x-4 ml-auto">
+        {/* Chat Notifications */}
+
+        {/* User Menu */}
+        <div className="h-10 w-10 flex items-center justify-center">
+          <NotificationDropdown />
+        </div>
+        <Dropdown
+          menu={{ items: userMenuItems }}
+          trigger={['click']}
+          placement="bottomRight"
+        >
+          <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded">
+
+            <Avatar
+              icon={<UserOutlined />}
+              style={{ backgroundColor: '#F6921E' }}
+              size="default"
+            />
+
+            <div className="flex flex-col gap-[2px]">
+              <Text className="font-['gilroy-medium'] text-sm leading-tight">
+                {userInfo?.fullName || 'User'}
+              </Text>
+            </div>
+          </div>
+        </Dropdown>
+      </div>
+
     </div>
   );
 };

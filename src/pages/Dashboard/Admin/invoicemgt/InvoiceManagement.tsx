@@ -341,7 +341,7 @@ const InvoiceManagement: React.FC = () => {
   return (
     <div className="p-6 font-[gilroy-regular]">
       {/* Header */}
-      <Header title="Invoicing" />
+      {/* <Header title="Invoicing" /> */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Invoice Management</h1>
@@ -462,17 +462,18 @@ const InvoiceManagement: React.FC = () => {
           pagination={
             pagination
               ? {
-                  current: pagination.currentPage,
-                  pageSize: pagination.invoicesPerPage,
-                  total: pagination.totalInvoices,
-                  showSizeChanger: true,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} of ${total} items`,
-                  onChange: (page, limit) => {
-                    setFilters({ ...filters, page, limit });
-                  },
-                }
+                current: pagination.currentPage,
+                pageSize: pagination.invoicesPerPage,
+                total: pagination.totalInvoices,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                position: ["bottomCenter"],
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} items`,
+                onChange: (page, limit) => {
+                  setFilters({ ...filters, page, limit });
+                },
+              }
               : false
           }
           scroll={{ x: 1200 }}

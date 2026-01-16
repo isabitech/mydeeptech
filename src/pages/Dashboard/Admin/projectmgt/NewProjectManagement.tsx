@@ -59,7 +59,7 @@ const { Step } = Steps;
 // Project categories for the new system
 const PROJECT_CATEGORIES: ProjectCategory[] = [
   "Text Annotation",
-  "Image Annotation", 
+  "Image Annotation",
   "Audio Annotation",
   "Video Annotation",
   "Data Labeling",
@@ -100,8 +100,8 @@ const ProjectManagement: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
-   const [token, setToken] = useState<string | null>(null);
-  
+  const [token, setToken] = useState<string | null>(null);
+
   // Deletion states
   const [isDeletionModalVisible, setIsDeletionModalVisible] = useState(false);
   const [deletionStep, setDeletionStep] = useState(0);
@@ -137,13 +137,13 @@ const ProjectManagement: React.FC = () => {
     });
   };
 
-   useEffect(() => {
-      const getToken = async () => {
-        const retrievedToken = await retrieveTokenFromStorage();
-        setToken(retrievedToken);
-      };
-      getToken();
-    }, []);
+  useEffect(() => {
+    const getToken = async () => {
+      const retrievedToken = await retrieveTokenFromStorage();
+      setToken(retrievedToken);
+    };
+    getToken();
+  }, []);
 
   // Handle search and filters
   const handleSearch = (value: string) => {
@@ -177,10 +177,10 @@ const ProjectManagement: React.FC = () => {
   const handleSubmitProject = async () => {
     try {
       const values = await form.validateFields();
-      
+
       // Exclude status from payload when editing
       const { status, ...formValues } = values;
-      
+
       const payload: CreateProjectForm = {
         ...formValues,
         deadline: dayjs(formValues.deadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
@@ -222,7 +222,7 @@ const ProjectManagement: React.FC = () => {
   // Smart Delete Project - checks if project has applications
   const handleDeleteProject = async (project: Project) => {
     setProjectToDelete(project);
-    
+
     // If project has active applications, use OTP flow
     if (project.totalApplications > 0) {
       setDeletionStep(0);
@@ -260,8 +260,8 @@ const ProjectManagement: React.FC = () => {
 
       const result = await requestDeletionOtp(projectToDelete._id, values.reason);
       if (result.success) {
-        notification.success({ 
-          message: "OTP Sent", 
+        notification.success({
+          message: "OTP Sent",
           description: "A deletion OTP has been sent to projects@mydeeptech.ng"
         });
         setOtpSent(true);
@@ -287,14 +287,14 @@ const ProjectManagement: React.FC = () => {
       if (!projectToDelete) return;
 
       const result = await verifyDeletionOtp(
-        projectToDelete._id, 
-        values.otp, 
+        projectToDelete._id,
+        values.otp,
         values.confirmationMessage
       );
-      
+
       if (result.success) {
-        notification.success({ 
-          message: "Project Deleted Successfully", 
+        notification.success({
+          message: "Project Deleted Successfully",
           description: "The project has been permanently deleted."
         });
         setIsDeletionModalVisible(false);
@@ -330,7 +330,7 @@ const ProjectManagement: React.FC = () => {
   // Export approved annotators to CSV
   const handleExportApprovedAnnotators = async (project: Project) => {
     try {
-      
+
       if (!token) {
         notification.error({
           message: 'Authentication Error',
@@ -389,7 +389,7 @@ const ProjectManagement: React.FC = () => {
       // Create blob and download
       const blob = await response.blob();
       console.log('📦 Blob size:', blob.size, 'Type:', blob.type);
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -493,7 +493,7 @@ const ProjectManagement: React.FC = () => {
       render: (level: string) => {
         const colors = {
           beginner: "green",
-          intermediate: "orange", 
+          intermediate: "orange",
           advanced: "red",
           expert: "purple",
         };
@@ -589,7 +589,7 @@ const ProjectManagement: React.FC = () => {
               Modal.confirm({
                 title: 'Delete Project',
                 icon: <ExclamationCircleOutlined />,
-                content: record.totalApplications > 0 
+                content: record.totalApplications > 0
                   ? `This project has ${record.totalApplications} active applications. OTP verification will be required.`
                   : `Are you sure you want to delete "${record.projectName}"? This action cannot be undone.`,
                 okText: 'Delete',
@@ -613,7 +613,7 @@ const ProjectManagement: React.FC = () => {
             <Button
               type="text"
               icon={<MoreOutlined />}
-              style={{ 
+              style={{
                 border: 'none',
                 boxShadow: 'none',
                 background: 'transparent'
@@ -646,8 +646,8 @@ const ProjectManagement: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Projects" />
-      
+      {/* <Header title="Projects" /> */}
+
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -735,7 +735,8 @@ const ProjectManagement: React.FC = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            position: ["bottomCenter"],
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} projects`,
           }}
           scroll={{ x: 1200 }}
@@ -939,7 +940,7 @@ const ProjectManagement: React.FC = () => {
               name="projectGuidelineLink"
               label="Project Guidelines Link"
             >
-              <Input 
+              <Input
                 placeholder="https://example.com/guidelines"
                 type="url"
               />
@@ -949,7 +950,7 @@ const ProjectManagement: React.FC = () => {
               name="projectGuidelineVideo"
               label="Project Guidelines Video"
             >
-              <Input 
+              <Input
                 placeholder="https://example.com/video"
                 type="url"
               />
@@ -961,7 +962,7 @@ const ProjectManagement: React.FC = () => {
               name="projectCommunityLink"
               label="Project Community Link"
             >
-              <Input 
+              <Input
                 placeholder="https://example.com/community"
                 type="url"
               />
@@ -971,7 +972,7 @@ const ProjectManagement: React.FC = () => {
               name="projectTrackerLink"
               label="Project Tracker Link"
             >
-              <Input 
+              <Input
                 placeholder="https://example.com/tracker"
                 type="url"
               />
@@ -1128,7 +1129,7 @@ const ProjectManagement: React.FC = () => {
               <div className="space-y-2">
                 <div><strong>Project:</strong> {projectToDelete.projectName}</div>
                 <div><strong>Applications:</strong> {projectToDelete.totalApplications}</div>
-                <div><strong>Status:</strong> 
+                <div><strong>Status:</strong>
                   <Tag color="blue" className="ml-1">{projectToDelete.status.toUpperCase()}</Tag>
                 </div>
               </div>
@@ -1136,13 +1137,13 @@ const ProjectManagement: React.FC = () => {
           )}
 
           <Steps current={deletionStep} className="mb-6">
-            <Step 
-              title="Request OTP" 
+            <Step
+              title="Request OTP"
               description="Provide reason and request OTP"
               icon={<ExclamationCircleOutlined />}
             />
-            <Step 
-              title="Verify OTP" 
+            <Step
+              title="Verify OTP"
               description="Enter OTP and confirm deletion"
               icon={<SafetyCertificateOutlined />}
             />
@@ -1166,11 +1167,11 @@ const ProjectManagement: React.FC = () => {
                     showCount
                   />
                 </Form.Item>
-                
+
                 <div className="flex justify-end gap-2">
                   <Button onClick={handleCancelDeletion}>Cancel</Button>
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     danger
                     onClick={handleRequestDeletionOtp}
                     loading={loading}
@@ -1228,8 +1229,8 @@ const ProjectManagement: React.FC = () => {
                   <Button onClick={() => setDeletionStep(0)}>Back</Button>
                   <div className="space-x-2">
                     <Button onClick={handleCancelDeletion}>Cancel</Button>
-                    <Button 
-                      type="primary" 
+                    <Button
+                      type="primary"
                       danger
                       onClick={handleVerifyDeletionOtp}
                       loading={loading}

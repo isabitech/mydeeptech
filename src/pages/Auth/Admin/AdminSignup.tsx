@@ -10,7 +10,7 @@ import mydeepTechLogo from '../../../assets/deeptech.png';
 const AdminSignup: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<"signup" | "verify-otp">("signup");
   const [userEmail, setUserEmail] = useState<string>("");
-  
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -19,11 +19,11 @@ const AdminSignup: React.FC = () => {
     confirmPassword: "",
     adminKey: "",
   });
-  
+
   const [otp, setOtp] = useState("");
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [otpError, setOtpError] = useState("");
-  
+
   const { signup, loading: signupLoading, error: signupError, resetState: resetSignupState } = useAdminSignup();
   const { verifyOTP, loading: otpLoading, error: otpVerifyError, resetState: resetOtpState } = useAdminVerifyOTP();
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ const AdminSignup: React.FC = () => {
       ...prev,
       [field]: value
     }));
-    
+
     // Clear specific field error when user starts typing
     if (formErrors[field]) {
       setFormErrors(prev => ({
@@ -95,11 +95,11 @@ const AdminSignup: React.FC = () => {
       }
 
       const result = await signup(formData);
-      
+
       if (result.success && result.data) {
         notification.success({
-            message: `${result.data.message || "Signup successful! Please verify your email."}`,
-            
+          message: `${result.data.message || "Signup successful! Please verify your email."}`,
+
         })
         setUserEmail(formData.email);
         setCurrentStep("verify-otp");
@@ -110,18 +110,18 @@ const AdminSignup: React.FC = () => {
       }
 
       const result = await verifyOTP({
-        verificationCode:  otp,
+        verificationCode: otp,
         email: userEmail,
         adminKey: formData.adminKey,
       });
-      
+
       if (result.success) {
         // Navigate to admin login with success message
-        navigate("/auth/admin-login", { 
-          state: { 
+        navigate("/auth/admin-login", {
+          state: {
             message: "Admin account created and verified successfully! You can now log in.",
-            email: userEmail 
-          } 
+            email: userEmail
+          }
         });
       }
     }
@@ -132,17 +132,17 @@ const AdminSignup: React.FC = () => {
       setOtpError("OTP is required");
       return false;
     }
-    
+
     if (otp.length !== 6) {
       setOtpError("OTP must be 6 digits");
       return false;
     }
-    
+
     if (!/^\d{6}$/.test(otp)) {
       setOtpError("OTP must contain only numbers");
       return false;
     }
-    
+
     setOtpError("");
     return true;
   };
@@ -151,7 +151,7 @@ const AdminSignup: React.FC = () => {
     // Allow only numbers and limit to 6 digits
     const numericValue = value.replace(/\D/g, "").slice(0, 6);
     setOtp(numericValue);
-    
+
     // Clear error when user starts typing
     if (otpError) {
       setOtpError("");
@@ -166,8 +166,8 @@ const AdminSignup: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className=" w-full flex justify-center items-center">
-            <img src={mydeepTechLogo} alt="Logo" className="h-26 w-auto mb-6 rounded-md"/>
+        <div className="flex justify-center items-center w-28 mx-auto">
+          <img src={mydeepTechLogo} alt="Logo" className="h-full w-full mb-6 rounded-md" />
         </div>
         <Card className="shadow-2xl border-0 font-[gilroy-regular]">
           {currentStep === "signup" ? (

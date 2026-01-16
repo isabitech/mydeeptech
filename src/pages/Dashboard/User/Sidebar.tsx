@@ -4,10 +4,8 @@ import {
   UserOutlined,
   SettingOutlined,
   CodeSandboxOutlined,
-  InboxOutlined,
   LogoutOutlined,
   WalletOutlined,
-  UnorderedListOutlined,
   BookOutlined,
   MenuOutlined,
   CloseOutlined,
@@ -118,13 +116,13 @@ const Sidebar = () => {
     }
 
     const { annotatorStatus, microTaskerStatus, qaStatus } = userInfo;
-    
+
     // QA Review and Assessments List are never locked if user has the right status
-    if ((itemKey === "qa-review" && qaStatus === "approved") || 
-        (itemKey === "assessments-list" && annotatorStatus === "approved")) {
+    if ((itemKey === "qa-review" && qaStatus === "approved") ||
+      (itemKey === "assessments-list" && annotatorStatus === "approved")) {
       return false;
     }
-    
+
     // If both statuses are pending, lock everything except overview, assessment, and settings
     if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus === "pending") {
       return !["overview", "assessment", "settings"].includes(itemKey);
@@ -146,15 +144,15 @@ const Sidebar = () => {
     }
 
     const { annotatorStatus, microTaskerStatus, qaStatus } = userInfo;
-    
+
     // Filter logic for assessment and assessment history
     let filteredItems = [...menuItems];
-    
+
     // If either status is approved, remove assessment from menu
     if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
       filteredItems = filteredItems.filter(item => item.key !== "assessment");
     }
-    
+
     // Show assessment history only if user has completed at least one assessment
     // (if either status is not "pending", it means they've taken an assessment)
     if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus !== "approved") {
@@ -169,15 +167,11 @@ const Sidebar = () => {
   const handleLogOutModal = () => setOpenModal(!openModal);
 
   return (
-    <div className=" font-[gilroy-regular]">
+    <div className="bg-white font-[gilroy-regular]">
       {/* Mobile top bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-primary text-white">
-        <div className="flex items-center gap-2">
-          {/* <img src={Logo} alt="logo" className="h-8 rounded" /> */}
-          {/* <span className="font-bold">Dashboard</span> */}
-        </div>
+      <div className="absolute top-3 left-3 lg:hidden rounded-sm flex items-center justify-center size-10  bg-primary text-white">
         <button onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <CloseOutlined className="text-xl" /> : <MenuOutlined className="text-xl" />}
+          {isOpen ? <CloseOutlined className="text-lg" /> : <MenuOutlined className="text-lg" />}
         </button>
       </div>
 
@@ -186,7 +180,7 @@ const Sidebar = () => {
         className={`
           fixed lg:static top-0 left-0 h-full bg-primary text-white w-[250px] flex flex-col
           transform ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-          lg:translate-x-0 transition-transform duration-300 z-50
+          lg:translate-x-0 transition-transform duration-300 z-50 p-2
         `}
       >
         {/* Logo (desktop only) */}
@@ -200,7 +194,7 @@ const Sidebar = () => {
           <ul className="space-y-2">
             {filteredMenuItems.map((item) => {
               const isLocked = isMenuItemLocked(item.key);
-              
+
               if (isLocked) {
                 // Render locked item as non-clickable
                 return (
@@ -221,8 +215,7 @@ const Sidebar = () => {
                     to={item.path}
                     onClick={() => setIsOpen(false)} // close menu on mobile click
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-4 py-3 text-sm font-medium ${
-                        isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
+                      `flex items-center gap-3 px-4 py-3 text-sm font-medium ${isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
                       }`
                     }
                   >
@@ -245,18 +238,18 @@ const Sidebar = () => {
         <div className="p-4 border-t border-gray-700 text-sm">
           <div className="flex flex-col space-y-2">
             <div className="flex justify-center space-x-3 text-xs">
-              <a 
-                href="/privacy-policy" 
-                target="_blank" 
+              <a
+                href="/privacy-policy"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#F6921E] transition-colors"
               >
                 Privacy
               </a>
               <span className="text-gray-600">|</span>
-              <a 
-                href="/terms-of-service" 
-                target="_blank" 
+              <a
+                href="/terms-of-service"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#F6921E] transition-colors"
               >

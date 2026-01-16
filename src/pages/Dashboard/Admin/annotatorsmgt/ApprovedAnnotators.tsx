@@ -239,8 +239,8 @@ const ApprovedAnnotators = () => {
       key: 'actions',
       render: (_: any, record: DTUser) => (
         <Space size="middle">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<EyeOutlined />}
             onClick={() => handleViewDetails(record)}
             size="small"
@@ -285,8 +285,8 @@ const ApprovedAnnotators = () => {
                 Total: {approvedUsers.length} approved annotators
               </p>
             </div>
-            <Button 
-              icon={<ReloadOutlined />} 
+            <Button
+              icon={<ReloadOutlined />}
               onClick={handleRefresh}
               loading={loading}
               type="primary"
@@ -315,7 +315,8 @@ const ApprovedAnnotators = () => {
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            position: ['bottomCenter'],
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} approved annotators`,
           }}
           scroll={{ x: 1000 }}
