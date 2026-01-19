@@ -23,12 +23,13 @@ const Assessment: React.FC = () => {
         setCountdown(countdown - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (showSuccessModal && countdown === 0) {
+    } 
+    else if (showSuccessModal && countdown === 0) {
       // Clear user data and redirect to login
-      localStorage.removeItem("user");
-      localStorage.removeItem("userInfo");
-      sessionStorage.clear();
-      navigate("/auth/login");
+      // localStorage.removeItem("user");
+      // localStorage.removeItem("userInfo");
+      // sessionStorage.clear();
+      navigate("/dashboard/assessment");
     }
   }, [showSuccessModal, countdown, navigate]);
 

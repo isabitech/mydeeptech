@@ -60,6 +60,8 @@ export const endpoints = {
     requestDeletionOtp: "/admin/projects", // /:projectId/request-deletion-otp
     verifyDeletionOtp: "/admin/projects", // /:projectId/verify-deletion-otp
     getAllApplications: "/admin/applications",
+    getApprovedApplicantsForProject: "/projects/:projectId/approved-applicants",
+    bulkRejectApplications: "/applications/bulk-reject",
     approveApplication: "/admin/applications",
     rejectApplication: "/admin/applications",
     removeApplicant: "/admin/applications", // /:applicationId/remove
