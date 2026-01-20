@@ -5,14 +5,15 @@ import { FileTextOutlined, SafetyOutlined, DownloadOutlined } from '@ant-design/
 
 const Settings = () => {
   return (
-    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
+    <div className="h-full grid grid-cols-1 gap-4 font-[gilroy-regular]">
       <Header title="Settings" />
 
+      {/* Reset Password Section */}
       <Reset />
       
       {/* Privacy & Legal Section */}
       <Card 
-        title={<span className="flex items-center gap-2"><SafetyOutlined className="text-[#F6921E]" />Privacy & Legal</span>}
+        title={<span className="flex items-center gap-2 pt-10 !mt-auto"><SafetyOutlined className="text-[#F6921E]" />Privacy & Legal</span>}
         className="shadow-sm"
       >
         <div className="space-y-4">
@@ -44,8 +45,8 @@ const Settings = () => {
               Download My Data
             </Button> */}
           </div>
-          <Divider className="my-3" />
-          <p className="text-sm text-gray-600">
+          <Divider className="my-5" />
+          <p className="text-sm text-gray-600 ">
             Need help with privacy or data concerns? Contact us at{' '}
             <a href="mailto:privacy@mydeeptech.ng" className="text-[#F6921E] hover:underline">
               privacy@mydeeptech.ng
