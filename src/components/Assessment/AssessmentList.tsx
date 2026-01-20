@@ -113,9 +113,9 @@ const AssessmentList: React.FC = () => {
   const loadAvailableAssessments = async () => {
     try {
       setLoading(true);
-      
+
       const response: AvailableAssessmentsResponse = await multimediaAssessmentApi.getAvailableAssessments();
-      
+
       if (response.success && response.data) {
         // Use the assessments directly from the backend response
         const assessmentData = response.data.assessments || [];
@@ -139,11 +139,11 @@ const AssessmentList: React.FC = () => {
       // For other assessment types, navigate to general assessment page
       navigate(`/dashboard/assessment?type=${assessment.type}&id=${assessment.id}`);
     }
-   
+
     try {
       // Call the correct API endpoint to start the assessment
       const response = await multimediaAssessmentApi.startUserAssessment(assessment.id);
-      
+
       if (response.success) {
         // Navigate to the assessment page after successful API call
       } else {
@@ -209,7 +209,7 @@ const AssessmentList: React.FC = () => {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
         />
       ) : (
-        <Row gutter={[24, 24]}>
+        <Row gutter={[20, 20]}>
           {assessments.map((assessment) => (
             <Col key={assessment.id} xs={24} lg={12} xl={8}>
               <motion.div
@@ -219,146 +219,199 @@ const AssessmentList: React.FC = () => {
                 className="h-full"
               >
                 <Card
-                  className="h-full shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 rounded-xl"
-                  bodyStyle={{ padding: '24px' }}
-                  actions={
-                    assessment.userStatus.hasAttempted ? [
-                      <Button
-                        key="view-results"
-                        icon={<HistoryOutlined />}
-                        onClick={() => navigate('/dashboard/assessment-history')}
-                        size="large"
-                        className="font-[gilroy-regular] mr-2"
-                      >
-                        View Results
-                      </Button>,
-                      assessment.userStatus.canRetake ? (
+                  className="!h-full grid grid-col-1 shadow-lg hover:shadow-xl transition-shadow duration-300 border-0 rounded-xl"
+                  // styles={{ body: { padding: '24px' } }}
+                // actions={
+                //   assessment.userStatus.hasAttempted ? [
+                //     <Button
+                //       key="view-results"
+                //       icon={<HistoryOutlined />}
+                //       onClick={() => navigate('/dashboard/assessment-history')}
+                //       size="large"
+                //       className="font-[gilroy-regular] mr-2"
+                //     >
+                //       View Results
+                //     </Button>,
+                //     assessment.userStatus.canRetake ? (
+                //       <Button
+                //         key="retake"
+                //         type="primary"
+                //         icon={<PlayCircleOutlined />}
+                //         onClick={() => handleStartAssessment(assessment)}
+                //         size="large"
+                //         className="font-[gilroy-regular] bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
+                //       >
+                //         Retake
+                //       </Button>
+                //     ) : (
+                //       <Button
+                //         key="cooldown"
+                //         disabled
+                //         size="large"
+                //         className="font-[gilroy-regular]"
+                //       >
+                //         Cooldown Active
+                //       </Button>
+                //     )
+                //   ] : [
+                //     <Button
+                //       key="start"
+                //       type="primary"
+                //       icon={<PlayCircleOutlined />}
+                //       onClick={() => handleStartAssessment(assessment)}
+                //       size="large"
+                //       block
+                //       className="font-[gilroy-regular]] !w-[90%] !mt-auto mx-auto bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
+                //     >
+                //       Start Assessment
+                //     </Button>
+                //   ]
+                // }
+                >
+                  <div className="h-full flex flex-col">
+
+                    <div className="mb-4">
+                      <div className="flex items-start mb-3 gap-3">
+                        <Title level={5} className="!mb-0 !text-[#333333] font-[gilroy-regular] w-[65%]">
+                          {assessment.title}
+                        </Title>
+                        <Badge
+                          status={getStatusColor(assessment.userStatus)}
+                          className='flex items-center ml-auto'
+                          text={
+                            <Text className="font-[gilroy-regular] text-sm shrink-0 flex items-center">
+                              {assessment.userStatus.hasAttempted
+                                ? assessment.userStatus.passed
+                                  ? 'Passed'
+                                  : 'Failed'
+                                : 'Not Started'}
+                            </Text>
+                          }
+                        />
+                      </div>
+
+                      <Paragraph className="text-gray-600 mb-4 font-[gilroy-regular]">
+                        {assessment.description}
+                      </Paragraph>
+
+                      <Space direction="vertical" size="middle" className="w-full">
+                        <div className="flex justify-between items-center flex-wrap gap-2">
+                          <Tag
+                            color={getDifficultyColor(assessment.difficulty)}
+                            className="font-[gilroy-regular] px-3 py-1 text-sm border-0 rounded-full"
+                          >
+                            <StarOutlined className="mr-1" />
+                            {assessment.difficulty}
+                          </Tag>
+                          <Tag
+                            color="#F6921E"
+                            className="font-[gilroy-regular] px-3 py-1 text-sm border-0 rounded-full"
+                          >
+                            {assessment.type.replace('_', ' ').toUpperCase()}
+                          </Tag>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <Row gutter={16}>
+                            <Col span={8}>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
+                                  {assessment.totalQuestions || assessment.totalTasks || 'N/A'}
+                                </div>
+                                <Text className="text-gray-500 text-sm font-[gilroy-regular]">
+                                  {assessment.totalQuestions ? 'Questions' : 'Tasks'}
+                                </Text>
+                              </div>
+                            </Col>
+                            <Col span={8}>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
+                                  {assessment.estimatedDuration}
+                                </div>
+                                <Text className="text-gray-500 text-sm font-[gilroy-regular]">Minutes</Text>
+                              </div>
+                            </Col>
+                            <Col span={8}>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
+                                  {assessment.passingScore}%
+                                </div>
+                                <Text className="text-gray-500 text-sm font-[gilroy-regular]">Pass Score</Text>
+                              </div>
+                            </Col>
+                          </Row>
+                        </div>
+
+                        {assessment.userStatus.hasAttempted && assessment.userStatus.lastAttemptDate && (
+                          <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border-l-4 border-[#F6921E]">
+                            <Text strong className="font-[gilroy-regular] text-[#333333]">Last Attempt: </Text>
+                            <br />
+                            <Text className="font-[gilroy-regular] text-gray-600">
+                              Score: <span className={`font-semibold ${assessment.userStatus.passed ? 'text-green-600' : 'text-red-600'}`}>
+                                {assessment.userStatus.latestScore}%
+                              </span> •{' '}
+                              {new Date(assessment.userStatus.lastAttemptDate).toLocaleDateString()}
+                            </Text>
+                            {!assessment.userStatus.canRetake && assessment.userStatus.nextRetakeAvailable && (
+                              <div className="mt-2">
+                                <Text className="font-[gilroy-regular] text-sm text-gray-500">
+                                  Next attempt available: {new Date(assessment.userStatus.nextRetakeAvailable).toLocaleDateString()}
+                                </Text>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Space>
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-center gap-2 w-full">
+                      {assessment.userStatus.hasAttempted ? (
+                        <>
+                          <Button
+                            key="view-results"
+                            icon={<HistoryOutlined />}
+                            onClick={() => navigate('/dashboard/assessment-history')}
+                            size="middle"
+                            className="font-[gilroy-regular]"
+                          >
+                            View Results
+                          </Button>
+                          {assessment.userStatus.canRetake ? (
+                            <Button
+                              key="retake"
+                              type="primary"
+                              icon={<PlayCircleOutlined />}
+                              onClick={() => handleStartAssessment(assessment)}
+                              size="middle"
+                              className="font-[gilroy-regular] bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
+                            >
+                              Retake
+                            </Button>
+                          ) : (
+                            <Button
+                              key="cooldown"
+                              disabled
+                              size="middle"
+                              className="font-[gilroy-regular]"
+                            >
+                              Cooldown Active
+                            </Button>
+                          )}
+                        </>
+                      ) : (
                         <Button
-                          key="retake"
+                          key="start"
                           type="primary"
                           icon={<PlayCircleOutlined />}
                           onClick={() => handleStartAssessment(assessment)}
                           size="large"
-                          className="font-[gilroy-regular] bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
+                          className="font-[gilroy-regular] w-full mt-auto bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
                         >
-                          Retake
+                          Start Assessment
                         </Button>
-                      ) : (
-                        <Button
-                          key="cooldown"
-                          disabled
-                          size="large"
-                          className="font-[gilroy-regular]"
-                        >
-                          Cooldown Active
-                        </Button>
-                      )
-                    ] : [
-                      <Button
-                        key="start"
-                        type="primary"
-                        icon={<PlayCircleOutlined />}
-                        onClick={() => handleStartAssessment(assessment)}
-                        size="large"
-                        block
-                        className="font-[gilroy-regular] bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]"
-                      >
-                        Start Assessment
-                      </Button>
-                    ]
-                  }
-                >
-                  <div className="mb-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <Title level={4} className="!mb-0 !text-[#333333] font-[gilroy-regular]">
-                        {assessment.title}
-                      </Title>
-                      <Badge
-                        status={getStatusColor(assessment.userStatus)}
-                        text={
-                          <Text className="font-[gilroy-regular] text-sm">
-                            {assessment.userStatus.hasAttempted
-                              ? assessment.userStatus.passed
-                                ? 'Passed'
-                                : 'Failed'
-                              : 'Not Started'}
-                          </Text>
-                        }
-                      />
-                    </div>
-                    
-                    <Paragraph className="text-gray-600 mb-4 font-[gilroy-regular]">
-                      {assessment.description}
-                    </Paragraph>
-
-                    <Space direction="vertical" size="middle" className="w-full">
-                      <div className="flex justify-between items-center">
-                        <Tag 
-                          color={getDifficultyColor(assessment.difficulty)}
-                          className="font-[gilroy-regular] px-3 py-1 text-sm border-0 rounded-full"
-                        >
-                          <StarOutlined className="mr-1" />
-                          {assessment.difficulty}
-                        </Tag>
-                        <Tag 
-                          color="#F6921E" 
-                          className="font-[gilroy-regular] px-3 py-1 text-sm border-0 rounded-full"
-                        >
-                          {assessment.type.replace('_', ' ').toUpperCase()}
-                        </Tag>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-xl p-4">
-                        <Row gutter={16}>
-                          <Col span={8}>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
-                                {assessment.totalQuestions || assessment.totalTasks || 'N/A'}
-                              </div>
-                              <Text className="text-gray-500 text-sm font-[gilroy-regular]">
-                                {assessment.totalQuestions ? 'Questions' : 'Tasks'}
-                              </Text>
-                            </div>
-                          </Col>
-                          <Col span={8}>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
-                                {assessment.estimatedDuration}
-                              </div>
-                              <Text className="text-gray-500 text-sm font-[gilroy-regular]">Minutes</Text>
-                            </div>
-                          </Col>
-                          <Col span={8}>
-                            <div className="text-center">
-                              <div className="text-2xl font-bold text-[#F6921E] font-[gilroy-regular]">
-                                {assessment.passingScore}%
-                              </div>
-                              <Text className="text-gray-500 text-sm font-[gilroy-regular]">Pass Score</Text>
-                            </div>
-                          </Col>
-                        </Row>
-                      </div>
-
-                      {assessment.userStatus.hasAttempted && assessment.userStatus.lastAttemptDate && (
-                        <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl border-l-4 border-[#F6921E]">
-                          <Text strong className="font-[gilroy-regular] text-[#333333]">Last Attempt: </Text>
-                          <br />
-                          <Text className="font-[gilroy-regular] text-gray-600">
-                            Score: <span className={`font-semibold ${assessment.userStatus.passed ? 'text-green-600' : 'text-red-600'}`}>
-                              {assessment.userStatus.latestScore}%
-                            </span> •{' '}
-                            {new Date(assessment.userStatus.lastAttemptDate).toLocaleDateString()}
-                          </Text>
-                          {!assessment.userStatus.canRetake && assessment.userStatus.nextRetakeAvailable && (
-                            <div className="mt-2">
-                              <Text className="font-[gilroy-regular] text-sm text-gray-500">
-                                Next attempt available: {new Date(assessment.userStatus.nextRetakeAvailable).toLocaleDateString()}
-                              </Text>
-                            </div>
-                          )}
-                        </div>
                       )}
-                    </Space>
+                    </div>
+
                   </div>
                 </Card>
               </motion.div>

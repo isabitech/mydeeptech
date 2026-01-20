@@ -23,7 +23,6 @@ class UserChatSocketService {
   async connect(token: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      console.log('🔌 [UserChatSocket] Connecting to Socket.IO server:', url);
       
       this.socket = io(url, {
         auth: { token },
@@ -42,7 +41,6 @@ class UserChatSocketService {
 
       // Connection success
       this.socket.on('connect', () => {
-        console.log('✅ [UserChatSocket] Connected successfully');
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.emit('connection_status', { connected: true });
@@ -72,14 +70,12 @@ class UserChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ [UserChatSocket] Disconnected:', reason);
       this.isConnected = false;
       this.emit('connection_status', { connected: false, reason });
     });
 
     // User-specific events
     this.socket.on('active_tickets', (data) => {
-      console.log('📋 [UserChatSocket] Active tickets received:', data);
       if (data.tickets && Array.isArray(data.tickets)) {
         data.tickets.forEach((ticket: ChatTicket) => {
           this.currentTickets.set(ticket._id, ticket);
@@ -89,7 +85,6 @@ class UserChatSocketService {
     });
 
     this.socket.on('chat_started', (data) => {
-      console.log('🚀 [UserChatSocket] Chat started:', data);
       const ticket: ChatTicket = {
         _id: data.ticketId,
         ticketId: data.ticketId,
@@ -108,19 +103,10 @@ class UserChatSocketService {
     });
 
     this.socket.on('new_message', (message: any) => {
-      console.log('💬 [UserChatSocket] New message received:', message);
       
       // Update local ticket data only for admin messages to avoid duplicates
       const senderEmail = message.senderEmail || message.userEmail || '';
       const isAdminMessage = message.isAdminReply === true;
-      
-      console.log('📋 [UserChatSocket] Message analysis:', {
-        isAdminReply: message.isAdminReply,
-        isAdminMessage,
-        senderEmail,
-        ticketId: message.ticketId,
-        messageId: message._id
-      });
       
       const ticket = this.currentTickets.get(message.ticketId);
       if (ticket && isAdminMessage) {
@@ -130,7 +116,6 @@ class UserChatSocketService {
           ticket.messages.push(message);
           ticket.lastUpdated = new Date();
           this.currentTickets.set(message.ticketId, ticket);
-          console.log('✅ [UserChatSocket] Added admin message to local ticket data');
         }
       }
       
@@ -139,28 +124,23 @@ class UserChatSocketService {
 
     // Listen for direct admin messages
     this.socket.on('admin_message', (message: any) => {
-      console.log('👨‍💼 [UserChatSocket] Direct admin message received:', message);
       this.emit('admin_message', message);
     });
 
     // Listen for admin replies specifically  
     this.socket.on('admin_reply', (message: any) => {
-      console.log('💬 [UserChatSocket] Admin reply received:', message);
       this.emit('new_message', { ...message, isAdminReply: true });
     });
 
     this.socket.on('message_sent', (data) => {
-      console.log('✅ [UserChatSocket] Message sent confirmation:', data);
       this.emit('message_sent', data);
     });
 
     this.socket.on('agent_joined', (data) => {
-      console.log('👨‍💼 [UserChatSocket] Agent joined chat:', data);
       this.emit('agent_joined', data);
     });
 
     this.socket.on('agent_typing', (data) => {
-      console.log('⌨️ [UserChatSocket] Agent is typing:', data);
       this.emit('agent_typing', data);
     });
 
@@ -192,7 +172,6 @@ class UserChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('reconnect', (attemptNumber) => {
-      console.log(`🔄 [UserChatSocket] Reconnected after ${attemptNumber} attempts`);
       this.isConnected = true;
       this.rejoinActiveTickets();
       this.emit('reconnected', { attempts: attemptNumber });
@@ -207,7 +186,6 @@ class UserChatSocketService {
   // User message sending
   sendMessage(ticketId: string, message: string, attachments: any[] = []): void {
     if (this.isConnected && this.socket) {
-      console.log('📤 [UserChatSocket] Sending user message:', { ticketId, message, senderModel: 'DTUser' });
       this.socket.emit('send_message', {
         ticketId,
         message,
@@ -224,7 +202,6 @@ class UserChatSocketService {
   // Start new chat
   startChat(message: string, category: ChatCategory = 'general_inquiry', priority: ChatPriority = 'medium'): void {
     if (this.isConnected && this.socket) {
-      console.log('🚀 [UserChatSocket] Starting new chat');
       this.socket.emit('start_chat', { 
         message, 
         category, 
@@ -238,7 +215,6 @@ class UserChatSocketService {
   // Rejoin ticket
   rejoinTicket(ticketId: string): void {
     if (this.isConnected && this.socket) {
-      console.log('🔄 [UserChatSocket] Rejoining ticket:', ticketId);
       
       // Try multiple methods to ensure room joining works
       this.socket.emit('get_chat_history', { ticketId });
@@ -246,7 +222,6 @@ class UserChatSocketService {
       this.socket.emit('join_room', { ticketId });
       this.socket.emit('rejoin_ticket', { ticketId });
       
-      console.log('✅ [UserChatSocket] Attempted multiple join methods for ticket:', ticketId);
     } else {
       console.warn('⚠️ [UserChatSocket] Cannot rejoin ticket: Not connected');
     }
@@ -255,7 +230,6 @@ class UserChatSocketService {
   // Join specific chat room
   joinChatRoom(ticketId: string): void {
     if (this.isConnected && this.socket) {
-      console.log('🏠 [UserChatSocket] Joining chat room:', ticketId);
       this.socket.emit('join_chat_room', { ticketId });
       this.socket.emit('join_room', { ticketId });
     } else {
@@ -332,7 +306,6 @@ class UserChatSocketService {
   // Clean disconnect
   disconnect(): void {
     if (this.socket) {
-      console.log('🔌 [UserChatSocket] Disconnecting...');
       this.socket.disconnect();
       this.isConnected = false;
       this.currentTickets.clear();

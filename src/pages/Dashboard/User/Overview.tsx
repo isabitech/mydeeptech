@@ -116,7 +116,7 @@ const Overview = () => {
     >
       {/* Header */}
       <motion.div variants={sectionVariants}>
-        <Header title={`Welcome back, ${data.userProfile.fullName}`} />
+        <Header title={`Welcome back, ${data?.userProfile?.fullName}`} />
       </motion.div>
 
       <hr />
@@ -188,30 +188,30 @@ const Overview = () => {
         {/* Financial Summary */}
         <motion.div variants={sectionVariants}>
           <FinancialSummaryCards 
-            financialSummary={data.financialSummary}
-            performanceMetrics={data.performanceMetrics}
+            financialSummary={data?.financialSummary}
+            performanceMetrics={data?.performanceMetrics}
           />
         </motion.div>
 
         {/* Statistics and Analytics */}
         <motion.div variants={sectionVariants}>
           <ApplicationStatisticsCharts 
-            applicationStatistics={data.applicationStatistics}
-            resultSubmissions={data.resultSubmissions}
+            applicationStatistics={data?.applicationStatistics}
+            resultSubmissions={data?.resultSubmissions}
           />
         </motion.div>
 
         {/* Available Opportunities */}
         <motion.div variants={sectionVariants}>
           <AvailableOpportunitiesComponent 
-            opportunities={data.availableOpportunities}
+            opportunities={data?.availableOpportunities}
           />
         </motion.div>
 
         {/* Recent Activity Timeline */}
         <motion.div variants={sectionVariants}>
           <RecentActivityTimeline 
-            recentActivity={data.recentActivity}
+            recentActivity={data?.recentActivity}
           />
         </motion.div>
 
@@ -221,8 +221,8 @@ const Overview = () => {
           className="text-center text-sm text-gray-500 py-4 border-t"
         >
           <p>
-            Dashboard generated on {new Date(data.generatedAt).toLocaleString()} • 
-            Activity timeframe: {data.timeframe.recentActivity} • 
+            Dashboard generated on {new Date(data?.generatedAt).toLocaleString()} • 
+            Activity timeframe: {data?.timeframe?.recentActivity} • 
             <Button type="link" size="small" onClick={refreshDashboard} className="p-0 ml-1">
               <ReloadOutlined /> Refresh
             </Button>

@@ -17,7 +17,6 @@ class UserChatAPI {
         priority
       });
       
-      console.log('📝 [UserChatAPI] Chat started via API:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to start chat:', error);
@@ -28,7 +27,6 @@ class UserChatAPI {
   async getActiveChats(): Promise<ActiveChatsResponse> {
     try {
       const response = await apiGet('/chat/active');
-      console.log('📋 [UserChatAPI] Active chats fetched:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to get active chats:', error);
@@ -39,7 +37,6 @@ class UserChatAPI {
   async getChatHistory(page: number = 1, limit: number = 50): Promise<ChatHistoryResponse> {
     try {
       const response = await apiGet(`/chat/history?page=${page}&limit=${limit}`);
-      console.log('📚 [UserChatAPI] Chat history fetched:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to get chat history:', error);
@@ -54,7 +51,6 @@ class UserChatAPI {
         senderModel: 'DTUser',
         attachments
       });
-      console.log('💬 [UserChatAPI] Message sent via API:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to send message:', error);
@@ -65,7 +61,6 @@ class UserChatAPI {
   async getChatTicket(ticketId: string) {
     try {
       const response = await apiGet(`/chat/${ticketId}`);
-      console.log('🎫 [UserChatAPI] Chat ticket fetched:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to get chat ticket:', error);
@@ -86,7 +81,6 @@ class UserChatAPI {
         }
       });
       
-      console.log('📎 [UserChatAPI] File uploaded:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to upload file:', error);
@@ -119,7 +113,6 @@ class UserChatAPI {
   async exportChatHistory(ticketId: string, format: 'pdf' | 'csv' = 'pdf') {
     try {
       const response = await apiGet(`/chat/${ticketId}/export?format=${format}`);
-      console.log('📄 [UserChatAPI] Chat export completed:', response);
       return response;
     } catch (error) {
       console.error('[UserChatAPI] Failed to export chat:', error);
