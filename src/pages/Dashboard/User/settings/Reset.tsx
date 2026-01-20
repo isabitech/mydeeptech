@@ -24,10 +24,10 @@ const Reset = () => {
     }
   };
   return (
-    <div className=" flex flex-col gap-4">
+    <div className="flex flex-col gap-4 w-full">
       <p>Reset Password</p>
 
-      <Form form={form} onFinish={handleSubmit}>
+      <Form form={form} onFinish={handleSubmit} className="flex flex-col gap-4 w-full">
         <Form.Item
           name="oldPassword"
           rules={[
@@ -36,7 +36,7 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[15rem] !rounded-md !p-4"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
             placeholder="Old password"
           />
         </Form.Item>
@@ -56,7 +56,7 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[15rem] !rounded-md !p-4"
+            className="!font-[gilroy-regular] !text-[#333333]  !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
             placeholder="New password"
           />
         </Form.Item>
@@ -86,13 +86,13 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[15rem] !rounded-md !p-4"
+            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
             placeholder="Confirm new password"
           />
         </Form.Item>
 
         <Button
-          className="!font-[gilroy-regular] !text-white bg-secondary !h-12 !mt-4"
+          className="!font-[gilroy-regular] !text-white bg-secondary !h-12 !w-[100%] lg:!w-[50%] !mt-4"
           type="primary"
           htmlType="submit"
           loading={loading}

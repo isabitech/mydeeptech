@@ -385,16 +385,100 @@ useEffect(() => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       <Header title="Profile" />
       <div className="mt-10 w-[90%] m-auto">
-        <div className="font-bold justify-start mb-6">
+        {/* <div className="font-bold justify-start mb-6">
           <p className="text-lg">Profile</p>
           <hr />
+        </div> */}
+        <div className="w-full">
+            <Card title="Personal Information" className="mb-6">
+              {/* Profile Image and Actions */}
+            <div className="lg:col-span-1">
+              <div className="flex flex-col items-center gap-4">
+                {/* Profile Avatar */}
+                <div className="flex h-[6rem] w-[6rem] cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <span className="font-[gilroy-medium] font-bold text-2xl">
+                    {profile?.personalInfo?.fullName?.split(' ').map(name => name.charAt(0)).join('') ||
+                     userInfo?.fullName?.split(' ').map(name => name.charAt(0)).join('') || 
+                     'U'}
+                  </span>
+                </div>
+
+                <div className="text-center">
+                  <h3 className="font-semibold text-lg">
+                    {profile?.personalInfo?.fullName || userInfo?.fullName || 'User Name'}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {profile?.annotatorStatus || 'Annotator'}
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-2 w-full max-w-xs">
+                  {isEditable ? (
+                    <div className="flex gap-2">
+                      <Button
+                        className="!bg-[#E3E6EA] !text-[#666666] rounded-lg !font-[gilroy-regular] flex-1"
+                        onClick={handleCancel}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="!bg-[#096A95] !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] flex-1"
+                        onClick={handleSave}
+                        loading={updateLoading}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
+                      onClick={handleEditToggle}
+                    >
+                      Edit Profile
+                    </Button>
+                  )}
+                </div>
+
+                {/* System Information (Read-only) */}
+                <Card title="System Information" className="w-full mt-4" size="small">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Device:</span>
+                      <span>{profile?.systemInfo?.deviceType || 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">OS:</span>
+                      <span>{profile?.systemInfo?.operatingSystem || 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Internet:</span>
+                      <span>{profile?.systemInfo?.internetSpeedMbps ? `${profile.systemInfo.internetSpeedMbps} Mbps` : 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Webcam:</span>
+                      <Tag color={profile?.systemInfo?.hasWebcam ? "green" : "red"}>
+                        {profile?.systemInfo?.hasWebcam ? "Available" : "Not Available"}
+                      </Tag>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Microphone:</span>
+                      <Tag color={profile?.systemInfo?.hasMicrophone ? "green" : "red"}>
+                        {profile?.systemInfo?.hasMicrophone ? "Available" : "Not Available"}
+                      </Tag>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+            </Card>
         </div>
 
         <Form form={form} layout="vertical">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-12 lg:grid-cols-12 gap-8">
             
             {/* Personal Information Section */}
-            <div className="lg:col-span-1">
+            <div className="col-span-12">
               <Card title="Personal Information" className="mb-6">
                 
                 {/* Read-only fields */}
@@ -421,13 +505,14 @@ useEffect(() => {
                 </Form.Item>
 
                 <Form.Item label="Domains">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {profile?.domains?.map((domain, index) => (
                       <Tag key={index} color="blue">{domain}</Tag>
                     )) || <span className="text-gray-500">No domains selected</span>}
                   </div>
                 </Form.Item>
 
+                <div className="grid lg:grid-cols-2 gap-x-5">
                 {/* Read-only personal fields */}
                 <Form.Item label="Full Name" name="fullName">
                   <Input
@@ -444,7 +529,6 @@ useEffect(() => {
                     placeholder="System managed"
                   />
                 </Form.Item>
-
                 {/* Editable personal fields */}
                 <Form.Item label="Country" name="country">
                   <Select
@@ -489,11 +573,14 @@ useEffect(() => {
                     ]}
                   />
                 </Form.Item>
+
+                </div>
+
               </Card>
             </div>
 
             {/* Payment Information Section */}
-            <div className="lg:col-span-1">
+            <div className="col-span-12">
               <Card title="Payment Information" className="mb-6">
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
@@ -665,7 +752,7 @@ useEffect(() => {
                         )}
 
                         {paymentMethod === 'bank_transfer' && (
-                          <>
+                          <div className="grid grid-cols-2 bg-red-500">
                             <Form.Item label="Account Holder Name" name="accountName" rules={[{ required: true, message: 'Account holder name is required' }]}>
                               <Input
                                 disabled={!isEditable}
@@ -691,7 +778,7 @@ useEffect(() => {
                                 placeholder="Enter bank name"
                               />
                             </Form.Item>
-                          </>
+                          </div>
                         )}
 
                         {paymentMethod === 'cryptocurrency' && (
@@ -1021,7 +1108,8 @@ useEffect(() => {
             </div>
 
             {/* Skills & Experience Section */}
-            <div className="lg:col-span-1">
+          
+            <div className="col-span-12">
               <Card title="Skills & Experience" className="mb-6">
                 
                 <Form.Item label="Annotation Skills" name="annotationSkills">
@@ -1197,86 +1285,7 @@ useEffect(() => {
               </Card>
             </div>
 
-            {/* Profile Image and Actions */}
-            <div className="lg:col-span-1">
-              <div className="flex flex-col items-center gap-4">
-                {/* Profile Avatar */}
-                <div className="flex h-[6rem] w-[6rem] cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                  <span className="font-[gilroy-medium] font-bold text-2xl">
-                    {profile?.personalInfo?.fullName?.split(' ').map(name => name.charAt(0)).join('') ||
-                     userInfo?.fullName?.split(' ').map(name => name.charAt(0)).join('') || 
-                     'U'}
-                  </span>
-                </div>
-
-                <div className="text-center">
-                  <h3 className="font-semibold text-lg">
-                    {profile?.personalInfo?.fullName || userInfo?.fullName || 'User Name'}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {profile?.annotatorStatus || 'Annotator'}
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col gap-2 w-full max-w-xs">
-                  {isEditable ? (
-                    <div className="flex gap-2">
-                      <Button
-                        className="!bg-[#E3E6EA] !text-[#666666] rounded-lg !font-[gilroy-regular] flex-1"
-                        onClick={handleCancel}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        className="!bg-[#096A95] !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] flex-1"
-                        onClick={handleSave}
-                        loading={updateLoading}
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
-                      onClick={handleEditToggle}
-                    >
-                      Edit Profile
-                    </Button>
-                  )}
-                </div>
-
-                {/* System Information (Read-only) */}
-                <Card title="System Information" className="w-full mt-4" size="small">
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Device:</span>
-                      <span>{profile?.systemInfo?.deviceType || 'Unknown'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">OS:</span>
-                      <span>{profile?.systemInfo?.operatingSystem || 'Unknown'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Internet:</span>
-                      <span>{profile?.systemInfo?.internetSpeedMbps ? `${profile.systemInfo.internetSpeedMbps} Mbps` : 'Unknown'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Webcam:</span>
-                      <Tag color={profile?.systemInfo?.hasWebcam ? "green" : "red"}>
-                        {profile?.systemInfo?.hasWebcam ? "Available" : "Not Available"}
-                      </Tag>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Microphone:</span>
-                      <Tag color={profile?.systemInfo?.hasMicrophone ? "green" : "red"}>
-                        {profile?.systemInfo?.hasMicrophone ? "Available" : "Not Available"}
-                      </Tag>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
+           
           </div>
         </Form>
       </div>
