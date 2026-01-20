@@ -106,18 +106,11 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     // Real-time message events
     unsubscribers.push(
       AdminChatSocketService.on('new_message', (chatMessage: any) => {
-        console.log('💬 Admin received message:', chatMessage);
         
         // Use isAdminReply to determine message type
         const isFromAdmin = chatMessage.isAdminReply === true;
         const isFromUser = chatMessage.isAdminReply === false;
         
-        console.log('🔍 Admin message analysis:', {
-          isAdminReply: chatMessage.isAdminReply,
-          isFromUser,
-          isFromAdmin,
-          messageId: chatMessage._id
-        });
         
         // Update messages if it's for selected chat
         if (selectedChat && chatMessage.ticketId === selectedChat._id) {
@@ -198,7 +191,6 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
   const initializeAdminChat = async () => {
     try {
       setIsLoading(true);
-      console.log('🔌 Initializing admin chat service...');
       await AdminChatSocketService.connect(adminToken);
       await loadActiveChats();
     } catch (error) {

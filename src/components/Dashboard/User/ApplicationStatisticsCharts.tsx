@@ -24,26 +24,26 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
   const applicationData = [
     { 
       name: 'Pending', 
-      value: applicationStatistics.pendingApplications, 
+      value: applicationStatistics?.pendingApplications, 
       color: COLORS.pending,
-      percentage: applicationStatistics.totalApplications > 0 
-        ? (applicationStatistics.pendingApplications / applicationStatistics.totalApplications * 100).toFixed(1)
+      percentage: applicationStatistics?.totalApplications > 0 
+        ? (applicationStatistics?.pendingApplications / applicationStatistics?.totalApplications * 100).toFixed(1)
         : '0'
     },
     { 
       name: 'Approved', 
-      value: applicationStatistics.approvedApplications, 
+      value: applicationStatistics?.approvedApplications, 
       color: COLORS.approved,
-      percentage: applicationStatistics.totalApplications > 0 
-        ? (applicationStatistics.approvedApplications / applicationStatistics.totalApplications * 100).toFixed(1)
+      percentage: applicationStatistics?.totalApplications > 0 
+        ? (applicationStatistics?.approvedApplications / applicationStatistics?.totalApplications * 100).toFixed(1)
         : '0'
     },
     { 
       name: 'Rejected', 
-      value: applicationStatistics.rejectedApplications, 
+      value: applicationStatistics?.rejectedApplications, 
       color: COLORS.rejected,
-      percentage: applicationStatistics.totalApplications > 0 
-        ? (applicationStatistics.rejectedApplications / applicationStatistics.totalApplications * 100).toFixed(1)
+      percentage: applicationStatistics?.totalApplications > 0 
+        ? (applicationStatistics?.rejectedApplications / applicationStatistics?.totalApplications * 100).toFixed(1)
         : '0'
     }
   ];
@@ -51,15 +51,15 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
   const submissionData = [
     {
       name: 'Applications',
-      submitted: applicationStatistics.totalApplications,
-      approved: applicationStatistics.approvedApplications,
-      pending: applicationStatistics.pendingApplications,
-      rejected: applicationStatistics.rejectedApplications
+      submitted: applicationStatistics?.totalApplications,
+      approved: applicationStatistics?.approvedApplications,
+      pending: applicationStatistics?.pendingApplications,
+      rejected: applicationStatistics?.rejectedApplications
     },
     {
       name: 'Submissions',
-      submitted: resultSubmissions.totalSubmissions,
-      approved: resultSubmissions.totalSubmissions,
+      submitted: resultSubmissions?.totalSubmissions,
+      approved: resultSubmissions?.totalSubmissions,
       pending: 0,
       rejected: 0
     }
@@ -120,7 +120,7 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
                 {/* Summary Stats */}
                 <div className="text-center mb-4">
                   <div className="text-2xl font-bold text-blue-600">
-                    <CountUp end={applicationStatistics.totalApplications} duration={2} />
+                    <CountUp end={applicationStatistics?.totalApplications} duration={2} />
                   </div>
                   <div className="text-sm text-gray-600">Total Applications</div>
                 </div>
@@ -259,8 +259,8 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
               <div className="text-2xl font-bold text-green-600">
                 <CountUp 
                   end={
-                    applicationStatistics.totalApplications > 0
-                      ? (applicationStatistics.approvedApplications / applicationStatistics.totalApplications) * 100
+                    applicationStatistics?.totalApplications > 0
+                      ? (applicationStatistics?.approvedApplications / applicationStatistics?.totalApplications) * 100
                       : 0
                   }
                   duration={2}
@@ -269,7 +269,7 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
                 />
               </div>
               <div className="text-sm text-gray-500">
-                {applicationStatistics.approvedApplications} of {applicationStatistics.totalApplications} approved
+                {applicationStatistics?.approvedApplications} of {applicationStatistics?.totalApplications} approved
               </div>
             </Card>
           </Col>
@@ -278,7 +278,7 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
               <div className="text-lg font-medium text-gray-700 mb-2">Pending Review</div>
               <div className="text-2xl font-bold text-orange-600">
                 <CountUp 
-                  end={applicationStatistics.pendingApplications}
+                  end={applicationStatistics?.pendingApplications}
                   duration={2}
                 />
               </div>
@@ -292,7 +292,7 @@ const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = 
               <div className="text-lg font-medium text-gray-700 mb-2">Total Submissions</div>
               <div className="text-2xl font-bold text-blue-600">
                 <CountUp 
-                  end={resultSubmissions.totalSubmissions}
+                  end={resultSubmissions?.totalSubmissions}
                   duration={2}
                 />
               </div>

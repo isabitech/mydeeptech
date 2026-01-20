@@ -1,4 +1,6 @@
-export const baseURL = import.meta.env.VITE_API_URL;
+
+export const baseURL = import.meta.env.MODE === "development" ? 'http://localhost:4000/api' : import.meta.env.VITE_API_URL_PROD;
+
 export const endpoints = {
   auth: {
     login: "/auth/login",

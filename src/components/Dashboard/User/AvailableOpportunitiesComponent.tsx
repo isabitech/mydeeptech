@@ -109,7 +109,7 @@ const AvailableOpportunitiesComponent: React.FC<AvailableOpportunitiesComponentP
           </Button>
         }
       >
-        {opportunities.availableProjects.length === 0 ? (
+        {opportunities?.availableProjects?.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <ProjectOutlined style={{ fontSize: 48, marginBottom: 16 }} />
             <div>No opportunities available at the moment</div>
@@ -220,7 +220,7 @@ const AvailableOpportunitiesComponent: React.FC<AvailableOpportunitiesComponentP
         )}
 
         {/* Summary Footer */}
-        {opportunities.availableProjects.length > 0 && (
+        {opportunities?.availableProjects?.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -229,14 +229,14 @@ const AvailableOpportunitiesComponent: React.FC<AvailableOpportunitiesComponentP
           >
             <div className="flex justify-between items-center text-sm text-gray-600">
               <span>
-                Showing {opportunities.availableProjects.length} of {opportunities.projectCount} projects
+                Showing {opportunities?.availableProjects.length} of {opportunities?.projectCount} projects
               </span>
               <div className="flex gap-4">
                 <span>
-                  Applied: {opportunities.availableProjects.filter(p => p.hasApplied).length}
+                  Applied: {opportunities?.availableProjects.filter(p => p.hasApplied).length}
                 </span>
                 <span>
-                  Available: {opportunities.availableProjects.filter(p => !p.hasApplied).length}
+                  Available: {opportunities?.availableProjects.filter(p => !p.hasApplied).length}
                 </span>
               </div>
             </div>

@@ -33,7 +33,6 @@ const Profile = () => {
     const loadUser = async () => {
       try {
         const user = await retrieveUserInfoFromStorage();
-        console.log("User info from storage:", user);
         if (user) {
           setUserInfo(user);
           setUserId(user.id);
@@ -61,7 +60,6 @@ useEffect(() => {
 
   const fetchProfile = async () => {
     try {
-      console.log("🚀 Fetching profile for userId:", userId);
       const result = await getProfile(userId);
 
       if (result.success) {
@@ -93,7 +91,6 @@ useEffect(() => {
         // Check if country is already selected and set state accordingly
         if (result.data?.personalInfo?.country) {
           setHasSelectedCountry(true);
-          console.log("🔒 Country already selected, timezone field locked");
         }
 
         setHasFetchedProfile(true); // ✅ Mark as fetched
@@ -121,16 +118,12 @@ useEffect(() => {
       form.setFieldsValue({
         timeZone: timezoneDisplayName,
       });
-      
-      console.log(`🌍 Country changed to: ${countryValue}`);
-      console.log(`⏰ Timezone auto-updated to: ${timezoneDisplayName}`);
     }
   };
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      console.log("💾 Saving profile:", values);
 
       if (!userId) {
         notification.error({
@@ -189,7 +182,6 @@ useEffect(() => {
         // Refresh the profile data to update UI with latest changes
         const refreshResult = await getProfile(userId);
         if (refreshResult.success) {
-          console.log("✅ Profile refreshed after update");
           // Update form with fresh data
           form.setFieldsValue({
             fullName: refreshResult.data?.personalInfo?.fullName,
