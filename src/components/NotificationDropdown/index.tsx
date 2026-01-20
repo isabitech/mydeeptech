@@ -324,7 +324,7 @@ const NotificationDropdown: React.FC = () => {
     <Dropdown
       overlay={dropdownContent}
       trigger={['click']}
-      placement="topCenter"
+      placement="top"
       open={dropdownOpen}
       onOpenChange={setDropdownOpen}
       overlayStyle={{

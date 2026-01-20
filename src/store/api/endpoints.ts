@@ -1,4 +1,6 @@
-export const baseURL = import.meta.env.VITE_API_URL;
+
+export const baseURL = import.meta.env.MODE === "development" ? 'http://localhost:4000/api' : import.meta.env.VITE_API_URL_PROD;
+
 export const endpoints = {
   auth: {
     login: "/auth/login",
@@ -60,6 +62,8 @@ export const endpoints = {
     requestDeletionOtp: "/admin/projects", // /:projectId/request-deletion-otp
     verifyDeletionOtp: "/admin/projects", // /:projectId/verify-deletion-otp
     getAllApplications: "/admin/applications",
+    getApprovedApplicantsForProject: "/projects/:projectId/approved-applicants",
+    bulkRejectApplications: "/applications/bulk-reject",
     approveApplication: "/admin/applications",
     rejectApplication: "/admin/applications",
     removeApplicant: "/admin/applications", // /:applicationId/remove

@@ -81,7 +81,6 @@ const EnhancedUserChatWidget: React.FC = () => {
     // Chat session events
     unsubscribers.push(
       UserChatSocketService.on('active_tickets', (tickets: ChatTicket[]) => {
-        console.log('📋 Loading active tickets:', tickets);
         setActiveTickets(tickets);
         if (tickets.length > 0 && !currentTicket) {
           selectTicket(tickets[0]);
@@ -91,7 +90,6 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     unsubscribers.push(
       UserChatSocketService.on('chat_started', (ticket: ChatTicket) => {
-        console.log('🚀 Chat started:', ticket);
         setActiveTickets(prev => {
           const existing = prev.find(t => t._id === ticket._id);
           if (!existing) {
@@ -109,38 +107,19 @@ const EnhancedUserChatWidget: React.FC = () => {
     // CRITICAL: Real-time message handling
     unsubscribers.push(
       UserChatSocketService.on('new_message', (message: any) => {
-        console.log('💬 Received new message:', message);
-        console.log('🔍 Message details:', {
-          ticketId: message.ticketId,
-          isAdminReply: message.isAdminReply,
-          senderEmail: message.senderEmail,
-          senderName: message.senderName,
-          messageId: message._id,
-          currentTicketId: currentTicket?._id
-        });
-        
         // Update messages if it's for current ticket
         // Check both ticketId and _id fields since backend might send either
         const messageTicketId = message.ticketId || message._id;
         const currentTicketId = currentTicket?._id || currentTicket?.ticketId;
         
         if (currentTicket && (messageTicketId === currentTicketId || message.ticketId === currentTicket._id || message.ticketId === currentTicket.ticketId)) {
-          console.log('✅ Message is for current ticket, updating UI');
           
           // Use isAdminReply === true to determine if message is from admin
           const isFromAdmin = message.isAdminReply === true;
           
-          console.log('🔍 Message analysis:', {
-            isAdminReply: message.isAdminReply,
-            senderEmail: message.senderEmail || message.userEmail,
-            finalIsAdmin: isFromAdmin,
-            messageId: message._id,
-            sender: message.sender
-          });
           
           if (isFromAdmin) {
             // This is a genuine admin message
-            console.log('📨 Adding admin message to chat from Admin');
             setMessages(prev => {
               const exists = prev.find(m => m._id === message._id);
               if (!exists) {
@@ -175,7 +154,6 @@ const EnhancedUserChatWidget: React.FC = () => {
             }
           } else {
             // This is a user message echo back - update pending message to confirmed
-            console.log('📤 Updating pending user message to confirmed');
             setMessages(prev => prev.map(msg => {
               // Match by message content and check if it's pending
               if (msg.pending && msg.message === message.message && !msg.isAdminReply) {
@@ -185,7 +163,6 @@ const EnhancedUserChatWidget: React.FC = () => {
             }));
           }
         } else {
-          console.log('⚠️ Message not for current ticket:', { messageTicketId, currentTicketId });
           
           // Still update ticket list for admin messages to show unread indicator
           if (message.isAdminReply === true) {
@@ -252,7 +229,6 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     unsubscribers.push(
       UserChatSocketService.on('agent_joined', (data: any) => {
-        console.log('👨‍💼 Agent joined:', data);
         showNotification(`Agent ${data.agentName || 'Support'} joined the conversation`, 'info');
       })
     );
@@ -267,7 +243,6 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     unsubscribers.push(
       UserChatSocketService.on('chat_closed', (data: any) => {
-        console.log('📪 Chat closed:', data);
         if (currentTicket && data.ticketId === currentTicket._id) {
           showNotification('Chat session has been closed by support', 'success');
           // Update ticket status instead of removing
@@ -285,7 +260,6 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     unsubscribers.push(
       UserChatSocketService.on('ticket_status_updated', (data: any) => {
-        console.log('📊 Ticket status updated:', data);
         setActiveTickets(prev => prev.map(ticket => 
           ticket._id === data.ticketId 
             ? { ...ticket, status: data.status, lastUpdated: new Date() }
@@ -300,10 +274,8 @@ const EnhancedUserChatWidget: React.FC = () => {
     // Add admin message event listener specifically
     unsubscribers.push(
       UserChatSocketService.on('admin_message', (data: any) => {
-        console.log('👨‍💼 Direct admin message received:', data);
         
         if (currentTicket && (data.ticketId === currentTicket._id || data.ticketId === currentTicket.ticketId)) {
-          console.log('✅ Admin message is for current ticket, adding to UI');
           
           const adminMessage: ChatMessage = {
             _id: data._id || `msg-${Date.now()}`,
@@ -334,7 +306,6 @@ const EnhancedUserChatWidget: React.FC = () => {
 
     unsubscribers.push(
       UserChatSocketService.on('message_sent', (data: any) => {
-        console.log('✅ Message delivery confirmed:', data);
         // Update pending message to confirmed
         setMessages(prev => prev.map(msg => 
           msg.pending && msg.message === data.message 
@@ -354,23 +325,16 @@ const EnhancedUserChatWidget: React.FC = () => {
     try {
       const token = await retrieveTokenFromStorage();
       if (!token) {
-        console.warn('No token found, chat disabled');
         return;
       }
 
-      console.log('🔌 Initializing chat service...');
       const connected = await UserChatSocketService.connect(token);
-      console.log('🔗 Socket connection result:', connected);
-      
       // Load existing active chats
       const result = await UserChatAPI.getActiveChats();
-      console.log('📋 Active chats API result:', result);
       
       if (result.success && result.data.activeChats) {
-        console.log('✅ Setting active tickets:', result.data.activeChats.length, 'tickets');
         setActiveTickets(result.data.activeChats);
         if (result.data.activeChats.length > 0) {
-          console.log('🎯 Auto-selecting first ticket:', result.data.activeChats[0]);
           selectTicket(result.data.activeChats[0]);
         }
       }
@@ -382,14 +346,12 @@ const EnhancedUserChatWidget: React.FC = () => {
 
   // Select ticket and join room for real-time updates
   const selectTicket = useCallback((ticket: ChatTicket) => {
-    console.log('🎯 Selecting ticket:', ticket.ticketNumber);
     setCurrentTicket(ticket);
     setMessages(ticket.messages || []);
     
     // Join ticket room for real-time updates - use multiple methods for better compatibility
     const socket = UserChatSocketService.getSocket();
     if (socket && UserChatSocketService.isSocketConnected()) {
-      console.log('🏠 Joining chat room for ticket:', ticket._id);
       
       // Method 1: Direct socket emit
       socket.emit('join_chat_room', { ticketId: ticket._id });
@@ -400,7 +362,6 @@ const EnhancedUserChatWidget: React.FC = () => {
       // Method 3: Use the service method
       UserChatSocketService.rejoinTicket(ticket._id);
       
-      console.log('✅ Attempted to join room with multiple methods for ticket:', ticket._id);
     } else {
       console.warn('⚠️ Socket not connected, cannot join room');
     }
@@ -468,7 +429,6 @@ const EnhancedUserChatWidget: React.FC = () => {
     try {
       setHistoryLoading(true);
       const result = await UserChatAPI.getChatHistory(1, 50);
-      console.log('📚 Chat history response:', result);
       
       if (result.success && result.data) {
         // Handle the UserChatHistoryResponse type
@@ -482,7 +442,6 @@ const EnhancedUserChatWidget: React.FC = () => {
         showNotification('No chat history found', 'info');
       }
     } catch (error) {
-      console.error('Failed to load chat history:', error);
       message.error('Failed to load chat history');
     } finally {
       setHistoryLoading(false);

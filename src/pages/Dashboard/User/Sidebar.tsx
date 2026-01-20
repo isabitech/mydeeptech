@@ -28,13 +28,13 @@ const Sidebar = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+
   // Load user info on component mount
   useEffect(() => {
     const loadUserInfo = async () => {
       try {
         const result = await retrieveUserInfoFromStorage();
         setUserInfo(result);
-        console.log(result)
       } catch (error) {
         console.error("Failed to load user info:", error);
       } finally {
@@ -65,7 +65,6 @@ const Sidebar = () => {
 
     const { qaStatus, annotatorStatus } = userInfo;
     let dynamicItems = [...baseMenuItems];
-    console.log("qa status", qaStatus)
 
     // If qaStatus === "approved", add QA Review Dashboard
     if (qaStatus === "approved") {
@@ -111,11 +110,14 @@ const Sidebar = () => {
 
   // Check if a menu item should be locked based on user status
   const isMenuItemLocked = (itemKey: string) => {
+    
     if (loading || !userInfo) {
       return false; // Don't lock anything while loading
     }
 
     const { annotatorStatus, microTaskerStatus, qaStatus } = userInfo;
+
+    // console.log({annotatorStatus, microTaskerStatus, qaStatus});
 
     // QA Review and Assessments List are never locked if user has the right status
     if ((itemKey === "qa-review" && qaStatus === "approved") ||
@@ -192,8 +194,8 @@ const Sidebar = () => {
         {/* Navigation Links */}
         <div className="flex flex-col justify-between h-full mt-4">
           <ul className="space-y-2">
-            {filteredMenuItems.map((item) => {
-              const isLocked = isMenuItemLocked(item.key);
+            {filteredMenuItems?.map((item) => {
+              const isLocked = isMenuItemLocked(item?.key);
 
               if (isLocked) {
                 // Render locked item as non-clickable

@@ -32,9 +32,9 @@ const PageModal = ({
         // Set a solid or semi-transparent background
         backgroundColor: "#333333", // Dark gray background for the modal
       }}
-      maskStyle={{
-        // Optional: Adjust the overlay opacity
-        backgroundColor: "rgba(0, 0, 0, 0.6)", // Darkened semi-transparent overlay
+
+      styles={{
+        mask: { backgroundColor: 'rgba(0, 0, 0, 0.5)' }
       }}
     >
       <div className="h-auto overflow-auto">{children}</div>

@@ -459,6 +459,7 @@ const ProjectManagement: React.FC = () => {
 
   // Show project annotators
   const showProjectAnnotators = (project: Project) => {
+    console.log({ project });
     setSelectedProjectForAnnotators(project);
     setIsAnnotatorsModalVisible(true);
   };

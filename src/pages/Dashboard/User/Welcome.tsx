@@ -15,7 +15,6 @@ const Welcome = () => {
   useEffect(() => {
     const loadUser = async () => {
       const user = await retrieveUserInfoFromStorage();
-      console.log("User info:", user);
       setUserInfo(user);
     };
     loadUser();
