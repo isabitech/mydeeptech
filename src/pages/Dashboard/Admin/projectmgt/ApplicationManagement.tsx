@@ -74,6 +74,7 @@ const ApplicationManagement: React.FC = () => {
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
   const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [pdfViewerApplication, setPdfViewerApplication] =
     useState<Application | null>(null);
@@ -492,10 +493,39 @@ const ApplicationManagement: React.FC = () => {
           </Button>
         </Space>
       </div>
+          <Space wrap className="mb-4">
+  <Button
+    type="primary"
+    icon={<CheckOutlined />}
+    onClick={() => {
+      if (selectedRowKeys.length === 0) return;
+      message.info(`Approving ${selectedRowKeys.length} applications`);
+    }}
+    disabled={selectedRowKeys.length === 0} 
+  >
+    Approve Selected ({selectedRowKeys.length})
+  </Button>
+
+  <Button
+    danger
+    icon={<CloseOutlined />}
+    onClick={() => {
+      if (selectedRowKeys.length === 0) return;
+      message.info(`Rejecting ${selectedRowKeys.length} applications`);
+    }}
+    disabled={selectedRowKeys.length === 0} 
+  >
+    Reject Selected ({selectedRowKeys.length})
+  </Button>
+</Space>
 
       {/* Applications Table */}
       <Spin spinning={loading}>
         <Table
+          rowSelection={{
+          selectedRowKeys,
+          onChange: (keys) => setSelectedRowKeys(keys),
+          }}
           columns={columns}
           dataSource={applications}
           rowKey="_id"
