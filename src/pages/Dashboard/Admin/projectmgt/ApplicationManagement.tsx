@@ -71,6 +71,8 @@ const ApplicationManagement: React.FC = () => {
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
   const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string>("");
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedApplications, setSelectedApplications] = useState<Application[]>([]);
   const [pdfViewerApplication, setPdfViewerApplication] =
     useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -209,6 +211,53 @@ const ApplicationManagement: React.FC = () => {
       message.error("Please complete the required fields");
     }
   };
+
+  const handleBulkApprove = async (values: { reviewNotes: string }) => {
+  try {
+    await Promise.all(
+      selectedApplications.map((app) =>
+        approveApplication(app._id, { reviewNotes: values.reviewNotes })
+      )
+    );
+
+    message.success("Selected applications approved successfully");
+    setSelectedRowKeys([]);
+    setSelectedApplications([]);
+    fetchApplications();
+  } catch {
+    message.error("Failed to approve selected applications");
+  }
+};
+
+const handleBulkReject = async (values: RejectApplicationForm) => {
+  try {
+    await Promise.all(
+      selectedApplications.map((app) =>
+        rejectApplication(app._id, values)
+      )
+    );
+
+    message.success("Selected applications rejected successfully");
+    setSelectedRowKeys([]);
+    setSelectedApplications([]);
+    fetchApplications();
+  } catch {
+    message.error("Failed to reject selected applications");
+  }
+};
+
+
+  const rowSelection = {
+  selectedRowKeys,
+  onChange: (keys: React.Key[], rows: Application[]) => {
+    setSelectedRowKeys(keys);
+    setSelectedApplications(rows);
+  },
+  getCheckboxProps: (record: Application) => ({
+    disabled: record.status !== "pending", 
+  }),
+};
+
 
   const columns = [
     {
@@ -482,9 +531,31 @@ const ApplicationManagement: React.FC = () => {
         </Space>
       </div>
 
+          {selectedRowKeys.length > 0 && (
+      <Space>
+      <Button
+      type="primary"
+      icon={<CheckOutlined />}
+      onClick={() => setIsApprovalModalVisible(true)}
+      className="bg-green-600 border-green-600"
+    >
+      Approve Selected ({selectedRowKeys.length})
+    </Button>
+
+    <Button
+      danger
+      icon={<CloseOutlined />}
+      onClick={() => setIsRejectionModalVisible(true)}
+    >
+      Reject Selected ({selectedRowKeys.length})
+    </Button>
+    </Space>
+)}
+
       {/* Applications Table */}
       <Spin spinning={loading}>
         <Table
+          rowSelection={rowSelection} 
           columns={columns}
           dataSource={applications}
           rowKey="_id"
@@ -705,7 +776,20 @@ const ApplicationManagement: React.FC = () => {
       <Modal
         title="Approve Application"
         open={isApprovalModalVisible}
-        onOk={handleApprove}
+         onOk={async () => {
+    try {
+      const values = await approvalForm.validateFields();
+
+      if (selectedApplications.length > 0) {
+        await handleBulkApprove(values);
+      } else {
+        await handleApprove();
+      }
+    } catch (error) {
+      message.error("Please complete the required fields");
+    }
+  }}
+        
         onCancel={() => setIsApprovalModalVisible(false)}
         okText="Approve"
         cancelText="Cancel"
