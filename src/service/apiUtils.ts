@@ -98,6 +98,17 @@ export const apiUpload = async <T = any>(
   }
 };
 
+export const bulkDeletePendingApplications = async (applicationIds: string[]) => {
+  try {
+    const response = await axiosInstance.delete('/admin/applications/bulk-delete-pending', {
+      data: { applicationIds },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 /**
  * Helper to extract error message from API error
  * @param error - Error object from API call
