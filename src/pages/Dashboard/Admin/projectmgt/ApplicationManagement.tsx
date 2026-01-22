@@ -17,6 +17,7 @@ import {
   Dropdown,
   Menu,
   TableColumnsType,
+  TableProps,
 } from "antd";
 import {
   EyeOutlined,
@@ -26,6 +27,7 @@ import {
   SearchOutlined,
   MoreOutlined,
   FilePdfOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { Viewer } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
@@ -82,6 +84,7 @@ const ApplicationManagement: React.FC = () => {
   const [approvalForm] = Form.useForm();
   const [rejectionForm] = Form.useForm();
 
+
   const {
     getAllApplications,
     approveApplication,
@@ -92,6 +95,12 @@ const ApplicationManagement: React.FC = () => {
     pagination,
     summary,
     resetState,
+    handleBulkApprovalOfPendingApplications,
+    handleBulkDeleteOfPendingApplications,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    isDeletingPendingApplications,
+    isApprovingPendingApplications,
   } = useAdminApplications();
 
   const { getAllProjects, projects } = useAdminProjects();
@@ -214,6 +223,7 @@ const ApplicationManagement: React.FC = () => {
     }
   };
 
+  
   const columns: TableColumnsType<Application> = [
     {
       title: "Applicant",
@@ -383,7 +393,16 @@ const ApplicationManagement: React.FC = () => {
     },
   ];
 
-
+  const rowSelection: TableProps<Application>['rowSelection'] = {
+    onChange: (selectedRowKeys) => {
+      setSelectedRowKeys(selectedRowKeys as string[]);
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== 'pending', // Disable checkbox for non-pending applications
+      name: record._id,
+    }),
+    preserveSelectedRowKeys: true,
+  };
 
   if (error) {
     return (
@@ -490,12 +509,39 @@ const ApplicationManagement: React.FC = () => {
           >
             Refresh
           </Button>
+          <Button
+            icon={<DeleteOutlined />}
+            onClick={handleBulkDeleteOfPendingApplications}
+            disabled={selectedRowKeys.length === 0}
+          >
+            Delete Pending
+          </Button>
         </Space>
       </div>
+          <Space wrap className="mb-4">
+  <Button
+    type="primary"
+    icon={<CheckOutlined />}
+    onClick={handleBulkApprovalOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isApprovingPendingApplications} 
+  >
+    Approve Selected ({selectedRowKeys.length})
+  </Button>
+
+  <Button
+    danger
+    icon={<CloseOutlined />}
+    onClick={handleBulkDeleteOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isDeletingPendingApplications} 
+  >
+    Reject Selected ({selectedRowKeys.length})
+  </Button>
+</Space>
 
       {/* Applications Table */}
       <Spin spinning={loading}>
         <Table
+           rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
           rowKey="_id"
