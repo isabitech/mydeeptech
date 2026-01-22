@@ -3,6 +3,8 @@ import { endpoints } from "../../../../store/api/endpoints";
 import {
   apiGet,
   apiPatch,
+  bulkApprovePendingApplications,
+  bulkDeletePendingApplications,
   getErrorMessage,
 } from "../../../../service/apiUtils";
 import {
@@ -150,7 +152,7 @@ export const useAdminApplications = () => {
         try {
           setIsDeletingPendingApplications(true);
 
-          // await bulkDeletePendingApplications(selectedRowKeys);
+          await bulkDeletePendingApplications(selectedRowKeys);
 
           message.success("Deleted successfully");
 
@@ -177,11 +179,11 @@ export const useAdminApplications = () => {
       okType: "primary",
       onOk: async () => {
         try {
-          setIsDeletingPendingApplications(true);
+          setIsApprovingPendingApplications(true);
 
-          // await bulkDeletePendingApplications(selectedRowKeys);
+          await bulkApprovePendingApplications(selectedRowKeys);
 
-          message.success("Deleted successfully");
+          message.success("Approved successfully");
 
           setApplications((prev) =>
             prev.filter((item) => !selectedRowKeys.includes(item._id)),
@@ -190,7 +192,7 @@ export const useAdminApplications = () => {
         } catch {
           message.error("Failed to approve application(s)");
         } finally {
-          setIsDeletingPendingApplications(false);
+          setIsApprovingPendingApplications(false);
         }
       },
     });
