@@ -109,6 +109,14 @@ export const bulkDeletePendingApplications = async (applicationIds: string[]) =>
   }
 }
 
+export const rejectApplicationsBulk = async (payload: {
+  applicationIds: string[];
+  rejectionReason?: string;
+  reviewNotes?: string;
+}) => {
+  return apiPut("/projects/reject-applications-bulk", payload);
+};
+
 
 export const bulkApprovePendingApplications = async (applicationIds: string[]) => {
   try {

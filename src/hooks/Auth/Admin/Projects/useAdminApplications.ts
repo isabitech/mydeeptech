@@ -6,6 +6,7 @@ import {
   bulkApprovePendingApplications,
   bulkDeletePendingApplications,
   getErrorMessage,
+  rejectApplicationsBulk,
 } from "../../../../service/apiUtils";
 import {
   Application,
@@ -106,6 +107,7 @@ export const useAdminApplications = () => {
     [],
   );
 
+
   const rejectApplication = useCallback(
     async (
       applicationId: string,
@@ -141,34 +143,39 @@ export const useAdminApplications = () => {
     setError(null);
   }, []);
 
-  const handleBulkDeleteOfPendingApplications = useCallback(() => {
-    if (selectedRowKeys.length === 0) return;
-    Modal.confirm({
-      title: `Delete ${selectedRowKeys.length} item(s)?`,
-      content: "This action cannot be undone.",
-      okType: "danger",
-      onOk: async () => {
-        try {
-          setIsDeletingPendingApplications(true);
+const handleBulkDeleteOfPendingApplications = useCallback(() => {
+  if (selectedRowKeys.length === 0) return;
 
-          await bulkDeletePendingApplications(selectedRowKeys);
+  Modal.confirm({
+    title: `Reject ${selectedRowKeys.length} application(s)?`,
+    content: "This action cannot be undone.",
+    okType: "danger",
+    onOk: async () => {
+      try {
+        setIsDeletingPendingApplications(true);
 
-          message.success("Deleted successfully");
+        await rejectApplicationsBulk({
+          applicationIds: selectedRowKeys,
+          rejectionReason: "other",
+          reviewNotes: "",
+        });
 
-          setApplications((prev) =>
-            prev.filter((item) => !selectedRowKeys.includes(item._id)),
-          );
+        message.success("Applications rejected successfully");
 
-          setSelectedRowKeys([]);
-          // getAllApplications();
-        } catch {
-          message.error("Failed to delete");
-        } finally {
-          setIsDeletingPendingApplications(false);
-        }
-      },
-    });
-  }, [applications, selectedRowKeys]);
+        setApplications((prev) =>
+          prev.filter((item) => !selectedRowKeys.includes(item._id))
+        );
+
+        setSelectedRowKeys([]);
+      } catch {
+        message.error("Failed to reject applications");
+      } finally {
+        setIsDeletingPendingApplications(false);
+      }
+    },
+  });
+}, [selectedRowKeys]);
+
 
   const handleBulkApprovalOfPendingApplications = useCallback(() => {
     if (selectedRowKeys.length === 0) return;
