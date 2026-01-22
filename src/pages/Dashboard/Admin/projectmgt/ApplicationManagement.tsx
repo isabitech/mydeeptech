@@ -17,6 +17,7 @@ import {
   Dropdown,
   Menu,
   TableColumnsType,
+  TableProps,
 } from "antd";
 import {
   EyeOutlined,
@@ -74,7 +75,6 @@ const ApplicationManagement: React.FC = () => {
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
   const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string>("");
   const [pdfViewerApplication, setPdfViewerApplication] =
     useState<Application | null>(null);
@@ -93,6 +93,12 @@ const ApplicationManagement: React.FC = () => {
     pagination,
     summary,
     resetState,
+    handleBulkApprovalOfPendingApplications,
+    handleBulkDeleteOfPendingApplications,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    isDeletingPendingApplications,
+    isApprovingPendingApplications,
   } = useAdminApplications();
 
   const { getAllProjects, projects } = useAdminProjects();
@@ -384,7 +390,16 @@ const ApplicationManagement: React.FC = () => {
     },
   ];
 
-
+  const rowSelection: TableProps<Application>['rowSelection'] = {
+    onChange: (selectedRowKeys) => {
+      setSelectedRowKeys(selectedRowKeys as string[]);
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== 'pending', // Disable checkbox for non-pending applications
+      name: record._id,
+    }),
+    preserveSelectedRowKeys: true,
+  };
 
   if (error) {
     return (
@@ -497,11 +512,8 @@ const ApplicationManagement: React.FC = () => {
   <Button
     type="primary"
     icon={<CheckOutlined />}
-    onClick={() => {
-      if (selectedRowKeys.length === 0) return;
-      message.info(`Approving ${selectedRowKeys.length} applications`);
-    }}
-    disabled={selectedRowKeys.length === 0} 
+    onClick={handleBulkApprovalOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isApprovingPendingApplications} 
   >
     Approve Selected ({selectedRowKeys.length})
   </Button>
@@ -509,11 +521,8 @@ const ApplicationManagement: React.FC = () => {
   <Button
     danger
     icon={<CloseOutlined />}
-    onClick={() => {
-      if (selectedRowKeys.length === 0) return;
-      message.info(`Rejecting ${selectedRowKeys.length} applications`);
-    }}
-    disabled={selectedRowKeys.length === 0} 
+    onClick={handleBulkDeleteOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isDeletingPendingApplications} 
   >
     Reject Selected ({selectedRowKeys.length})
   </Button>
@@ -522,10 +531,7 @@ const ApplicationManagement: React.FC = () => {
       {/* Applications Table */}
       <Spin spinning={loading}>
         <Table
-          rowSelection={{
-          selectedRowKeys,
-          onChange: (keys) => setSelectedRowKeys(keys),
-          }}
+           rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
           rowKey="_id"
