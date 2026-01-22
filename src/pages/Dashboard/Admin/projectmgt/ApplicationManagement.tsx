@@ -95,9 +95,12 @@ const ApplicationManagement: React.FC = () => {
     pagination,
     summary,
     resetState,
-    handleBulkDeleteOfPendingApplications, 
-    setSelectedRowKeys, 
-    selectedRowKeys
+    handleBulkApprovalOfPendingApplications,
+    handleBulkDeleteOfPendingApplications,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    isDeletingPendingApplications,
+    isApprovingPendingApplications,
   } = useAdminApplications();
 
   const { getAllProjects, projects } = useAdminProjects();
@@ -390,7 +393,6 @@ const ApplicationManagement: React.FC = () => {
     },
   ];
 
-
   const rowSelection: TableProps<Application>['rowSelection'] = {
     onChange: (selectedRowKeys) => {
       setSelectedRowKeys(selectedRowKeys as string[]);
@@ -401,7 +403,6 @@ const ApplicationManagement: React.FC = () => {
     }),
     preserveSelectedRowKeys: true,
   };
-
 
   if (error) {
     return (
@@ -517,14 +518,33 @@ const ApplicationManagement: React.FC = () => {
           </Button>
         </Space>
       </div>
+          <Space wrap className="mb-4">
+  <Button
+    type="primary"
+    icon={<CheckOutlined />}
+    onClick={handleBulkApprovalOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isApprovingPendingApplications} 
+  >
+    Approve Selected ({selectedRowKeys.length})
+  </Button>
+
+  <Button
+    danger
+    icon={<CloseOutlined />}
+    onClick={handleBulkDeleteOfPendingApplications}
+    disabled={selectedRowKeys.length === 0 || isDeletingPendingApplications} 
+  >
+    Reject Selected ({selectedRowKeys.length})
+  </Button>
+</Space>
 
       {/* Applications Table */}
       <Spin spinning={loading}>
         <Table
+           rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
           rowKey="_id"
-          rowSelection={rowSelection}
           pagination={{
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,

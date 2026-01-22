@@ -109,6 +109,18 @@ export const bulkDeletePendingApplications = async (applicationIds: string[]) =>
   }
 }
 
+
+export const bulkApprovePendingApplications = async (applicationIds: string[]) => {
+  try {
+    const response = await axiosInstance.patch('/admin/applications/bulk-approve-pending', {
+      data: { applicationIds },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 /**
  * Helper to extract error message from API error
  * @param error - Error object from API call

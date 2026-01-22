@@ -3,6 +3,7 @@ import { endpoints } from "../../../../store/api/endpoints";
 import {
   apiGet,
   apiPatch,
+  bulkApprovePendingApplications,
   bulkDeletePendingApplications,
   getErrorMessage,
 } from "../../../../service/apiUtils";
@@ -25,6 +26,8 @@ export const useAdminApplications = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [isDeletingPendingApplications, setIsDeletingPendingApplications] =
     useState(false);
+  const [isApprovingPendingApplications, setIsApprovingPendingApplications] =
+    useState(false);
 
   const getAllApplications = useCallback(
     async (params?: {
@@ -43,8 +46,6 @@ export const useAdminApplications = () => {
         if (params?.projectId) queryParams.projectId = params.projectId;
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.limit) queryParams.limit = params.limit.toString();
-
-        console.log("🔗 Calling Applications API with params:", queryParams);
         const data: ApplicationsResponse = await apiGet(
           endpoints.adminProject.getAllApplications,
           { params: queryParams },
@@ -56,11 +57,6 @@ export const useAdminApplications = () => {
           setApplications(data.data.applications);
           setPagination(data.data.pagination);
           setSummary(data.data.summary);
-          console.log(
-            "✅ Applications loaded:",
-            data.data.applications?.length || 0,
-            "applications",
-          );
           return { success: true, data };
         } else {
           const errorMessage = data.message || "Failed to fetch applications";
@@ -145,11 +141,8 @@ export const useAdminApplications = () => {
     setError(null);
   }, []);
 
-  const clearSelection = () => {
-    setSelectedRowKeys([]);
-  };
-
   const handleBulkDeleteOfPendingApplications = useCallback(() => {
+    if (selectedRowKeys.length === 0) return;
     Modal.confirm({
       title: `Delete ${selectedRowKeys.length} item(s)?`,
       content: "This action cannot be undone.",
@@ -158,7 +151,7 @@ export const useAdminApplications = () => {
         try {
           setIsDeletingPendingApplications(true);
 
-          // await bulkDeletePendingApplications(selectedRowKeys);
+          await bulkDeletePendingApplications(selectedRowKeys);
 
           message.success("Deleted successfully");
 
@@ -177,6 +170,33 @@ export const useAdminApplications = () => {
     });
   }, [applications, selectedRowKeys]);
 
+  const handleBulkApprovalOfPendingApplications = useCallback(() => {
+    if (selectedRowKeys.length === 0) return;
+    Modal.confirm({
+      title: `Approving ${selectedRowKeys.length} application(s)?`,
+      content: "",
+      okType: "primary",
+      onOk: async () => {
+        try {
+          setIsApprovingPendingApplications(true);
+
+          await bulkApprovePendingApplications(selectedRowKeys);
+
+          message.success("Approved successfully");
+
+          setApplications((prev) =>
+            prev.filter((item) => !selectedRowKeys.includes(item._id)),
+          );
+          setSelectedRowKeys([]);
+        } catch {
+          message.error("Failed to approve application(s)");
+        } finally {
+          setIsApprovingPendingApplications(false);
+        }
+      },
+    });
+  }, [applications, selectedRowKeys]);
+
   return {
     getAllApplications,
     approveApplication,
@@ -187,11 +207,13 @@ export const useAdminApplications = () => {
     pagination,
     summary,
     resetState,
+    handleBulkApprovalOfPendingApplications,
     handleBulkDeleteOfPendingApplications,
-    setSelectedRowKeys,
     selectedRowKeys,
-    clearSelection,
-    setIsDeletingPendingApplications,
+    setSelectedRowKeys,
     isDeletingPendingApplications,
+    setIsDeletingPendingApplications,
+    isApprovingPendingApplications,
+    setIsApprovingPendingApplications,
   };
 };
