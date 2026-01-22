@@ -509,17 +509,7 @@ const ApplicationManagement: React.FC = () => {
           >
             Refresh
           </Button>
-          <Button
-            icon={<DeleteOutlined />}
-            onClick={handleBulkDeleteOfPendingApplications}
-            disabled={selectedRowKeys.length === 0}
-          >
-            Delete Pending
-          </Button>
-        </Space>
-      </div>
-          <Space wrap className="mb-4">
-  <Button
+            <Button
     type="primary"
     icon={<CheckOutlined />}
     onClick={handleBulkApprovalOfPendingApplications}
@@ -536,6 +526,10 @@ const ApplicationManagement: React.FC = () => {
   >
     Reject Selected ({selectedRowKeys.length})
   </Button>
+        </Space>
+      </div>
+          <Space wrap className="mb-4">
+
 </Space>
 
       {/* Applications Table */}
