@@ -232,10 +232,10 @@ const ApplicationManagement: React.FC = () => {
       render: (record: Application) => (
         <div>
           <div className="font-medium">
-            {record.annotator?.fullName || "Unknown User"}
+            {record.applicantId?.fullName || "Unknown User"}
           </div>
           <div className="text-gray-500 text-sm">
-            {record.annotator?.email || ""}
+            {record.applicantId?.email || ""}
           </div>
         </div>
       ),
@@ -252,7 +252,7 @@ const ApplicationManagement: React.FC = () => {
         };
         return (
           <Tag color={colors[applicationStatus as keyof typeof colors]}>
-            {applicationStatus.toUpperCase()}
+            {applicationStatus?.toUpperCase() || 'UNKNOWN'}
           </Tag>
         );
       },
@@ -269,11 +269,11 @@ const ApplicationManagement: React.FC = () => {
       title: "Resume",
       key: "resumeUrl",
       render: (_: any, record: Application) =>
-        record.annotator?.attachments?.resumeUrl ? (
+        record.resumeUrl ? (
           <Button
             type="link"
             icon={<FilePdfOutlined />}
-            onClick={() => viewResume(record.annotator.attachments.resumeUrl!, record)}
+            onClick={() => viewResume(record.resumeUrl!, record)}
             size="small"
           >
             View
@@ -297,11 +297,11 @@ const ApplicationManagement: React.FC = () => {
               >
                 View Details
               </Menu.Item>
-              {record.annotator?.attachments?.resumeUrl && (
+              {record.resumeUrl && (
                 <Menu.Item
                   key="view-resume"
                   icon={<FilePdfOutlined />}
-                  onClick={() => viewResume(record.annotator.attachments.resumeUrl!, record)}
+                  onClick={() => viewResume(record.resumeUrl!, record)}
                 >
                   View Resume
                 </Menu.Item>
@@ -544,21 +544,21 @@ const ApplicationManagement: React.FC = () => {
                       : "red"
                 }
               >
-                {selectedApplication.applicationStatus.toUpperCase()}
+                {selectedApplication.applicationStatus?.toUpperCase() || 'UNKNOWN'}
               </Tag>
             </div>
 
             <Card className="mb-6">
               <Descriptions title="Applicant Information" bordered column={2}>
                 <Descriptions.Item label="Name">
-                  {selectedApplication.annotator?.fullName || "Unknown User"}
+                  {selectedApplication.applicantId?.fullName || "Unknown User"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Email">
-                  {selectedApplication.annotator?.email || "N/A"}
+                  {selectedApplication.applicantId?.email || "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Skills" span={2}>
-                  {selectedApplication.annotator?.professionalBackground?.skills?.length
-                    ? selectedApplication.annotator.professionalBackground.skills.map(
+                  {selectedApplication.applicantId?.professionalBackground?.skills?.length
+                    ? selectedApplication.applicantId.professionalBackground.skills.map(
                         (skill: string, index: number) => (
                           <Tag key={index} color="blue">
                             {skill}
@@ -578,7 +578,7 @@ const ApplicationManagement: React.FC = () => {
                   )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  {selectedApplication.applicationStatus.toUpperCase()}
+                  {selectedApplication.applicationStatus?.toUpperCase() || 'UNKNOWN'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Cover Letter" span={2}>
                   <div className="bg-gray-50 p-3 rounded">
@@ -658,7 +658,7 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to approve{" "}
               <strong>
-                {selectedApplication.annotator?.fullName || "Unknown User"}
+                {selectedApplication.applicantId?.fullName || "Unknown User"}
               </strong>
               .
             </p>
@@ -695,7 +695,7 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to reject{" "}
               <strong>
-                {selectedApplication.annotator?.fullName || "Unknown User"}
+                {selectedApplication.applicantId?.fullName || "Unknown User"}
               </strong>
               's application.
             </p>
