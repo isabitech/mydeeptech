@@ -105,9 +105,9 @@ export const useUserActiveProjects = () => {
       if (data.success) {
         const applications = data.data.applications || [];
         // Separate applications by status
-        const active = applications.filter((app: Application) => app.applicationStatus === 'approved');
-        const pending = applications.filter((app: Application) => app.applicationStatus === 'pending');
-        const rejected = applications.filter((app: Application) => app.applicationStatus === 'rejected');
+        const active = applications.filter((app: Application) => app.status === 'approved');
+        const pending = applications.filter((app: Application) => app.status === 'pending');
+        const rejected = applications.filter((app: Application) => app.status === 'rejected');
 
         setActiveProjects(active);
         setPendingApplications(pending);

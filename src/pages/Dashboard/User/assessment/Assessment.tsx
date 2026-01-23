@@ -397,9 +397,15 @@ const Assessment: React.FC = () => {
                         {assessment.lastAttempt.score !== undefined && (
                           <div className="mb-2">
                             <div className="flex justify-between items-center mb-1">
-                              <Text className="font-[gilroy-regular] text-xs">Score</Text>
+                              <Text className="font-[gilroy-regular] text-xs">Your Score</Text>
                               <Text className="font-[gilroy-regular] text-xs font-semibold">
                                 {assessment.lastAttempt.score}%
+                              </Text>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                              <Text className="font-[gilroy-regular] text-xs text-gray-500">Required</Text>
+                              <Text className="font-[gilroy-regular] text-xs text-gray-500">
+                                {assessment.passingScore}%
                               </Text>
                             </div>
                             <Progress 

@@ -100,8 +100,10 @@ export const apiUpload = async <T = any>(
 
 export const bulkDeletePendingApplications = async (applicationIds: string[]) => {
   try {
-    const response = await axiosInstance.delete('/admin/applications/bulk-delete-pending', {
-      data: { applicationIds },
+    const response = await axiosInstance.post('/admin/applications/bulk/reject', {
+      applicationIds,
+      rejectionReason: 'other',
+      reviewNotes: 'Bulk rejected by admin'
     });
     return response.data;
   } catch (error) {
@@ -112,8 +114,8 @@ export const bulkDeletePendingApplications = async (applicationIds: string[]) =>
 
 export const bulkApprovePendingApplications = async (applicationIds: string[]) => {
   try {
-    const response = await axiosInstance.patch('/admin/applications/bulk-approve-pending', {
-      data: { applicationIds },
+    const response = await axiosInstance.post('/admin/applications/bulk/approve', {
+      applicationIds
     });
     return response.data;
   } catch (error) {
