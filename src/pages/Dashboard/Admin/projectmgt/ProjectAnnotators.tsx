@@ -24,6 +24,7 @@ import {
   Form,
   Input,
   Select,
+  Grid,
 } from "antd";
 import {
   UserOutlined,
@@ -51,6 +52,7 @@ import {
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 const { Option } = Select;
+const { useBreakpoint } = Grid;
 
 interface ProjectAnnotatorsProps {
   projectId: string;
@@ -75,13 +77,27 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
 
   const { getProjectAnnotators, removeApplicant, loading, error } = useAdminProjects();
 
+
+
   useEffect(() => {
     if (visible && projectId) {
       fetchProjectAnnotators();
     }
   }, [visible, projectId]);
 
+  const screens = useBreakpoint();
+
+  const getWidth = () => {
+    if (screens.xxl) return '70%';
+    if (screens.xl) return '75%';
+    if (screens.lg) return '80%';
+    if (screens.md) return '85%';
+    if (screens.sm) return '90%';
+    return '95%';
+  };
+
   const fetchProjectAnnotators = async () => {
+    console.log({ projectId })
     const result = await getProjectAnnotators(projectId);
     if (result.success) {
       setData(result.data);
@@ -110,7 +126,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
       };
 
       const result = await removeApplicant(selectedForRemoval._id, removalData);
-      
+
       if (result.success) {
         message.success('Annotator removed successfully');
         setIsRemovalModalVisible(false);
@@ -153,10 +169,12 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   };
 
   // Filter applications by status
-  const approvedApplications = data?.recentApplications.filter(app => app.status === "approved") || [];
-  const rejectedApplications = data?.recentApplications.filter(app => app.status === "rejected") || [];
-  const pendingApplications = data?.recentApplications.filter(app => app.status === "pending") || [];
+  // Prefer detailed annotator lists from API
+  const approvedAnnotators = data?.annotators?.approved || [];
+  const rejectedAnnotators = data?.annotators?.rejected || [];
+  const pendingAnnotators = data?.annotators?.pending || [];
 
+  // Columns for recentApplications (lightweight records)
   const applicationColumns = [
     {
       title: "Applicant",
@@ -179,9 +197,9 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
           <Tag color={getStatusColor(record.status)}>
             {record.status.toUpperCase()}
           </Tag>
-          <Tag color={getAnnotatorStatusColor(record.applicantId.annotatorStatus)}>
+          {/* <Tag color={getAnnotatorStatusColor(record.applicantId.annotatorStatus)}>
             {record.applicantId.annotatorStatus.toUpperCase()}
-          </Tag>
+          </Tag> */}
         </div>
       ),
     },
@@ -234,9 +252,9 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
 
         return (
           <Dropdown menu={getDropdownMenu()} trigger={['click']}>
-            <Button 
-              type="text" 
-              icon={<MoreOutlined />} 
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
               onClick={(e) => e.preventDefault()}
             />
           </Dropdown>
@@ -245,39 +263,78 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     },
   ];
 
-  const rejectedColumns = [
-    ...applicationColumns.slice(0, -2), // Remove Applied date and Actions
+  // Columns for detailed annotator applications (approved/rejected/pending lists)
+  const annotatorColumns = [
+    {
+      title: "Applicant",
+      key: "annotator",
+      render: (record: any) => (
+        <div className="flex items-center space-x-3">
+          <Avatar size={40} icon={<UserOutlined />} />
+          <div>
+            <div className="font-semibold">{record.annotator?.fullName}</div>
+            <div className="text-gray-500 text-sm">{record.annotator?.email}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (record: any) => (
+        <div className="space-y-1">
+          <Tag color={getStatusColor(record.applicationStatus)}>
+            {String(record.applicationStatus || '').toUpperCase()}
+          </Tag>
+          {/* <Tag color={getAnnotatorStatusColor(record.annotator?.annotatorStatus)}>
+            {String(record.annotator?.annotatorStatus || '').toUpperCase()}
+          </Tag> */}
+        </div>
+      ),
+    },
+    {
+      title: "Applied",
+      key: "appliedAt",
+      render: (record: any) => record.appliedAt ? moment(record.appliedAt).format("MMM DD, YYYY") : "N/A",
+    },
     {
       title: "Reviewed",
       key: "reviewedAt",
-      render: (record: RecentApplication) => 
-        record.reviewedAt ? moment(record.reviewedAt).format("MMM DD, YYYY") : "N/A",
-    },
-    {
-      title: "Reason",
-      key: "rejectionReason",
-      render: (record: RecentApplication) => (
-        <Tooltip title={record.reviewNotes || "No notes provided"}>
-          <Tag color="red">
-            {record.rejectionReason?.replace("_", " ") || "Not specified"}
-          </Tag>
-        </Tooltip>
-      ),
+      render: (record: any) => record.reviewedAt ? moment(record.reviewedAt).format("MMM DD, YYYY") : "N/A",
     },
     {
       title: "Actions",
       key: "actions",
-      render: (record: RecentApplication) => (
-        <Button
-          type="primary"
-          size="small"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewApplication(record)}
-        >
-          View Details
-        </Button>
-      ),
-    },
+      render: (record: any) => {
+        const isApproved = record.applicationStatus === 'approved';
+        const applicationId = record.applicationId || record._id;
+        const onView = () => handleViewApplication(record as any);
+        const onRemove = () => handleRemoveAnnotator({ ...(record as any), _id: applicationId } as RecentApplication);
+
+        const items: any[] = [
+          {
+            key: 'view',
+            icon: <EyeOutlined />,
+            label: 'View Details',
+            onClick: onView
+          }
+        ];
+        if (isApproved) {
+          items.push({
+            key: 'remove',
+            icon: <DeleteOutlined />,
+            label: 'Remove Annotator',
+            onClick: onRemove
+          });
+        }
+
+        return (
+          <Dropdown menu={{ items }} trigger={['click']} >
+            <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.preventDefault()} />
+          </Dropdown>
+        );
+      }
+    }
   ];
 
   if (loading) {
@@ -329,8 +386,12 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         open={visible}
         onCancel={onClose}
         footer={null}
-        width={1200}
         centered
+        width={getWidth()}
+        bodyStyle={{
+          maxHeight: '85vh',
+          overflowY: 'auto',
+        }}
       >
         {data ? (
           <div className="space-y-6">
@@ -371,40 +432,41 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             <Tabs activeKey={activeTab} onChange={setActiveTab}>
               <TabPane
                 tab={
-                  <span>
+                  <span className="flex items-center gap-1">
                     <CheckCircleOutlined />
-                    Approved ({approvedApplications.length})
+                    Approved ({approvedAnnotators.length})
                   </span>
                 }
                 key="1"
               >
-                {approvedApplications.length > 0 ? (
+                {approvedAnnotators.length > 0 ? (
                   <Table
-                    columns={applicationColumns}
-                    dataSource={approvedApplications}
+                    columns={annotatorColumns}
+                    dataSource={approvedAnnotators}
                     rowKey="_id"
-                    pagination={{ pageSize: 10 }}
+                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+
                   />
                 ) : (
                   <Empty description="No approved applications yet" />
                 )}
               </TabPane>
-              
+
               <TabPane
                 tab={
-                  <span>
+                  <span className="flex items-center gap-1">
                     <ClockCircleOutlined />
-                    Pending ({pendingApplications.length})
+                    Pending ({pendingAnnotators.length})
                   </span>
                 }
                 key="2"
               >
-                {pendingApplications.length > 0 ? (
+                {pendingAnnotators.length > 0 ? (
                   <Table
-                    columns={applicationColumns}
-                    dataSource={pendingApplications}
+                    columns={annotatorColumns}
+                    dataSource={pendingAnnotators}
                     rowKey="_id"
-                    pagination={{ pageSize: 10 }}
+                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
                   />
                 ) : (
                   <Empty description="No pending applications" />
@@ -413,19 +475,19 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
 
               <TabPane
                 tab={
-                  <span>
+                  <span className="flex items-center gap-1">
                     <CloseCircleOutlined />
-                    Rejected ({rejectedApplications.length})
+                    Rejected ({rejectedAnnotators.length})
                   </span>
                 }
                 key="3"
               >
-                {rejectedApplications.length > 0 ? (
+                {rejectedAnnotators.length > 0 ? (
                   <Table
-                    columns={rejectedColumns}
-                    dataSource={rejectedApplications}
+                    columns={annotatorColumns}
+                    dataSource={rejectedAnnotators}
                     rowKey="_id"
-                    pagination={{ pageSize: 10 }}
+                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
                   />
                 ) : (
                   <Empty description="No rejected applications" />
@@ -456,8 +518,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             {/* Status Badges */}
             <div className="flex space-x-2">
               <Badge
-                status={selectedApplication.status === "approved" ? "success" : 
-                       selectedApplication.status === "rejected" ? "error" : "processing"}
+                status={selectedApplication.status === "approved" ? "success" :
+                  selectedApplication.status === "rejected" ? "error" : "processing"}
                 text={`Application: ${selectedApplication.status}`}
               />
               <Badge
@@ -555,10 +617,10 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
           <Button key="cancel" onClick={handleCancelRemoval}>
             Cancel
           </Button>,
-          <Button 
-            key="confirm" 
-            type="primary" 
-            danger 
+          <Button
+            key="confirm"
+            type="primary"
+            danger
             loading={loading}
             onClick={handleConfirmRemoval}
           >
@@ -587,7 +649,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   {selectedForRemoval.applicantId.email}
                 </Descriptions.Item>
                 <Descriptions.Item label="Work Started">
-                  {selectedForRemoval.workStartedAt 
+                  {selectedForRemoval.workStartedAt
                     ? moment(selectedForRemoval.workStartedAt).format("MMM DD, YYYY HH:mm")
                     : "Not started"
                   }

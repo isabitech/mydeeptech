@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Button, Card, Typography, Space, Divider, Alert, Checkbox } from 'antd';
 import { ClockCircleOutlined, FileTextOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
 import { assessmentSections } from '../../data/assessmentQuestions';
@@ -11,14 +12,32 @@ interface AssessmentIntroductionProps {
 
 const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStartAssessment }) => {
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const location = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const type = searchParams.get('type') || 'english_proficiency';
+  const isAkan = type === 'akan_proficiency';
+
+  const title = isAkan ? 'Akan (Twi) Proficiency Assessment' : 'English Proficiency Assessment';
+  const timeText = isAkan ? '35 Minutes Total' : '15 Minutes Total';
+  const questionText = isAkan ? '25 Multiple Choice' : '20 Multiple Choice';
+  const sectionSubtitle = isAkan
+    ? '5 sections: Grammar, Vocabulary, Translation, Writing, Reading'
+    : '4 sections: Comprehension, Vocabulary, Grammar, Writing';
+  const sectionsList = isAkan
+    ? [
+        { id: 1, title: 'Grammar', description: 'Akan grammar, structure, and usage' },
+        { id: 2, title: 'Vocabulary', description: 'Common Akan words and meanings' },
+        { id: 3, title: 'Translation', description: 'Translate between English and Akan' },
+        { id: 4, title: 'Writing', description: 'Spelling and sentence formation in Akan' },
+        { id: 5, title: 'Reading', description: 'Reading comprehension in Akan' },
+      ]
+    : assessmentSections;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
       <Card className="max-w-4xl w-full shadow-2xl border-0 rounded-2xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#F6921E] to-[#ff7b00] text-white p-8 -m-6 mb-6">
-          <Title level={1} className="!text-white !mb-2 font-[gilroy-regular]">
-            English Proficiency Assessment
-          </Title>
+          <Title level={1} className="!text-white !mb-2 font-[gilroy-regular]">{title}</Title>
           <Text className="!text-white text-lg opacity-90 font-[gilroy-regular]">
             MyDeepTech Language Evaluation
           </Text>
@@ -38,9 +57,7 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
               <div className="text-center">
                 <ClockCircleOutlined className="text-4xl text-[#F6921E] mb-4" />
                 <Title level={3} className="!text-[#333333] font-[gilroy-regular]">Time Limit</Title>
-                <Text className="text-lg text-gray-600 font-[gilroy-regular]">
-                  15 Minutes Total
-                </Text>
+                <Text className="text-lg text-gray-600 font-[gilroy-regular]">{timeText}</Text>
                 <Paragraph className="text-sm text-gray-500 mt-2">
                   The assessment will automatically submit when time expires
                 </Paragraph>
@@ -51,11 +68,9 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
               <div className="text-center">
                 <FileTextOutlined className="text-4xl text-[#F6921E] mb-4" />
                 <Title level={3} className="!text-[#333333] font-[gilroy-regular]">Questions</Title>
-                <Text className="text-lg text-gray-600 font-[gilroy-regular]">
-                  20 Multiple Choice
-                </Text>
+                <Text className="text-lg text-gray-600 font-[gilroy-regular]">{questionText}</Text>
                 <Paragraph className="text-sm text-gray-500 mt-2">
-                  4 sections: Comprehension, Vocabulary, Grammar, Writing
+                  {sectionSubtitle}
                 </Paragraph>
               </div>
             </Card>
@@ -66,7 +81,7 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
               Assessment Sections
             </Title>
             <div className="grid md:grid-cols-2 gap-4">
-              {assessmentSections.map((section, index) => (
+              {sectionsList.map((section, index) => (
                 <div key={section.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex-shrink-0 w-8 h-8 bg-[#F6921E] text-white rounded-full flex items-center justify-center font-[gilroy-regular] font-semibold">
                     {section.id}

@@ -35,24 +35,77 @@ export interface Project {
   updatedAt: string;
 }
 
+
+
+
 // Application Types
+// export interface Application {
+//   _id: string;
+//   projectId: string | Project;
+//   applicantId: string | DTUser;
+//   status: ApplicationStatus;
+//   coverLetter: string;
+//   availability: Availability;
+//   proposedRate?: number;
+//   estimatedCompletionTime?: string;
+//   resumeUrl?: string;
+//   appliedAt: string;
+//   approvedAt?: string;
+//   rejectedAt?: string;
+//   workStartedAt?: string;
+//   reviewNotes?: string;
+//   rejectionReason?: RejectionReason;
+// }
+
+
 export interface Application {
-  _id: string;
-  projectId: string | Project;
-  applicantId: string | DTUser;
-  status: ApplicationStatus;
-  coverLetter: string;
-  availability: Availability;
-  proposedRate?: number;
-  estimatedCompletionTime?: string;
-  resumeUrl?: string;
+  applicationId: string;
+  applicationStatus: "approved" | "rejected" | "pending";
   appliedAt: string;
-  approvedAt?: string;
-  rejectedAt?: string;
-  workStartedAt?: string;
-  reviewNotes?: string;
-  rejectionReason?: RejectionReason;
-}
+  reviewedAt: string | null;
+  reviewedBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+  } | null;
+  reviewNotes: string;
+  rejectionReason: string | null;
+  coverLetter: string;
+  workStartedAt: string | null;
+  annotator: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    annotatorStatus: string;
+    microTaskerStatus: string;
+    profilePicture: string | null;
+    joinedDate: string;
+    personalInfo: {
+      country: string | null;
+      timeZone: string | null;
+      availableHours: number | null;
+      languages: string[];
+    };
+    professionalBackground: {
+      educationField: string;
+      yearsOfExperience: number;
+      previousProjects: unknown[];
+      skills: string[];
+    };
+    paymentInfo: {
+      hasPaymentInfo: boolean;
+      accountName: string | null;
+      bankName: string | null;
+    };
+    attachments: {
+      hasResume: boolean;
+      hasIdDocument: boolean;
+      resumeUrl: string | null;
+      idDocumentUrl: string | null;
+    };
+  };
+};
 
 // User Types (for project applications)
 export interface DTUser {
@@ -255,10 +308,19 @@ export interface AnnotatorProjectResponse {
   data: AnnotatorProjectResponseData;
 }
 
+export interface ApplicationsResponse {
+  approved: Application[];
+  rejected: Application[];
+  pending: Application[];
+};
+
+
+
 export interface AnnotatorProjectResponseData {
   project: Project;
   applicationStats: ApplicationStats;
   recentApplications: RecentApplication[];
+  annotators: ApplicationsResponse;
 }
 
 export interface ProjectFiles {
