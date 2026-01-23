@@ -19,6 +19,7 @@ import {
   Steps,
   Dropdown,
   Menu,
+  Switch,
 } from "antd";
 import {
   PlusSquareOutlined,
@@ -100,6 +101,8 @@ const ProjectManagement: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [activeFilter, setActiveFilter] = useState<string>(""); // "true", "false", or "" (all)
+  const [toggleLoadingIds, setToggleLoadingIds] = useState<Set<string>>(new Set());
   const [token, setToken] = useState<string | null>(null);
 
   // Deletion states
@@ -115,6 +118,7 @@ const ProjectManagement: React.FC = () => {
     deleteProject,
     requestDeletionOtp,
     verifyDeletionOtp,
+    toggleProjectActiveStatus,
     loading,
     error,
     projects,
@@ -134,6 +138,7 @@ const ProjectManagement: React.FC = () => {
       status: statusFilter || undefined,
       category: categoryFilter || undefined,
       search: searchText || undefined,
+      isActive: activeFilter || undefined,
     });
   };
 
@@ -152,6 +157,7 @@ const ProjectManagement: React.FC = () => {
       search: value || undefined,
       status: statusFilter || undefined,
       category: categoryFilter || undefined,
+      isActive: activeFilter || undefined,
     });
   };
 
@@ -161,6 +167,7 @@ const ProjectManagement: React.FC = () => {
       status: value || undefined,
       search: searchText || undefined,
       category: categoryFilter || undefined,
+      isActive: activeFilter || undefined,
     });
   };
 
@@ -170,6 +177,17 @@ const ProjectManagement: React.FC = () => {
       category: value || undefined,
       search: searchText || undefined,
       status: statusFilter || undefined,
+      isActive: activeFilter || undefined,
+    });
+  };
+
+  const handleActiveFilter = (value: string) => {
+    setActiveFilter(value);
+    getAllProjects({
+      isActive: value || undefined,
+      search: searchText || undefined,
+      status: statusFilter || undefined,
+      category: categoryFilter || undefined,
     });
   };
 
@@ -325,6 +343,41 @@ const ProjectManagement: React.FC = () => {
   const handleCancelDeletion = () => {
     setIsDeletionModalVisible(false);
     resetDeletionState();
+  };
+
+  // Handle toggle project active status
+  const handleToggleActiveStatus = async (project: Project) => {
+    // Add to loading set
+    setToggleLoadingIds(prev => new Set(prev).add(project._id));
+    
+    try {
+      const result = await toggleProjectActiveStatus(project._id);
+      
+      if (result.success) {
+        const newStatus = result.data.project.isActive;
+        notification.success({
+          message: `Project ${newStatus ? 'Activated' : 'Deactivated'}`,
+          description: `"${project.projectName}" has been ${newStatus ? 'activated' : 'deactivated'} successfully.`,
+        });
+      } else {
+        notification.error({
+          message: "Error Toggling Project Status",
+          description: result.error,
+        });
+      }
+    } catch (error: any) {
+      notification.error({
+        message: "Error",
+        description: error.message || "Failed to toggle project status",
+      });
+    } finally {
+      // Remove from loading set
+      setToggleLoadingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(project._id);
+        return newSet;
+      });
+    }
   };
 
   // Export approved annotators to CSV
@@ -537,6 +590,20 @@ const ProjectManagement: React.FC = () => {
       render: (date: string) => moment(date).format("MMM DD, YYYY"),
     },
     {
+      title: "Active",
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (isActive: boolean, record: Project) => (
+        <Switch
+          checked={isActive}
+          onChange={() => handleToggleActiveStatus(record)}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+          loading={toggleLoadingIds.has(record._id)}
+        />
+      ),
+    },
+    {
       title: "Actions",
       key: "actions",
       render: (_: any, record: Project) => {
@@ -707,6 +774,16 @@ const ProjectManagement: React.FC = () => {
             {PROJECT_CATEGORIES.map(category => (
               <Option key={category} value={category}>{category}</Option>
             ))}
+          </Select>
+          <Select
+            placeholder="Filter by active status"
+            allowClear
+            style={{ width: 180 }}
+            onChange={handleActiveFilter}
+            value={activeFilter}
+          >
+            <Option value="true">Active Only</Option>
+            <Option value="false">Inactive Only</Option>
           </Select>
           <Button
             icon={<ReloadOutlined />}

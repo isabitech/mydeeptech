@@ -160,9 +160,9 @@ const UserNotifications: React.FC = () => {
     return colorMap[priority];
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
-      handleMarkAsRead(notification._id);
+      await handleMarkAsRead(notification._id);
     }
 
     if (notification.actionUrl) {

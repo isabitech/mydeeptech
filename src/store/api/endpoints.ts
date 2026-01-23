@@ -58,6 +58,7 @@ export const endpoints = {
     getProjectById: "/admin/projects",
     getProjectAnnotators: "/admin/projects",
     updateProject: "/admin/projects",
+    toggleActiveStatus: "/admin/projects", // /:projectId/toggle-active
     deleteProject: "/admin/projects",
     requestDeletionOtp: "/admin/projects", // /:projectId/request-deletion-otp
     verifyDeletionOtp: "/admin/projects", // /:projectId/verify-deletion-otp
