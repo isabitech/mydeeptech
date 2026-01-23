@@ -180,14 +180,15 @@ export const useAssessmentSystem = () => {
   }, []);
 
   const getAssessmentQuestions = useCallback(async (
-    questionsPerSection = 5
+    questionsPerSection = 5,
+    language?: 'en' | 'akan'
   ): Promise<HookOperationResult<AssessmentTypeResponse>> => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await apiGet("/assessments/questions", {
-        params: { questionsPerSection }
+        params: language ? { questionsPerSection, language } : { questionsPerSection }
       });
 
       if (response.success) {

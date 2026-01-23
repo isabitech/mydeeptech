@@ -344,7 +344,13 @@ export const multimediaAssessmentApi = {
 
   // Start assessment for users  
   startUserAssessment: async (assessmentId: string) => {
+    // Multimedia assessments only
     return apiPost(`/assessments/multimedia/${assessmentId}/start`, { assessmentId });
+  },
+
+  // Start general/english/akan assessment
+  startGeneralAssessment: async (assessmentId: string) => {
+    return apiPost(`/assessments/start/${assessmentId}`);
   },
 
   // Get assessment overview for admin dashboard

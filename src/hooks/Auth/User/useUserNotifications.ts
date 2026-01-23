@@ -98,7 +98,7 @@ export const useUserNotifications = () => {
 
     try {
       const data: any = await apiPatch(endpoints.notifications.markAllAsRead, {});
-
+      console.log("Mark All As Read Response:", endpoints.notifications.markAllAsRead);
       if (data.success) {
         // Update all notifications as read in local state
         setNotifications(prevNotifications =>

@@ -59,7 +59,7 @@ interface Assessment {
   id: string;
   title: string;
   description: string;
-  type: 'multimedia_assessment' | 'english_proficiency' | 'general';
+  type: 'multimedia_assessment' | 'english_proficiency' | 'akan_proficiency' | 'general';
   category: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedDuration: number;
@@ -116,6 +116,8 @@ const AssessmentList: React.FC = () => {
 
       const response: AvailableAssessmentsResponse = await multimediaAssessmentApi.getAvailableAssessments();
 
+      console.log('Available Assessments Response:', response.data.assessments);
+
       if (response.success && response.data) {
         // Use the assessments directly from the backend response
         const assessmentData = response.data.assessments || [];
@@ -141,8 +143,13 @@ const AssessmentList: React.FC = () => {
     }
 
     try {
-      // Call the correct API endpoint to start the assessment
-      const response = await multimediaAssessmentApi.startUserAssessment(assessment.id);
+      // Call the correct API endpoint to start the assessment by type
+      let response;
+      if (assessment.type === 'multimedia_assessment') {
+        response = await multimediaAssessmentApi.startUserAssessment(assessment.id);
+      } else {
+        response = await multimediaAssessmentApi.startGeneralAssessment(assessment.id);
+      }
 
       if (response.success) {
         // Navigate to the assessment page after successful API call
@@ -364,7 +371,7 @@ const AssessmentList: React.FC = () => {
                       </Space>
                     </div>
 
-                    <div className="mt-auto flex items-center justify-center gap-2 w-full">
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-2 w-full">
                       {assessment.userStatus.hasAttempted ? (
                         <>
                           <Button

@@ -178,7 +178,7 @@ const ApplicationManagement: React.FC = () => {
       };
 
       const result = await approveApplication(
-        selectedApplication._id,
+        selectedApplication.applicationId,
         approvalData
       );
 
@@ -206,7 +206,7 @@ const ApplicationManagement: React.FC = () => {
       };
 
       const result = await rejectApplication(
-        selectedApplication._id,
+        selectedApplication.applicationId,
         rejectionData
       );
 
@@ -229,79 +229,31 @@ const ApplicationManagement: React.FC = () => {
       title: "Applicant",
       key: "applicant",
       width: 200,
-      // fixed: 'left' as any,
       render: (record: Application) => (
         <div>
           <div className="font-medium">
-            {typeof record.applicantId === "object"
-              ? record.applicantId.fullName
-              : "Unknown User"}
+            {record.annotator?.fullName || "Unknown User"}
           </div>
           <div className="text-gray-500 text-sm">
-            {typeof record.applicantId === "object"
-              ? record.applicantId.email
-              : ""}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Project",
-      key: "project",
-      width: 200,
-      render: (record: Application) => (
-        <div>
-          <div className="font-medium">
-            {typeof record.projectId === "object"
-              ? record.projectId.projectName
-              : "Unknown Project"}
-          </div>
-          <div className="text-gray-500 text-sm">
-            {typeof record.projectId === "object"
-              ? record.projectId.projectCategory
-              : ""}
+            {record.annotator?.email || ""}
           </div>
         </div>
       ),
     },
     {
       title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => {
+      dataIndex: "applicationStatus",
+      key: "applicationStatus",
+      render: (applicationStatus: string) => {
         const colors = {
           pending: "orange",
           approved: "green",
           rejected: "red",
         };
         return (
-          <Tag color={colors[status as keyof typeof colors]}>
-            {status.toUpperCase()}
+          <Tag color={colors[applicationStatus as keyof typeof colors]}>
+            {applicationStatus.toUpperCase()}
           </Tag>
-        );
-      },
-    },
-    {
-      title: "Availability",
-      dataIndex: "availability",
-      key: "availability",
-      render: (availability: string) => (
-        <Tag color="blue">{availability.replace("_", " ").toUpperCase()}</Tag>
-      ),
-    },
-    {
-      title: "Proposed Rate",
-      dataIndex: "proposedRate",
-      key: "proposedRate",
-      render: (rate: number, record: Application) => {
-        if (!rate) return "As Listed";
-        return (
-          <span>
-            {typeof record.projectId === "object"
-              ? record.projectId.payRateCurrency
-              : ""}{" "}
-            {rate}
-          </span>
         );
       },
     },
@@ -315,14 +267,13 @@ const ApplicationManagement: React.FC = () => {
     },
     {
       title: "Resume",
-      dataIndex: "resumeUrl",
       key: "resumeUrl",
-      render: (resumeUrl: string, record: Application) =>
-        resumeUrl ? (
+      render: (_: any, record: Application) =>
+        record.annotator?.attachments?.resumeUrl ? (
           <Button
             type="link"
             icon={<FilePdfOutlined />}
-            onClick={() => viewResume(resumeUrl, record)}
+            onClick={() => viewResume(record.annotator.attachments.resumeUrl!, record)}
             size="small"
           >
             View
@@ -334,7 +285,6 @@ const ApplicationManagement: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      // fixed: 'right' as any,
       width: 100,
       render: (_: any, record: Application) => (
         <Dropdown
@@ -347,16 +297,16 @@ const ApplicationManagement: React.FC = () => {
               >
                 View Details
               </Menu.Item>
-              {record.resumeUrl && (
+              {record.annotator?.attachments?.resumeUrl && (
                 <Menu.Item
                   key="view-resume"
                   icon={<FilePdfOutlined />}
-                  onClick={() => viewResume(record.resumeUrl!, record)}
+                  onClick={() => viewResume(record.annotator.attachments.resumeUrl!, record)}
                 >
                   View Resume
                 </Menu.Item>
               )}
-              {record.status === "pending" && (
+              {record.applicationStatus === "pending" && (
                 <>
                   <Menu.Divider />
                   <Menu.Item
@@ -398,8 +348,8 @@ const ApplicationManagement: React.FC = () => {
       setSelectedRowKeys(selectedRowKeys as string[]);
     },
     getCheckboxProps: (record) => ({
-      disabled: record.status !== 'pending', // Disable checkbox for non-pending applications
-      name: record._id,
+      disabled: record.applicationStatus !== 'pending',
+      name: record.applicationId,
     }),
     preserveSelectedRowKeys: true,
   };
@@ -538,7 +488,7 @@ const ApplicationManagement: React.FC = () => {
            rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
-          rowKey="_id"
+          rowKey="applicationId"
           pagination={{
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,
@@ -587,63 +537,35 @@ const ApplicationManagement: React.FC = () => {
               </h2>
               <Tag
                 color={
-                  selectedApplication.status === "pending"
+                  selectedApplication.applicationStatus === "pending"
                     ? "orange"
-                    : selectedApplication.status === "approved"
+                    : selectedApplication.applicationStatus === "approved"
                       ? "green"
                       : "red"
                 }
               >
-                {selectedApplication.status.toUpperCase()}
+                {selectedApplication.applicationStatus.toUpperCase()}
               </Tag>
             </div>
 
             <Card className="mb-6">
               <Descriptions title="Applicant Information" bordered column={2}>
                 <Descriptions.Item label="Name">
-                  {typeof selectedApplication.applicantId === "object"
-                    ? selectedApplication.applicantId.fullName
-                    : "Unknown User"}
+                  {selectedApplication.annotator?.fullName || "Unknown User"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Email">
-                  {typeof selectedApplication.applicantId === "object"
-                    ? selectedApplication.applicantId.email
-                    : "N/A"}
+                  {selectedApplication.annotator?.email || "N/A"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Skills" span={2}>
-                  {typeof selectedApplication.applicantId === "object" &&
-                    selectedApplication.applicantId.skills
-                    ? selectedApplication.applicantId.skills.map(
-                      (skill, index) => (
-                        <Tag key={index} color="blue">
-                          {skill}
-                        </Tag>
+                  {selectedApplication.annotator?.professionalBackground?.skills?.length
+                    ? selectedApplication.annotator.professionalBackground.skills.map(
+                        (skill: string, index: number) => (
+                          <Tag key={index} color="blue">
+                            {skill}
+                          </Tag>
+                        )
                       )
-                    )
                     : "No skills listed"}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-
-            <Card className="mb-6">
-              <Descriptions title="Project Information" bordered column={2}>
-                <Descriptions.Item label="Project Name">
-                  {typeof selectedApplication.projectId === "object"
-                    ? selectedApplication.projectId.projectName
-                    : "Unknown Project"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Category">
-                  {typeof selectedApplication.projectId === "object"
-                    ? selectedApplication.projectId.projectCategory
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Pay Rate">
-                  {typeof selectedApplication.projectId === "object"
-                    ? `${selectedApplication.projectId.payRateCurrency} ${selectedApplication.projectId.payRate}`
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Proposed Rate">
-                  {selectedApplication.proposedRate || "As Listed"}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -655,29 +577,9 @@ const ApplicationManagement: React.FC = () => {
                     "MMMM DD, YYYY HH:mm"
                   )}
                 </Descriptions.Item>
-                <Descriptions.Item label="Availability">
-                  {selectedApplication.availability
-                    .replace("_", " ")
-                    .toUpperCase()}
-                </Descriptions.Item>
-                <Descriptions.Item label="Estimated Completion">
-                  {selectedApplication.estimatedCompletionTime ||
-                    "Not specified"}
-                </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  {selectedApplication.status.toUpperCase()}
+                  {selectedApplication.applicationStatus.toUpperCase()}
                 </Descriptions.Item>
-                {selectedApplication.resumeUrl && (
-                  <Descriptions.Item label="Resume" span={2}>
-                    <Button
-                      type="primary"
-                      icon={<FilePdfOutlined />}
-                      onClick={() => viewResume(selectedApplication.resumeUrl!)}
-                    >
-                      View Resume
-                    </Button>
-                  </Descriptions.Item>
-                )}
                 <Descriptions.Item label="Cover Letter" span={2}>
                   <div className="bg-gray-50 p-3 rounded">
                     {selectedApplication.coverLetter}
@@ -686,7 +588,7 @@ const ApplicationManagement: React.FC = () => {
               </Descriptions>
             </Card>
 
-            {selectedApplication.status !== "pending" && (
+            {selectedApplication.applicationStatus !== "pending" && (
               <Card>
                 <Descriptions title="Review Information" bordered column={1}>
                   {selectedApplication.reviewNotes && (
@@ -696,28 +598,14 @@ const ApplicationManagement: React.FC = () => {
                       </div>
                     </Descriptions.Item>
                   )}
-                  {selectedApplication.status === "approved" &&
-                    selectedApplication.approvedAt && (
-                      <Descriptions.Item label="Approved Date">
-                        {moment(selectedApplication.approvedAt).format(
-                          "MMMM DD, YYYY HH:mm"
-                        )}
-                      </Descriptions.Item>
-                    )}
-                  {selectedApplication.status === "rejected" && (
+                  {/* Add approved/rejected date if available in new type */}
+                  {selectedApplication.applicationStatus === "rejected" && (
                     <>
                       <Descriptions.Item label="Rejection Reason">
                         {selectedApplication.rejectionReason
                           ?.replace("_", " ")
                           .toUpperCase()}
                       </Descriptions.Item>
-                      {selectedApplication.rejectedAt && (
-                        <Descriptions.Item label="Rejected Date">
-                          {moment(selectedApplication.rejectedAt).format(
-                            "MMMM DD, YYYY HH:mm"
-                          )}
-                        </Descriptions.Item>
-                      )}
                     </>
                   )}
                 </Descriptions>
@@ -725,7 +613,7 @@ const ApplicationManagement: React.FC = () => {
             )}
 
             {/* Action Buttons for Pending Applications */}
-            {selectedApplication.status === "pending" && (
+            {selectedApplication.applicationStatus === "pending" && (
               <div className="flex justify-end gap-4 mt-6">
                 <Button
                   type="primary"
@@ -770,15 +658,7 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to approve{" "}
               <strong>
-                {typeof selectedApplication.applicantId === "object"
-                  ? selectedApplication.applicantId.fullName
-                  : "Unknown User"}
-              </strong>{" "}
-              for the project{" "}
-              <strong>
-                {typeof selectedApplication.projectId === "object"
-                  ? selectedApplication.projectId.projectName
-                  : "Unknown Project"}
+                {selectedApplication.annotator?.fullName || "Unknown User"}
               </strong>
               .
             </p>
@@ -815,17 +695,9 @@ const ApplicationManagement: React.FC = () => {
             <p className="mb-4">
               You are about to reject{" "}
               <strong>
-                {typeof selectedApplication.applicantId === "object"
-                  ? selectedApplication.applicantId.fullName
-                  : "Unknown User"}
+                {selectedApplication.annotator?.fullName || "Unknown User"}
               </strong>
-              's application for{" "}
-              <strong>
-                {typeof selectedApplication.projectId === "object"
-                  ? selectedApplication.projectId.projectName
-                  : "Unknown Project"}
-              </strong>
-              .
+              's application.
             </p>
 
             <Form form={rejectionForm} layout="vertical">
@@ -870,7 +742,7 @@ const ApplicationManagement: React.FC = () => {
         onCancel={closePdfModal}
         width={900}
         footer={[
-          pdfViewerApplication?.status === "pending" && (
+          pdfViewerApplication?.applicationStatus === "pending" && (
             <div
               key="pdf-actions"
               style={{

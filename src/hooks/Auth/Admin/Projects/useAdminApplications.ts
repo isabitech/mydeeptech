@@ -156,7 +156,7 @@ export const useAdminApplications = () => {
           message.success("Deleted successfully");
 
           setApplications((prev) =>
-            prev.filter((item) => !selectedRowKeys.includes(item._id)),
+            prev.filter((item) => !selectedRowKeys.includes(item.applicationId)),
           );
 
           setSelectedRowKeys([]);
@@ -185,7 +185,7 @@ export const useAdminApplications = () => {
           message.success("Approved successfully");
 
           setApplications((prev) =>
-            prev.filter((item) => !selectedRowKeys.includes(item._id)),
+            prev.filter((item) => !selectedRowKeys.includes(item.applicationId)),
           );
           setSelectedRowKeys([]);
         } catch {

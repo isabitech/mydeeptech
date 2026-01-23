@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Radio, Button, Progress, Typography, Space, Modal, Alert, Spin } from 'antd';
 import { ClockCircleOutlined, CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { fallbackQuestions, fallbackAssessmentInfo, convertApiQuestionToComponent, ComponentQuestion } from '../../data/assessmentQuestions';
 import { useAssessmentSystem, UserAnswer } from '../../hooks/Auth/User/useAssessmentSystem';
 import { AssessmentTypeResponse, AssessmentTypeResponseData } from '../../types/assesment-type';
+import { useLocation } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -14,8 +15,12 @@ interface AssessmentExamProps {
 const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   // ALL HOOKS MUST BE DECLARED FIRST - BEFORE ANY EARLY RETURNS
   const { submitAssessment, getAssessmentQuestions } = useAssessmentSystem();
-  
-  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes = 900 seconds
+  const location = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const type = searchParams.get('type') || 'english_proficiency';
+  const isAkan = type === 'akan_proficiency';
+
+  const [timeLeft, setTimeLeft] = useState(isAkan ? 35 * 60 : 15 * 60);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<UserAnswer[]>([]);
@@ -31,22 +36,22 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
     const loadAssessmentData = async () => {
       try {
         setLoadingQuestions(true);
-        
+
         // Try to fetch from API first
-        const questionsResult = await getAssessmentQuestions(5); // 5 questions per section
-        
-        // console.log(questionsResult);
+        const questionsResult = await getAssessmentQuestions(5, isAkan ? 'akan' : 'en'); // 5 per section by language
+
+        console.log(questionsResult);
 
         if (questionsResult.data) {
           // The questionsResult.data is already the AssessmentTypeResponse
           const apiResponse = questionsResult as any;
-          
+
           if (apiResponse.success && apiResponse.data) {
             const apiQuestions = apiResponse.data.questions || [];
             // console.log("API Questions", apiQuestions);
             const convertedQuestions = apiQuestions.map(convertApiQuestionToComponent);
             setQuestions(convertedQuestions);
-            
+
             // Use sections from API response
             const apiSections = apiResponse.data.assessmentInfo?.sections || fallbackAssessmentInfo.sections;
             setSections(apiSections);
@@ -75,22 +80,33 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   // Handle assessment submission
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    
+
     try {
       const completedAt = new Date().toISOString();
-      
+
       // Create submission payload matching the required structure
+      // Always use the section from the question object (not from UI state)
+      // Akan section override mapping (from JSON file - complete mapping)
+      const akanSectionMap: Record<number, string> = {
+        1: 'Grammar', 2: 'Grammar', 3: 'Grammar', 4: 'Grammar', 5: 'Grammar', 6: 'Grammar', 7: 'Grammar', 8: 'Grammar', 9: 'Grammar', 10: 'Grammar', 11: 'Vocabulary', 12: 'Vocabulary', 13: 'Vocabulary', 14: 'Vocabulary', 15: 'Vocabulary', 16: 'Vocabulary', 17: 'Vocabulary', 18: 'Vocabulary', 19: 'Vocabulary', 20: 'Vocabulary', 21: 'Translation', 22: 'Translation', 23: 'Translation', 24: 'Translation', 25: 'Translation', 26: 'Translation', 27: 'Translation', 28: 'Translation', 29: 'Translation', 30: 'Translation', 31: 'Writing', 32: 'Writing', 33: 'Writing', 34: 'Writing', 35: 'Writing', 36: 'Grammar', 37: 'Grammar', 38: 'Grammar', 39: 'Grammar', 40: 'Grammar', 41: 'Reading', 42: 'Reading', 43: 'Reading', 44: 'Reading', 45: 'Reading', 46: 'Reading', 47: 'Reading', 48: 'Vocabulary', 49: 'Vocabulary', 50: 'Vocabulary'
+      };
+
       const submissionPayload = {
-        assessmentType: "annotator_qualification" ,
+        assessmentType: "annotator_qualification",
         startedAt,
         completedAt,
         answers: answers.map((answer) => {
           const question = questions.find(q => q.questionId === answer.questionId);
+          // If Akan, override section from DB mapping
+          let section = question?.section || "";
+          if (isAkan && akanSectionMap[Number(answer.questionId)]) {
+            section = akanSectionMap[Number(answer.questionId)];
+          }
           return {
             question: question?.questionText || "",
-            questionId: answer.questionId,
+            questionId: question?.questionId ?? answer.questionId,
             userAnswer: answer.selectedAnswer,
-            section: question?.section || "",
+            section,
           };
         }),
         passingScore: 60,
@@ -103,16 +119,22 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
         // Extract score and status from API response
         const score = result.data.results?.scorePercentage || 0;
         const status = score >= 60 ? 'advanced' : 'basic';
-        
+
         onSubmitSuccess(score, status);
       } else {
         throw new Error(result.error || 'Submission failed');
       }
     } catch (error) {
       console.error('Assessment submission failed:', error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unknown error occurred';
+
       Modal.error({
         title: 'Submission Failed',
-        content: 'There was an error submitting your assessment. Please try again.',
+        content: `There was an error submitting your assessment.
+Error: ${message}`,
       });
     } finally {
       setIsSubmitting(false);
@@ -154,7 +176,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   // Handle answer selection
   const handleAnswerChange = (value: string | boolean) => {
     if (!questions[currentQuestionIndex]) return;
-    
+
     const currentQuestion = questions[currentQuestionIndex];
     const existingAnswerIndex = answers.findIndex(
       (answer) => answer.questionId === currentQuestion.questionId
@@ -178,7 +200,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   // Get current answer
   const getCurrentAnswer = () => {
     if (!questions[currentQuestionIndex]) return undefined;
-    
+
     const currentQuestion = questions[currentQuestionIndex];
     const answer = answers.find((a) => a.questionId === currentQuestion.questionId);
     return answer?.selectedAnswer;
@@ -189,13 +211,13 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
     if (currentQuestionIndex < questions.length - 1) {
       const nextQuestionIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextQuestionIndex);
-      
+
       // Check if we're moving to a new section
       const nextQuestion = questions[nextQuestionIndex];
       const nextSectionIndex = sections.findIndex((sectionName) =>
         nextQuestion.section === sectionName
       );
-      
+
       if (nextSectionIndex !== -1 && nextSectionIndex !== currentSectionIndex) {
         setCurrentSectionIndex(nextSectionIndex);
       }
@@ -219,7 +241,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
             Loading Assessment
           </Title>
           <Text className="text-gray-600 font-[gilroy-regular]">
-            Preparing your English Proficiency Assessment...
+            Preparing your {isAkan ? 'Akan (Twi)' : 'English'} Proficiency Assessment...
           </Text>
         </Card>
       </div>
@@ -268,18 +290,18 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
         <div className="flex justify-between items-center">
           <div>
             <Title level={3} className="!text-[#333333] !mb-1 font-[gilroy-regular]">
-              English Proficiency Assessment
+              {isAkan ? 'Akan (Twi) Proficiency Assessment' : 'English Proficiency Assessment'}
             </Title>
             <Text className="text-gray-600 font-[gilroy-regular]">
               Section {currentSectionIndex + 1}: {currentSection || 'Loading...'}
             </Text>
           </div>
-          
+
           <div className="text-right">
             <div className="flex items-center space-x-2 mb-2">
               <ClockCircleOutlined className={timeLeft <= 300 ? 'text-red-500' : 'text-[#F6921E]'} />
-              <Text 
-                strong 
+              <Text
+                strong
                 className={`font-[gilroy-regular] text-lg ${timeLeft <= 300 ? 'text-red-500' : 'text-[#333333]'}`}
               >
                 {formatTime(timeLeft)}
@@ -290,7 +312,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
             </Text>
           </div>
         </div>
-        
+
         <Progress
           percent={progressPercentage}
           strokeColor="#F6921E"
@@ -311,7 +333,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
                 Question {currentQuestionIndex + 1}
               </Title>
             </div>
-            
+
             <Text className="text-lg text-[#333333] font-[gilroy-regular] leading-relaxed">
               {currentQuestion?.questionText || 'Loading question...'}
             </Text>
@@ -370,7 +392,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
                 {answers.length} of {questions.length} questions answered
               </Text>
             </div>
-            
+
             <div className="space-x-4">
               {!isLastQuestion ? (
                 <Button
@@ -411,17 +433,16 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
               answers.some(a => a.questionId === q.questionId)
             ).length;
             const isCurrentSection = index === currentSectionIndex;
-            
+
             return (
               <div
                 key={index}
-                className={`p-3 rounded-lg text-center ${
-                  isCurrentSection
+                className={`p-3 rounded-lg text-center ${isCurrentSection
                     ? 'bg-[#F6921E] text-white'
                     : answeredInSection === sectionQuestions.length
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-600'
-                }`}
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
               >
                 <Text strong className={`font-[gilroy-regular] ${isCurrentSection ? 'text-white' : ''}`}>
                   Section {index + 1}

@@ -123,7 +123,7 @@ export const endpoints = {
   notifications: {
     getUserNotifications: "/notifications",
     markAsRead: "/notifications",
-    markAllAsRead: "/notifications/mark-all-read",
+    markAllAsRead: "/notifications/read-all",
     deleteNotification: "/notifications",
     getSummary: "/notifications/summary",
   },
