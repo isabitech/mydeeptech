@@ -128,8 +128,8 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
         const assignedDTUsers = applications
           .map((app: Application) => {
             console.log('📋 Processing application:', app);
-            // Use annotator directly from Application type
-            return app.annotator;
+            // Use applicantId directly from Application type
+            return app.applicantId;
           })
           .filter((user: DTUser | null) => user !== null) as DTUser[];
 

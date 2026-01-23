@@ -71,8 +71,9 @@ export interface Application {
   reviewNotes: string;
   rejectionReason: string | null;
   coverLetter: string;
+  resumeUrl: string;
   workStartedAt: string | null;
-  annotator: {
+  applicantId: {
     id: string;
     fullName: string;
     email: string;
