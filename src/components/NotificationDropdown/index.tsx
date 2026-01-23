@@ -47,6 +47,8 @@ const NotificationDropdown: React.FC = () => {
   } = useUserNotifications();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
+  const [keepDropdownOpen, setKeepDropdownOpen] = useState(false);
 
   useEffect(() => {
     // Fetch summary on component mount
@@ -124,7 +126,9 @@ const NotificationDropdown: React.FC = () => {
     }
   };
 
-  const handleMarkAllAsRead = async () => {
+  const handleMarkAllAsRead = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+    setKeepDropdownOpen(true);
     try {
       const result = await markAllAsRead();
       if (result.success) {
@@ -135,13 +139,32 @@ const NotificationDropdown: React.FC = () => {
       }
     } catch (error) {
       toast.error("Failed to mark all notifications as read");
+    } finally {
+      setKeepDropdownOpen(false);
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
+  const handleNotificationClick = async (notification: Notification) => {
     // Mark as read if not already read
     if (!notification.isRead) {
-      markAsRead(notification._id);
+      setMarkingAsRead(notification._id);
+      try {
+        const result = await markAsRead(notification._id);
+        if (result.success) {
+          // Refresh summary to update unread count in badge
+          getSummary();
+          // Refresh notifications list to show updated read status
+          getUserNotifications({ limit: 10, page: 1 });
+        } else {
+          console.error('Failed to mark notification as read:', result.error);
+          toast.error('Failed to mark notification as read');
+        }
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+        toast.error('Failed to mark notification as read');
+      } finally {
+        setMarkingAsRead(null);
+      }
     }
 
     // Navigate to action URL if provided
@@ -153,7 +176,11 @@ const NotificationDropdown: React.FC = () => {
   };
 
   const dropdownContent = (
-    <div style={{ width: 380, maxHeight: 500, overflow: 'hidden' }}>
+    <div 
+      style={{ width: 380, maxHeight: 500, overflow: 'hidden' }} 
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       {/* Header */}
       <div
         style={{
@@ -170,6 +197,7 @@ const NotificationDropdown: React.FC = () => {
             type="link"
             size="small"
             onClick={handleMarkAllAsRead}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{ padding: 0 }}
           >
             Mark all as read
@@ -197,12 +225,13 @@ const NotificationDropdown: React.FC = () => {
               <List.Item
                 style={{
                   padding: '12px 16px',
-                  cursor: 'pointer',
+                  cursor: markingAsRead === notification._id ? 'not-allowed' : 'pointer',
                   backgroundColor: notification.isRead ? '#ffffff' : '#f6ffed',
                   borderLeft: `3px solid ${getNotificationColor(notification.type)}`,
-                  transition: 'background-color 0.2s'
+                  transition: 'background-color 0.2s',
+                  opacity: markingAsRead === notification._id ? 0.7 : 1
                 }}
-                onClick={() => handleNotificationClick(notification)}
+                onClick={() => markingAsRead !== notification._id && handleNotificationClick(notification)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = notification.isRead ? '#f5f5f5' : '#f0f9ff';
                 }}
@@ -242,16 +271,19 @@ const NotificationDropdown: React.FC = () => {
                   }
                   title={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Text
-                        strong={!notification.isRead}
-                        style={{
-                          fontSize: '14px',
-                          lineHeight: '1.4',
-                          marginBottom: '4px'
-                        }}
-                      >
-                        {notification.title}
-                      </Text>
+                      <Space align="center">
+                        {markingAsRead === notification._id && <Spin size="small" />}
+                        <Text
+                          strong={!notification.isRead}
+                          style={{
+                            fontSize: '14px',
+                            lineHeight: '1.4',
+                            marginBottom: '4px'
+                          }}
+                        >
+                          {notification.title}
+                        </Text>
+                      </Space>
                       <Tag
                         color={getPriorityColor(notification.priority)}
                         style={{
@@ -322,11 +354,16 @@ const NotificationDropdown: React.FC = () => {
 
   return (
     <Dropdown
-      overlay={dropdownContent}
+      dropdownRender={() => dropdownContent}
       trigger={['click']}
-      placement="top"
+      placement="bottomRight"
       open={dropdownOpen}
-      onOpenChange={setDropdownOpen}
+      onOpenChange={(open) => {
+        // Only allow closing if not currently processing an action
+        if (!open || (!markingAsRead && !keepDropdownOpen)) {
+          setDropdownOpen(open);
+        }
+      }}
       overlayStyle={{
         boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.08)',
         borderRadius: '8px',

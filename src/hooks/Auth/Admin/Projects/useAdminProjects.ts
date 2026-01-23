@@ -50,6 +50,7 @@ export const useAdminProjects = () => {
     status?: string;
     category?: string;
     search?: string;
+    isActive?: string;
   }): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
@@ -62,6 +63,7 @@ export const useAdminProjects = () => {
       if (params?.status) queryParams.status = params.status;
       if (params?.category) queryParams.category = params.category;
       if (params?.search) queryParams.search = params.search;
+      if (params?.isActive) queryParams.isActive = params.isActive;
 
       const data: ProjectsResponse = await apiGet(endpoints.adminProject.getAllProjects, { params: queryParams });
 
@@ -288,6 +290,37 @@ export const useAdminProjects = () => {
     }
   }, []);
 
+  const toggleProjectActiveStatus = useCallback(async (
+    projectId: string
+  ): Promise<HookOperationResult> => {
+    setError(null);
+
+    try {
+      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/toggle-active`;
+      const data: ProjectResponse = await apiPatch(url, {});
+      
+      if (data.success) {
+        // Only update state after successful API response
+        setProjects(prevProjects => 
+          prevProjects.map(project => 
+            project._id === projectId 
+              ? { ...project, isActive: data.data.project.isActive }
+              : project
+          )
+        );
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to toggle project status";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
   const resetState = useCallback(() => {
     setLoading(false);
     setError(null);
@@ -299,6 +332,7 @@ export const useAdminProjects = () => {
     getProjectById,
     getProjectAnnotators,
     updateProject,
+    toggleProjectActiveStatus,
     deleteProject,
     requestDeletionOtp,
     verifyDeletionOtp,
