@@ -242,17 +242,17 @@ const ApplicationManagement: React.FC = () => {
     },
     {
       title: "Status",
-      dataIndex: "applicationStatus",
-      key: "applicationStatus",
-      render: (applicationStatus: string) => {
+      dataIndex: "status",
+      key: "status",
+      render: (status: string) => {
         const colors = {
           pending: "orange",
           approved: "green",
           rejected: "red",
         };
         return (
-          <Tag color={colors[applicationStatus as keyof typeof colors]}>
-            {applicationStatus?.toUpperCase() || 'UNKNOWN'}
+          <Tag color={colors[status as keyof typeof colors]}>
+            {status?.toUpperCase() || 'UNKNOWN'}
           </Tag>
         );
       },
@@ -306,7 +306,7 @@ const ApplicationManagement: React.FC = () => {
                   View Resume
                 </Menu.Item>
               )}
-              {record.applicationStatus === "pending" && (
+              {record.status === "pending" && (
                 <>
                   <Menu.Divider />
                   <Menu.Item
@@ -344,13 +344,18 @@ const ApplicationManagement: React.FC = () => {
   ];
 
   const rowSelection: TableProps<Application>['rowSelection'] = {
+    type: 'checkbox',
+    selectedRowKeys,
     onChange: (selectedRowKeys) => {
       setSelectedRowKeys(selectedRowKeys as string[]);
     },
-    getCheckboxProps: (record) => ({
-      disabled: record.applicationStatus !== 'pending',
-      name: record.applicationId,
-    }),
+    getCheckboxProps: (record) => {
+      const isDisabled = record.status === 'approved' || record.status === 'rejected';
+      return {
+        disabled: isDisabled,
+        name: record.applicationId,
+      };
+    },
     preserveSelectedRowKeys: true,
   };
 
@@ -459,23 +464,26 @@ const ApplicationManagement: React.FC = () => {
           >
             Refresh
           </Button>
-            <Button
-    type="primary"
-    icon={<CheckOutlined />}
-    onClick={handleBulkApprovalOfPendingApplications}
-    disabled={selectedRowKeys.length === 0 || isApprovingPendingApplications} 
-  >
-    Approve Selected ({selectedRowKeys.length})
-  </Button>
 
-  <Button
-    danger
-    icon={<CloseOutlined />}
-    onClick={handleBulkDeleteOfPendingApplications}
-    disabled={selectedRowKeys.length === 0 || isDeletingPendingApplications} 
-  >
-    Reject Selected ({selectedRowKeys.length})
-  </Button>
+          <Button
+            type="primary"
+            icon={<CheckOutlined />}
+            onClick={handleBulkApprovalOfPendingApplications}
+            disabled={selectedRowKeys.length === 0 || isApprovingPendingApplications}
+            loading={isApprovingPendingApplications}
+          >
+            Approve Selected ({selectedRowKeys.length})
+          </Button>
+
+          <Button
+            danger
+            icon={<CloseOutlined />}
+            onClick={handleBulkDeleteOfPendingApplications}
+            disabled={selectedRowKeys.length === 0 || isDeletingPendingApplications}
+            loading={isDeletingPendingApplications}
+          >
+            Reject Selected ({selectedRowKeys.length})
+          </Button>
         </Space>
       </div>
           <Space wrap className="mb-4">
@@ -488,7 +496,7 @@ const ApplicationManagement: React.FC = () => {
            rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
-          rowKey="applicationId"
+          rowKey={(record) => record.applicationId || (record as any)._id || String(Math.random())}
           pagination={{
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,
@@ -516,8 +524,10 @@ const ApplicationManagement: React.FC = () => {
               });
             },
           }}
-          // scroll={{ x: 500 }}
           scroll={{ x: 'max-content' }}
+          rowClassName={(record) => 
+            selectedRowKeys.includes(record.applicationId) ? 'bg-blue-50' : ''
+          }
         />
       </Spin>
 
@@ -537,14 +547,14 @@ const ApplicationManagement: React.FC = () => {
               </h2>
               <Tag
                 color={
-                  selectedApplication.applicationStatus === "pending"
+                  selectedApplication.status === "pending"
                     ? "orange"
-                    : selectedApplication.applicationStatus === "approved"
+                    : selectedApplication.status === "approved"
                       ? "green"
                       : "red"
                 }
               >
-                {selectedApplication.applicationStatus?.toUpperCase() || 'UNKNOWN'}
+                {selectedApplication.status?.toUpperCase() || 'UNKNOWN'}
               </Tag>
             </div>
 
@@ -578,7 +588,7 @@ const ApplicationManagement: React.FC = () => {
                   )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Status">
-                  {selectedApplication.applicationStatus?.toUpperCase() || 'UNKNOWN'}
+                  {selectedApplication.status?.toUpperCase() || 'UNKNOWN'}
                 </Descriptions.Item>
                 <Descriptions.Item label="Cover Letter" span={2}>
                   <div className="bg-gray-50 p-3 rounded">
@@ -588,7 +598,7 @@ const ApplicationManagement: React.FC = () => {
               </Descriptions>
             </Card>
 
-            {selectedApplication.applicationStatus !== "pending" && (
+            {selectedApplication.status !== "pending" && (
               <Card>
                 <Descriptions title="Review Information" bordered column={1}>
                   {selectedApplication.reviewNotes && (
@@ -599,7 +609,7 @@ const ApplicationManagement: React.FC = () => {
                     </Descriptions.Item>
                   )}
                   {/* Add approved/rejected date if available in new type */}
-                  {selectedApplication.applicationStatus === "rejected" && (
+                  {selectedApplication.status === "rejected" && (
                     <>
                       <Descriptions.Item label="Rejection Reason">
                         {selectedApplication.rejectionReason
@@ -613,7 +623,7 @@ const ApplicationManagement: React.FC = () => {
             )}
 
             {/* Action Buttons for Pending Applications */}
-            {selectedApplication.applicationStatus === "pending" && (
+            {selectedApplication.status === "pending" && (
               <div className="flex justify-end gap-4 mt-6">
                 <Button
                   type="primary"
@@ -742,7 +752,7 @@ const ApplicationManagement: React.FC = () => {
         onCancel={closePdfModal}
         width={900}
         footer={[
-          pdfViewerApplication?.applicationStatus === "pending" && (
+          pdfViewerApplication?.status === "pending" && (
             <div
               key="pdf-actions"
               style={{

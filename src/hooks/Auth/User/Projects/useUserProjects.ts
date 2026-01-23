@@ -303,13 +303,13 @@ export const useUserProjects = () => {
           const stats = {
             totalApplications: allApplications.length,
             activeProjects: allApplications.filter(
-              (app: Application) => app.applicationStatus === "approved"
+              (app: Application) => app.status === "approved"
             ).length,
             pendingApplications: allApplications.filter(
-              (app: Application) => app.applicationStatus === "pending"
+              (app: Application) => app.status === "pending"
             ).length,
             rejectedApplications: allApplications.filter(
-              (app: Application) => app.applicationStatus === "rejected"
+              (app: Application) => app.status === "rejected"
             ).length,
             completedProjects: 0,
           };

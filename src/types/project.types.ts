@@ -60,7 +60,7 @@ export interface Project {
 
 export interface Application {
   applicationId: string;
-  applicationStatus: "approved" | "rejected" | "pending";
+  status: "approved" | "rejected" | "pending";
   appliedAt: string;
   reviewedAt: string | null;
   reviewedBy: {

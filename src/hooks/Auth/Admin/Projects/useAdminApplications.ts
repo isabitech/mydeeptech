@@ -144,7 +144,7 @@ export const useAdminApplications = () => {
   const handleBulkDeleteOfPendingApplications = useCallback(() => {
     if (selectedRowKeys.length === 0) return;
     Modal.confirm({
-      title: `Delete ${selectedRowKeys.length} item(s)?`,
+      title: `Reject ${selectedRowKeys.length} application(s)?`,
       content: "This action cannot be undone.",
       okType: "danger",
       onOk: async () => {
@@ -153,22 +153,19 @@ export const useAdminApplications = () => {
 
           await bulkDeletePendingApplications(selectedRowKeys);
 
-          message.success("Deleted successfully");
+          message.success("Applications rejected successfully");
 
-          setApplications((prev) =>
-            prev.filter((item) => !selectedRowKeys.includes(item.applicationId)),
-          );
-
+          // Clear selection and refresh data from server
           setSelectedRowKeys([]);
-          // getAllApplications();
+          await getAllApplications(); // Refresh the data
         } catch {
-          message.error("Failed to delete");
+          message.error("Failed to reject applications");
         } finally {
           setIsDeletingPendingApplications(false);
         }
       },
     });
-  }, [applications, selectedRowKeys]);
+  }, [selectedRowKeys, getAllApplications]);
 
   const handleBulkApprovalOfPendingApplications = useCallback(() => {
     if (selectedRowKeys.length === 0) return;
@@ -182,12 +179,11 @@ export const useAdminApplications = () => {
 
           await bulkApprovePendingApplications(selectedRowKeys);
 
-          message.success("Approved successfully");
+          message.success("Applications approved successfully");
 
-          setApplications((prev) =>
-            prev.filter((item) => !selectedRowKeys.includes(item.applicationId)),
-          );
+          // Clear selection and refresh data from server
           setSelectedRowKeys([]);
+          await getAllApplications(); // Refresh the data
         } catch {
           message.error("Failed to approve application(s)");
         } finally {
@@ -195,7 +191,7 @@ export const useAdminApplications = () => {
         }
       },
     });
-  }, [applications, selectedRowKeys]);
+  }, [selectedRowKeys, getAllApplications]);
 
   return {
     getAllApplications,
