@@ -29,11 +29,8 @@ const Assessment: React.FC = () => {
       return () => clearTimeout(timer);
     } 
     else if (showSuccessModal && countdown === 0) {
-      // Clear user data and redirect to login
-      // localStorage.removeItem("user");
-      // localStorage.removeItem("userInfo");
-      // sessionStorage.clear();
-      navigate("/dashboard/assessment");
+      // Redirect to dashboard after countdown
+      navigate("/dashboard/assessments");
     }
   }, [showSuccessModal, countdown, navigate]);
 
@@ -98,7 +95,7 @@ const Assessment: React.FC = () => {
                 </p>
               </div>
               <p className="text-gray-600">
-                Redirecting to login page in{" "}
+                Redirecting to your dashboard in{" "}
                 <span className="font-bold text-blue-600">{countdown}</span>{" "}
                 seconds...
               </p>
