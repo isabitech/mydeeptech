@@ -19,6 +19,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const type = searchParams.get('type') || 'english_proficiency';
   const isAkan = type === 'akan_proficiency';
+  const assessmentLanguage = isAkan ? 'akan' : 'en';
 
   const [timeLeft, setTimeLeft] = useState(isAkan ? 35 * 60 : 15 * 60);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -29,6 +30,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
   const [questions, setQuestions] = useState<ComponentQuestion[]>([]);
   const [sections, setSections] = useState(fallbackAssessmentInfo.sections);
   const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [questionsSource, setQuestionsSource] = useState<'api' | 'fallback'>('fallback');
   const [startedAt] = useState(new Date().toISOString());
 
   // Load questions from API
@@ -38,7 +40,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
         setLoadingQuestions(true);
 
         // Try to fetch from API first
-        const questionsResult = await getAssessmentQuestions(5, isAkan ? 'akan' : 'en'); // 5 per section by language
+        const questionsResult = await getAssessmentQuestions(5, assessmentLanguage); // 5 per section by language
 
         console.log(questionsResult);
 
@@ -51,6 +53,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
             // console.log("API Questions", apiQuestions);
             const convertedQuestions = apiQuestions.map(convertApiQuestionToComponent);
             setQuestions(convertedQuestions);
+            setQuestionsSource('api');
 
             // Use sections from API response
             const apiSections = apiResponse.data.assessmentInfo?.sections || fallbackAssessmentInfo.sections;
@@ -62,6 +65,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
           const convertedQuestions = fallbackQuestions.map(convertApiQuestionToComponent);
           setQuestions(convertedQuestions);
           setSections(fallbackAssessmentInfo.sections);
+          setQuestionsSource('fallback');
         }
       } catch (error) {
         console.error('Error loading assessment data:', error);
@@ -69,6 +73,7 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
         const convertedQuestions = fallbackQuestions.map(convertApiQuestionToComponent);
         setQuestions(convertedQuestions);
         setSections(fallbackAssessmentInfo.sections);
+        setQuestionsSource('fallback');
       } finally {
         setLoadingQuestions(false);
       }
@@ -82,30 +87,35 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
     setIsSubmitting(true);
 
     try {
+      // Block submission if questions came from fallback to avoid DB mismatches
+      if (questionsSource !== 'api') {
+        Modal.error({
+          title: 'Submission Unavailable',
+          content: 'We could not load official assessment questions from the server. Please retry or check your connection. Submissions are disabled for fallback questions to prevent validation errors.',
+        });
+        setIsSubmitting(false);
+        return;
+      }
       const completedAt = new Date().toISOString();
 
       // Create submission payload matching the required structure
-      // Always use the section from the question object (not from UI state)
-      // Akan section override mapping (from JSON file - complete mapping)
-      const akanSectionMap: Record<number, string> = {
-        1: 'Grammar', 2: 'Grammar', 3: 'Grammar', 4: 'Grammar', 5: 'Grammar', 6: 'Grammar', 7: 'Grammar', 8: 'Grammar', 9: 'Grammar', 10: 'Grammar', 11: 'Vocabulary', 12: 'Vocabulary', 13: 'Vocabulary', 14: 'Vocabulary', 15: 'Vocabulary', 16: 'Vocabulary', 17: 'Vocabulary', 18: 'Vocabulary', 19: 'Vocabulary', 20: 'Vocabulary', 21: 'Translation', 22: 'Translation', 23: 'Translation', 24: 'Translation', 25: 'Translation', 26: 'Translation', 27: 'Translation', 28: 'Translation', 29: 'Translation', 30: 'Translation', 31: 'Writing', 32: 'Writing', 33: 'Writing', 34: 'Writing', 35: 'Writing', 36: 'Grammar', 37: 'Grammar', 38: 'Grammar', 39: 'Grammar', 40: 'Grammar', 41: 'Reading', 42: 'Reading', 43: 'Reading', 44: 'Reading', 45: 'Reading', 46: 'Reading', 47: 'Reading', 48: 'Vocabulary', 49: 'Vocabulary', 50: 'Vocabulary'
-      };
+      // Always use the section from the question object returned by the API
 
       const submissionPayload = {
         assessmentType: "annotator_qualification",
+        language: assessmentLanguage,
         startedAt,
         completedAt,
         answers: answers.map((answer) => {
           const question = questions.find(q => q.questionId === answer.questionId);
-          // If Akan, override section from DB mapping
-          let section = question?.section || "";
-          if (isAkan && akanSectionMap[Number(answer.questionId)]) {
-            section = akanSectionMap[Number(answer.questionId)];
-          }
+          const section = question?.section || "";
+          const userAnswerString = typeof answer.selectedAnswer === 'string'
+            ? answer.selectedAnswer
+            : (answer.selectedAnswer ? 'True' : 'False');
           return {
             question: question?.questionText || "",
-            questionId: question?.questionId ?? answer.questionId,
-            userAnswer: answer.selectedAnswer,
+            questionId: Number(question?.questionId ?? answer.questionId),
+            userAnswer: userAnswerString,
             section,
           };
         }),
