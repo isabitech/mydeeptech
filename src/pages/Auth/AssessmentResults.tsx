@@ -7,26 +7,44 @@ const { Title, Text, Paragraph } = Typography;
 interface AssessmentResultsProps {
   score: number;
   status: string;
+  assessmentType?: string;
   onReturnToDashboard: () => void;
 }
 
 const AssessmentResults: React.FC<AssessmentResultsProps> = ({ 
   score, 
   status, 
+  assessmentType = 'english_proficiency',
   onReturnToDashboard 
 }) => {
   const isAnnotatorApproved = status === 'annotator';
+  const isAkan = assessmentType === 'akan_proficiency';
+  
   const resultIcon = isAnnotatorApproved ? 
     <TrophyOutlined className="text-6xl text-yellow-500" /> : 
     <CheckCircleOutlined className="text-6xl text-blue-500" />;
 
+  const getAssessmentName = () => {
+    if (isAkan) {
+      return 'Akan (Twi) Proficiency';
+    }
+    return 'English Proficiency';
+  };
+
   const resultTitle = isAnnotatorApproved ? 
-    "Congratulations! Advanced English Proficiency" : 
-    "Assessment Complete - Basic English Proficiency";
+    `Congratulations! Advanced ${getAssessmentName()}` : 
+    `Assessment Complete - Basic ${getAssessmentName()}`;
+
+  const getTaskType = () => {
+    if (isAkan) {
+      return isAnnotatorApproved ? 'Advanced Akan Language Tasks' : 'Basic Akan Language Tasks';
+    }
+    return isAnnotatorApproved ? 'Advanced English Tasks' : 'Basic English Tasks';
+  };
 
   const resultSubtitle = isAnnotatorApproved ?
-    "You've qualified for Advanced English Tasks" :
-    "You've been approved for Basic English Tasks";
+    `You've qualified for ${getTaskType()}` :
+    `You've been approved for ${getTaskType()}`;
 
   const statusColor = isAnnotatorApproved ? "success" : "info";
   const badgeColor = isAnnotatorApproved ? "#52c41a" : "#1890ff";
@@ -94,8 +112,8 @@ const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                   />
                   <Text className="text-sm text-gray-600 mt-2 block font-[gilroy-regular]">
                     {isAnnotatorApproved 
-                      ? "You can now work on advanced English language projects"
-                      : "You can now work on basic English language tasks"
+                      ? `You can now work on advanced ${isAkan ? 'Akan' : 'English'} language projects`
+                      : `You can now work on basic ${isAkan ? 'Akan' : 'English'} language tasks`
                     }
                   </Text>
                 </div>
@@ -109,8 +127,8 @@ const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                   </Title>
                   <Text className="text-gray-600 font-[gilroy-regular]">
                     {isAnnotatorApproved 
-                      ? "Browse available advanced English projects in your dashboard"
-                      : "Check out basic English tasks available for you"
+                      ? `Browse available advanced ${isAkan ? 'Akan' : 'English'} projects in your dashboard`
+                      : `Check out basic ${isAkan ? 'Akan' : 'English'} tasks available for you`
                     }
                   </Text>
                 </div>
@@ -166,8 +184,8 @@ const AssessmentResults: React.FC<AssessmentResultsProps> = ({
                 <li className="flex items-start">
                   <span className="text-[#F6921E] mr-2">•</span>
                   {isAnnotatorApproved 
-                    ? "Continue to excel in advanced English projects to build your reputation"
-                    : "You can retake the assessment after 24 hours to qualify for advanced English tasks"
+                    ? `Continue to excel in advanced ${isAkan ? 'Akan' : 'English'} projects to build your reputation`
+                    : `You can retake the assessment after 24 hours to qualify for advanced ${isAkan ? 'Akan' : 'English'} tasks`
                   }
                 </li>
                 <li className="flex items-start">
