@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import AssessmentIntroduction from "./AssessmentIntroduction";
 import AssessmentExam from "./AssessmentExam";
 import AssessmentResults from "./AssessmentResults";
@@ -9,6 +9,10 @@ type AssessmentStep = "introduction" | "exam" | "results" | "completed";
 
 const Assessment: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const assessmentType = searchParams.get('type') || 'english_proficiency';
+  
   const [currentStep, setCurrentStep] =
     useState<AssessmentStep>("introduction");
   const [assessmentScore, setAssessmentScore] = useState<number>(0);
@@ -65,6 +69,7 @@ const Assessment: React.FC = () => {
           <AssessmentResults
             score={assessmentScore}
             status={assessmentStatus}
+            assessmentType={assessmentType}
             onReturnToDashboard={handleReturnToDashboard}
           />
         );
