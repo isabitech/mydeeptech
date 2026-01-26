@@ -1,5 +1,5 @@
 
-export const baseURL = import.meta.env.MODE === "development" ? 'https://mydeeptech-be-lmrk.onrender.com/api' : import.meta.env.VITE_API_URL;
+export const baseURL = import.meta.env.VITE_API_URL;
 
 export const endpoints = {
   auth: {
