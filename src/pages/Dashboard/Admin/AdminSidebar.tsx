@@ -112,7 +112,7 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
 
   return (
     //    {/* Logo */}
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col">
       <div className="p-4 text-center  flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
         <div className="h-[80px]">
           <img className="h-full w-full rounded-md pointer-events-none" src={Logo} alt="" />
@@ -182,10 +182,9 @@ const AdminSidebar = () => {
           handleLogOutModal={handleLogOutModal}
         />
       </Drawer>
-      <div className="hidden h-full font-[gilroy-regular] bg-primary text-white w-[250px] lg:flex flex-col p-1">
+      <div className="hidden min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] lg:flex flex-col overflow-y-auto p-1">
         <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
       </div>
-
 
       <PageModal
         openModal={openModal}

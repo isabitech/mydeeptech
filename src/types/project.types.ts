@@ -21,6 +21,7 @@ export interface Project {
   projectCommunityLink?: string;
   projectTrackerLink?: string;
   status: ProjectStatus;
+  openCloseStatus: "open" | "close";
   isActive: boolean;
   createdBy: {
     _id: string;
