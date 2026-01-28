@@ -296,7 +296,7 @@ export const useAdminProjects = () => {
     setError(null);
 
     try {
-      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/toggle-active`;
+      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/toggle-status`;
       const data: ProjectResponse = await apiPatch(url, {});
       
       if (data.success) {
@@ -304,13 +304,44 @@ export const useAdminProjects = () => {
         setProjects(prevProjects => 
           prevProjects.map(project => 
             project._id === projectId 
-              ? { ...project, isActive: data.data.project.isActive }
+              ? { ...project, isActive: data.data.project.isActive, status: data.data.project.status }
               : project
           )
         );
         return { success: true, data: data.data };
       } else {
         const errorMessage = data.message || "Failed to toggle project status";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
+   const toggleProjectShowHide = useCallback(async (
+    projectId: string
+  ): Promise<HookOperationResult> => {
+    setError(null);
+
+    try {
+      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/show-hide`;
+      const data: ProjectResponse = await apiPatch(url, {});
+      
+      if (data.success) {
+        // Only update state after successful API response
+        setProjects(prevProjects => 
+          prevProjects.map(project => 
+            project._id === projectId 
+              ? { ...project, openCloseStatus: data.data.project.openCloseStatus }
+              : project
+          )
+        );
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to toggle project show/hide status";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -333,6 +364,7 @@ export const useAdminProjects = () => {
     getProjectAnnotators,
     updateProject,
     toggleProjectActiveStatus,
+    toggleProjectShowHide,
     deleteProject,
     requestDeletionOtp,
     verifyDeletionOtp,

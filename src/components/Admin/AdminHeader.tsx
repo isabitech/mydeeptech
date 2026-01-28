@@ -65,9 +65,7 @@ const AdminHeader: React.FC = () => {
       label: 'Settings',
       onClick: () => navigate('/admin/settings')
     },
-    {
-      type: 'divider' as const
-    },
+    { type: 'divider' as const },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -82,12 +80,6 @@ const AdminHeader: React.FC = () => {
         <Button className='size-8 lg:hidden rounded-sm flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
           <MenuOutlined />
         </Button>
-
-        {/* <div className="absolute top-3 left-3 lg:hidden rounded-sm flex items-center justify-center size-10  bg-primary text-white">
-        <button onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <CloseOutlined className="text-lg" /> : <MenuOutlined className="text-lg" />}
-        </button>
-      </div> */}
         <Text className="hidden lg:block text-lg font-['gilroy-semibold'] text-[#333333]">
           Admin Dashboard
         </Text>

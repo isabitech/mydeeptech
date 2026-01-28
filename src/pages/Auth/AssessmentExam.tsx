@@ -5,6 +5,7 @@ import { fallbackQuestions, fallbackAssessmentInfo, convertApiQuestionToComponen
 import { useAssessmentSystem, UserAnswer } from '../../hooks/Auth/User/useAssessmentSystem';
 import { AssessmentTypeResponse, AssessmentTypeResponseData } from '../../types/assesment-type';
 import { useLocation } from 'react-router-dom';
+import { retrieveTokenFromStorage } from '../../helpers';
 
 const { Title, Text } = Typography;
 
@@ -87,6 +88,17 @@ const AssessmentExam: React.FC<AssessmentExamProps> = ({ onSubmitSuccess }) => {
     setIsSubmitting(true);
 
     try {
+      // Verify authentication token before attempting submission
+      const token = await retrieveTokenFromStorage();
+      if (!token) {
+        Modal.error({
+          title: 'Authentication Required',
+          content: 'Your session is missing or has expired. Please log in again to submit your assessment.',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Block submission if questions came from fallback to avoid DB mismatches
       if (questionsSource !== 'api') {
         Modal.error({
