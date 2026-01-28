@@ -455,9 +455,6 @@ const ProjectManagement: React.FC = () => {
           filename = matches[1];
         }
       }
-
-      console.log('📄 Filename:', filename);
-
       // Create blob and download
       const blob = await response.blob();
       console.log('📦 Blob size:', blob.size, 'Type:', blob.type);
@@ -635,7 +632,7 @@ const ProjectManagement: React.FC = () => {
       ),
     },
     {
-      title: "Show",
+      title: "Visibility",
       dataIndex: "openCloseStatus",
       key: "openCloseStatus",
       render: (openCloseStatus: Project["openCloseStatus"], record: Project) => (
