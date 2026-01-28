@@ -330,7 +330,7 @@ export const useAdminProjects = () => {
     setError(null);
 
     try {
-      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/show-hide`;
+      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/toggle-visibility`;
       const data: ProjectResponse = await apiPatch(url, {});
       
       if (data.success) {

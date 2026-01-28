@@ -818,16 +818,7 @@ const ProjectManagement: React.FC = () => {
               <Option key={category} value={category}>{category}</Option>
             ))}
           </Select>
-          {/* <Select
-            placeholder="Filter by active status"
-            allowClear
-            style={{ width: 180 }}
-            onChange={handleActiveFilter}
-            value={activeFilter}
-          >
-            <Option value="true">Active Only</Option>
-            <Option value="false">Inactive Only</Option>
-          </Select> */}
+        
           <Select
             placeholder="Filter by visibility"
             allowClear
