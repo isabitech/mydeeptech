@@ -51,6 +51,7 @@ export const useAdminProjects = () => {
     category?: string;
     search?: string;
     isActive?: string;
+    openCloseStatus?: string;
   }): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
@@ -64,6 +65,8 @@ export const useAdminProjects = () => {
       if (params?.category) queryParams.category = params.category;
       if (params?.search) queryParams.search = params.search;
       if (params?.isActive) queryParams.isActive = params.isActive;
+      if (params?.openCloseStatus) queryParams.openCloseStatus = params.openCloseStatus;
+
 
       const data: ProjectsResponse = await apiGet(endpoints.adminProject.getAllProjects, { params: queryParams });
 
@@ -321,13 +324,13 @@ export const useAdminProjects = () => {
     }
   }, []);
 
-   const toggleProjectShowHide = useCallback(async (
+   const toggleProjectVisibleStatus = useCallback(async (
     projectId: string
   ): Promise<HookOperationResult> => {
     setError(null);
 
     try {
-      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/show-hide`;
+      const url = `${endpoints.adminProject.toggleActiveStatus}/${projectId}/toggle-visibility`;
       const data: ProjectResponse = await apiPatch(url, {});
       
       if (data.success) {
@@ -364,7 +367,7 @@ export const useAdminProjects = () => {
     getProjectAnnotators,
     updateProject,
     toggleProjectActiveStatus,
-    toggleProjectShowHide,
+    toggleProjectVisibleStatus,
     deleteProject,
     requestDeletionOtp,
     verifyDeletionOtp,

@@ -151,7 +151,7 @@ export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert
 
 export type ExperienceLevel = "none" | "beginner" | "intermediate" | "advanced";
 
-export type ProjectStatus = "active" | "completed" | "paused" | "cancelled";
+export type ProjectStatus = "active" | "inactive" | "completed" | "paused" | "cancelled" | "open" | "close";
 
 export type ApplicationStatus = "pending" | "approved" | "rejected";
 
