@@ -86,7 +86,7 @@ const DIFFICULTY_LEVELS: DifficultyLevel[] = ["beginner", "intermediate", "advan
 
 const EXPERIENCE_LEVELS: ExperienceLevel[] = ["none", "beginner", "intermediate", "advanced"];
 
-const PROJECT_STATUSES: ProjectStatus[] = ["active", "completed", "paused", "cancelled"];
+const PROJECT_STATUSES: ProjectStatus[] = ["active", "completed", "paused", "cancelled", "inactive"];
 
 const ProjectManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -102,6 +102,7 @@ const ProjectManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [activeFilter, setActiveFilter] = useState<string>(""); // "true", "false", or "" (all)
+  const [openCloseFilter, setOpenCloseFilter] = useState<string>(""); // "open", "close", or "" (all)
   const [toggleLoadingIds, setToggleLoadingIds] = useState<Set<string>>(new Set());
   const [token, setToken] = useState<string | null>(null);
 
@@ -119,6 +120,7 @@ const ProjectManagement: React.FC = () => {
     requestDeletionOtp,
     verifyDeletionOtp,
     toggleProjectActiveStatus,
+    toggleProjectVisibleStatus,
     loading,
     error,
     projects,
@@ -139,6 +141,7 @@ const ProjectManagement: React.FC = () => {
       category: categoryFilter || undefined,
       search: searchText || undefined,
       isActive: activeFilter || undefined,
+      openCloseStatus: openCloseFilter || undefined,
     });
   };
 
@@ -158,6 +161,7 @@ const ProjectManagement: React.FC = () => {
       status: statusFilter || undefined,
       category: categoryFilter || undefined,
       isActive: activeFilter || undefined,
+      openCloseStatus: openCloseFilter || undefined,
     });
   };
 
@@ -168,6 +172,7 @@ const ProjectManagement: React.FC = () => {
       search: searchText || undefined,
       category: categoryFilter || undefined,
       isActive: activeFilter || undefined,
+      openCloseStatus: openCloseFilter || undefined,
     });
   };
 
@@ -178,6 +183,7 @@ const ProjectManagement: React.FC = () => {
       search: searchText || undefined,
       status: statusFilter || undefined,
       isActive: activeFilter || undefined,
+      openCloseStatus: openCloseFilter || undefined,
     });
   };
 
@@ -188,6 +194,19 @@ const ProjectManagement: React.FC = () => {
       search: searchText || undefined,
       status: statusFilter || undefined,
       category: categoryFilter || undefined,
+      openCloseStatus: openCloseFilter || undefined,
+    });
+  };
+
+  // Handle open/close filter
+  const handleOpenCloseFilter = (value: string) => {
+    setOpenCloseFilter(value);
+    getAllProjects({
+      openCloseStatus: value || undefined,
+      search: searchText || undefined,
+      status: statusFilter || undefined,
+      category: categoryFilter || undefined,
+      isActive: activeFilter || undefined,
     });
   };
 
@@ -569,6 +588,18 @@ const ProjectManagement: React.FC = () => {
       },
     },
     {
+      title: "Open",
+      dataIndex: "openCloseStatus",
+      key: "openCloseStatus",
+      render: (openCloseStatus: string) => {
+        const colors = {
+          open: "green",
+          close: "red",
+        };
+        return <Tag color={colors[openCloseStatus as keyof typeof colors]}>{openCloseStatus?.toUpperCase()}</Tag>;
+      },
+    },
+    {
       title: "Applications",
       dataIndex: "totalApplications",
       key: "totalApplications",
@@ -599,6 +630,20 @@ const ProjectManagement: React.FC = () => {
           onChange={() => handleToggleActiveStatus(record)}
           checkedChildren="Active"
           unCheckedChildren="Inactive"
+          loading={toggleLoadingIds.has(record._id)}
+        />
+      ),
+    },
+    {
+      title: "Show",
+      dataIndex: "openCloseStatus",
+      key: "openCloseStatus",
+      render: (openCloseStatus: Project["openCloseStatus"], record: Project) => (
+        <Switch
+          checked={openCloseStatus === "open"}
+          onChange={() => toggleProjectVisibleStatus(record._id)}
+          checkedChildren="Open"
+          unCheckedChildren="Closed"
           loading={toggleLoadingIds.has(record._id)}
         />
       ),
@@ -672,9 +717,7 @@ const ProjectManagement: React.FC = () => {
 
         return (
           <Dropdown
-            menu={{
-              items: menuItems,
-            }}
+            menu={{ items: menuItems }}
             trigger={['click']}
             placement="bottomRight"
           >
@@ -775,7 +818,7 @@ const ProjectManagement: React.FC = () => {
               <Option key={category} value={category}>{category}</Option>
             ))}
           </Select>
-          <Select
+          {/* <Select
             placeholder="Filter by active status"
             allowClear
             style={{ width: 180 }}
@@ -784,6 +827,16 @@ const ProjectManagement: React.FC = () => {
           >
             <Option value="true">Active Only</Option>
             <Option value="false">Inactive Only</Option>
+          </Select> */}
+          <Select
+            placeholder="Filter by visibility"
+            allowClear
+            style={{ width: 180 }}
+            onChange={handleOpenCloseFilter}
+            value={openCloseFilter}
+          >
+            <Option value="open">OPEN</Option>
+            <Option value="close">CLOSED</Option>
           </Select>
           <Button
             icon={<ReloadOutlined />}
