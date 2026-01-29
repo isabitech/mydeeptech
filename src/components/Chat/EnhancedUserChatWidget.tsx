@@ -656,14 +656,14 @@ const EnhancedUserChatWidget: React.FC = () => {
   // Chat toggle button
   if (!isOpen) {
     return (
-      <div className="fixed bottom-0 right-6 z-50">
+      <div className="fixed bottom-4 right-6 z-50">
         <Button
           type="primary"
           shape="circle"
           size="large"
           icon={<MessageOutlined />}
           onClick={() => setIsOpen(true)}
-          className=" flex items-center justify-center shadow-lg bg-red-500"
+          className="flex items-center justify-center shadow-lg bg-red-500"
         //   style={{ 
         //     backgroundColor: '#F6921E', 
         //     borderColor: '#F6921E',
