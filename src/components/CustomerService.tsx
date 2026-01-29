@@ -45,7 +45,7 @@ const CustomerService: React.FC = () => {
   };
 
   return (
-    <div className=" absolute bottom-4 right-4">{renderChatComponent()}</div>
+    <div className="absolute bottom-4 right-4">{renderChatComponent()}</div>
   );
 };
 
