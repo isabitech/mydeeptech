@@ -467,10 +467,9 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
   };
 
   return (
-    // max-h-[calc(100%-500px)]
-    <div className="px-6 font-['gilroy-regular'] grid grid-rows-[auto_1fr] flex-1 gap-6 overflow-hidden">
+    <div className="lg:px-6 font-['gilroy-regular'] grid grid-rows-[auto_1fr] flex-1 gap-6 lg:overflow-hidden w-full">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center w-full">
         <div>
           <Title level={2} className="!text-[#333333] !mb-2 font-['gilroy-semibold']">
             Support Chat Dashboard
@@ -519,12 +518,12 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
       </div>
 
     <div className="w-full flex flex-col flex-1">
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6 w-full">
         {/* Chat List */}
-        <div className="col-span-4 rounded-md">
+        <div className="col-span-12 lg:col-span-4 rounded-md w-full">
           <Card
-          className='relative h-[550px] overflow-auto '
-            styles={{ body: { padding: 0 } }}
+          className='relative h-[400px] lg:h-[550px] overflow-auto w-full'
+            styles={{ body: { padding: 0, } }}
           >
             <div className="flex items-center justify-between w-full sticky top-0 right-0 left-0 z-10 p-3 bg-white rounded-t-md border-b">
                 <span className="font-['gilroy-semibold']">Active Chats ({activeChats.length})</span>
@@ -542,7 +541,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
             ) : (
               <List
                 dataSource={activeChats}
-                className="p-3"
+                className="p-3 w-full"
                 renderItem={(chat) => (
                   <motion.div
                     whileHover={{ backgroundColor: '#f8f9fa' }}
@@ -610,10 +609,10 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
         </div>
 
         {/* Chat Interface */}
-        <div className="col-span-8">
+        <div className="col-span-12 lg:col-span-8">
           <Card styles={{ body: { padding: 0, } }}>
             {selectedChat ? (
-              <div className="relative grid grid-rows-[auto_1fr_auto] h-[550px] rounded-md">
+              <div className="relative grid grid-rows-[auto_1fr_auto] h-full lg:h-[550px] rounded-md">
                 
                 <div 
                   className="px-6 py-4 border-b text-white rounded-t-md"
@@ -624,7 +623,8 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                       <Avatar 
                         icon={<UserOutlined />} 
                         size={48}
-                        style={{ backgroundColor: '#F6921E' }}
+                        style={{ backgroundColor: '#F6921E',  }}
+                        className='shrink-0'
                       />
                       <div>
                         <h3 className="font-['gilroy-semibold'] text-lg mb-1">
@@ -738,7 +738,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-[500px] text-center">
+              <div className="flex items-center justify-center h-full lg:h-[550px] text-center">
                 <div>
                   <CustomerServiceOutlined className="text-6xl text-gray-400 mb-4" />
                   <h3 className="text-xl font-['gilroy-semibold'] text-gray-600 mb-2">
