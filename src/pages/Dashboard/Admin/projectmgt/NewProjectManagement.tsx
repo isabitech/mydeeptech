@@ -632,7 +632,7 @@ const ProjectManagement: React.FC = () => {
       ),
     },
     {
-      title: "Visibility",
+      title: () => <span className="text-center flex items-center justify-center">Application <br/>Status</span>,
       dataIndex: "openCloseStatus",
       key: "openCloseStatus",
       render: (openCloseStatus: Project["openCloseStatus"], record: Project) => (
