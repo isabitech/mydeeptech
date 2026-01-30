@@ -467,9 +467,10 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 font-['gilroy-regular']">
+    // max-h-[calc(100%-500px)]
+    <div className="px-6 font-['gilroy-regular'] grid grid-rows-[auto_1fr] flex-1 gap-6 overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <div>
           <Title level={2} className="!text-[#333333] !mb-2 font-['gilroy-semibold']">
             Support Chat Dashboard
@@ -517,31 +518,31 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
         </Space>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 h-full">
+    <div className="w-full flex flex-col flex-1">
+      <div className="grid grid-cols-12 gap-6">
         {/* Chat List */}
-        <div className="col-span-4">
-          <Card 
-            title={
-              <div className="flex items-center justify-between">
+        <div className="col-span-4 rounded-md">
+          <Card
+          className='relative h-[550px] overflow-auto '
+            styles={{ body: { padding: 0 } }}
+          >
+            <div className="flex items-center justify-between w-full sticky top-0 right-0 left-0 z-10 p-3 bg-white rounded-t-md border-b">
                 <span className="font-['gilroy-semibold']">Active Chats ({activeChats.length})</span>
                 <Badge 
                   count={activeChats.filter(chat => chat.status === 'open').length} 
                   style={{ backgroundColor: '#F6921E' }}
                 />
               </div>
-            }
-            className="h-full"
-            bodyStyle={{ padding: 0, height: 'calc(100% - 70px)', overflow: 'auto' }}
-          >
             {activeChats.length === 0 ? (
               <Empty 
                 description="No active chats"
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
-                className="mt-16"
+                className="mt-16 p-4 h-[500px]"
               />
             ) : (
               <List
                 dataSource={activeChats}
+                className="p-3"
                 renderItem={(chat) => (
                   <motion.div
                     whileHover={{ backgroundColor: '#f8f9fa' }}
@@ -560,7 +561,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                           <Badge dot={chat.status === 'open'} offset={[-5, 5]}>
                             <Avatar 
                               icon={<UserOutlined />} 
-                              style={{ backgroundColor: '#333333' }}
+                              style={{ backgroundColor: '#333333', marginLeft: '4px' }}
                             />
                           </Badge>
                         }
@@ -610,12 +611,12 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
         {/* Chat Interface */}
         <div className="col-span-8">
-          <Card className="h-full" bodyStyle={{ padding: 0, height: '100%' }}>
+          <Card styles={{ body: { padding: 0, } }}>
             {selectedChat ? (
-              <div className="flex flex-col h-full">
-                {/* Chat Header */}
+              <div className="relative grid grid-rows-[auto_1fr_auto] h-[550px] rounded-md">
+                
                 <div 
-                  className="px-6 py-4 border-b text-white"
+                  className="px-6 py-4 border-b text-white rounded-t-md"
                   style={{ background: 'linear-gradient(135deg, #333333 0%, #F6921E 100%)' }}
                 >
                   <div className="flex justify-between items-center">
@@ -654,8 +655,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                   </div>
                 </div>
 
-                {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-6 bg-gray-50" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+                <div className="overflow-y-auto p-6 bg-gray-50" >
                   {selectedChatMessages.length === 0 ? (
                     <div className="text-center text-gray-500 py-16">
                       <MessageOutlined className="text-4xl mb-3 text-gray-400" />
@@ -702,8 +702,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
                 <Divider className="m-0" />
 
-                {/* Message Input */}
-                <div className="p-6 bg-white">
+                <div className="p-6 bg-white rounded-b-md">
                   <div className="flex space-x-3">
                     <TextArea
                       value={newMessage}
@@ -739,7 +738,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-center">
+              <div className="flex items-center justify-center h-[500px] text-center">
                 <div>
                   <CustomerServiceOutlined className="text-6xl text-gray-400 mb-4" />
                   <h3 className="text-xl font-['gilroy-semibold'] text-gray-600 mb-2">
@@ -754,6 +753,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
           </Card>
         </div>
       </div>
+    </div>
     </div>
   );
 };

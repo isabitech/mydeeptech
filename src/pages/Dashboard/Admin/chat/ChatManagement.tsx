@@ -21,12 +21,7 @@ const ChatManagement: React.FC = () => {
     getToken();
   }, []);
 
-  return (
-    <div className="min-h-screen">
-      {/* <EnhancedAdminChatDashboard adminToken={token} /> */}
-      <AdminChatDashboard adminToken={token} />
-    </div>
-  );
+  return <AdminChatDashboard adminToken={token} />
 };
 
 export default ChatManagement;
