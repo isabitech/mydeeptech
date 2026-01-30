@@ -11,7 +11,7 @@ const AdminLayout = () => {
         <div className="grid grid-rows-[auto_1fr] w-full">
           <AdminHeader />
           {/* Main Content */}
-          <div className="flex-1 h-full bg-gray-100 p-6 overflow-y-auto">
+          <div className="grid bg-gray-100 p-6 overflow-y-auto">
             <Outlet />
           </div>
         </div>
