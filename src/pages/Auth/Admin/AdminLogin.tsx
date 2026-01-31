@@ -7,11 +7,13 @@ import { useAdminLogin } from "../../../hooks/Auth/Admin/useAdminLogin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
 
 const AdminLogin: React.FC = () => {
+  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     rememberMe: false,
   });
+
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [successMessage, setSuccessMessage] = useState<string>("");
 
@@ -116,7 +118,6 @@ const AdminLogin: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-
         <div className="flex justify-center items-center w-28 mx-auto">
           <img src={mydeepTechLogo} alt="Logo" className="h-full w-full mb-6 rounded-md" />
         </div>
@@ -309,5 +310,4 @@ const AdminLogin: React.FC = () => {
     </div>
   );
 };
-
 export default AdminLogin;

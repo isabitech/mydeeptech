@@ -61,6 +61,7 @@ export interface Project {
 
 
 export interface Application {
+  _id: string;
   applicationId: string;
   status: "approved" | "rejected" | "pending";
   appliedAt: string;
