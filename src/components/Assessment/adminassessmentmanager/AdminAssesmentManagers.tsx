@@ -13,6 +13,7 @@ import { BulkUploadModal } from './modals/BulkUploadModal';
 import { multimediaAssessmentApi } from '../../../service/axiosApi';
 import { toast } from 'sonner';
 import { AssessmentConfig, VideoReel } from './types';
+import { div } from 'framer-motion/client';
 
 const { Title } = Typography;
 
@@ -105,7 +106,8 @@ export const AdminReelAssessmentManager = () => {
         <Tabs.TabPane tab="Assessment Configurations" key="assessments">
           <Card
             extra={
-              <Button
+              <div className=' '>
+                 <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => {
@@ -116,6 +118,18 @@ export const AdminReelAssessmentManager = () => {
               >
                 New Assessment
               </Button>
+               <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  setEditingAssessment(null);
+                  assessmentForm.resetFields();
+                  setShowAssessmentModal(true);
+                }}
+              >
+                New Assessment
+              </Button>
+              </div>
             }
           >
             <Table
