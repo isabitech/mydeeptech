@@ -738,7 +738,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full lg:h-[550px] text-center">
+              <div className="flex items-center justify-center h-[300px] lg:h-[550px] text-center">
                 <div>
                   <CustomerServiceOutlined className="text-6xl text-gray-400 mb-4" />
                   <h3 className="text-xl font-['gilroy-semibold'] text-gray-600 mb-2">
