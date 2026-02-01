@@ -18,9 +18,16 @@ import { toast } from 'sonner';
 import { AssessmentConfig, VideoReel } from '../Assessment/adminassessmentmanager/types';
 import { Space } from 'lucide-react';
 import AssesmentDomain from './AssesmentDomain';
-const { Title } = Typography;
+const { Title } = Typography; 
 
-export const AdminReelAssessmentManager = () => {
+interface AdminReelAssessmentManagerProps {
+  onAssessmentCreated?: (assessment: AssessmentConfig) => void;
+}
+
+
+
+
+export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAssessmentManagerProps) => {
   const { assessments, videoReels, loading, reloadAssessments, reloadReels } =
     useReelAssessmentData();
 
@@ -44,6 +51,7 @@ export const AdminReelAssessmentManager = () => {
     const res = await multimediaAssessmentApi.createAssessmentConfig(values);
     if (res.data?.success) {
       toast.success('Assessment created');
+      onAssessmentCreated?.(res.data.data);
       reloadAssessments();
       setShowAssessmentModal(false);
       assessmentForm.resetFields();
