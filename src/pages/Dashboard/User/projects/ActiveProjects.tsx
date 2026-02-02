@@ -45,9 +45,11 @@ const ActiveProjects = () => {
   } = useUserProjects();
 
   // Filter projects that have active applications
-  const activeProjects: Project[] = (projects as unknown as Project[]).filter(project => 
-    project.userApplication && project.userApplication.status === 'approved'
-  );
+  // const activeProjects: Project[] = (projects as unknown as Project[]).filter(project => 
+  //   project.userApplication && project.userApplication.status === 'approved'
+  // );
+
+  const activeProjects = projects as unknown as Project[];
 
   useEffect(() => {
     const fetchActiveProjects = async () => {
@@ -104,7 +106,7 @@ const ActiveProjects = () => {
   }
 
   return (
-    <div className="font-[gilroy-regular] flex flex-col gap-4">
+    <div className="font-[gilroy-regular] flex flex-col gap-4 pb-10">
       {/* Statistics Cards */}
       {userStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -160,9 +162,10 @@ const ActiveProjects = () => {
               return (
                 <Card
                   key={project._id}
-                  className="project-card hover:shadow-lg transition-shadow"
+                  className="project-card hover:shadow-lg transition-shadow flex items-center justify-between flex-col gap-5 w-full"
                   actions={[
                     <Dropdown
+                    overlayStyle={{width: '10rem'}}
                       overlay={
                         <Menu>
                           <Menu.Item 
@@ -223,7 +226,7 @@ const ActiveProjects = () => {
                       <Button 
                         type="text" 
                         icon={<MoreOutlined />}
-                        className="hover:bg-gray-100"
+                        className="hover:bg-gray-100 !w-full"
                       >
                         Actions
                       </Button>
