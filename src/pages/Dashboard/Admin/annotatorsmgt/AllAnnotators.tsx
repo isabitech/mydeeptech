@@ -326,11 +326,13 @@ const AllAnnotators = () => {
       dataIndex: 'fullName',
       key: 'fullName',
       sorter: true,
+      width: 150,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      width: 100,
     },
     {
       title: 'Phone',
@@ -341,8 +343,9 @@ const AllAnnotators = () => {
       title: 'Domains',
       dataIndex: 'domains',
       key: 'domains',
+      width: 300,
       render: (domains: string[]) => (
-        <div>
+        <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
           {domains?.map((domain, index) => (
             <Tag key={index} color="blue">{domain}</Tag>
           ))}
@@ -353,12 +356,14 @@ const AllAnnotators = () => {
       title: 'Annotator Status',
       dataIndex: 'annotatorStatus',
       key: 'annotatorStatus',
+      width: 100,
       render: (status: string) => getStatusTag(status),
     },
     {
       title: 'MicroTasker Status',
       dataIndex: 'microTaskerStatus',
       key: 'microTaskerStatus',
+      width: 100,
       render: (status: string) => getStatusTag(status),
     },
     {
@@ -380,6 +385,7 @@ const AllAnnotators = () => {
     },
     {
       title: 'Email Verified',
+      width: 100,
       dataIndex: 'isEmailVerified',
       key: 'isEmailVerified',
       render: (verified: boolean) => (
@@ -392,6 +398,7 @@ const AllAnnotators = () => {
       title: 'Password Set',
       dataIndex: 'hasSetPassword',
       key: 'hasSetPassword',
+      width: 100,
       render: (hasPassword: boolean) => (
         <Tag color={hasPassword ? 'green' : 'orange'}>
           {hasPassword ? 'SET' : 'NOT SET'}
@@ -402,12 +409,14 @@ const AllAnnotators = () => {
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 100,
       render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: "Assessment Result",
       dataIndex: "resultLink",
       key: "resultLink",
+      width: 100,
       render: (link: string, record: DTUser) => (
         link ?
           <Button
@@ -516,7 +525,7 @@ const AllAnnotators = () => {
               fetchUsers(page, size || 10, searchTerm, statusFilter);
             }
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: "max-content" }}
         />
       </Spin>
 
