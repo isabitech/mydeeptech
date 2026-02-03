@@ -539,6 +539,7 @@ const ProjectManagement: React.FC = () => {
       title: "Project Name",
       dataIndex: "projectName",
       key: "projectName",
+      width: 250,
       sorter: (a: Project, b: Project) => a.projectName.localeCompare(b.projectName),
     },
     {

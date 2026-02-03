@@ -300,14 +300,12 @@ const AvailableProjects = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProjects.map((project) => {
-
-              console.log('Rendering project:', project);
               return (
                 <Card
                   key={project._id}
-                  className="project-card hover:shadow-lg transition-shadow flex flex-col gap-5 justify-between"
+                  className="project-card hover:shadow-lg transition-shadow flex flex-col gap-5 justify-between w-full"
                   classNames={{
-                    actions: "flex items-center justify-between"
+                    actions: "flex items-center justify-between w-full"
                   }}
                   actions={[
                     <Button
