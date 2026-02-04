@@ -41,7 +41,7 @@ export const ButtonModal = ({
             onCategoryFormClick();      
           }}
         >
-          Your Domain
+          Create your Domain
         </Button>
       </Space>
     </Modal>

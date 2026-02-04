@@ -112,7 +112,7 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
 
   
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="w-full mx-auto p-6">
       <Title level={2}>Assessment Management</Title>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
@@ -148,7 +148,7 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
         <Tabs.TabPane tab="Video Reels" key="reels">
           <Card
             extra={
-              <>
+              <div className='flex gap-5'>
                 <Button
                   icon={<UploadOutlined />}
                   onClick={() => setShowBulkUploadModal(true)}
@@ -166,7 +166,7 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
                 >
                   Add Reel
                 </Button>
-              </>
+              </div>
             }
           >
             <Table

@@ -22,7 +22,6 @@ const categoriesData = [
       { id: 24, name: "Geometry", subSub: ["Triangles", "Circles", "Polygons"] },
     ],
   },
-  // ... Add other categories here
 ];
 
 const AssesmentDomain = () => {
