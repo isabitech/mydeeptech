@@ -45,11 +45,11 @@ const ActiveProjects = () => {
   } = useUserProjects();
 
   // Filter projects that have active applications
-  // const activeProjects: Project[] = (projects as unknown as Project[]).filter(project => 
-  //   project.userApplication && project.userApplication.status === 'approved'
-  // );
+  const activeProjects: Project[] = (projects as unknown as Project[]).filter(project => 
+    project.userApplication && project.userApplication.status === 'approved'
+  );
 
-  const activeProjects = projects as unknown as Project[];
+  // const activeProjects = projects as unknown as Project[];
 
   useEffect(() => {
     const fetchActiveProjects = async () => {
@@ -259,6 +259,13 @@ const ActiveProjects = () => {
                       </span>
                     </div>
 
+                     <div className="w-full">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Application Status:</span>
+                        <span className="text-green-700 capitalize">{project.userApplication?.status}</span>
+                      </div>
+                    </div>
+
                     <div className="w-full">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progress</span>
@@ -267,7 +274,7 @@ const ActiveProjects = () => {
                       <Progress percent={progress} size="small" />
                     </div>
 
-                    <div className="text-gray-500 text-sm w-full">
+                    {/* <div className="text-gray-500 text-sm w-full">
                       <CalendarOutlined /> Due: {project.deadline ? moment(project.deadline).format('MMM DD, YYYY') : 'N/A'}
                     </div>
 
@@ -275,7 +282,7 @@ const ActiveProjects = () => {
                       <div className="text-gray-500 text-sm w-full">
                         Started: {moment(project.userApplication.appliedAt).format('MMM DD, YYYY')}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </Card>
               );
