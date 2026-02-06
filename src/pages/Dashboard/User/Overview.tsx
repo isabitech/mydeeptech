@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
-import { Row, Col, Spin, Alert, Button } from 'antd';
-import { ReloadOutlined, UserOutlined, DashboardOutlined } from '@ant-design/icons';
+import { Row, Col, Spin, Alert, Button, Card } from 'antd';
+import { ReloadOutlined, TeamOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Header from './Header';
 import { useDTUserDashboard } from '../../../hooks/User/useDTUserDashboard';
-import ProfileCompletionCard from '../../../components/Dashboard/User/ProfileCompletionCard';
 import FinancialSummaryCards from '../../../components/Dashboard/User/FinancialSummaryCards';
 import ApplicationStatisticsCharts from '../../../components/Dashboard/User/ApplicationStatisticsCharts';
 import AvailableOpportunitiesComponent from '../../../components/Dashboard/User/AvailableOpportunitiesComponent';
 import RecentActivityTimeline from '../../../components/Dashboard/User/RecentActivityTimeline';
+import SlackNotification from './_components/slack-notification';
 
 const Overview = () => {
   const { data, loading, error, getDashboardData, refreshDashboard } = useDTUserDashboard();
@@ -120,6 +120,40 @@ const Overview = () => {
       </motion.div>
 
       <hr />
+
+      {/* Slack Community Invite Section */}
+      <motion.div variants={sectionVariants}>
+        <Card className="bg-gradient-to-r from-purple-500 to-blue-600 border-0 rounded-xl overflow-hidden">
+          <div className="relative">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-4 right-4 text-white text-6xl">
+                <TeamOutlined />
+              </div>
+            </div>
+            
+         <SlackNotification />
+            
+            {/* Additional Info */}
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <div className="flex flex-wrap items-center gap-6 text-purple-100 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span>Active Community</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <span>Real-time Support</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <span>Project Updates</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
 
       {/* Content */}
       <div className="h-full flex flex-col gap-6 overflow-auto px-2">
