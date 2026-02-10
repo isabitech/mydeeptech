@@ -61,6 +61,7 @@ export interface Project {
 
 
 export interface Application {
+  _id: string;
   applicationId: string;
   status: "approved" | "rejected" | "pending";
   appliedAt: string;
@@ -393,6 +394,57 @@ export interface RecentApplication {
   __v: number;
   id: string;
 }
+
+
+export interface ApplicationRecord {
+  applicationId: string;
+  applicationStatus: "approved" | "rejected" | "pending";
+  appliedAt: string;
+  reviewedAt: string;
+  reviewedBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  reviewNotes: string | null;
+  rejectionReason: string | null;
+  coverLetter: string;
+  workStartedAt: string;
+  annotator: {
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    annotatorStatus: "approved" | "rejected" | "pending";
+    microTaskerStatus: "approved" | "rejected" | "pending";
+    profilePicture: string | null;
+    joinedDate: string;
+    personalInfo: {
+      country: string;
+      timeZone: string | null;
+      availableHours: number | null;
+      languages: string[];
+    };
+    professionalBackground: {
+      educationField: string | null;
+      yearsOfExperience: number | null;
+      previousProjects: string[];
+      skills: string[];
+    };
+    paymentInfo: {
+      hasPaymentInfo: boolean;
+      accountName: string;
+      bankName: string;
+    };
+    attachments: {
+      hasResume: boolean;
+      hasIdDocument: boolean;
+      resumeUrl: string | null;
+      idDocumentUrl: string | null;
+    };
+  };
+};
+
 
 // Removal functionality types
 export interface RemoveApplicantRequest {

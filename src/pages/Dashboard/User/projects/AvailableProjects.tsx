@@ -20,6 +20,7 @@ import {
   ClockCircleOutlined,
   DollarOutlined,
   UserOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
@@ -59,6 +60,12 @@ const PROJECT_CATEGORIES: ProjectCategory[] = [
 const DIFFICULTY_LEVELS: DifficultyLevel[] = ["beginner", "intermediate", "advanced", "expert"];
 
 const AVAILABILITY_OPTIONS: Availability[] = ["full_time", "part_time", "flexible"];
+
+
+const statusMap = {
+  open: "Open",
+  close: "Closed",
+};
 
 const AvailableProjects = () => {
   const [isApplicationModalVisible, setIsApplicationModalVisible] = useState(false);
@@ -172,11 +179,12 @@ const AvailableProjects = () => {
 
   // Filter projects locally based on search text
   const filteredProjects = projects.filter(project =>
-    searchText ? 
+    searchText ?
       project.projectName.toLowerCase().includes(searchText.toLowerCase()) ||
       project.projectDescription.toLowerCase().includes(searchText.toLowerCase())
-    : true
+      : true
   );
+
 
   if (error) {
     return (
@@ -198,7 +206,7 @@ const AvailableProjects = () => {
   }
 
   return (
-    <div className="font-[gilroy-regular] flex flex-col gap-4">
+    <div className="font-[gilroy-regular] flex flex-col gap-4 pb-10">
       {/* User Stats */}
       {userStats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -231,7 +239,7 @@ const AvailableProjects = () => {
           onSearch={handleSearch}
           style={{ width: 250 }}
         />
-        
+
         <Select
           placeholder="Category"
           allowClear
@@ -291,90 +299,111 @@ const AvailableProjects = () => {
           <Empty description="No projects available" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProjects.map((project) => (
-              <Card
-                key={project._id}
-                className="project-card hover:shadow-lg transition-shadow"
-                actions={[
-                  <Button
-                    type="text"
-                    icon={<EyeOutlined />}
-                    onClick={() => showProjectDetails(project)}
-                  >
-                    View Details
-                  </Button>,
-                  project.hasApplied ? (
-                    <Button type="text" disabled>
-                      Already Applied
-                    </Button>
-                  ) : (
+            {filteredProjects.map((project) => {
+              return (
+                <Card
+                  key={project._id}
+                  className="project-card hover:shadow-lg transition-shadow flex flex-col gap-5 justify-between w-full"
+                  classNames={{
+                    actions: "flex items-center justify-between w-full"
+                  }}
+                  actions={[
                     <Button
-                      type="primary"
-                      icon={<ArrowsAltOutlined />}
-                      onClick={() => showApplicationModal(project)}
-                      className="!bg-secondary !border-secondary"
+                      type="text"
+                      icon={<EyeOutlined />}
+                      onClick={() => showProjectDetails(project)}
                     >
-                      Apply
-                    </Button>
-                  ),
-                ]}
-              >
-                <div className="mb-3">
-                  <h3 className="text-lg font-bold mb-2 line-clamp-2">
-                    {project.projectName}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-3">
-                    {project.projectDescription}
-                  </p>
-                </div>
+                      View Details
+                    </Button>,
 
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Tag color="blue">{project.projectCategory}</Tag>
-                    <Tag color={
-                      project.difficultyLevel === 'beginner' ? 'green' :
-                      project.difficultyLevel === 'intermediate' ? 'orange' :
-                      project.difficultyLevel === 'advanced' ? 'red' : 'purple'
-                    }>
-                      {project.difficultyLevel.toUpperCase()}
-                    </Tag>
+                    project.openCloseStatus === 'close' ? (
+                      <Button type="text" disabled>
+                        Closed
+                      </Button>
+                    ) : project.hasApplied ? (
+                      <Button type="text" disabled>
+                        Already Applied
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        icon={<ArrowsAltOutlined />}
+                        onClick={() => showApplicationModal(project)}
+                        className="!bg-secondary !border-secondary"
+                      >
+                        Apply
+                      </Button>
+                    )
+                  ]}
+                >
+                  <div className="mb-5">
+                    <h3 className="text-lg font-bold mb-2 line-clamp-2">
+                      {project.projectName}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-3">
+                      {project.projectDescription}
+                    </p>
                   </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-green-600">
-                      <DollarOutlined /> {project.payRateCurrency} {project.payRate}
-                      <span className="text-gray-500">/{project.payRateType.replace('_', ' ')}</span>
-                    </span>
-                    <span className="text-gray-500 text-sm">
-                      <UserOutlined /> {project.totalApplications}/{project.maxAnnotators || '∞'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 text-sm">
-                      <ClockCircleOutlined /> Due: {moment(project.deadline).format('MMM DD, YYYY')}
-                    </span>
-                    <Tag color={project.status === 'active' ? 'green' : 'orange'}>
-                      {project.status.toUpperCase()}
-                    </Tag>
-                  </div>
-
-                  {project.requiredSkills?.length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-500 mb-1">Skills:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {project.requiredSkills.slice(0, 3).map((skill, index) => (
-                          <Tag key={index} className="text-xs">{skill}</Tag>
-                        ))}
-                        {project.requiredSkills.length > 3 && (
-                          <Tag className="text-xs">+{project.requiredSkills.length - 3} more</Tag>
-                        )}
-                      </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Tag color="blue">{project.projectCategory}</Tag>
+                      <Tag color={
+                        project.difficultyLevel === 'beginner' ? 'green' :
+                          project.difficultyLevel === 'intermediate' ? 'orange' :
+                            project.difficultyLevel === 'advanced' ? 'red' : 'purple'
+                      }>
+                        {project.difficultyLevel.toUpperCase()}
+                      </Tag>
                     </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-green-600">
+                        <DollarOutlined /> {project.payRateCurrency} {project.payRate}
+                        <span className="text-gray-500">/{project.payRateType.replace('_', ' ')}</span>
+                      </span>
+                      <span className="text-gray-500 text-sm">
+                        <UserOutlined /> {project.totalApplications}/{project.maxAnnotators || '∞'}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 text-sm">
+                        <ClockCircleOutlined /> Due: {moment(project.deadline).format('MMM DD, YYYY')}
+                      </span>
+                      <Tag color={project.status === 'active' ? 'green' : 'orange'}>
+                        {project.status.toUpperCase()}
+                      </Tag>
+                    </div>
+
+
+                    {
+                      project.openCloseStatus && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-500 text-sm">
+                            <CheckCircleOutlined /> Application Status: {statusMap[project.openCloseStatus]}
+                          </span>
+                        </div>
+                      )
+                    }
+
+                    {project.requiredSkills?.length > 0 && (
+                      <div className="flex gap-2">
+                        <span className="text-xs text-gray-500 mb-1 inline-block">Skills:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {project.requiredSkills.slice(0, 3).map((skill, index) => (
+                            <Tag key={index} className="text-xs">{skill}</Tag>
+                          ))}
+                          {project.requiredSkills.length > 3 && (
+                            <Tag className="text-xs">+{project.requiredSkills.length - 3} more</Tag>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )
+            })}
           </div>
         )}
       </Spin>

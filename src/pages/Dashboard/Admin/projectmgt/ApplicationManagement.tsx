@@ -171,6 +171,8 @@ const ApplicationManagement: React.FC = () => {
   const handleApprove = async () => {
     if (!selectedApplication) return;
 
+    console.log("Approving application:", selectedApplication);
+
     try {
       const values = await approvalForm.validateFields();
       const approvalData: ApproveApplicationForm = {
@@ -178,7 +180,7 @@ const ApplicationManagement: React.FC = () => {
       };
 
       const result = await approveApplication(
-        selectedApplication.applicationId,
+        selectedApplication._id,
         approvalData
       );
 
@@ -206,7 +208,7 @@ const ApplicationManagement: React.FC = () => {
       };
 
       const result = await rejectApplication(
-        selectedApplication.applicationId,
+        selectedApplication._id,
         rejectionData
       );
 
@@ -496,7 +498,7 @@ const ApplicationManagement: React.FC = () => {
            rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
-          rowKey={(record) => record.applicationId || (record as any)._id || String(Math.random())}
+          rowKey={(record) => record.applicationId || (record as any)?._id || String(Math.random())}
           pagination={{
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,

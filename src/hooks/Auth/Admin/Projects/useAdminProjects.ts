@@ -69,7 +69,6 @@ export const useAdminProjects = () => {
 
 
       const data: ProjectsResponse = await apiGet(endpoints.adminProject.getAllProjects, { params: queryParams });
-
       if (data.success) {
         setProjects(data.data.projects);
         setPagination(data.data.pagination);

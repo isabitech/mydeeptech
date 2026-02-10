@@ -4,14 +4,12 @@ import {
   Modal,
   Form,
   Input,
-  DatePicker,
   notification,
   Select,
   InputNumber,
   Tag,
   Card,
   Space,
-  Popconfirm,
   Table,
   Alert,
   Spin,
@@ -132,6 +130,20 @@ const ProjectManagement: React.FC = () => {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Debug logging for summary data
+  useEffect(() => {
+    console.log('🎯 Summary state updated:', summary);
+    if (summary) {
+      console.log('📈 Summary properties:', {
+        totalProjects: summary.totalProjects,
+        activeProjects: summary.activeProjects,
+        completedProjects: summary.completedProjects,
+        pausedProjects: summary.pausedProjects,
+        allKeys: Object.keys(summary)
+      });
+    }
+  }, [summary]);
 
   const fetchProjects = async () => {
     await getAllProjects({
@@ -368,10 +380,10 @@ const ProjectManagement: React.FC = () => {
   const handleToggleActiveStatus = async (project: Project) => {
     // Add to loading set
     setToggleLoadingIds(prev => new Set(prev).add(project._id));
-    
+
     try {
       const result = await toggleProjectActiveStatus(project._id);
-      
+
       if (result.success) {
         const newStatus = result.data.project.isActive;
         notification.success({
@@ -421,7 +433,7 @@ const ProjectManagement: React.FC = () => {
       });
 
       // Use the proper base URL for the API call
-      const apiBaseUrl = baseURL || 'http://localhost:5000'; // Fallback URL
+      const apiBaseUrl = baseURL || 'http://localhost:4000'; // Fallback URL
       const apiUrl = `${apiBaseUrl}/admin/projects/${project._id}/export-approved-csv`;
       console.log('🚀 baseURL:', baseURL);
       console.log('🚀 Final API URL:', apiUrl);
@@ -539,6 +551,7 @@ const ProjectManagement: React.FC = () => {
       title: "Project Name",
       dataIndex: "projectName",
       key: "projectName",
+      width: 250,
       sorter: (a: Project, b: Project) => a.projectName.localeCompare(b.projectName),
     },
     {
@@ -572,16 +585,14 @@ const ProjectManagement: React.FC = () => {
     },
     {
       title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => {
+      dataIndex: "isActive",
+      key: "isActive",
+      render: (status: boolean) => {
         const colors = {
-          active: "green",
-          completed: "blue",
-          paused: "orange",
-          cancelled: "red",
+          true: "green",
+          false: "red",
         };
-        return <Tag color={colors[status as keyof typeof colors]}>{status.toUpperCase()}</Tag>;
+        return <Tag color={colors[status?.toString() as keyof typeof colors]}>{status ? "ACTIVE" : "INACTIVE"}</Tag>;
       },
     },
     {
@@ -632,7 +643,7 @@ const ProjectManagement: React.FC = () => {
       ),
     },
     {
-      title: () => <span className="text-center flex items-center justify-center">Application <br/>Status</span>,
+      title: () => <span className="text-center flex items-center justify-center">Application <br />Status</span>,
       dataIndex: "openCloseStatus",
       key: "openCloseStatus",
       render: (openCloseStatus: Project["openCloseStatus"], record: Project) => (
@@ -755,31 +766,29 @@ const ProjectManagement: React.FC = () => {
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       {/* <Header title="Projects" /> */}
-
-      {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{summary.totalProjects}</div>
+              <div className="text-2xl font-bold text-blue-600">{summary.totalProjects ?? 0}</div>
               <div className="text-gray-600">Total Projects</div>
             </div>
           </Card>
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{summary.activeProjects}</div>
+              <div className="text-2xl font-bold text-green-600">{summary.activeProjects ?? 0}</div>
               <div className="text-gray-600">Active Projects</div>
             </div>
           </Card>
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-500">{summary.completedProjects}</div>
+              <div className="text-2xl font-bold text-blue-500">{summary.completedProjects ?? 0}</div>
               <div className="text-gray-600">Completed</div>
             </div>
           </Card>
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{summary.pausedProjects}</div>
+              <div className="text-2xl font-bold text-orange-600">{summary.pausedProjects ?? 0}</div>
               <div className="text-gray-600">Paused</div>
             </div>
           </Card>
@@ -815,7 +824,7 @@ const ProjectManagement: React.FC = () => {
               <Option key={category} value={category}>{category}</Option>
             ))}
           </Select>
-        
+
           <Select
             placeholder="Filter by visibility"
             allowClear
@@ -858,7 +867,7 @@ const ProjectManagement: React.FC = () => {
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} projects`,
           }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 'max-content' }}
         />
       </Spin>
 
@@ -986,7 +995,7 @@ const ProjectManagement: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Form.Item
+            {/* <Form.Item
               name="deadline"
               label="Project Deadline"
               rules={[{ required: true, message: "Please select project deadline!" }]}
@@ -997,9 +1006,9 @@ const ProjectManagement: React.FC = () => {
                 placeholder="Select deadline"
                 disabledDate={(current) => current && current.isBefore(dayjs(), 'day')}
               />
-            </Form.Item>
+            </Form.Item> */}
 
-            <Form.Item
+            {/* <Form.Item
               name="applicationDeadline"
               label="Application Deadline"
               rules={[{ required: true, message: "Please select application deadline!" }]}
@@ -1010,7 +1019,8 @@ const ProjectManagement: React.FC = () => {
                 placeholder="Select application deadline"
                 disabledDate={(current) => current && current.isBefore(dayjs(), 'day')}
               />
-            </Form.Item>
+            </Form.Item> */}
+
           </div>
 
           <Form.Item
@@ -1058,6 +1068,10 @@ const ProjectManagement: React.FC = () => {
             <Form.Item
               name="projectGuidelineLink"
               label="Project Guidelines Link"
+              rules={[
+                { required: true, message: "Project guidelines link is required" },
+                { type: "url", message: "Please enter a valid URL" },
+              ]}
             >
               <Input
                 placeholder="https://example.com/guidelines"
@@ -1068,6 +1082,10 @@ const ProjectManagement: React.FC = () => {
             <Form.Item
               name="projectGuidelineVideo"
               label="Project Guidelines Video"
+              rules={[
+                { required: true, message: "Project guidelines video link is required" },
+                { type: "url", message: "Please enter a valid URL" },
+              ]}
             >
               <Input
                 placeholder="https://example.com/video"
@@ -1080,6 +1098,10 @@ const ProjectManagement: React.FC = () => {
             <Form.Item
               name="projectCommunityLink"
               label="Project Community Link"
+              rules={[
+                { required: true, message: "Project community link is required" },
+                { type: "url", message: "Please enter a valid URL" },
+              ]}
             >
               <Input
                 placeholder="https://example.com/community"
@@ -1090,6 +1112,10 @@ const ProjectManagement: React.FC = () => {
             <Form.Item
               name="projectTrackerLink"
               label="Project Tracker Link"
+              rules={[
+                { required: true, message: "Project tracker link is required" },
+                { type: "url", message: "Please enter a valid URL" },
+              ]}
             >
               <Input
                 placeholder="https://example.com/tracker"

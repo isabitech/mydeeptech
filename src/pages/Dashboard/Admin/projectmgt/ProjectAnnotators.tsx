@@ -97,7 +97,6 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   };
 
   const fetchProjectAnnotators = async () => {
-    console.log({ projectId })
     const result = await getProjectAnnotators(projectId);
     if (result.success) {
       setData(result.data);
@@ -118,6 +117,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const handleConfirmRemoval = async () => {
     if (!selectedForRemoval) return;
 
+    console.log({ selectedForRemoval });
+
     try {
       const values = await removalForm.validateFields();
       const removalData: RemoveApplicantRequest = {
@@ -125,7 +126,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         removalNotes: values.notes || '',
       };
 
-      const result = await removeApplicant(selectedForRemoval._id, removalData);
+      const result = await removeApplicant(selectedForRemoval.applicantId?._id, removalData);
 
       if (result.success) {
         message.success('Annotator removed successfully');
@@ -286,9 +287,6 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
           <Tag color={getStatusColor(record.applicationStatus)}>
             {String(record.applicationStatus || '').toUpperCase()}
           </Tag>
-          {/* <Tag color={getAnnotatorStatusColor(record.annotator?.annotatorStatus)}>
-            {String(record.annotator?.annotatorStatus || '').toUpperCase()}
-          </Tag> */}
         </div>
       ),
     },
@@ -307,9 +305,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
       key: "actions",
       render: (record: any) => {
         const isApproved = record.applicationStatus === 'approved';
-        const applicationId = record.applicationId || record._id;
         const onView = () => handleViewApplication(record as any);
-        const onRemove = () => handleRemoveAnnotator({ ...(record as any), _id: applicationId } as RecentApplication);
+        const onRemove = () => handleRemoveAnnotator(record);
 
         const items: any[] = [
           {
@@ -505,7 +502,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         title={
           <div className="flex items-center space-x-2">
             <Avatar icon={<UserOutlined />} />
-            <span>{selectedApplication?.applicantId.fullName}</span>
+            <span>{selectedApplication?.applicantId?.fullName}</span>
           </div>
         }
         open={isApplicationModalVisible}
@@ -521,10 +518,12 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                 status={selectedApplication.status === "approved" ? "success" :
                   selectedApplication.status === "rejected" ? "error" : "processing"}
                 text={`Application: ${selectedApplication.status}`}
+                className="capitalize"
               />
               <Badge
-                status={selectedApplication.applicantId.annotatorStatus === "approved" ? "success" : "processing"}
-                text={`Annotator: ${selectedApplication.applicantId.annotatorStatus}`}
+                status={selectedApplication.applicantId?.annotatorStatus === "approved" ? "success" : "processing"}
+                text={`Annotator: ${selectedApplication.applicantId?.annotatorStatus}`}
+                className="capitalize"
               />
             </div>
 
@@ -534,20 +533,20 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                 <Descriptions.Item label="Email">
                   <Space>
                     <MailOutlined />
-                    {selectedApplication.applicantId.email}
+                    {selectedApplication?.applicantId?.email}
                   </Space>
                 </Descriptions.Item>
                 <Descriptions.Item label="Proposed Rate">
                   <Space>
                     <DollarOutlined />
-                    {selectedApplication.proposedRate || "Not specified"}
+                    {selectedApplication?.proposedRate || "Not specified"}
                   </Space>
                 </Descriptions.Item>
                 <Descriptions.Item label="Availability">
-                  {selectedApplication.availability}
+                  {selectedApplication?.availability}
                 </Descriptions.Item>
                 <Descriptions.Item label="Estimated Completion">
-                  {selectedApplication.estimatedCompletionTime || "Not specified"}
+                  {selectedApplication?.estimatedCompletionTime || "Not specified"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Applied Date">
                   <Space>
@@ -555,7 +554,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                     {moment(selectedApplication.appliedAt).format("MMM DD, YYYY HH:mm")}
                   </Space>
                 </Descriptions.Item>
-                {selectedApplication.reviewedAt && (
+                {selectedApplication?.reviewedAt && (
                   <Descriptions.Item label="Reviewed Date">
                     <Space>
                       <CalendarOutlined />
@@ -563,7 +562,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                     </Space>
                   </Descriptions.Item>
                 )}
-                {selectedApplication.workStartedAt && (
+                {selectedApplication?.workStartedAt && (
                   <Descriptions.Item label="Work Started">
                     <Space>
                       <CalendarOutlined />
@@ -572,28 +571,28 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   </Descriptions.Item>
                 )}
                 <Descriptions.Item label="Tasks Completed">
-                  {selectedApplication.tasksCompleted || 0}
+                  {selectedApplication?.tasksCompleted || 0}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
             {/* Cover Letter */}
             <Card title="Cover Letter" size="small">
-              <Text>{selectedApplication.coverLetter}</Text>
+              <Text>{selectedApplication?.coverLetter}</Text>
             </Card>
 
             {/* Review Information */}
-            {(selectedApplication.reviewNotes || selectedApplication.rejectionReason) && (
+            {(selectedApplication?.reviewNotes || selectedApplication?.rejectionReason) && (
               <Card title="Review Information" size="small">
                 <Descriptions column={1} size="small">
-                  {selectedApplication.reviewNotes && (
+                  {selectedApplication?.reviewNotes && (
                     <Descriptions.Item label="Review Notes">
-                      {selectedApplication.reviewNotes}
+                      {selectedApplication?.reviewNotes}
                     </Descriptions.Item>
                   )}
-                  {selectedApplication.rejectionReason && (
+                  {selectedApplication?.rejectionReason && (
                     <Descriptions.Item label="Rejection Reason">
-                      <Tag color="red">{selectedApplication.rejectionReason}</Tag>
+                      <Tag color="red">{selectedApplication?.rejectionReason}</Tag>
                     </Descriptions.Item>
                   )}
                 </Descriptions>
@@ -643,10 +642,10 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             <Card title="Annotator to Remove" size="small">
               <Descriptions column={1} size="small">
                 <Descriptions.Item label="Name">
-                  {selectedForRemoval.applicantId.fullName}
+                  {selectedForRemoval?.applicantId?.fullName}
                 </Descriptions.Item>
                 <Descriptions.Item label="Email">
-                  {selectedForRemoval.applicantId.email}
+                  {selectedForRemoval?.applicantId?.email}
                 </Descriptions.Item>
                 <Descriptions.Item label="Work Started">
                   {selectedForRemoval.workStartedAt

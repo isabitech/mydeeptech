@@ -49,6 +49,8 @@ const ActiveProjects = () => {
     project.userApplication && project.userApplication.status === 'approved'
   );
 
+  // const activeProjects = projects as unknown as Project[];
+
   useEffect(() => {
     const fetchActiveProjects = async () => {
       try {
@@ -104,7 +106,7 @@ const ActiveProjects = () => {
   }
 
   return (
-    <div className="font-[gilroy-regular] flex flex-col gap-4">
+    <div className="font-[gilroy-regular] flex flex-col gap-4 pb-10">
       {/* Statistics Cards */}
       {userStats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
@@ -160,7 +162,10 @@ const ActiveProjects = () => {
               return (
                 <Card
                   key={project._id}
-                  className="project-card hover:shadow-lg transition-shadow"
+                  className="project-card hover:shadow-lg transition-shadow flex items-center justify-between flex-col gap-5 w-full"
+                  styles={{ 
+                    body: { width: "100%" }, 
+                    actions: { width: "100%", cursor: "none", marginTop: "auto", } }}
                   actions={[
                     <Dropdown
                       overlay={
@@ -220,7 +225,7 @@ const ActiveProjects = () => {
                       }
                       trigger={['click']}
                     >
-                      <Button 
+                      <Button
                         type="text" 
                         icon={<MoreOutlined />}
                         className="hover:bg-gray-100"
@@ -230,7 +235,7 @@ const ActiveProjects = () => {
                     </Dropdown>
                   ]}
                 >
-                  <div className="mb-3">
+                  <div className="mb-3 w-full">
                     <h3 className="text-lg font-bold mb-2 line-clamp-2">
                       {project.projectName}
                     </h3>
@@ -239,7 +244,7 @@ const ActiveProjects = () => {
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 w-full">
                     <div className="flex justify-between items-center">
                       <Tag color="green">
                         <CheckCircleOutlined /> ACTIVE
@@ -247,14 +252,21 @@ const ActiveProjects = () => {
                       <Tag color="blue">{project.projectCategory}</Tag>
                     </div>
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center w-full">
                       <span className="font-bold text-green-600">
                         <DollarOutlined /> {project.payRateCurrency} {project.payRate}
                         <span className="text-gray-500">/{project.payRateType.replace('_', ' ')}</span>
                       </span>
                     </div>
 
-                    <div>
+                     <div className="w-full">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Application Status:</span>
+                        <span className="text-green-700 capitalize">{project.userApplication?.status}</span>
+                      </div>
+                    </div>
+
+                    <div className="w-full">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Progress</span>
                         <span>{progress}%</span>
@@ -262,15 +274,15 @@ const ActiveProjects = () => {
                       <Progress percent={progress} size="small" />
                     </div>
 
-                    <div className="text-gray-500 text-sm">
+                    {/* <div className="text-gray-500 text-sm w-full">
                       <CalendarOutlined /> Due: {project.deadline ? moment(project.deadline).format('MMM DD, YYYY') : 'N/A'}
                     </div>
 
                     {project.userApplication?.appliedAt && (
-                      <div className="text-gray-500 text-sm">
+                      <div className="text-gray-500 text-sm w-full">
                         Started: {moment(project.userApplication.appliedAt).format('MMM DD, YYYY')}
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </Card>
               );

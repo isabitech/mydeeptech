@@ -4,7 +4,7 @@ interface Props {
   open: boolean;
   onCancel: () => void;
   onCreateAssessmentClick: () => void; 
-  onCategoryFormClick: () => void;    
+  onCategoryFormClick: () => void;
 }
 
 export const ButtonModal = ({

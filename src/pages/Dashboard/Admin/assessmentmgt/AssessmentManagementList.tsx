@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card,
-  Table,
   Button,
   Typography,
   Badge,
@@ -14,13 +13,10 @@ import {
   Row,
   Col,
   Statistic,
-  Avatar,
 } from 'antd';
 import {
   EyeOutlined,
-  UserOutlined,
   BookOutlined,
-  TrophyOutlined,
   ClockCircleOutlined,
   SearchOutlined,
   FilterOutlined,
