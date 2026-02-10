@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Tabs, Badge } from "antd";
+import { Tabs, Badge, Button, Modal } from "antd";
 import Header from "../../User/Header";
 import AllAnnotators from "./AllAnnotators";
 import ApprovedAnnotators from "./ApprovedAnnotators";
@@ -9,11 +9,14 @@ import PendingAnnotators from "./PendingAnnotators";
 import SubmittedAnnotators from "./SubmittedAnnotators";
 import QAAnnotators from "./QAAnnotators";
 import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
+import AnnotatorsDomain from "./AnnotatorsDomain";
+
 
 const { TabPane } = Tabs;
 
 const Annotators = () => {
   const [activeTab, setActiveTab] = useState("1");
+  const [showCaModal, setShowCaModal] = useState(false);
   const [counts, setCounts] = useState({
     total: 0,
     approved: 0,
@@ -60,8 +63,13 @@ const Annotators = () => {
       <div className=" w-full">
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Annotators Management</h1>
+            <div className=" flex justify-between items-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
+            <Button
+             onClick={() => setShowCaModal(true)}
 
+            className=" border-2 px-8 py-6 text-gray-900 border-red-600 font-bold">Add Domains</Button>
+            </div>
             {/* Tabs for different annotator views */}
             <Tabs
               activeKey={activeTab}
@@ -228,6 +236,18 @@ const Annotators = () => {
           </div>
         </div>
       </div>
+                
+
+        <Modal
+          title="Pick your Domain"
+          open={showCaModal}
+          onCancel={() => setShowCaModal(false)}
+          footer={null}
+          width={800}
+          destroyOnClose
+          >
+            <AnnotatorsDomain/>
+          </Modal>
     </div>
   );
 };

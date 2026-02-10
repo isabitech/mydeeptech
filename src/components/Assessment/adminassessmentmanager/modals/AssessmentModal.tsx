@@ -1,4 +1,4 @@
-import { Modal, Form, Input, InputNumber, Switch, Button, Row, Col, Space } from 'antd';
+import { Modal, Form, Input, InputNumber, Switch, Button, Row, Col, Space, FormInstance } from 'antd';
 
 const { TextArea } = Input;
 
