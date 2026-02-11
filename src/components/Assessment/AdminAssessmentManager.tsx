@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Card, Tabs, Table, Button, Typography, Form, Modal } from 'antd';
+import { Card, Tabs, Table, Button, Typography, Form,  } from 'antd';
 import { PlusOutlined, YoutubeOutlined, UploadOutlined } from '@ant-design/icons';
 
 import { assessmentColumns } from '../Assessment/adminassessmentmanager/columns/AssessmentColumn';
@@ -17,7 +17,7 @@ import { multimediaAssessmentApi } from '../../service/axiosApi';
 import { toast } from 'sonner';
 import { AssessmentConfig, VideoReel } from '../Assessment/adminassessmentmanager/types';
 import { Space } from 'lucide-react';
-import AssesmentDomain from './AssesmentDomain';
+import AssesmentDomain from '../../pages/Dashboard/Admin/annotatorsmgt/AnnotatorsDomain';
 const { Title } = Typography; 
 
 interface AdminReelAssessmentManagerProps {
@@ -123,9 +123,9 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
                   <Button
       type="primary"
       icon={<PlusOutlined />}
-      onClick={() => setShowActionsModal(true)}
+      onClick={() => setShowAssessmentModal(true)}
     >
-      New
+      New Assesment
     </Button>
             }
           >
@@ -152,6 +152,7 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
                 <Button
                   icon={<UploadOutlined />}
                   onClick={() => setShowBulkUploadModal(true)}
+                  
                 >
                   Bulk Upload
                 </Button>
@@ -219,14 +220,14 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
         onSubmit={handleBulkUpload}
       />
 
-        <ButtonModal
+        {/* <ButtonModal
         open={showActionsModal}
         onCancel={() => setShowActionsModal(false)}
         onCreateAssessmentClick={() => setShowAssessmentModal(true)}
         onCategoryFormClick={() => setShowCaModal(true)}
-        />
+        /> */}
 
-        <Modal
+        {/* <Modal
           title="Pick your Domain"
           open={showCaModal}
           onCancel={() => setShowCaModal(false)}
@@ -235,7 +236,7 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
           destroyOnClose
           >
             <AssesmentDomain/>
-          </Modal>
+          </Modal> */}
 
     </div>
   );
