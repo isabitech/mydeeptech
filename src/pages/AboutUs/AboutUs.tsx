@@ -1,15 +1,32 @@
+import { Link } from 'react-router-dom';
 import Logo from '../../assets/deeptech.png';
+import { ArrowLeft } from 'lucide-react';
 
 const AboutUs = () => {
   return (
     <div className="min-h-screen px-6 py-10 bg-white text-[#333333] font-[gilroy-regular]">
-     <div className="h-[50px]">
-              <a href="/"><img className="h-auto w-[65px] rounded-md" src={Logo} alt="Logo" /></a>
-            </div>
+
+      <div className="h-[50px] flex items-center justify-center gap-4 mb-10 w-full">
+        <Link to="/" className="f text-[#F6921E] transition-colors">
+          <img className="size-[100px] rounded-md" src={Logo} alt="MyDeepTech Logo" />
+        </Link>
+      </div>
+
       <div className="max-w-5xl mx-auto space-y-12">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-[#F6921E]">About MyDeepTech</h1>
+        <div className="text-center space-y-4 relative">
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Link
+              to="/"
+              className="flex items-center text-[#F6921E] hover:text-[#d37102] transition-colors duration-200"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Link>
+
+            <h1 className="text-4xl font-bold text-[#F6921E] self-center">About MyDeepTech</h1>
+          </div>
           <p className="text-lg text-gray-700 max-w-2xl mx-auto">
             Empowering Africa's Data Workforce for the Future of AI.
           </p>
