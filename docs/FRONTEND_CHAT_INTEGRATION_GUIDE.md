@@ -25,7 +25,7 @@ class ChatService {
 
   // Connect to Socket.IO server
   connect(token) {
-    this.socket = io('http://localhost:5000', {
+    this.socket = io('http://localhost:4000', {
       auth: { token },
       transports: ['polling', 'websocket']
     });
@@ -103,7 +103,7 @@ export default new ChatService();
 
 ```javascript
 // ChatAPI.js
-const API_BASE = 'http://localhost:5000/api/chat';
+const API_BASE = 'http://localhost:4000/api/chat';
 
 class ChatAPI {
   constructor(token) {

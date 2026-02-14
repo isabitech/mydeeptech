@@ -30,7 +30,7 @@ class EnhancedChatSocketService implements IChatSocketService {
   // Enhanced connection with production configuration
   async connect(token: string, userType: ChatUserType = 'user'): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
       console.log('🔌 Connecting to Socket.IO server:', url);
       
       this.userType = userType;

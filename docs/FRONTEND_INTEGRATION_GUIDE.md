@@ -52,7 +52,7 @@ class ChatSocketService {
           this.disconnect();
         }
 
-        const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
         
         console.log('🔗 Connecting to Socket.IO server:', serverUrl);
 
@@ -331,7 +331,7 @@ class ChatApiService {
   private token: string | null = null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   }
 
   setToken(token: string) {
@@ -771,8 +771,8 @@ export default FloatingChat;
 
 ```env
 # .env (Frontend)
-VITE_API_URL=http://localhost:5000
-VITE_WS_URL=http://localhost:5000
+VITE_API_URL=http://localhost:4000
+VITE_WS_URL=http://localhost:4000
 ```
 
 ### 5. Usage in Your App
@@ -803,7 +803,7 @@ npm install socket.io-client
 ```
 
 2. **Check Backend Server**:
-- Make sure server is running on `http://localhost:5000`
+- Make sure server is running on `http://localhost:4000`
 - Verify Socket.IO is properly initialized
 - Check CORS settings
 

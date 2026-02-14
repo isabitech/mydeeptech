@@ -27,8 +27,8 @@ npm install @react-native-async-storage/async-storage
 ```javascript
 // .env files
 // .env.development
-REACT_APP_API_URL=http://localhost:5000
-REACT_APP_WS_URL=http://localhost:5000
+REACT_APP_API_URL=http://localhost:4000
+REACT_APP_WS_URL=http://localhost:4000
 
 // .env.production  
 REACT_APP_API_URL=https://api.mydeeptech.ng
@@ -58,7 +58,7 @@ class EnhancedChatService {
 
   // Enhanced connection with production config
   connect(token, userType = 'user') {
-    const url = process.env.REACT_APP_WS_URL || 'http://localhost:5000';
+    const url = process.env.REACT_APP_WS_URL || 'http://localhost:4000';
     
     this.socket = io(url, {
       auth: { token },
@@ -352,7 +352,7 @@ import axios from 'axios';
 
 class EnhancedChatAPI {
   constructor() {
-    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    this.baseURL = process.env.REACT_APP_API_URL || 'http://localhost:4000';
     this.api = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,
@@ -1314,7 +1314,7 @@ class MobileChatService {
   };
 
   async connect(token) {
-    const apiUrl = await AsyncStorage.getItem('API_URL') || 'http://localhost:5000';
+    const apiUrl = await AsyncStorage.getItem('API_URL') || 'http://localhost:4000';
     
     this.socket = io(apiUrl, {
       auth: { token },
@@ -1612,8 +1612,8 @@ const getChatConfig = () => {
   
   const configs = {
     development: {
-      apiUrl: 'http://localhost:5000',
-      wsUrl: 'http://localhost:5000',
+      apiUrl: 'http://localhost:4000',
+      wsUrl: 'http://localhost:4000',
       reconnectionAttempts: 5,
       timeout: 20000,
       debug: true,
