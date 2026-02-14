@@ -175,7 +175,7 @@ const LandingPage = () => {
                 
                 {/* Floating Stats */}
                 <div className="absolute -top-4 -left-4 bg-[#F6921E] text-white p-4 rounded-lg shadow-xl animate-bounce">
-                  <div className="text-2xl font-bold">500+</div>
+                  <div className="text-2xl font-bold">1752+</div>
                   <div className="text-sm">Active Users</div>
                 </div>
                 
