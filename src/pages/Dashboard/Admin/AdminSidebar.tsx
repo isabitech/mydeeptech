@@ -94,12 +94,13 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       path: "/chat",
     },
 
-    // {
-    //   key: "users",
-    //   label: "Users",
-    //   icon: <UserOutlined />,
-    //   path: "/users",
-    // },
+    {
+      key: "users",
+      label: "User Roles",
+      icon: <UserOutlined />,
+      path: "/users",
+    },
+
     {
       key: "settings",
       label: "Settings",
