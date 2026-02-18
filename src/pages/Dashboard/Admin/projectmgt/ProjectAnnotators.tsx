@@ -17,9 +17,7 @@ import {
   Badge,
   Spin,
   Empty,
-  Tooltip,
   Dropdown,
-  Menu,
   message,
   Form,
   Input,
@@ -33,7 +31,6 @@ import {
   ClockCircleOutlined,
   EyeOutlined,
   MailOutlined,
-  PhoneOutlined,
   CalendarOutlined,
   DollarOutlined,
   MoreOutlined,
@@ -46,11 +43,10 @@ import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdmin
 import {
   AnnotatorProjectResponseData,
   RecentApplication,
-  ApplicantId,
   RemoveApplicantRequest,
 } from "../../../../types/project.types";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { useBreakpoint } = Grid;
@@ -77,6 +73,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const [activeTab, setActiveTab] = useState("1");
   const [searchText, setSearchText] = useState<string>("");
   const [isSearching, setIsSearching] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { getProjectAnnotators, removeApplicant, loading, error } = useAdminProjects();
@@ -96,6 +93,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
 
   useEffect(() => {
     if (visible && projectId) {
+      setInitialLoading(true);
       fetchProjectAnnotators();
     }
   }, [visible, projectId]);
@@ -120,7 +118,10 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   }, [searchText, visible, projectId]);
 
   const fetchProjectAnnotators = useCallback(async () => {
-    setIsSearching(true);
+    // Only set isSearching if it's not the initial load
+    if (!initialLoading) {
+      setIsSearching(true);
+    }
     try {
       const result = await getProjectAnnotators(
         projectId, 
@@ -133,8 +134,9 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
       console.error('Error fetching project annotators:', error);
     } finally {
       setIsSearching(false);
+      setInitialLoading(false);
     }
-  }, [projectId, searchText, getProjectAnnotators]);
+  }, [projectId, searchText, getProjectAnnotators, initialLoading]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
@@ -374,7 +376,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     }
   ];
 
-  if (loading) {
+  if (initialLoading || (loading && !data)) {
     return (
       <Modal
         title="Project Annotators"
@@ -483,7 +485,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   <div className="text-sm text-gray-500">
                     <Space>
                       {isSearching && <Spin size="small" />}
-                      Showing results for "{searchText}"
+                      Showing results for {`"${searchText}"`}
                       {data && (
                         <span>
                           ({(data.annotators?.approved?.length || 0) + 
@@ -514,10 +516,16 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                     dataSource={approvedAnnotators}
                     rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
-
+                    loading={isSearching}
                   />
                 ) : (
-                  <Empty description="No approved applications yet" />
+                  isSearching ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Spin size="large" />
+                    </div>
+                  ) : (
+                    <Empty description="No approved applications yet" />
+                  )
                 )}
               </TabPane>
 
@@ -536,9 +544,16 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                     dataSource={pendingAnnotators}
                     rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                    loading={isSearching}
                   />
                 ) : (
-                  <Empty description="No pending applications" />
+                  isSearching ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Spin size="large" />
+                    </div>
+                  ) : (
+                    <Empty description="No pending applications" />
+                  )
                 )}
               </TabPane>
 
@@ -557,9 +572,16 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                     dataSource={rejectedAnnotators}
                     rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                    loading={isSearching}
                   />
                 ) : (
-                  <Empty description="No rejected applications" />
+                  isSearching ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Spin size="large" />
+                    </div>
+                  ) : (
+                    <Empty description="No rejected applications" />
+                  )
                 )}
               </TabPane>
             </Tabs>
