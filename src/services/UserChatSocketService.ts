@@ -22,7 +22,7 @@ class UserChatSocketService {
   // User connection with proper configuration
   async connect(token: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
       
       this.socket = io(url, {
         auth: { token },

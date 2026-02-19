@@ -35,6 +35,7 @@ export const useAdminApplications = () => {
       projectId?: string;
       page?: number;
       limit?: number;
+      search?: string;
     }): Promise<HookOperationResult> => {
       setLoading(true);
       setError(null);
@@ -46,6 +47,7 @@ export const useAdminApplications = () => {
         if (params?.projectId) queryParams.projectId = params.projectId;
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.limit) queryParams.limit = params.limit.toString();
+        if (params?.search) queryParams.search = params.search;
         const data: ApplicationsResponse = await apiGet(
           endpoints.adminProject.getAllApplications,
           { params: queryParams },

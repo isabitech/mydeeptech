@@ -458,8 +458,8 @@ npm run dev
 ### Environment Variables
 ```env
 # .env
-VITE_API_URL=http://localhost:5000
-VITE_WS_URL=http://localhost:5000
+VITE_API_URL=http://localhost:4000
+VITE_WS_URL=http://localhost:4000
 # Add other required environment variables
 ```
 

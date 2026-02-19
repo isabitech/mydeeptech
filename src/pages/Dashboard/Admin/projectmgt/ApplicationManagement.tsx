@@ -81,6 +81,7 @@ const ApplicationManagement: React.FC = () => {
     useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
+  const [searchText, setSearchText] = useState<string>("");
   const [approvalForm] = Form.useForm();
   const [rejectionForm] = Form.useForm();
 
@@ -114,6 +115,7 @@ const ApplicationManagement: React.FC = () => {
     await getAllApplications({
       status: statusFilter || undefined,
       projectId: projectFilter || undefined,
+      search: searchText || undefined,
       page: 1,
       limit: 50,
     });
@@ -128,6 +130,7 @@ const ApplicationManagement: React.FC = () => {
     getAllApplications({
       status: value || undefined,
       projectId: projectFilter || undefined,
+      search: searchText || undefined,
     });
   };
 
@@ -136,6 +139,7 @@ const ApplicationManagement: React.FC = () => {
     getAllApplications({
       projectId: value || undefined,
       status: statusFilter || undefined,
+      search: searchText || undefined,
     });
   };
 
@@ -488,9 +492,37 @@ const ApplicationManagement: React.FC = () => {
           </Button>
         </Space>
       </div>
-          <Space wrap className="mb-4">
 
-</Space>
+      {/* Search Applicant by Name, Email and status */}
+      <div className="mb-4">
+        <Input
+          placeholder="Search by applicant name, email, or status..."
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            // Trigger search with debounce effect
+            const timer = setTimeout(() => {
+              getAllApplications({
+                status: statusFilter || undefined,
+                projectId: projectFilter || undefined,
+                search: e.target.value || undefined,
+              });
+            }, 500);
+            return () => clearTimeout(timer);
+          }}
+          allowClear
+          onClear={() => {
+            setSearchText("");
+            getAllApplications({
+              status: statusFilter || undefined,
+              projectId: projectFilter || undefined,
+            });
+          }}
+          style={{ maxWidth: 400 }}
+          className="mb-2"
+        />
+      </div>
 
       {/* Applications Table */}
       <Spin spinning={loading}>
@@ -513,6 +545,7 @@ const ApplicationManagement: React.FC = () => {
               getAllApplications({
                 status: statusFilter || undefined,
                 projectId: projectFilter || undefined,
+                search: searchText || undefined,
                 page,
                 limit: pageSize,
               });
@@ -521,6 +554,7 @@ const ApplicationManagement: React.FC = () => {
               getAllApplications({
                 status: statusFilter || undefined,
                 projectId: projectFilter || undefined,
+                search: searchText || undefined,
                 page: 1,
                 limit: size,
               });

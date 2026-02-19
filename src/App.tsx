@@ -90,7 +90,6 @@ const AppRoutes = () => {
         <Route path="/uploadEmail" element={<UploadEmail />} />
         <Route path="/apply" element={<AdsLandingPage />} />
 
-
         <Route path="/route" element={<PageRoute />} />
 
         {/* Protected Dashboard Routes */}

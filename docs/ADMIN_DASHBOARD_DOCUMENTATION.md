@@ -51,7 +51,7 @@ fetch('/api/admin/dashboard', {
 
 ### cURL Example:
 ```bash
-curl -X GET http://localhost:5000/api/admin/dashboard \
+curl -X GET http://localhost:4000/api/admin/dashboard \
   -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
   -H "Content-Type: application/json"
 ```
@@ -387,7 +387,7 @@ const axios = require('axios');
 
 const getAdminDashboard = async (adminToken) => {
   try {
-    const response = await axios.get('http://localhost:5000/api/admin/dashboard', {
+    const response = await axios.get('http://localhost:4000/api/admin/dashboard', {
       headers: {
         'Authorization': `Bearer ${adminToken}`,
         'Content-Type': 'application/json'
@@ -416,7 +416,7 @@ Use the provided `test-admin-dashboard.html` file:
 ### Manual Testing Steps:
 1. **Login as Admin**:
    ```bash
-   curl -X POST http://localhost:5000/api/admin/login \
+   curl -X POST http://localhost:4000/api/admin/login \
      -H "Content-Type: application/json" \
      -d '{"email":"admin@mydeeptech.ng","password":"your_password"}'
    ```
@@ -425,7 +425,7 @@ Use the provided `test-admin-dashboard.html` file:
 
 3. **Test Dashboard**:
    ```bash
-   curl -X GET http://localhost:5000/api/admin/dashboard \
+   curl -X GET http://localhost:4000/api/admin/dashboard \
      -H "Authorization: Bearer YOUR_JWT_TOKEN"
    ```
 

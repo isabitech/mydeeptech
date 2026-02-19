@@ -36,7 +36,7 @@ class ChatSocketService {
           this.disconnect();
         }
 
-        const serverUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const serverUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
         
         console.log('🔗 Connecting to chat socket server:', serverUrl);
 
