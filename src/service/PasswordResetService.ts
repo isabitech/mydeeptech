@@ -10,7 +10,7 @@ class PasswordResetService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
   }
 
   private async request<T>(

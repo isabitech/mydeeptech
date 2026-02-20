@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Card,
   Tabs,
@@ -39,6 +39,7 @@ import {
   MoreOutlined,
   DeleteOutlined,
   ExclamationCircleOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
@@ -74,16 +75,11 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const [selectedForRemoval, setSelectedForRemoval] = useState<RecentApplication | null>(null);
   const [removalForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState("1");
+  const [searchText, setSearchText] = useState<string>("");
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { getProjectAnnotators, removeApplicant, loading, error } = useAdminProjects();
-
-
-
-  useEffect(() => {
-    if (visible && projectId) {
-      fetchProjectAnnotators();
-    }
-  }, [visible, projectId]);
 
   const screens = useBreakpoint();
 
@@ -96,11 +92,56 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     return '95%';
   };
 
-  const fetchProjectAnnotators = async () => {
-    const result = await getProjectAnnotators(projectId);
-    if (result.success) {
-      setData(result.data);
+
+
+  useEffect(() => {
+    if (visible && projectId) {
+      fetchProjectAnnotators();
     }
+  }, [visible, projectId]);
+
+  // Handle search with debouncing
+  useEffect(() => {
+    if (!visible || !projectId) return;
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchProjectAnnotators();
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchText, visible, projectId]);
+
+  const fetchProjectAnnotators = useCallback(async () => {
+    setIsSearching(true);
+    try {
+      const result = await getProjectAnnotators(
+        projectId, 
+        searchText.trim() || undefined
+      );
+      if (result.success) {
+        setData(result.data);
+      }
+    } catch (error) {
+      console.error('Error fetching project annotators:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [projectId, searchText, getProjectAnnotators]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+  };
+
+  const handleSearchClear = () => {
+    setSearchText("");
   };
 
   const handleViewApplication = (application: RecentApplication) => {
@@ -169,8 +210,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     return colors[status] || "default";
   };
 
-  // Filter applications by status
-  // Prefer detailed annotator lists from API
+  // Use backend-filtered data directly
   const approvedAnnotators = data?.annotators?.approved || [];
   const rejectedAnnotators = data?.annotators?.rejected || [];
   const pendingAnnotators = data?.annotators?.pending || [];
@@ -425,6 +465,38 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
               </Col>
             </Row>
 
+            {/* Search Annotators */}
+            <div className="mb-4">
+              <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                <Input
+                  placeholder="Search annotators by name, email, or status..."
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={handleSearchChange}
+                  allowClear
+                  onClear={handleSearchClear}
+                  style={{ maxWidth: 400 }}
+                  className="mb-2"
+                  suffix={isSearching ? <Spin size="small" /> : null}
+                />
+                {searchText && (
+                  <div className="text-sm text-gray-500">
+                    <Space>
+                      {isSearching && <Spin size="small" />}
+                      Showing results for "{searchText}"
+                      {data && (
+                        <span>
+                          ({(data.annotators?.approved?.length || 0) + 
+                            (data.annotators?.pending?.length || 0) + 
+                            (data.annotators?.rejected?.length || 0)} total)
+                        </span>
+                      )}
+                    </Space>
+                  </div>
+                )}
+              </Space>
+            </div>
+
             {/* Applications Tabs */}
             <Tabs activeKey={activeTab} onChange={setActiveTab}>
               <TabPane
@@ -440,7 +512,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   <Table
                     columns={annotatorColumns}
                     dataSource={approvedAnnotators}
-                    rowKey="_id"
+                    rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
 
                   />
@@ -462,7 +534,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   <Table
                     columns={annotatorColumns}
                     dataSource={pendingAnnotators}
-                    rowKey="_id"
+                    rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
                   />
                 ) : (
@@ -483,7 +555,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   <Table
                     columns={annotatorColumns}
                     dataSource={rejectedAnnotators}
-                    rowKey="_id"
+                    rowKey={(record) => record._id || record.applicationId}
                     pagination={{ pageSize: 10, position: ["bottomCenter"], }}
                   />
                 ) : (

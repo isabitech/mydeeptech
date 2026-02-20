@@ -112,13 +112,19 @@ export const useAdminProjects = () => {
     }
   }, []);
 
-  const getProjectAnnotators = useCallback(async (projectId: string): Promise<HookOperationResult> => {
+  const getProjectAnnotators = useCallback(async (
+    projectId: string,
+    search?: string
+  ): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
 
     try {
       const url = createApiUrl(endpoints.adminProject.getProjectAnnotators, projectId);
-      const data: AnnotatorProjectResponse = await apiGet(url);
+      const params: Record<string, string> = {};
+      if (search) params.search = search;
+      
+      const data: AnnotatorProjectResponse = await apiGet(url, { params });
 
       if (data.success) {
         return { success: true, data: data.data };

@@ -82,6 +82,11 @@ export const endpoints = {
     getAllDTUsers: "/admin/dtusers",
     updateUserStatus: "/admin/dtusers",
     getAdminUsers: "/admin/admin-users",
+    updateUserRole: "/admin/users/:userId/role",
+    getRoles: "/admin/roles",
+    createRole: "/admin/roles",
+    updateRole: "/admin/roles/:roleId",
+    deleteRole: "/admin/roles/:roleId",
   },
 
   // Admin invoice management endpoints
@@ -113,6 +118,9 @@ export const endpoints = {
   },
   users: {
     getAllUsers: "/auth/getAllUsers",
+    getUsers: "/auth/getUsers",
+    getAllUsersForRoleManagement: "/admin/users/all",
+    getUserById: "/auth/users/:userId",
   },
   survey: {
     verifyEmail: "auth/validateuseremail",

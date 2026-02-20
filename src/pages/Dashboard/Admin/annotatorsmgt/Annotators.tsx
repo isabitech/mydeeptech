@@ -68,7 +68,7 @@ const Annotators = () => {
             <Button
              onClick={() => setShowCaModal(true)}
 
-            className=" border-2 px-8 py-6 text-gray-900 border-red-600 font-bold">Add Domains</Button>
+            className="border-2 px-6 py-5 text-gray-900 border-black font-bold">Add Domains</Button>
             </div>
             {/* Tabs for different annotator views */}
             <Tabs

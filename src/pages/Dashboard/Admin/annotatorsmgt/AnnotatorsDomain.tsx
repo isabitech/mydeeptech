@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Space, Select, Button, Form, message } from "antd";
 
-const BASE_URL = "https://api.mydeeptech.ng/api";
+const BASE_URL = "https://mydeeptech-be-lmrk.onrender.com/api/domain";
+  
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OThjYzU3NmQzZmUxMzEzNGY2MDI0MDEiLCJlbWFpbCI6InNoaW5hX2JlZGV2QG15ZGVlcHRlY2gubmciLCJpc0FkbWluIjp0cnVlLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzE2MDQwOTgsImV4cCI6MTc3MjIwODg5OH0.G5Q3XVQyMYrTuFLQ96tMIqIFzcVTm3B9utM4R3La38c"
 
 const AnnotatorsDomain = () => {
   const [form] = Form.useForm();
@@ -16,7 +18,11 @@ const AnnotatorsDomain = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${BASE_URL}/categories/tree`);
+        const res = await fetch(`${BASE_URL}/categories/tree`, {
+  headers: {
+    Authorization: `Bearer ${TOKEN}`,
+  },
+});
         const result = await res.json();
 
         if (result.success) {
@@ -39,7 +45,13 @@ const AnnotatorsDomain = () => {
       setLoading(true);
 
       const res = await fetch(
-        `${BASE_URL}/subcategories/by-category/${value}`
+        `${BASE_URL}/subcategories/by-category/${value}`,
+
+          {
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+    },
+  }
       );
       const result = await res.json();
 
@@ -63,7 +75,12 @@ const AnnotatorsDomain = () => {
       setLoading(true);
 
       const res = await fetch(
-        `${BASE_URL}/domains/by-parent?parentId=${value}&parentModel=SubCategory`
+        `${BASE_URL}/domains/by-parent?parentId=${value}&parentModel=Category|SubCategory`,
+         {
+    headers: {
+      Authorization: `Bearer ${TOKEN}`,
+    },
+  }
       );
       const result = await res.json();
 

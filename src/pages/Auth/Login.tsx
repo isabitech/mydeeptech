@@ -40,11 +40,15 @@ const Login = () => {
     if (!validateForm()) return;
 
     const result = await login(formData);
+  if (result.success && result.token) {
+    // 🔥 SAVE THE TOKEN HERE
+    localStorage.setItem("admin_token", result.token);
 
-    if (!result.success) {
-      // Error is already handled by the hook
-      console.error("Login failed:", result.error);
-    }
+    console.log("Token saved successfully!");
+  } else {
+    // Error is already handled by the hook
+    console.error("Login failed:", result.error);
+  }
   };
 
   const handleInputChange = (field: "email" | "password", value: string) => {
