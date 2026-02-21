@@ -239,7 +239,7 @@ const Annotators = () => {
                 
 
         <Modal
-          title="Pick your Domain"
+          title="Create Domains"
           open={showCaModal}
           onCancel={() => setShowCaModal(false)}
           footer={null}

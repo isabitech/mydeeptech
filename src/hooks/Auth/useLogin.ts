@@ -41,6 +41,7 @@ export interface User {
 interface LoginResult {
   success: boolean;
   data?: LoginResponse;
+  token?: string;
   error?: string;
 }
 

@@ -1,310 +1,150 @@
-import { useState } from 'react';
-import { Space, Select, Button, Form } from 'antd';
+import { useState } from "react";
+import { Form, Input, Button, Space, message } from "antd";
 
-const categoriesData = [
-  {
-    id: 1,
-    name: "Computing & Software Engineering",
-    sub: [
-      {
-        id: 11,
-        name: "Software Development",
-        subSub: [
-          "Python",
-          "JavaScript",
-          "Java",
-          "C / C++",
-          "Go",
-          "Rust",
-          "PHP",
-        ],
-      },
-      {
-        id: 12,
-        name: "Web Development",
-        subSub: [
-          "Frontend (HTML, CSS, React, Vue)",
-          "Backend (Node.js, Django, Flask)",
-          "APIs & Microservices",
-        ],
-      },
-      {
-        id: 13,
-        name: "Mobile Development",
-        subSub: [
-          "Android",
-          "iOS",
-          "Cross-platform (Flutter, React Native)",
-        ],
-      },
-      {
-        id: 14,
-        name: "Systems & OS",
-        subSub: [
-          "Operating Systems",
-          "Compilers",
-          "Embedded Systems",
-        ],
-      },
-      {
-        id: 15,
-        name: "DevOps & Cloud",
-        subSub: [
-          "AWS / GCP / Azure",
-          "Docker & Kubernetes",
-          "CI/CD",
-        ],
-      },
-      {
-        id: 16,
-        name: "Databases",
-        subSub: [
-          "SQL",
-          "NoSQL",
-          "Data Modeling",
-        ],
-      },
-      {
-        id: 17,
-        name: "Cybersecurity",
-        subSub: [
-          "Network Security",
-          "Application Security",
-          "Cryptography",
-        ],
-      },
-      {
-        id: 18,
-        name: "AI & ML",
-        subSub: [
-          "Machine Learning",
-          "Deep Learning",
-          "Reinforcement Learning",
-          "MLOps",
-        ],
-      },
-    ],
-  },
+interface AnnotatorsDomainFormValues {
+  category: string;
+  subCategory?: string;
+  domain: string;
+}
 
-  {
-    id: 2,
-    name: "Engineering & Applied Sciences",
-    sub: [
-      {
-        id: 21,
-        name: "Civil Engineering",
-        subSub: [
-          "Structural Engineering",
-          "Geotechnical Engineering",
-          "Transportation Engineering",
-        ],
-      },
-      {
-        id: 22,
-        name: "Mechanical Engineering",
-        subSub: [
-          "Thermodynamics",
-          "Fluid Mechanics",
-          "CAD/CAM",
-        ],
-      },
-      {
-        id: 23,
-        name: "Electrical Engineering",
-        subSub: [
-          "Power Systems",
-          "Electronics",
-          "Control Systems",
-        ],
-      },
-      {
-        id: 24,
-        name: "Chemical Engineering",
-        subSub: [
-          "Process Design",
-          "Materials Science",
-        ],
-      },
-      {
-        id: 25,
-        name: "Robotics",
-        subSub: [
-          "Kinematics",
-          "SLAM",
-          "Sensor Fusion",
-        ],
-      },
-      {
-        id: 26,
-        name: "Manufacturing",
-        subSub: [
-          "Quality Control",
-          "Industrial Automation",
-        ],
-      },
-    ],
-  },
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  error?: string | null;
+}
 
-  {
-    id: 3,
-    name: "Mathematics & Formal Sciences",
-    sub: [
-      {
-        id: 31,
-        name: "Mathematics",
-        subSub: [
-          "Arithmetic",
-          "Algebra",
-          "Geometry",
-          "Trigonometry",
-          "Calculus",
-          "Linear Algebra",
-          "Probability",
-          "Statistics",
-        ],
-      },
-      {
-        id: 32,
-        name: "Logic & Formal Reasoning",
-        subSub: [
-          "Propositional Logic",
-          "Predicate Logic",
-        ],
-      },
-      {
-        id: 33,
-        name: "Other",
-        subSub: [
-          "Optimization",
-          "Numerical Methods",
-        ],
-      },
-    ],
-  },
+interface CategoryData {
+  _id: string;
+  name: string;
+  slug: string;
+}
 
-  {
-    id: 4,
-    name: "Natural Sciences",
-    sub: [
-      {
-        id: 41,
-        name: "Physics",
-        subSub: [
-          "Classical Mechanics",
-          "Quantum Mechanics",
-          "Electromagnetism",
-        ],
-      },
-      {
-        id: 42,
-        name: "Chemistry",
-        subSub: [
-          "Organic Chemistry",
-          "Inorganic Chemistry",
-          "Analytical Chemistry",
-        ],
-      },
-      {
-        id: 43,
-        name: "Biology",
-        subSub: [
-          "Molecular Biology",
-          "Genetics",
-          "Ecology",
-        ],
-      },
-      {
-        id: 44,
-        name: "Environmental Science",
-        subSub: [
-          "Climate Science",
-          "Sustainability",
-        ],
-      },
-      {
-        id: 45,
-        name: "Astronomy & Space Science",
-        subSub: [],
-      },
-    ],
-  },
-];
+interface SubCategoryData {
+  _id: string;
+  name: string;
+  slug: string;
+  categoryId: string;
+}
 
+interface DomainData {
+  _id: string;
+  name: string;
+  parentId: string;
+}
 
+const BASE_URL = "https://mydeeptech-be-lmrk.onrender.com/api/domain";
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OThjYzU3NmQzZmUxMzEzNGY2MDI0MDEiLCJlbWFpbCI6InNoaW5hX2JlZGV2QG15ZGVlcHRlY2gubmciLCJpc0FkbWluIjp0cnVlLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzE2MDQwOTgsImV4cCI6MTc3MjIwODg5OH0.G5Q3XVQyMYrTuFLQ96tMIqIFzcVTm3B9utM4R3La38c"
 const AnnotatorsDomain = () => {
-  const [form] = Form.useForm();
-  const [subOptions, setSubOptions] = useState<any[]>([]);
-  const [subSubOptions, setSubSubOptions] = useState<string[]>([]);
-  const [formDisabled, setFormDisabled] = useState(false);
+  const [form] = Form.useForm<AnnotatorsDomainFormValues>();
+  const [loading, setLoading] = useState(false);
 
+  const onFinish = async (values: AnnotatorsDomainFormValues) => {
+    setLoading(true);
 
-  // When category changes
-  const handleCategoryChange = (value: number) => {
-    const domain = categoriesData.find(c => c.id === Number(value));
-    setSubOptions(domain?.sub || []);
-    setSubSubOptions([]);
-    form.setFieldsValue({ subCategory: undefined, subSubCategory: undefined });
-  };
+    try {
+      const categoryRes = await fetch(`${BASE_URL}/categories`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${TOKEN}`,
+        },
+        body: JSON.stringify({ name: values.category }),
+      });
+      const categoryText = await categoryRes.text();
+      console.log("Category raw response:", categoryText);
+      const categoryData: ApiResponse<CategoryData> = JSON.parse(categoryText);
 
-  // When subcategory changes
-  const handleSubChange = (value: number) => {
-    const sub = subOptions.find(s => s.id === Number(value));
-    setSubSubOptions(sub?.subSub || []);
-    form.setFieldsValue({ subSubCategory: undefined });
-  };
+      if (!categoryData.success) throw new Error(categoryData.message || "Failed to create category");
 
-  const onFinish = (values: any) => {
-    console.log("Form submitted:", values);
-    setFormDisabled(true)
+      let parentId = categoryData.data._id;
+
+      if (values.subCategory) {
+        const subRes = await fetch(`${BASE_URL}/subcategories`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${TOKEN}`,
+          },
+          body: JSON.stringify({
+            name: values.subCategory,
+            category: parentId,
+          }),
+        });
+
+        const subText = await subRes.text();
+        console.log("Subcategory raw response:", subText);
+        const subData: ApiResponse<SubCategoryData> = JSON.parse(subText);
+
+        if (!subData.success) throw new Error(subData.message || "Failed to create subcategory");
+
+        parentId = subData.data._id;
+      }
+
+      const parentModel = values.subCategory ? "SubCategory" : "Category";
+      const domainRes = await fetch(`${BASE_URL}/domains`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${TOKEN}`,
+        },
+        body: JSON.stringify({
+          name: values.domain,
+           parent: parentId,       
+           parentModel,
+        }),
+      });
+
+      const domainText = await domainRes.text();
+      console.log("Domain raw response:", domainText);
+      const domainData: ApiResponse<DomainData> = JSON.parse(domainText);
+
+      if (!domainData.success) throw new Error(domainData.message || "Failed to create domain");
+
+      message.success("Created successfully 🎉");
+      form.resetFields();
+    } catch (error: any) {
+      console.error(error);
+      message.error(error.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Form form={form} layout="vertical" onFinish={onFinish} style={{ maxWidth: 900, margin: 'auto', }}>
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={onFinish}
+      style={{ maxWidth: 900, margin: "auto" }}
+    >
       <Form.Item
         name="category"
         label="Category"
-        rules={[{ required: true, message: "Please select a category" }]}
+        rules={[{ required: true, message: "Category is required" }]}
       >
-        <Select
-          placeholder="Select category"
-          options={categoriesData.map(c => ({ value: c.id, label: c.name }))}
-          onChange={handleCategoryChange}
-           disabled={formDisabled}
-        />
+        <Input placeholder="Enter category" />
       </Form.Item>
 
       <Form.Item
         name="subCategory"
         label="Sub Category"
-        rules={[{ required: true, message: "Please select a sub category" }]}
       >
-        <Select
-          placeholder="Select sub category"
-          options={subOptions.map(s => ({ value: s.id, label: s.name }))}
-          onChange={handleSubChange}
-          disabled={!subOptions.length || formDisabled}
-        />
+        <Input placeholder="Enter sub category (optional)" />
       </Form.Item>
 
       <Form.Item
-        name="subSubCategory"
-        label="Example"
-        rules={[{ required: true, message: "Please select an example" }]}
+        name="domain"
+        label="Domain"
+        rules={[{ required: true, message: "Domain is required" }]}
       >
-        <Select
-          placeholder="Select example"
-          options={subSubOptions.map(s => ({ value: s, label: s }))}
-          disabled={!subSubOptions.length || formDisabled}
-        />
+        <Input placeholder="Enter domain" />
       </Form.Item>
 
       <Form.Item>
         <Space>
-          <Button type="primary" htmlType="submit">
-            Submit
-          </Button>
-          <Button onClick={() =>{form.resetFields(); setFormDisabled(false);} }>
-            Reset
+          <Button type="primary" htmlType="submit" loading={loading}>
+            Create
           </Button>
         </Space>
       </Form.Item>
