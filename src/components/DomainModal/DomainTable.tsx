@@ -3,7 +3,6 @@ import React from "react";
 import { Table, Card, Typography, Tag, Spin, Alert, Space } from "antd";
 import { DatabaseOutlined, FolderOutlined, BranchesOutlined } from "@ant-design/icons";
 import domainQueryService from "../../services/domain-service/domain-query";
-import { DivideCircle } from "lucide-react";
 
 const { Title, Text } = Typography;
 
