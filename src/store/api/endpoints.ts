@@ -173,4 +173,20 @@ export const endpoints = {
       getChatDetails: "/chat/admin",
     },
   },
+  domain: {
+    getCategories: "/new-domain/categories",
+    addCategory: "/new-domain/categories",
+    updateCategory: "/new-domain/categories",
+    deleteCategory: "/new-domain/categories",
+
+    addSubCategory: "/new-domain/subcategories",
+    getSubCategories: "/new-domain/subcategories",
+    updateSubCategory: "/new-domain/subcategories",
+    deleteSubCategory: "/new-domain/subcategories",
+
+    createDomain: "/new-domain",
+    getDomains: "/new-domain",
+    updateDomain: "/new-domain",
+    deleteDomain: "/new-domain",
+  }
 };
