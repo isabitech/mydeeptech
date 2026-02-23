@@ -20,7 +20,7 @@ import ErrorMessage from "../../lib/error-message";
 const CreateDomainForm: React.FC = () => {
     const [domainForm] = Form.useForm();
     const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-    const { onCancel, onSuccess, setActiveTab } = useDomainActions();
+    const { onCancel, setActiveTab } = useDomainActions();
     const addDomain = domainService.useCreateDomain();
     const isDomainMutationLoading = addDomain.isPending;
 
@@ -47,7 +47,6 @@ const CreateDomainForm: React.FC = () => {
             onSuccess: () => {
                 message.success("Domain created successfully!");
                 domainForm.resetFields();
-                onSuccess?.();
             },
              onError: (error) => {
                 message.error(ErrorMessage(error));

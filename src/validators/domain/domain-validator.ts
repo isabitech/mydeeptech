@@ -52,11 +52,41 @@ const DomainEntitySchema = z.object({
   ...MongoMeta
 }).strip()
 
+const DomainCategoryRefSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+}).strip();
+
+/* Domain (child) */
+const DomainChildSchema = z.object({
+    _id: z.string(),
+    name: z.string(),
+    slug: z.string(),
+    description: z.string().optional(),
+    domain_category: DomainCategoryRefSchema,
+    domain_sub_category: z.object({
+      _id: z.string(),
+      name: z.string(),
+      slug: z.string(),
+    }).strip(),
+    ...MongoMeta,
+    ...Timestamps,
+  }).strip();
+
 const CreateDomainSchemaResponse = z.object({
     success: z.boolean(),
     message: z.string(),
     data: z.object({ domain: DomainEntitySchema }),
   })
+
+const GetDomainsResponseSchema = z.object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({
+      domain: z.array(DomainChildSchema),
+    }),
+  }).strip();
 
 /* ──────────────────────────────
  * Reference & entity schemas
@@ -88,14 +118,6 @@ const GetDomainCategoriesResponseSchema = z.object({
     data: z.object({ categories: z.array(DomainCategorySchema) }),
   }).strip();
 
-  const DomainCategoryRefSchema = z.object({
-  _id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-}).strip();
-
-
-
 /* Domain Sub-Category */
 const DomainSubCategorySchema = z.object({
   _id: z.string(),
@@ -105,17 +127,6 @@ const DomainSubCategorySchema = z.object({
   ...MongoMeta,
   ...Timestamps,
 });
-
-/* Domain (child) */
-const DomainSchema = z.object({
-    _id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-    domain_category: z.string(),
-    domain_sub_category: z.string(),
-    ...MongoMeta,
-    ...Timestamps,
-  }).strip();
 
 const CreateDomainSubCategoryResponseSchema = z.object({
     success: z.boolean(),
@@ -158,6 +169,7 @@ type CreateDomainSubCategoryResponseSchema = z.infer<typeof CreateDomainSubCateg
 type GetDomainSubCategoriesResponseSchema = z.infer<typeof GetDomainSubCategoriesResponseSchema>;
 type CreateDomainSchema = z.infer<typeof CreateDomainSchema>;
 type CreateDomainSchemaResponse = z.infer<typeof CreateDomainSchemaResponse>;
+type GetDomainsResponseSchema = z.infer<typeof GetDomainsResponseSchema>;
 
 /* ──────────────────────────────
  * Exports
@@ -175,4 +187,5 @@ export {
   GetDomainSubCategoriesResponseSchema,
   CreateDomainSchema,
   CreateDomainSchemaResponse,
+  GetDomainsResponseSchema,
 };

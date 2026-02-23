@@ -11,6 +11,7 @@ import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGet
 import AnnotatorsDomain from "./AnnotatorsDomain";
 import DomainModal from "../../../../components/DomainModal/DomainModal";
 import { useDomainActions } from "../../../../store/useDomainStore";
+import DomainTable from "../../../../components/DomainModal/DomainTable";
 
 
 const { TabPane } = Tabs;
@@ -235,6 +236,19 @@ const Annotators = () => {
               >
                 <div className="pt-4">
                   <SubmittedAnnotators />
+                </div>
+              </TabPane>
+
+              <TabPane
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>Domain Overview</span>
+                  </div>
+                }
+                key="7"
+              >
+                <div className="pt-4">
+                  <DomainTable />
                 </div>
               </TabPane>
             </Tabs>

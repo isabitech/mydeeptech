@@ -19,7 +19,7 @@ import ErrorMessage from "../../lib/error-message";
 
 const CreateSubDomainCategoryForm: React.FC = () => {
     const [subDomainForm] = Form.useForm();
-    const { onCancel, onSuccess, setActiveTab } = useDomainActions();
+    const { onCancel, setActiveTab } = useDomainActions();
 
     const addSubDomainCategory = domainService.useAddDomainSubCategory();
     const fetchDomainCategories = domainQueryService.useDomainCategories();
@@ -33,7 +33,6 @@ const CreateSubDomainCategoryForm: React.FC = () => {
             onSuccess: () => {
                 message.success("Sub-Domain Category created successfully!");
                 subDomainForm.resetFields();
-                onSuccess?.();
             },
              onError: (error) => {
                 message.error(ErrorMessage(error));

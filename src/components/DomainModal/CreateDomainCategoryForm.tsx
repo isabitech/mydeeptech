@@ -17,7 +17,7 @@ const CreateDomainCategoryForm = () => {
     const [subDomainForm] = Form.useForm();
     const [domainForm] = Form.useForm();
 
-    const { onCancel, onSuccess, setActiveTab } = useDomainActions();
+    const { onCancel, setActiveTab } = useDomainActions();
     const addDomainCategory = domainMutation.useAddDomainCategory();
     const isDomainMutationLoading = addDomainCategory.isPending;
 
@@ -26,7 +26,6 @@ const CreateDomainCategoryForm = () => {
             onSuccess: () => {
                 message.success("Domain Category created successfully!");
                 categoryForm.resetFields();
-                onSuccess?.();
             },
             onError: (error) => {
                 message.error(ErrorMessage(error));
