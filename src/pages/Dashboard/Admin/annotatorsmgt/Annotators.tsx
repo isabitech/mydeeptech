@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, Badge, Button, Modal } from "antd";
-import Header from "../../User/Header";
 import AllAnnotators from "./AllAnnotators";
 import ApprovedAnnotators from "./ApprovedAnnotators";
 import MicroTasker from "./MicroTasker";
@@ -10,6 +9,9 @@ import SubmittedAnnotators from "./SubmittedAnnotators";
 import QAAnnotators from "./QAAnnotators";
 import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
 import AnnotatorsDomain from "./AnnotatorsDomain";
+import DomainModal from "../../../../components/DomainModal/DomainModal";
+import { useDomainActions } from "../../../../store/useDomainStore";
+import DomainTable from "../../../../components/DomainModal/DomainTable";
 
 
 const { TabPane } = Tabs;
@@ -26,7 +28,8 @@ const Annotators = () => {
     qa: 0,
   });
 
-  const { getAllDTUsers, summary, loading } = useGetAllDtUsers();
+  const { getAllDTUsers, summary } = useGetAllDtUsers();
+   const { setOpenDomainModal } = useDomainActions();
 
   // Fetch counts when component mounts
   useEffect(() => {
@@ -61,14 +64,17 @@ const Annotators = () => {
       {/* <Header title="Annotators Management" /> */}
 
       <div className=" w-full">
+      
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
             <div className=" flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
+          
             <Button
-             onClick={() => setShowCaModal(true)}
-
-            className="border-2 px-6 py-5 text-gray-900 border-black font-bold">Add Domains</Button>
+              onClick={() => setOpenDomainModal(true)}
+              className="border-2 px-6 py-5 text-gray-900 border-black font-bold">
+              Create Domains
+            </Button>
             </div>
             {/* Tabs for different annotator views */}
             <Tabs
@@ -232,14 +238,27 @@ const Annotators = () => {
                   <SubmittedAnnotators />
                 </div>
               </TabPane>
+
+              <TabPane
+                tab={
+                  <div className="flex items-center gap-2">
+                    <span>Domain Overview</span>
+                  </div>
+                }
+                key="7"
+              >
+                <div className="pt-4">
+                  <DomainTable />
+                </div>
+              </TabPane>
             </Tabs>
           </div>
         </div>
       </div>
                 
-
+      <DomainModal />
         <Modal
-          title="Pick your Domain"
+          title="Create Domains"
           open={showCaModal}
           onCancel={() => setShowCaModal(false)}
           footer={null}
