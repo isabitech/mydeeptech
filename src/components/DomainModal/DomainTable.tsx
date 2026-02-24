@@ -1,10 +1,18 @@
 
-import React from "react";
-import { Table, Card, Typography, Tag, Spin, Alert, Space } from "antd";
-import { DatabaseOutlined, FolderOutlined, BranchesOutlined } from "@ant-design/icons";
+import React, { useState, useMemo, useCallback } from "react";
+import { Table, Card, Typography, Tag, Spin, Alert, Space, Input, Pagination, Row, Col } from "antd";
+import { DatabaseOutlined, FolderOutlined, BranchesOutlined, SearchOutlined } from "@ant-design/icons";
 import domainQueryService from "../../services/domain-service/domain-query";
 
 const { Title, Text } = Typography;
+
+const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
 
 interface TableDataType {
   key: string;
@@ -27,9 +35,52 @@ interface TableDataType {
 }
 
 const DomainTable: React.FC = () => {
-  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = domainQueryService.useDomainCategories();
-  const { data: subCategoriesData, isLoading: subCategoriesLoading, error: subCategoriesError } = domainQueryService.useDomainSubCategories();
-  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = domainQueryService.useDomains();
+  // Pagination and search state
+  const [categoriesPage, setCategoriesPage] = useState(1);
+  const [subCategoriesPage, setSubCategoriesPage] = useState(1);
+  const [domainsPage, setDomainsPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
+  const pageSize = 50; // Larger page size since we're combining data
+
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchTerm(value);
+      // Reset to page 1 when searching
+      setCategoriesPage(1);
+      setSubCategoriesPage(1);
+      setDomainsPage(1);
+    }, 500),
+    []
+  );
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
+  // API calls with pagination
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = domainQueryService.useDomainCategories({
+    page: categoriesPage,
+    limit: pageSize,
+    search: debouncedSearchTerm
+  });
+  
+  const { data: subCategoriesData, isLoading: subCategoriesLoading, error: subCategoriesError } = domainQueryService.useDomainSubCategories({
+    page: subCategoriesPage,
+    limit: pageSize,
+    search: debouncedSearchTerm
+  });
+  
+  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = domainQueryService.useDomains({
+    page: domainsPage,
+    limit: pageSize,
+    search: debouncedSearchTerm
+  });
 
   const isLoading = categoriesLoading || subCategoriesLoading || domainsLoading;
   const hasError = categoriesError || subCategoriesError || domainsError;
@@ -84,8 +135,9 @@ const DomainTable: React.FC = () => {
         });
       }
 
-      // Only add category if it has subcategories or direct domains
-      if (subCategoriesWithDomains.length > 0) {
+      // Only add category if it has subcategories or direct domains, OR if we're searching
+      // (to show categories that match search but don't have matching subcategories/domains)
+      if (subCategoriesWithDomains.length > 0 || debouncedSearchTerm) {
         groupedData.push({
           key: category._id,
           category: {
@@ -93,7 +145,12 @@ const DomainTable: React.FC = () => {
             id: category._id,
             slug: category.slug,
           },
-          subCategories: subCategoriesWithDomains,
+          subCategories: subCategoriesWithDomains.length > 0 ? subCategoriesWithDomains : [{
+            name: 'No matching sub-categories or domains',
+            id: 'empty',
+            slug: '',
+            domains: []
+          }],
         });
       }
     });
@@ -101,7 +158,8 @@ const DomainTable: React.FC = () => {
     return groupedData;
   };
 
-  const tableData = processTableData();
+  // Memoize processed data
+  const tableData = useMemo(() => processTableData(), [categoriesData, subCategoriesData, domainsData]);
 
   // Flatten data for table display with grouped domains
   const flattenedData = tableData.flatMap(categoryData => 
@@ -227,10 +285,27 @@ const DomainTable: React.FC = () => {
           </Text>
         </div>
 
+        {/* Search Input */}
+        <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+          <Col xs={24} sm={12} md={8}>
+            <Input
+              placeholder="Search domains, categories, or subcategories..."
+              prefix={<SearchOutlined />}
+              value={searchTerm}
+              onChange={handleSearchChange}
+              allowClear
+            />
+          </Col>
+        </Row>
+
         {flattenedData.length === 0 ? (
           <Alert
             message="No Data Available"
-            description="No domains, categories, or sub-categories have been created yet."
+            description={
+              debouncedSearchTerm 
+                ? `No results found for "${debouncedSearchTerm}". Try adjusting your search terms.`
+                : "No domains, categories, or sub-categories have been created yet."
+            }
             type="info"
             showIcon
             style={{ marginTop: '20px' }}
@@ -240,19 +315,11 @@ const DomainTable: React.FC = () => {
             <Table
               columns={columns}
               dataSource={flattenedData}
-              pagination={flattenedData.length > 10 ? {
-                pageSize: 10, 
-                showSizeChanger: false,
-                showQuickJumper: true,
-                showTotal: (total, range) => 
-                  `${range[0]}-${range[1]} of ${total} sub-categories`
-              } : false}
+              pagination={false} // We'll handle pagination separately
               scroll={{ x: 800 }}
               size="small"
               bordered
-              style={{
-                backgroundColor: '#fafafa'
-              }}
+              style={{ backgroundColor: '#fafafa' }}
             />
           </>
         )}

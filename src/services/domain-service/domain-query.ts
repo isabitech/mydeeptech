@@ -4,31 +4,64 @@ import { endpoints } from "../../store/api/endpoints";
 import { GetDomainCategoriesResponseSchema, GetDomainSubCategoriesResponseSchema, GetDomainsResponseSchema } from "../../validators/domain/domain-validator";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 
-const useDomainCategories = () => {
+interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+const useDomainCategories = (paginationParams?: PaginationParams) => {
+  const { page = 1, limit = 10, search = '' } = paginationParams || {};
+  
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getDomainCategories],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getDomainCategories, { page, limit, search }],
     queryFn: async () => {
-      const response = await axiosInstance.get<GetDomainCategoriesResponseSchema>(`${endpoints.domain.getCategories}/find`);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) params.append('search', search);
+      
+      const response = await axiosInstance.get<GetDomainCategoriesResponseSchema>(
+        `${endpoints.domain.getCategories}/find?${params.toString()}`
+      );
       return GetDomainCategoriesResponseSchema.parse(response.data);
     },
   });
 };
 
-const useDomainSubCategories = () => {
+const useDomainSubCategories = (paginationParams?: PaginationParams) => {
+  const { page = 1, limit = 10, search = '' } = paginationParams || {};
+  
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getDomainSubCategories],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getDomainSubCategories, { page, limit, search }],
     queryFn: async () => {
-      const response = await axiosInstance.get<GetDomainSubCategoriesResponseSchema>(`${endpoints.domain.getSubCategories}/find`);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) params.append('search', search);
+      
+      const response = await axiosInstance.get<GetDomainSubCategoriesResponseSchema>(
+        `${endpoints.domain.getSubCategories}/find?${params.toString()}`
+      );
       return GetDomainSubCategoriesResponseSchema.parse(response.data);
     },
   });
 };
 
-const useDomains = () => {
+const useDomains = (paginationParams?: PaginationParams) => {
+  const { page = 1, limit = 10, search = '' } = paginationParams || {};
+  
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getDomains],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getDomains, { page, limit, search }],
     queryFn: async () => {
-      const response = await axiosInstance.get<GetDomainsResponseSchema>(`${endpoints.domain.getDomains}/find`);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) params.append('search', search);
+      
+      const response = await axiosInstance.get<GetDomainsResponseSchema>(
+        `${endpoints.domain.getDomains}/find?${params.toString()}`
+      );
       return GetDomainsResponseSchema.parse(response.data);
     },
   });
