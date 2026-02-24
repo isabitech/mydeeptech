@@ -68,10 +68,31 @@ const useDomains = (paginationParams?: PaginationParams) => {
 };
 
 
+const useDomainsWithCategorization = (paginationParams?: PaginationParams) => {
+  const { page = 1, limit = 50, search = '' } = paginationParams || {};
+  
+  return useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getDomainsWithCategorization, { page, limit, search }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) params.append('search', search);
+      
+      const response = await axiosInstance.get(
+        `${endpoints.domain.getDomains}/all-with-categorization?${params.toString()}`
+      );
+      return response.data;
+    },
+  });
+};
+
+
 const domainQueryService = {
   useDomainCategories,
   useDomainSubCategories,
   useDomains,
+  useDomainsWithCategorization,
 };
 
 export default domainQueryService;
