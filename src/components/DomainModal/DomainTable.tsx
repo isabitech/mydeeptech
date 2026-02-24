@@ -1,119 +1,123 @@
 
-import React from "react";
-import { Table, Card, Typography, Tag, Spin, Alert, Space } from "antd";
-import { DatabaseOutlined, FolderOutlined, BranchesOutlined } from "@ant-design/icons";
+import React, { useState, useMemo, useCallback } from "react";
+import { Table, Card, Typography, Tag, Spin, Alert, Space, Input, Row, Col } from "antd";
+import { DatabaseOutlined, FolderOutlined, BranchesOutlined, SearchOutlined } from "@ant-design/icons";
 import domainQueryService from "../../services/domain-service/domain-query";
 
 const { Title, Text } = Typography;
 
+const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
+
+interface DomainWithCategorizationItem {
+  category: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  subCategory: {
+    _id: string | null;
+    name: string;
+    slug: string | null;
+  };
+  domains: {
+    _id: string;
+    name: string;
+    slug: string;
+  }[];
+  totalDomains: number;
+}
+
 interface TableDataType {
   key: string;
-  category: {
+  categoryName: string;
+  categoryRowSpan: number;
+  subCategoryName: string;
+  subCategorySlug: string | null;
+  domains: {
+    _id: string;
     name: string;
-    id: string;
-    slug?: string;
-  };
-  subCategories: {
-    name: string;
-    id: string;
-    slug?: string;
-    domains: {
-      name: string;
-      id: string;
-      slug?: string;
-      createdAt?: string;
-    }[];
+    slug: string;
   }[];
 }
 
 const DomainTable: React.FC = () => {
-  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = domainQueryService.useDomainCategories();
-  const { data: subCategoriesData, isLoading: subCategoriesLoading, error: subCategoriesError } = domainQueryService.useDomainSubCategories();
-  const { data: domainsData, isLoading: domainsLoading, error: domainsError } = domainQueryService.useDomains();
+  // Pagination and search state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
+  const pageSize = 20; // Reasonable page size for grouped data
 
-  const isLoading = categoriesLoading || subCategoriesLoading || domainsLoading;
-  const hasError = categoriesError || subCategoriesError || domainsError;
+  // Debounced search function
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setDebouncedSearchTerm(value);
+      // Reset to page 1 when searching
+      setCurrentPage(1);
+    }, 500),
+    []
+  );
 
-  // Process data to create grouped table rows
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
+  // Single API call with pagination
+  const { data: domainsWithCategorizationData, isLoading, error } = domainQueryService.useDomainsWithCategorization({
+    page: currentPage,
+    limit: pageSize,
+    search: debouncedSearchTerm
+  });
+
+  // Process data to create flattened table rows
   const processTableData = (): TableDataType[] => {
-    if (!domainsData?.data?.domain || !categoriesData?.data?.categories || !subCategoriesData?.data?.domainSubCategories) {
+    if (!domainsWithCategorizationData?.data?.domains) {
       return [];
     }
 
-    const domains = domainsData.data.domain;
-    const categories = categoriesData.data.categories;
-    const subCategories = subCategoriesData.data.domainSubCategories;
-
-    // Group domains by category
-    const groupedData: TableDataType[] = [];
-
-    categories.forEach((category) => {
-      // Find all subcategories for this category
-      const categorySubCategories = subCategories.filter(sc => sc.domain_category._id === category._id);
-
-      const subCategoriesWithDomains = categorySubCategories.map(subCat => ({
-        name: subCat.name,
-        id: subCat._id,
-        slug: subCat.slug,
-        domains: domains.filter(domain => 
-          domain.domain_sub_category?._id === subCat._id
-        ).map(domain => ({
-          name: domain.name,
-          id: domain._id,
-          slug: domain.slug,
-          createdAt: domain.createdAt,
-        }))
-      }));
-
-      // Also include domains that belong directly to category without subcategory
-      const directCategoryDomains = domains.filter(domain => 
-        domain.domain_category._id === category._id && !domain.domain_sub_category
-      );
-
-      if (directCategoryDomains.length > 0) {
-        subCategoriesWithDomains.unshift({
-          name: 'No Sub-Category',
-          id: 'direct',
-          slug: '',
-          domains: directCategoryDomains.map(domain => ({
-            name: domain.name,
-            id: domain._id,
-            slug: domain.slug,
-            createdAt: domain.createdAt,
-          }))
-        });
+    const domainsData: DomainWithCategorizationItem[] = domainsWithCategorizationData.data.domains;
+    
+    // Group by category to calculate rowSpans
+    const categoryGroups: { [categoryId: string]: DomainWithCategorizationItem[] } = {};
+    
+    domainsData.forEach(item => {
+      const categoryId = item.category._id;
+      if (!categoryGroups[categoryId]) {
+        categoryGroups[categoryId] = [];
       }
-
-      // Only add category if it has subcategories or direct domains
-      if (subCategoriesWithDomains.length > 0) {
-        groupedData.push({
-          key: category._id,
-          category: {
-            name: category.name,
-            id: category._id,
-            slug: category.slug,
-          },
-          subCategories: subCategoriesWithDomains,
-        });
-      }
+      categoryGroups[categoryId].push(item);
     });
 
-    return groupedData;
+    // Flatten data for table display with proper rowSpan calculation
+    const flattenedData: TableDataType[] = [];
+    
+    Object.values(categoryGroups).forEach(categoryItems => {
+      categoryItems.forEach((item, index) => {
+        flattenedData.push({
+          key: `${item.category._id}-${item.subCategory._id || 'no-sub'}-${index}`,
+          categoryName: index === 0 ? item.category.name : '',
+          categoryRowSpan: index === 0 ? categoryItems.length : 0,
+          subCategoryName: item.subCategory.name,
+          subCategorySlug: item.subCategory.slug,
+          domains: item.domains,
+        });
+      });
+    });
+
+    return flattenedData;
   };
 
-  const tableData = processTableData();
-
-  // Flatten data for table display with grouped domains
-  const flattenedData = tableData.flatMap(categoryData => 
-    categoryData.subCategories.map((subCat, subIndex) => ({
-      key: `${categoryData.key}-${subIndex}`,
-      categoryName: subIndex === 0 ? categoryData.category.name : '',
-      categoryRowSpan: subIndex === 0 ? categoryData.subCategories.length : 0,
-      subCategoryName: subCat.name,
-      subCategorySlug: subCat.slug,
-      domains: subCat.domains,
-    }))
-  );
+  // Memoize processed data
+  const tableData = useMemo(() => processTableData(), [domainsWithCategorizationData]);
 
   const columns = [
     {
@@ -162,10 +166,10 @@ const DomainTable: React.FC = () => {
       ),
       dataIndex: 'domains',
       key: 'domains',
-      render: (domains: any[]) => (
+      render: (domains: { _id: string; name: string; slug: string; }[]) => (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px' }}>
           {domains.map((domain) => (
-            <div key={domain.id} style={{ marginBottom: '4px' }}>
+            <div key={domain._id} style={{ marginBottom: '4px' }}>
               <Tag 
                 color="green" 
                 style={{ 
@@ -202,12 +206,12 @@ const DomainTable: React.FC = () => {
     );
   }
 
-  if (hasError) {
+  if (error) {
     return (
       <Card>
         <Alert
           message="Error Loading Data"
-          description="There was an error loading the domain, category, or subcategory data. Please try again later."
+          description="There was an error loading the domain data. Please try again later."
           type="error"
           showIcon
         />
@@ -227,10 +231,27 @@ const DomainTable: React.FC = () => {
           </Text>
         </div>
 
-        {flattenedData.length === 0 ? (
+        {/* Search Input */}
+        <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+          <Col xs={24} sm={12} md={8}>
+            <Input
+              placeholder="Search domains, categories, or subcategories..."
+              prefix={<SearchOutlined />}
+              value={searchTerm}
+              onChange={handleSearchChange}
+              allowClear
+            />
+          </Col>
+        </Row>
+
+        {tableData.length === 0 ? (
           <Alert
             message="No Data Available"
-            description="No domains, categories, or sub-categories have been created yet."
+            description={
+              debouncedSearchTerm 
+                ? `No results found for "${debouncedSearchTerm}". Try adjusting your search terms.`
+                : "No domains, categories, or sub-categories have been created yet."
+            }
             type="info"
             showIcon
             style={{ marginTop: '20px' }}
@@ -239,20 +260,27 @@ const DomainTable: React.FC = () => {
           <>
             <Table
               columns={columns}
-              dataSource={flattenedData}
-              pagination={flattenedData.length > 10 ? {
-                pageSize: 10, 
-                showSizeChanger: false,
+              dataSource={tableData}
+              rowKey="key"
+              pagination={{
+                current: domainsWithCategorizationData?.data?.pagination?.currentPage || currentPage,
+                pageSize: domainsWithCategorizationData?.data?.pagination?.limit || pageSize,
+                total: domainsWithCategorizationData?.data?.pagination?.totalCount || 0,
+                showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total, range) => 
-                  `${range[0]}-${range[1]} of ${total} sub-categories`
-              } : false}
+                position: ['bottomCenter'],
+                showTotal: (total, range) => {
+                  const currentPage = domainsWithCategorizationData?.data?.pagination?.currentPage || 1;
+                  return `Showing (${currentPage} of ${domainsWithCategorizationData?.data?.pagination?.totalPages || 1})`;
+                },
+                onChange: (page, size) => {
+                  setCurrentPage(page);
+                }
+              }}
               scroll={{ x: 800 }}
               size="small"
               bordered
-              style={{
-                backgroundColor: '#fafafa'
-              }}
+              style={{ backgroundColor: '#fafafa' }}
             />
           </>
         )}

@@ -21,6 +21,7 @@ const QUERY = {
     getDomainCategories: "getDomainCategories",
     getDomainSubCategories: "getDomainSubCategories",
     getDomains: "getDomains",
+    getDomainsWithCategorization: "getDomainsWithCategorization", 
 } as const;
 
 const REACT_QUERY_KEYS = {

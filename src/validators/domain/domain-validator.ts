@@ -58,6 +58,16 @@ const DomainCategoryRefSchema = z.object({
   slug: z.string(),
 }).strip();
 
+// Pagination metadata schema - must be defined before usage
+const PaginationSchema = z.object({
+  currentPage: z.number(),
+  totalPages: z.number(),
+  totalCount: z.number(),
+  limit: z.number(),
+  hasNextPage: z.boolean(),
+  hasPrevPage: z.boolean(),
+});
+
 /* Domain (child) */
 const DomainChildSchema = z.object({
     _id: z.string(),
@@ -85,6 +95,7 @@ const GetDomainsResponseSchema = z.object({
     message: z.string(),
     data: z.object({
       domain: z.array(DomainChildSchema),
+      pagination: PaginationSchema.optional()
     }),
   }).strip();
 
@@ -115,7 +126,10 @@ const CreateDomainCategoryResponseSchema = z.object({
 const GetDomainCategoriesResponseSchema = z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({ categories: z.array(DomainCategorySchema) }),
+    data: z.object({ 
+      categories: z.array(DomainCategorySchema),
+      pagination: PaginationSchema.optional()
+    }),
   }).strip();
 
 /* Domain Sub-Category */
@@ -139,6 +153,7 @@ const GetDomainSubCategoriesResponseSchema = z.object({
     message: z.string(),
     data: z.object({
       domainSubCategories: z.array(DomainSubCategorySchema),
+      pagination: PaginationSchema.optional()
     }),
   }).strip();
 
@@ -170,6 +185,7 @@ type GetDomainSubCategoriesResponseSchema = z.infer<typeof GetDomainSubCategorie
 type CreateDomainSchema = z.infer<typeof CreateDomainSchema>;
 type CreateDomainSchemaResponse = z.infer<typeof CreateDomainSchemaResponse>;
 type GetDomainsResponseSchema = z.infer<typeof GetDomainsResponseSchema>;
+type PaginationSchema = z.infer<typeof PaginationSchema>;
 
 /* ──────────────────────────────
  * Exports
@@ -188,4 +204,5 @@ export {
   CreateDomainSchema,
   CreateDomainSchemaResponse,
   GetDomainsResponseSchema,
+  PaginationSchema,
 };
