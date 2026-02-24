@@ -17,6 +17,7 @@ import {
 const useAddDomainCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.createDomainCategory],
     mutationFn: async (data: CreateDomainCategorySchema) => {
       const response = await axiosInstance.post<CreateDomainCategoryResponseSchema>(`${endpoints.domain.addCategory}/create`, data);
       return CreateDomainCategoryResponseSchema.parse(response.data);
@@ -58,6 +59,7 @@ const useDeleteDomainCategory = () => {
 const useAddDomainSubCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.createDomainSubCategory],
     mutationFn: async (data: CreateSubDomainCategorySchema) => {
       const response = await axiosInstance.post<CreateDomainSubCategoryResponseSchema>(`${endpoints.domain.addSubCategory}/create`, data);
       return CreateDomainSubCategoryResponseSchema.parse(response.data);
@@ -71,6 +73,7 @@ const useAddDomainSubCategory = () => {
 const useCreateDomain = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.createDomain],
     mutationFn: async (data: CreateDomainSchema) => {
       const response = await axiosInstance.post<CreateDomainSchemaResponse>(`${endpoints.domain.createDomain}/create`, data);
        return CreateDomainSchemaResponse.parse(response.data);
@@ -79,6 +82,7 @@ const useCreateDomain = () => {
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getDomainCategories]});
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getDomainSubCategories]});
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getDomains]});
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getDomainsWithCategorization]});
     },
   });
 }

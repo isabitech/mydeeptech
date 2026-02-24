@@ -38,7 +38,7 @@ const CreateSubDomainCategorySchema = z.object({
 const CreateDomainSchema = z.object({
   name: NameField("Domain name is required"),
   domain_category: NameField("Domain category is required"),
-  domain_sub_category: NameField("Domain sub-category is required"),
+  domain_sub_category: z.string().min(1, "Domain sub-category must not be empty").optional().nullable(),
   description: OptionalDescription,
 });
 
@@ -47,7 +47,7 @@ const DomainEntitySchema = z.object({
   name: z.string(),
   slug: z.string(),
   domain_category: z.string(),
-  domain_sub_category: z.string(),
+  domain_sub_category: z.string().optional().nullable(),
   ...Timestamps,
   ...MongoMeta
 }).strip()
