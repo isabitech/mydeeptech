@@ -26,7 +26,10 @@ const CreateSubDomainCategoryForm: React.FC = () => {
 
     const isDomainMutationLoading = addSubDomainCategory.isPending;
     const { data, refetch: refetchDomainCategories, isFetching: isFetchingDomainCategories } = fetchDomainCategories || {};
-    const domainCategories = Array.isArray(data?.data.categories) ? data.data.categories : [];
+    // const domainCategories = Array.isArray(data?.data.categories) ? data.data.categories : [];
+    const domainCategories = Array.isArray(data?.data) 
+  ? data.data 
+  : [];
 
     const handleSubCategorySubmit = async (formValues: CreateSubDomainCategorySchema) => {
         addSubDomainCategory.mutate(formValues, {

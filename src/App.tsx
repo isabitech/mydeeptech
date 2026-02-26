@@ -56,6 +56,7 @@ import { AdminReelAssessmentManager } from "./components/Assessment/AdminAssessm
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
+import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
 
 const AppRoutes = () => {
   return (
@@ -132,6 +133,7 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationManagement />} />
           <Route path="chat" element={<ChatManagement />} />
           <Route path="settings" element={<SettingsMgt />} />
+          <Route path="invoice-page" element={<InvoicePage/>} />
         </Route>
 
         {/* Redirect unmatched routes */}
