@@ -24,8 +24,7 @@ const useDomainCategories = (paginationParams?: PaginationParams) => {
       const response = await axiosInstance.get<GetDomainCategoriesResponseSchema>(
         `${endpoints.domain.getCategories}/find?${params.toString()}`
       );
-      console.log("Domain Categories Response:", response.data);
-      return response.data
+      return GetDomainCategoriesResponseSchema.parse(response.data);
     },
   });
 };
