@@ -64,12 +64,14 @@ const Profile = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
+  
   const [form] = Form.useForm();
   const [selectedCategory, setSelectedCategory] = useState<string>();
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>();
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const { userInfo, setUserInfo } = useUserContext();
   const { getProfile, loading, error, profile } = useGetProfile();
+  
   const {
     updateProfile,
     loading: updateLoading,
@@ -119,6 +121,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const result = await getProfile(userId);
+        
 
         if (result.success) {
           form.setFieldsValue({
@@ -148,6 +151,7 @@ const Profile = () => {
             // Attachments
             resumeUrl: result.data?.attachments?.resumeUrl,
             idDocumentUrl: result.data?.attachments?.idDocumentUrl,
+            
           });
 
           // Check if country is already selected and set state accordingly
@@ -593,7 +597,7 @@ const Profile = () => {
             </div>
           </Card>
         </div>
-
+                            console.log(result.data.domains);
         <Form form={form} layout="vertical">
           <div className="grid grid-cols-12 lg:grid-cols-12 gap-8">
             {/* Personal Information Section */}
