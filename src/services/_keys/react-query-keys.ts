@@ -14,6 +14,8 @@ const MUTATION = {
     createDomain: "createDomain",
     updateDomain: "updateDomain",
     deleteDomain: "deleteDomain",
+
+    bulkInvoicePayment: "bulkInvoicePayment",
 } as const;
 
 const QUERY = {
@@ -22,6 +24,7 @@ const QUERY = {
     getDomainSubCategories: "getDomainSubCategories",
     getDomains: "getDomains",
     getDomainsWithCategorization: "getDomainsWithCategorization", 
+    getAllInvoices: "getAllInvoices",
 } as const;
 
 const REACT_QUERY_KEYS = {
