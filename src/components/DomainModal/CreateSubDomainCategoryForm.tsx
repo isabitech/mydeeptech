@@ -28,6 +28,8 @@ const CreateSubDomainCategoryForm: React.FC = () => {
     const { data, refetch: refetchDomainCategories, isFetching: isFetchingDomainCategories } = fetchDomainCategories || {};
     const domainCategories = Array.isArray(data?.data.categories) ? data.data.categories : [];
 
+    console.log("Domain Categories:", domainCategories);
+
     const handleSubCategorySubmit = async (formValues: CreateSubDomainCategorySchema) => {
         addSubDomainCategory.mutate(formValues, {
             onSuccess: () => {
