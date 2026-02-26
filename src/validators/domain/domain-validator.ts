@@ -121,7 +121,7 @@ const CreateDomainCategoryResponseSchema = z.object({
     success: z.boolean(),
     message: z.string(),
     data: z.object({ category: DomainCategorySchema }),
-  }).strip();
+  });
 
 const GetDomainCategoriesResponseSchema = z.object({
     success: z.boolean(),
@@ -130,7 +130,7 @@ const GetDomainCategoriesResponseSchema = z.object({
       categories: z.array(DomainCategorySchema),
       pagination: PaginationSchema.optional()
     }),
-  }).strip();
+  });
 
 /* Domain Sub-Category */
 const DomainSubCategorySchema = z.object({
@@ -155,7 +155,7 @@ const GetDomainSubCategoriesResponseSchema = z.object({
       domainSubCategories: z.array(DomainSubCategorySchema),
       pagination: PaginationSchema.optional()
     }),
-  }).strip();
+  });
 
 /* ──────────────────────────────
  * Update / Delete
