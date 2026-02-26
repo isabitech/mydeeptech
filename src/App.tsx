@@ -46,7 +46,6 @@ import InvoiceManagement from "./pages/Dashboard/Admin/invoicemgt/InvoiceManagem
 import { NotificationManagement } from "./pages/Dashboard/Admin/notifications";
 import ChatManagement from "./pages/Dashboard/Admin/chat/ChatManagement";
 import ResetPassword from "./pages/Auth/ResetPassword";
-import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
 import CustomerService from "./components/CustomerService";
 import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
 import MultimediaAssessmentDemo from "./components/Assessment/MultimediaAssessmentDemo";
