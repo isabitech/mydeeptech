@@ -22,12 +22,17 @@ import {
   FileTextOutlined,
   ThunderboltOutlined,
   FileExcelOutlined,
+  CreditCardOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { Invoice, UpdatePaymentStatusForm } from "../../../../types/invoice.types";
 import { AdminInvoice } from "../../../../types/admin-invoice-type";
 import { generatePaymentReceipt } from "../../../../utils/receiptGenerator";
+import { constructBulkTransferPayload } from "./_utils/_payment-payload.utils";
+import paymentMutationService from "../../../../services/invoice-payment-service/invoice-payment-mutation";
+import ErrorMessage from "../../../../lib/error-message";
+import { BulkTransferPayloadSchema } from "../../../../validators/payment/payment-schema";
 
 interface UnpaidProps {
   invoices: AdminInvoice[];
@@ -60,9 +65,12 @@ const Unpaid: React.FC<UnpaidProps> = ({
   const [isBulkAuthorizing, setIsBulkAuthorizing] = useState(false);
   const [isGeneratingCSV, setIsGeneratingCSV] = useState(false);
   const [isGeneratingMpesaCSV, setIsGeneratingMpesaCSV] = useState(false);
+  const [isLoggingSelected, setIsLoggingSelected] = useState(false);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
   const [showNGNOnly, setShowNGNOnly] = useState(false);
   const [showKESOnly, setShowKESOnly] = useState(false);
+
+  const paymentWithInvoiceMutation = paymentMutationService.useBulkInvoicePayment();
 
   const handleMarkAsPaid = async (invoice: Invoice) => {
     try {
@@ -217,6 +225,11 @@ const Unpaid: React.FC<UnpaidProps> = ({
         return false;
       })
     : invoices;
+
+  // Get selected invoice objects (not just IDs)
+  const selectedInvoices = filteredInvoices.filter(invoice => 
+    selectedInvoiceIds.includes(invoice._id)
+  );
 
   // Check if user has NGN payment info
   const hasNGNPaymentInfo = (invoice: AdminInvoice): boolean => {
@@ -395,6 +408,62 @@ const Unpaid: React.FC<UnpaidProps> = ({
     } finally {
       setIsGeneratingCSV(false);
     }
+  };
+
+  const handleLogSelectedInvoices = () => {
+    // console.log('Selected Invoice IDs:', selectedInvoiceIds);
+    // console.log('Selected Invoice Objects:', selectedInvoices);
+    // console.log('Number of selected items:', selectedInvoices.length);
+
+
+    if (selectedInvoices.length === 0) {
+      message.info('No invoices selected');
+      return;
+    }
+
+    const payload = constructBulkTransferPayload(selectedInvoices, {
+      currency: showNGNOnly ? "NGN" : showKESOnly ? "KES" : undefined,
+      source: "balance",
+    });
+
+    const validatedPayload = BulkTransferPayloadSchema.safeParse(payload);
+
+    if (!validatedPayload.success) {
+      const errorMessage = validatedPayload.error.issues[0]?.message || 'Invalid payload structure';
+      console.error('Payload validation failed:', validatedPayload.error);
+      
+      // Show the invoices that failed validation
+      const failedInvoices = selectedInvoices.map(invoice => 
+        `${invoice.invoiceNumber} (${getDTUserName(invoice.dtUserId)})`
+      ).join(', ');
+      
+      notification.error({
+        key: 'bulk-payment-validation-error', // Prevents multiple duplicate notifications
+        message: 'Payload Validation Failed',
+        description: (
+          <div>
+            <p>{errorMessage}</p>
+            <div className="mt-2">
+              <p className="font-medium">Failed Invoices ({selectedInvoices.length}):</p>
+              <p className="text-sm text-gray-600 max-h-20 overflow-y-auto">
+                {failedInvoices}
+              </p>
+            </div>
+          </div>
+        ),
+        duration: 8,
+        placement: 'topRight',
+      });
+      return;
+    }
+
+    paymentWithInvoiceMutation.bulkPaymentMutate(validatedPayload.data, {
+      onSuccess: () => {
+        message.success('Bulk payment mutation successful. Invoices will be processed shortly.');
+      },
+      onError: (error) =>  message.error(ErrorMessage(error)),
+    })
+
   };
 
   const generateMpesaCSV = async (invoiceIds: string[] | null) => {
@@ -656,13 +725,13 @@ const Unpaid: React.FC<UnpaidProps> = ({
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center flex-wrap gap-5">
         <p>
           Unpaid Invoices - {dayjs().format("MMMM DD, YYYY")}
         </p>
         
         {/* Bulk Operations */}
-        <Space size="middle">
+        <div  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {onBulkAuthorizePayment && (
             <Button
               type="primary"
@@ -701,12 +770,22 @@ const Unpaid: React.FC<UnpaidProps> = ({
               Generate MPESA CSV
             </Button>
           )}
-        </Space>
+          
+          <Button
+            type="default"
+            icon={<CreditCardOutlined />}
+            onClick={handleLogSelectedInvoices}
+            loading={paymentWithInvoiceMutation.bulkPaymentMutationIsPending}
+            disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending}
+            className="border-gray-500 text-gray-600 hover:border-gray-600 hover:text-gray-700"
+          > Pay Invoice{`${selectedInvoiceIds.length > 1 ? 's' : ''}`} ({selectedInvoiceIds.length})
+          </Button>
+        </div>
       </div>
       
       {/* Bulk Operations Info */}
       {(onBulkAuthorizePayment || onGeneratePaystackCSV || onGenerateMpesaCSV) && invoices.length > 0 && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg mt-4">
           <div className="flex items-start space-x-2">
             <div className="text-blue-600 text-sm">
               <p className="font-medium mb-1">💡 Bulk Operations Available:</p>
