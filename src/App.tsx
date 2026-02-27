@@ -136,9 +136,9 @@ const AppRoutes = () => {
           <Route path="chat" element={<ChatManagement />} />
           <Route path="settings" element={<SettingsMgt />} />
           <Route path="invoice-page" element={<InvoicePage/>} />
-          <Route path="invoice-page/:id" element={<InvoiceDetails />} />
+          <Route path="/admin/invoice-page/:id" element={<InvoiceDetails />} />
           <Route path="invoice-page/:id/send" element={<SendInvoice />} />
-          <Route path="invoice-page/:id/edit" element={<EditInvoice />} />
+          <Route path="invoice-page/:id/edit" element={<EditInvoice  />} />
         </Route>
 
         {/* Redirect unmatched routes */}
