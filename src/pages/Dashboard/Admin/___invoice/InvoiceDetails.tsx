@@ -1,10 +1,13 @@
-import { useParams, useNavigate } from "react-router-dom";
-
+import { useParams, useNavigate, } from "react-router-dom";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { useRef } from "react";
 const InvoiceDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const invoiceRef = useRef<HTMLDivElement>(null);
   const invoice = {
+    id: id || "1",
     number: "INV-1771351258045",
     client: "Thomas Sankara",
     email: "example@gmail.com",
@@ -17,11 +20,42 @@ const InvoiceDetails = () => {
       { description: "WiFi routers", quantity: 5, rate: 89 },
     ],
   };
+  const handleExportPDF = async () => {
+    if (!invoiceRef.current) return;
 
-  const subtotal = invoice.items.reduce(
-    (acc, item) => acc + item.quantity * item.rate,
-    0
-  );
+    const canvas = await html2canvas(invoiceRef.current);
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    pdf.save(`invoice-${invoice?.number}.pdf`);
+  };
+//   const handleSendEmail = async () => {
+//   try {
+//     await fetch("/api/send-invoice", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         invoiceId: id,
+//       }),
+//     });
+
+//     alert("Invoice sent successfully!");
+//   } catch (error) {
+//     alert("Failed to send invoice.");
+//   }
+// };
+const subtotal = invoice.items.reduce(
+  (acc, item) => acc + item.quantity * item.rate,
+  0
+);
+
+
 
   const tax = subtotal * 0.16;
   const total = subtotal + tax;
@@ -34,24 +68,48 @@ const InvoiceDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-xl">
-
+      <div
+        ref={invoiceRef}
+        className="max-w-5xl mx-auto bg-white p-10 rounded-2xl shadow-xl"
+      >
         <button
           onClick={() => navigate(-1)}
           className="mb-6 text-sm text-gray-500 hover:underline"
         >
           ← Back
         </button>
+        <div className=" flex items-center justify-between mb-10">
+          <div className="flex gap-4 items-center">
+            <h1 className="text-2xl font-semibold">Invoice {invoice.number}</h1>
 
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-2xl font-semibold">
-            Invoice {invoice.number}
-          </h1>
+            <span className="px-4 py-1 bg-green-100 text-green-600 rounded-full text-sm">
+              {invoice.status}
+            </span>
+          </div>
+          <div className="flex gap-3">
+  <button
+    onClick={handleExportPDF}
+    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"
+  >
+    Export PDF
+  </button>
 
-          <span className="px-4 py-1 bg-green-100 text-green-600 rounded-full text-sm">
-            {invoice.status}
-          </span>
+  <button
+    onClick={() => navigate(`/admin/invoice-page/${id}/send`, {state: { invoice },})}
+    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"
+  >
+    Send to Client
+  </button>
+
+  <button
+    onClick={()=> navigate(`/admin/invoice-page/${id}/edit`, {state: { invoice },})}
+    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50"
+  >
+    Edit
+  </button>
+</div>
         </div>
+       
 
         <div className="grid md:grid-cols-2 gap-6 mb-10">
           <div className="bg-gray-50 p-6 rounded-xl border">
@@ -62,11 +120,13 @@ const InvoiceDetails = () => {
           </div>
 
           <div className="bg-gray-50 p-6 rounded-xl border">
-            <h3 className="mb-4 font-medium text-gray-600">
-              Invoice Details
-            </h3>
-            <p><strong>Issue Date:</strong> {invoice.issueDate}</p>
-            <p><strong>Due Date:</strong> {invoice.dueDate}</p>
+            <h3 className="mb-4 font-medium text-gray-600">Invoice Details</h3>
+            <p>
+              <strong>Issue Date:</strong> {invoice.issueDate}
+            </p>
+            <p>
+              <strong>Due Date:</strong> {invoice.dueDate}
+            </p>
           </div>
         </div>
 
@@ -85,9 +145,7 @@ const InvoiceDetails = () => {
               <tr key={index} className="border-b">
                 <td className="p-4">{item.description}</td>
                 <td className="p-4 text-right">{item.quantity}</td>
-                <td className="p-4 text-right">
-                  {formatCurrency(item.rate)}
-                </td>
+                <td className="p-4 text-right">{formatCurrency(item.rate)}</td>
                 <td className="p-4 text-right font-medium">
                   {formatCurrency(item.quantity * item.rate)}
                 </td>
@@ -112,7 +170,6 @@ const InvoiceDetails = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -81,7 +81,7 @@ export const getSubCategoriesForCategory = (categoryId: string, domainsData: Dom
   return Array.from(subCategoryMap.values());
 };
 
-export const getDomainsForCategoryAndSubCategory = (categoryId: string, subCategoryId: string, domainsData: DomainWithCategorizationItem[] | undefined): any[] => {
+export const getDomainsForCategoryAndSubCategory = (categoryId: string, subCategoryId: string | null, domainsData: DomainWithCategorizationItem[] | undefined): any[] => {
   if (!domainsData) return [];
   
   const domainsFound = domainsData.find(

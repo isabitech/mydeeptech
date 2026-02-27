@@ -100,7 +100,7 @@ const DomainTable: React.FC = () => {
 
   const getDomainsForCategoryAndSubCategoryHelper = (
     categoryId: string,
-    subCategoryId: string,
+    subCategoryId: string | null,
   ) =>
     getDomainsForCategoryAndSubCategory(
       categoryId,
@@ -205,7 +205,7 @@ const DomainTable: React.FC = () => {
 
         form.setFieldsValue({
           category: data.categoryId || undefined,
-          subcategory: effectiveSubCategoryId || undefined,
+         subcategory: effectiveSubCategoryId || undefined, // Only set if actually exists
           domain: defaultDomain?._id || data.id || undefined,
           name: defaultDomain?.name || nameValue,
           description: defaultDomain?.description || data.description || "",
@@ -242,7 +242,7 @@ const DomainTable: React.FC = () => {
                 onSuccess: () => {
                   message.success("Category updated successfully!");
                   closeModal();
-                  ({
+                 queryClient.invalidateQueries ({
                     queryKey: [REACT_QUERY_KEYS.QUERY.getDomainCategories],
                   });
                 },
@@ -298,7 +298,7 @@ const DomainTable: React.FC = () => {
                 onSuccess: () => {
                   message.success("Domain updated successfully!");
                   closeModal();
-                  ({
+                  queryClient.invalidateQueries({
                     queryKey: [
                       REACT_QUERY_KEYS.QUERY.getDomainsWithCategorization,
                     ],
@@ -551,7 +551,7 @@ const DomainTable: React.FC = () => {
     }
   };
 
-  const handleSubCategorySelectionForDomain = (subCategoryId: string) => {
+  const handleSubCategorySelectionForDomain = (subCategoryId: string | null) => {
     setSelectedSubCategoryForDomain(subCategoryId);
 
     if (!selectedCategoryForDomain) return;

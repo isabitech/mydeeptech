@@ -24,7 +24,7 @@ interface EditModalProps {
   onCategorySelection: (categoryId: string) => void;
   onCategorySelectionForDomain: (categoryId: string) => void;
   onSubCategorySelection: (subCategoryId: string) => void;
-  onSubCategorySelectionForDomain: (subCategoryId: string) => void;
+  onSubCategorySelectionForDomain: (subCategoryId: string | null) => void;
   onDomainSelection: (domainId: string) => void;
   getSubCategoriesForCategory: (categoryId: string) => AvailableSubCategory[];
   getDomainsForCategoryAndSubCategory: (categoryId: string, subCategoryId: string) => any[];
@@ -95,6 +95,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 }))}
               />
             </Form.Item>
+
             <Form.Item
               name="subcategory"
               label="Select Sub-Category (Optional)"
@@ -109,10 +110,13 @@ const EditModal: React.FC<EditModalProps> = ({
                   }
                 }}
                 options={selectedCategoryForSubCategory && getSubCategoriesForCategory(selectedCategoryForSubCategory).length > 0 ? 
-                  getSubCategoriesForCategory(selectedCategoryForSubCategory).map(subCategory => ({
+                  getSubCategoriesForCategory(selectedCategoryForSubCategory).map(subCategory =>  {
+                    form.setFieldValue("subcategory", subCategory.name);
+                    return ({
                     label: subCategory.name,
                     value: subCategory.id
-                  })) : [{ label: "No sub-categories available", value: "" }]
+                  })
+                  }) : [{ label: "No sub-categories available", value: "" }]
                 }
               />
             </Form.Item>
@@ -139,13 +143,20 @@ const EditModal: React.FC<EditModalProps> = ({
             <Form.Item
               name="subcategory"
               label="Select Sub-Category"
-              rules={[{ required: true, message: 'Please select a sub-category' }]}
+              help="Leave empty for 'No Sub-Category'"
+              rules={selectedCategoryForDomain && getSubCategoriesForCategory(selectedCategoryForDomain || '').length > 0 ? 
+                [] : [] // Remove required validation to allow clearing
+              }
             >
               <Select
-                placeholder="Select a sub-category"
+                placeholder={selectedCategoryForDomain && getSubCategoriesForCategory(selectedCategoryForDomain || '').length > 0 ? 
+                  "Select a sub-category (optional)" : "No sub-categories available"
+                }
                 value={selectedSubCategoryForDomain}
                 disabled={!selectedCategoryForDomain || getSubCategoriesForCategory(selectedCategoryForDomain || '').length === 0}
                 onChange={onSubCategorySelectionForDomain}
+                allowClear
+                clearIcon={<span title="Remove sub-category">✕</span>}
                 options={selectedCategoryForDomain ? 
                   getSubCategoriesForCategory(selectedCategoryForDomain).map(subCategory => ({
                     label: subCategory.name,
@@ -161,25 +172,31 @@ const EditModal: React.FC<EditModalProps> = ({
             >
               <Select
                 placeholder="Select a domain"
+                showSearch
+                optionFilterProp="label"
+                value={form.getFieldValue('domain')}
                 disabled={!selectedCategoryForDomain}
                 onChange={onDomainSelection}
                 options={(() => {
-                  if (selectedCategoryForDomain && selectedSubCategoryForDomain) {
+                  if (!selectedCategoryForDomain) return [];
+                  
+                  // If a specific sub-category is selected, show only domains from that sub-category
+                  if (selectedSubCategoryForDomain) {
                     return getDomainsForCategoryAndSubCategory(selectedCategoryForDomain, selectedSubCategoryForDomain).map((domain: any) => ({
                       label: domain.name,
                       value: domain._id
                     }));
-                  } else if (selectedCategoryForDomain) {
-                    const allDomainsForCategory = domainsData
-                      ?.filter((item) => item.category._id === selectedCategoryForDomain)
-                      ?.flatMap((item) => item.domains) || [];
-                    
-                    return allDomainsForCategory.map((domain: any) => ({
-                      label: domain.name,
-                      value: domain._id
-                    }));
                   }
-                  return [];
+                  
+                  // If no sub-category is selected, show all domains from the category
+                  const allDomainsForCategory = domainsData
+                    ?.filter((item) => item.category._id === selectedCategoryForDomain)
+                    ?.flatMap((item) => item.domains) || [];
+                  
+                  return allDomainsForCategory.map((domain: any) => ({
+                    label: domain.name,
+                    value: domain._id
+                  }));
                 })()}
               />
             </Form.Item>
