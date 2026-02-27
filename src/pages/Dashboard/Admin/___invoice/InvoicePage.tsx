@@ -1,8 +1,8 @@
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
 const InvoicePage = () => {
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-
+  const navigate = useNavigate();
   const invoices = [
     {
       id: 1,
@@ -125,7 +125,9 @@ const InvoicePage = () => {
 
             {openDropdown === invoice.id && (
               <div className="absolute  top-0 right-20 ml-2 bg-white  w-40 py-2  border border-zinc-800 rounded-xl shadow-lg z-10">
-                <button className="block w-full text-left px-4 py-1 hover:bg-zinc-800 text-sm">
+                <button
+                onClick={() => navigate(`/invoice/${invoice.id}`)}
+                className="block w-full text-left px-4 py-1 hover:bg-zinc-800 text-sm">
                   View invoice
                 </button>
                 <button className="block w-full text-left px-4 py-1 hover:bg-zinc-800 text-sm">

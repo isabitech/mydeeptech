@@ -22,63 +22,65 @@ import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
 } from "../../../../utils/countryTimezoneMapping";
-import { baseURL, endpoints } from "../../../../store/api/endpoints";
+import {  endpoints } from "../../../../store/api/endpoints";
 import { useUploadFile } from "../../../../hooks/useUploadFile";
+import domainQueryService from "../../../../services/domain-service/domain-query";
 
-const dummyDomainTree = [
-  {
-    id: "c1",
-    name: "Computing",
-    subCategories: [
-      {
-        id: "s1",
-        name: "Frontend",
-        domains: [
-          { id: "d1", name: "React" },
-          { id: "d2", name: "Vue" },
-        ],
-      },
-      {
-        id: "s2",
-        name: "Backend",
-        domains: [
-          { id: "d3", name: "Node.js" },
-          { id: "d4", name: "Django" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "c2",
-    name: "Medicine",
-    subCategories: [],
-    domains: [
-      { id: "d5", name: "Pharmacy" },
-      { id: "d6", name: "Nursing" },
-    ],
-  },
-];
+type Domain = {
+  _id: string;
+  name: string;
+};
 
+type DomainSubCategory = {
+  _id: string;
+  name: string;
+  slug: string;
+  domain_category: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  deleted_at: string | null;
+  __v?: number;
+};
+  
 const Profile = () => {
-  const [isEditable, setIsEditable] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
-  
+  const [isEditing, setIsEditing] = useState(false);
+  const [step, setStep] = useState(1);
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [availableDomains, setAvailableDomains] = useState<Domain[]>([]);
+  const [selectedDomains, setSelectedDomains] = useState([]);
   const [form] = Form.useForm();
-  const [selectedCategory, setSelectedCategory] = useState<string>();
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>();
-  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+
   const { userInfo, setUserInfo } = useUserContext();
   const { getProfile, loading, error, profile } = useGetProfile();
-  
   const {
     updateProfile,
     loading: updateLoading,
     error: updateError,
   } = useUpdateProfile();
   const { uploadFile, uploading } = useUploadFile();
+ 
+                // domainhooks
 
+  const { data: categoriesData, isLoading: categoriesLoading } =
+  domainQueryService.useDomainCategories();
+const categories = categoriesData?.data || []; 
+const { data: domainsData, refetch: refetchDomains } = domainQueryService.useDomainsWithCategorization();
+// Fetch subcategories
+const { data: subCategoriesData } = domainQueryService.useDomainSubCategories();
+const subCategoryList: DomainSubCategory[] = subCategoriesData?.data?.domainSubCategories || [];
+
+const hasSubCategories = selectedCategory
+  ? subCategoryList.some((sub) => sub.domain_category._id === selectedCategory)
+  : false;
   // Watch form values at the top level to avoid conditional hooks
   const paymentCurrency = Form.useWatch("paymentCurrency", form);
   const paymentMethod = Form.useWatch("paymentMethod", form);
@@ -107,21 +109,31 @@ const Profile = () => {
     }
   }, [userInfo?.id, setUserInfo]);
 
+  
   // Fetch profile when userId becomes available
   const [hasFetchedProfile, setHasFetchedProfile] = useState(false);
 
+useEffect(() => {
+  if (step === 3 && domainsData) {
+    const source = selectedSubCategory || selectedCategory;
+
+    // Filter domains by selected category/subcategory
+    const filteredDomains = domainsData.filter(
+      (domain: any) =>
+        domain.categoryId === selectedCategory || domain.subCategoryId === selectedSubCategory
+    );
+
+    setAvailableDomains(filteredDomains);
+  }
+}, [step, selectedCategory, selectedSubCategory, domainsData]);
+
+
   useEffect(() => {
-    if (profile?.domains) {
-      setSelectedDomains(profile.domains);
-    }
-  }, [profile]);
-  useEffect(() => {
-    if (!userId || hasFetchedProfile) return; // ✅ Only fetch if not fetched yet
+    if (!userId || hasFetchedProfile) return; 
 
     const fetchProfile = async () => {
       try {
         const result = await getProfile(userId);
-        
 
         if (result.success) {
           form.setFieldsValue({
@@ -151,7 +163,6 @@ const Profile = () => {
             // Attachments
             resumeUrl: result.data?.attachments?.resumeUrl,
             idDocumentUrl: result.data?.attachments?.idDocumentUrl,
-            
           });
 
           // Check if country is already selected and set state accordingly
@@ -171,9 +182,12 @@ const Profile = () => {
     fetchProfile();
   }, [userId, hasFetchedProfile, getProfile]);
 
-  const handleEditToggle = () => {
-    setIsEditable(!isEditable);
-  };
+
+  const selectedCategoryData = categories.find(
+  cat => cat._id === selectedCategory
+);
+
+
 
   const handleCountryChange = (countryValue: string) => {
     // Auto-update timezone based on selected country
@@ -185,18 +199,49 @@ const Profile = () => {
       });
     }
   };
-  const currentCategory = dummyDomainTree.find(
-    (cat) => cat.id === selectedCategory,
-  );
-  const subCategories = Array.isArray(currentCategory?.subCategories)
-    ? currentCategory.subCategories
-    : [];
-  const currentSubCategory = currentCategory?.subCategories?.find(
-    (sub) => sub.id === selectedSubCategory,
+
+
+    const handleEditToggle = () => {
+  setIsEditing(true);
+  setStep(1);
+  setSelectedCategory(null);
+  setSelectedSubCategory(null);
+};
+
+
+const handleSaveDomains = async () => {
+  if (!profile || !profile.domains || !userId) return; // safety check
+
+  // Existing domain IDs
+  const existingIds = profile.domains.map((d: any) =>
+    typeof d === "string" ? d : d._id
   );
 
-  const availableDomains =
-    currentSubCategory?.domains || currentCategory?.domains || [];
+  // Merge with selected domains from the form
+  const merged = [...new Set([...existingIds, ...selectedDomains])];
+
+  try {
+    // Update profile with merged domains
+    await updateProfile(userId, {
+      ...profile,
+      domains: merged,
+    });
+
+    // Close editing UI
+    setIsEditing(false);
+    setStep(1);
+
+    // Refresh profile data after save
+    await getProfile(userId);
+  } catch (error) {
+    console.error("Failed to save domains:", error);
+    notification.error({
+      message: "Error",
+      description: "Failed to save domains. Please try again.",
+    });
+  }
+};
+
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
@@ -208,7 +253,6 @@ const Profile = () => {
         });
         return;
       }
-
       // Prepare the payload according to the API structure
       const payload = {
         personalInfo: {
@@ -257,7 +301,7 @@ const Profile = () => {
           message: "Profile Updated",
           description: "Your profile has been successfully updated.",
         });
-        setIsEditable(false);
+        setIsEditing(false);
 
         // Refresh the profile data to update UI with latest changes
         const refreshResult = await getProfile(userId);
@@ -356,7 +400,7 @@ const Profile = () => {
         idDocumentUrl: profile?.attachments?.idDocumentUrl,
       });
     }
-    setIsEditable(false);
+    setIsEditing(false);
   };
 
   const handleResumeUpload = async (file: File) => {
@@ -433,6 +477,22 @@ const Profile = () => {
     }
     return false;
   };
+  const handleDeleteDomain = async (domainId: string) => {
+    if (!profile?.domains || !userId) return;
+
+    const updated = profile.domains.filter((d) => d !== domainId);
+
+    try {
+      await updateProfile(userId, {
+        ...(profile as any),
+        domains: updated,
+      });
+
+      await getProfile(userId);
+    } catch (error) {
+      console.error("Failed to delete domain:", error);
+    }
+  };
 
   const handleViewDocument = (url: string, type: string) => {
     if (url) {
@@ -480,9 +540,9 @@ const Profile = () => {
       <Header title="Profile" />
       <div className="mt-10 w-[90%] m-auto">
         {/* <div className="font-bold justify-start mb-6">
-            <p className="text-lg">Profile</p>
-            <hr />
-          </div> */}
+          <p className="text-lg">Profile</p>
+          <hr />
+        </div> */}
         <div className="w-full">
           <Card title="Personal Information" className="mb-6">
             {/* Profile Image and Actions */}
@@ -516,7 +576,7 @@ const Profile = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col gap-2 w-full max-w-xs">
-                  {isEditable ? (
+                  {isEditing ? (
                     <div className="flex gap-2">
                       <Button
                         className="!bg-[#E3E6EA] !text-[#666666] rounded-lg !font-[gilroy-regular] flex-1"
@@ -534,11 +594,17 @@ const Profile = () => {
                     </div>
                   ) : (
                     <Button
-                      className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
-                      onClick={handleEditToggle}
-                    >
-                      Edit Profile
-                    </Button>
+  className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
+  onClick={() => {
+    setIsEditing(true);
+    setStep(1);
+    setSelectedCategory(null);
+    setSelectedSubCategory(null);
+    setSelectedDomains([]);
+  }}
+>
+  Edit Profile
+</Button>
                   )}
                 </div>
 
@@ -597,7 +663,7 @@ const Profile = () => {
             </div>
           </Card>
         </div>
-                            console.log(result.data.domains);
+
         <Form form={form} layout="vertical">
           <div className="grid grid-cols-12 lg:grid-cols-12 gap-8">
             {/* Personal Information Section */}
@@ -641,83 +707,66 @@ const Profile = () => {
                 </Form.Item>
 
                 <Form.Item label="Domains">
-                  {!isEditable ? (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedDomains.length ? (
-                        selectedDomains.map((id) => {
-                          const found = dummyDomainTree
-                            .flatMap((c) => [
-                              ...(c.domains || []),
-                              ...c.subCategories.flatMap((s) => s.domains),
-                            ])
-                            .find((d) => d.id === id);
-
-                          return (
-                            <Tag key={id} color="blue">
-                              {found?.name}
-                            </Tag>
-                          );
-                        })
-                      ) : (
-                        <span className="text-gray-500">
-                          No domains selected
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {/* CATEGORY */}
-                      <Select
-                        placeholder="Select Category"
-                        value={selectedCategory}
-                        onChange={(val) => {
-                          setSelectedCategory(val);
-                          setSelectedSubCategory(undefined);
-                        }}
-                        className="mb-3 w-full"
+                  <div className="flex flex-wrap gap-2">
+                    {profile?.domains?.map((domain) => (
+                      <Tag
+                        key={domain}
+                        closable={isEditing}
+                        onClose={() => handleDeleteDomain(domain)}
+                        color="blue"
                       >
-                        {dummyDomainTree.map((cat) => (
-                          <Select.Option key={cat.id} value={cat.id}>
-                            {cat.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-
-                      {/* SUBCATEGORY (if exists) */}
-                      {subCategories.length > 0 && (
-                        <Select
-                          placeholder="Select SubCategory"
-                          value={selectedSubCategory}
-                          onChange={(val) => setSelectedSubCategory(val)}
-                          className="mb-3 w-full"
-                        >
-                          {subCategories.map((sub) => (
-                            <Select.Option key={sub.id} value={sub.id}>
-                              {sub.name}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      )}
-
-                      {/* DOMAIN */}
-                      {selectedCategory && (
-                        <Select
-                          mode="multiple"
-                          placeholder="Select Domain"
-                          value={selectedDomains}
-                          onChange={(vals) => setSelectedDomains(vals)}
-                          className="w-full"
-                        >
-                          {availableDomains.map((domain) => (
-                            <Select.Option key={domain.id} value={domain.id}>
-                              {domain.name}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      )}
-                    </>
-                  )}
+                        {domain}
+                        {}
+                      </Tag>
+                    ))}
+                  </div>
                 </Form.Item>
+
+                {isEditing && step === 1 && (
+  <>
+    <Select
+      placeholder="Select Category"
+      onChange={(value) => setSelectedCategory(value)}
+      options={categories.map(cat => ({
+        label: cat.name,
+        value: cat._id
+      }))}
+    />
+
+    <Button onClick={() => setStep(2)}>Next</Button>
+  </>
+)}
+{isEditing && step === 2 && hasSubCategories && (
+  <>
+    <Select
+      placeholder="Select Subcategory"
+      onChange={(value) => setSelectedSubCategory(value)}
+      options={subCategoryList
+        .filter((sub) => sub.domain_category._id === selectedCategory)
+        .map((sub) => ({
+          label: sub.name,
+          value: sub._id,
+        }))}
+    />
+  </>
+)}
+{isEditing && step === 3 && (
+  <>
+    <Select
+      mode="multiple"
+      placeholder="Select Domains"
+      onChange={(values) => setSelectedDomains(values)}
+      options={availableDomains.map(domain => ({
+        label: domain.name,
+        value: domain._id
+      }))}
+    />
+
+    <Button type="primary" onClick={handleSaveDomains}>
+      Save
+    </Button>
+  </>
+)}
 
                 <div className="grid lg:grid-cols-2 gap-x-5">
                   {/* Read-only personal fields */}
@@ -739,7 +788,7 @@ const Profile = () => {
                   {/* Editable personal fields */}
                   <Form.Item label="Country" name="country">
                     <Select
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       className="!font-[gilroy-regular]"
                       placeholder="Select your country"
                       showSearch
@@ -755,7 +804,7 @@ const Profile = () => {
 
                   <Form.Item label="Time Zone" name="timeZone">
                     <Input
-                      disabled={!isEditable || hasSelectedCountry}
+                      disabled={!isEditing || hasSelectedCountry}
                       className="!font-[gilroy-regular]"
                       placeholder={
                         hasSelectedCountry
@@ -771,7 +820,7 @@ const Profile = () => {
                   >
                     <Input
                       type="number"
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       className="!font-[gilroy-regular]"
                       placeholder="Enter available hours"
                     />
@@ -782,7 +831,7 @@ const Profile = () => {
                     name="preferredCommunicationChannel"
                   >
                     <Select
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       placeholder="Select communication channel"
                       options={[
                         { value: "email", label: "Email" },
@@ -801,7 +850,7 @@ const Profile = () => {
               <Card title="Payment Information" className="mb-6">
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
-                    disabled={!isEditable}
+                    disabled={!isEditing}
                     className="!font-[gilroy-regular]"
                     placeholder="Select payment currency first"
                     onChange={(value) => {
@@ -845,7 +894,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter account name as it appears on your bank"
                           />
@@ -866,7 +915,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter 10-digit account number"
                             maxLength={10}
@@ -884,7 +933,7 @@ const Profile = () => {
                           ]}
                         >
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Select your bank"
                             showSearch
@@ -987,7 +1036,7 @@ const Profile = () => {
 
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             placeholder="Select payment method"
                             options={[
                               {
@@ -1015,7 +1064,7 @@ const Profile = () => {
                           ]}
                         >
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             placeholder="Select payment method"
                             onChange={(value) => {
                               // Reset fields when method changes
@@ -1059,7 +1108,7 @@ const Profile = () => {
                             ]}
                           >
                             <Input
-                              disabled={!isEditable}
+                              disabled={!isEditing}
                               className="!font-[gilroy-regular]"
                               placeholder="Enter your PayPal email address"
                               type="email"
@@ -1084,7 +1133,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter your Wise email address"
                                 type="email"
@@ -1101,7 +1150,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter account holder name"
                               />
@@ -1122,7 +1171,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter full name on account"
                               />
@@ -1142,7 +1191,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter 9-digit routing number"
                                 maxLength={9}
@@ -1159,7 +1208,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter bank name"
                               />
@@ -1180,7 +1229,7 @@ const Profile = () => {
                               ]}
                             >
                               <Input
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 className="!font-[gilroy-regular]"
                                 placeholder="Enter your wallet address"
                               />
@@ -1196,7 +1245,7 @@ const Profile = () => {
                               ]}
                             >
                               <Select
-                                disabled={!isEditable}
+                                disabled={!isEditing}
                                 placeholder="Select cryptocurrency"
                                 options={[
                                   {
@@ -1231,7 +1280,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter full name as on account"
                           />
@@ -1249,7 +1298,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter IBAN (e.g., DE89370400440532013000)"
                             style={{ textTransform: "uppercase" }}
@@ -1267,7 +1316,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter bank name"
                           />
@@ -1275,7 +1324,7 @@ const Profile = () => {
 
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             placeholder="Select payment method"
                             options={[
                               {
@@ -1304,7 +1353,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter full name as on account"
                           />
@@ -1325,7 +1374,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter sort code (e.g., 12-34-56)"
                           />
@@ -1342,7 +1391,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter bank name"
                           />
@@ -1350,7 +1399,7 @@ const Profile = () => {
 
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             placeholder="Select payment method"
                             options={[
                               {
@@ -1379,7 +1428,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter account holder name"
                           />
@@ -1396,7 +1445,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter account number"
                           />
@@ -1413,7 +1462,7 @@ const Profile = () => {
                           ]}
                         >
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Select your bank"
                             showSearch
@@ -1440,7 +1489,7 @@ const Profile = () => {
 
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             placeholder="Select payment method"
                             options={[
                               {
@@ -1468,7 +1517,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter your full name as registered on MPESA"
                           />
@@ -1490,7 +1539,7 @@ const Profile = () => {
                           ]}
                         >
                           <Input
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             className="!font-[gilroy-regular]"
                             placeholder="Enter phone number (e.g., 254712345678)"
                             maxLength={12}
@@ -1572,7 +1621,7 @@ const Profile = () => {
                             ]}
                           >
                             <Input
-                              disabled={!isEditable}
+                              disabled={!isEditing}
                               className="!font-[gilroy-regular]"
                               placeholder="Enter account holder name"
                             />
@@ -1589,7 +1638,7 @@ const Profile = () => {
                             ]}
                           >
                             <Input
-                              disabled={!isEditable}
+                              disabled={!isEditing}
                               className="!font-[gilroy-regular]"
                               placeholder="Enter account number or relevant details"
                             />
@@ -1606,7 +1655,7 @@ const Profile = () => {
                             ]}
                           >
                             <Input
-                              disabled={!isEditable}
+                              disabled={!isEditing}
                               className="!font-[gilroy-regular]"
                               placeholder="Enter bank or financial institution name"
                             />
@@ -1617,7 +1666,7 @@ const Profile = () => {
                             name="paymentMethod"
                           >
                             <Select
-                              disabled={!isEditable}
+                              disabled={!isEditing}
                               placeholder="Select payment method"
                               options={[
                                 {
@@ -1648,7 +1697,7 @@ const Profile = () => {
 
                   <Form.Item label="Education Field" name="educationField">
                     <Input
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       className="!font-[gilroy-regular]"
                       placeholder="Enter your education field"
                     />
@@ -1660,7 +1709,7 @@ const Profile = () => {
                   >
                     <Input
                       type="number"
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       className="!font-[gilroy-regular]"
                       placeholder="Enter years of experience"
                     />
@@ -1668,7 +1717,7 @@ const Profile = () => {
 
                   <Form.Item label="Primary Language" name="primaryLanguage">
                     <Select
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       className="!font-[gilroy-regular]"
                       placeholder="Select your primary language"
                       options={[
@@ -1684,7 +1733,7 @@ const Profile = () => {
                     name="englishFluencyLevel"
                   >
                     <Select
-                      disabled={!isEditable}
+                      disabled={!isEditing}
                       placeholder="Select English fluency level"
                       options={[
                         { value: "native", label: "Native" },
@@ -1706,7 +1755,7 @@ const Profile = () => {
                 <Form.Item label="Annotation Skills" name="annotationSkills">
                   <Select
                     mode="multiple"
-                    disabled={!isEditable}
+                    disabled={!isEditing}
                     className="!font-[gilroy-regular]"
                     placeholder="Select annotation skills"
                     options={[
@@ -1743,7 +1792,7 @@ const Profile = () => {
                 <Form.Item label="Tool Experience" name="toolExperience">
                   <Select
                     mode="multiple"
-                    disabled={!isEditable}
+                    disabled={!isEditing}
                     className="!font-[gilroy-regular]"
                     placeholder="Select tools you have experience with"
                     options={[
@@ -1771,7 +1820,7 @@ const Profile = () => {
                   <Form.Item label="Resume/CV" name="resumeUrl">
                     <div className="flex gap-2">
                       <Input
-                        disabled={!isEditable}
+                        disabled={!isEditing}
                         className="!font-[gilroy-regular] flex-1"
                         placeholder={
                           profile?.attachments?.resumeUrl
@@ -1799,7 +1848,7 @@ const Profile = () => {
                           >
                             View
                           </Button>
-                          {isEditable && (
+                          {isEditing && (
                             <Button
                               icon={<DeleteOutlined />}
                               size="small"
@@ -1814,7 +1863,7 @@ const Profile = () => {
                           )}
                         </Space>
                       )}
-                      {isEditable && (
+                      {isEditing && (
                         <Upload
                           showUploadList={false}
                           beforeUpload={handleResumeUpload}
@@ -1823,7 +1872,7 @@ const Profile = () => {
                           <Button
                             icon={<UploadOutlined />}
                             size="small"
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             loading={uploading}
                             title={
                               profile?.attachments?.resumeUrl
@@ -1843,7 +1892,7 @@ const Profile = () => {
                   <Form.Item label="ID Document" name="idDocumentUrl">
                     <div className="flex gap-2">
                       <Input
-                        disabled={!isEditable}
+                        disabled={!isEditing}
                         className="!font-[gilroy-regular] flex-1"
                         placeholder={
                           profile?.attachments?.idDocumentUrl
@@ -1871,7 +1920,7 @@ const Profile = () => {
                           >
                             View
                           </Button>
-                          {isEditable && (
+                          {isEditing && (
                             <Button
                               icon={<DeleteOutlined />}
                               size="small"
@@ -1889,7 +1938,7 @@ const Profile = () => {
                           )}
                         </Space>
                       )}
-                      {isEditable && (
+                      {isEditing && (
                         <Upload
                           showUploadList={false}
                           beforeUpload={handleIdDocumentUpload}
@@ -1898,7 +1947,7 @@ const Profile = () => {
                           <Button
                             icon={<UploadOutlined />}
                             size="small"
-                            disabled={!isEditable}
+                            disabled={!isEditing}
                             loading={uploading}
                             title={
                               profile?.attachments?.idDocumentUrl
@@ -1924,4 +1973,4 @@ const Profile = () => {
   );
 };
 
- export default Profile;
+export default Profile;

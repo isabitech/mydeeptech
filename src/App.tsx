@@ -57,6 +57,7 @@ import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
 import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
+import InvoiceDetails from "./pages/Dashboard/Admin/___invoice/InvoiceDetails";
 
 const AppRoutes = () => {
   return (
@@ -134,6 +135,7 @@ const AppRoutes = () => {
           <Route path="chat" element={<ChatManagement />} />
           <Route path="settings" element={<SettingsMgt />} />
           <Route path="invoice-page" element={<InvoicePage/>} />
+          <Route path="invoice-page/:id" element={<InvoiceDetails />} />
         </Route>
 
         {/* Redirect unmatched routes */}
