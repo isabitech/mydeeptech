@@ -58,13 +58,6 @@ const CreateSubDomainCategoryForm: React.FC = () => {
             layout="vertical"
             onFinish={handleSubCategorySubmit}
         >
-            <Form.Item
-                name="name"
-                label="Sub-Category Name"
-                rules={[{ required: true, message: "Please enter sub-category name" }]}
-            >
-                <Input placeholder="Enter sub-category name" />
-            </Form.Item>
 
             <Form.Item
               name="domain_category"
@@ -78,6 +71,14 @@ const CreateSubDomainCategoryForm: React.FC = () => {
                   </Option>
                 ))}
               </Select>
+            </Form.Item>
+
+            <Form.Item
+                name="name"
+                label="Sub-Category Name"
+                rules={[{ required: true, message: "Please enter sub-category name" }]}
+            >
+                <Input placeholder="Enter sub-category name" />
             </Form.Item>
 
             <Form.Item
@@ -97,7 +98,6 @@ const CreateSubDomainCategoryForm: React.FC = () => {
             </Form.Item>
         </Form>
         </>
-
     )
 }
 export default CreateSubDomainCategoryForm

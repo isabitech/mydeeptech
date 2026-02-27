@@ -69,10 +69,13 @@ const EditModal: React.FC<EditModalProps> = ({
               <Select
                 placeholder="Select a category"
                 onChange={onCategorySelection}
-                options={availableCategories.map(category => ({
+                options={availableCategories.map(category => {
+                  form.setFieldValue('name', category?.name || '');
+                  return ({ 
                   label: category.name,
                   value: category.id
-                }))}
+                })
+                })}
               />
             </Form.Item>
           </>
@@ -95,6 +98,7 @@ const EditModal: React.FC<EditModalProps> = ({
                 }))}
               />
             </Form.Item>
+
             <Form.Item
               name="subcategory"
               label="Select Sub-Category (Optional)"
@@ -109,10 +113,13 @@ const EditModal: React.FC<EditModalProps> = ({
                   }
                 }}
                 options={selectedCategoryForSubCategory && getSubCategoriesForCategory(selectedCategoryForSubCategory).length > 0 ? 
-                  getSubCategoriesForCategory(selectedCategoryForSubCategory).map(subCategory => ({
+                  getSubCategoriesForCategory(selectedCategoryForSubCategory).map(subCategory =>  {
+                    form.setFieldValue("subcategory", subCategory.name);
+                    return ({
                     label: subCategory.name,
                     value: subCategory.id
-                  })) : [{ label: "No sub-categories available", value: "" }]
+                  })
+                  }) : [{ label: "No sub-categories available", value: "" }]
                 }
               />
             </Form.Item>
