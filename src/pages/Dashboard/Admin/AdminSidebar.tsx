@@ -176,7 +176,7 @@ const AdminSidebar = () => {
         title={null}
         closable={false}
         className="!bg-primary text-white [&_.ant-drawer-close]:text-white [&_.ant-drawer-close:hover]:text-gray-200"
-        bodyStyle={{ padding: 5 }}
+        styles={{ body: { padding: 5 } }}
       >
         <SidebarMenus
           openModal={openModal}

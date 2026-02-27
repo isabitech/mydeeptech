@@ -37,15 +37,13 @@ export const createTableColumns = ({
     ),
     dataIndex: 'categoryName',
     key: 'category',
-    render: (text: string, record: any) => ({
-      children: (
-        <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
-          {text}
-        </div>
-      ),
-      props: {
-        rowSpan: record.categoryRowSpan,
-      },
+    render: (text: string) => (
+      <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+        {text}
+      </div>
+    ),
+    onCell: (record: any) => ({
+      rowSpan: record.categoryRowSpan,
     }),
     width: '20%',
   },
@@ -110,12 +108,13 @@ export const createTableColumns = ({
           icon: <EditOutlined />,
           onClick: () => onEditCategory(record.categoryId, record.categoryName || 'Unknown')
         },
-        {
+        // Only show edit sub-category option if there's actually a sub-category (not null/undefined/empty)
+        ...(record.subCategoryId && record.subCategoryId !== null && record.subCategoryName !== 'No Sub-Category' ? [{
           key: 'edit-subcategory',
           label: 'Sub-Category',
           icon: <EditOutlined />,
-          onClick: () => onEditSubCategory(record.subCategoryId || record.categoryId, record.subCategoryName, record.categoryId)
-        },
+          onClick: () => onEditSubCategory(record.subCategoryId!, record.subCategoryName, record.categoryId)
+        }] : []),
         {
           key: 'edit-domain',
           label: 'Domain',
@@ -138,13 +137,14 @@ export const createTableColumns = ({
           danger: true,
           onClick: () => onDeleteCategory(record.categoryId, record.categoryName || 'Unknown')
         },
-        {
+        // Only show delete sub-category option if there's actually a sub-category (not null/undefined/empty)
+        ...(record.subCategoryId && record.subCategoryId !== null && record.subCategoryName !== 'No Sub-Category' ? [{
           key: 'delete-subcategory',
           label: 'Sub-Category',
           icon: <DeleteOutlined />,
           danger: true,
-          onClick: () => onDeleteSubCategory(record.subCategoryId || record.categoryId, record.subCategoryName, record.categoryId)
-        },
+          onClick: () => onDeleteSubCategory(record.subCategoryId!, record.subCategoryName, record.categoryId)
+        }] : []),
         {
           key: 'delete-domain',
           label: 'Domain',

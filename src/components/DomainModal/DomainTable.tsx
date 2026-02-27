@@ -129,22 +129,16 @@ const DomainTable: React.FC = () => {
         if (data.categoryId) {
           setSelectedCategoryForDomain(data.categoryId);
           
-          const availableSubCategories = getSubCategoriesForCategoryHelper(data.categoryId);
-          
-          if (availableSubCategories.length > 0) {
-            const defaultSubCategory = data.subCategoryId || availableSubCategories[0].id;
-            setSelectedSubCategoryForDomain(defaultSubCategory);
-          } else if (data.subCategoryId) {
-            setSelectedSubCategoryForDomain(data.subCategoryId);
-          }
+          // Only set the sub-category if the domain actually has one
+          setSelectedSubCategoryForDomain(data.subCategoryId || null);
         }
         
         let availableDomains = [];
-        const effectiveSubCategoryId = data.subCategoryId || 
-          (data.categoryId ? getSubCategoriesForCategoryHelper(data.categoryId)[0]?.id : null);
+        // Only use the actual subCategoryId if it exists, don't fall back to first available
+        const actualSubCategoryId = data.subCategoryId;
           
-        if (data.categoryId && effectiveSubCategoryId) {
-          availableDomains = getDomainsForCategoryAndSubCategoryHelper(data.categoryId, effectiveSubCategoryId);
+        if (data.categoryId && actualSubCategoryId) {
+          availableDomains = getDomainsForCategoryAndSubCategoryHelper(data.categoryId, actualSubCategoryId);
         } else if (data.categoryId) {
           availableDomains = domainsWithCategorizationData?.data?.domains
             ?.filter((item: any) => item.category._id === data.categoryId)
@@ -156,7 +150,7 @@ const DomainTable: React.FC = () => {
         
         form.setFieldsValue({
           category: data.categoryId || undefined,
-          subcategory: effectiveSubCategoryId || undefined,
+          subcategory: actualSubCategoryId || undefined, // Only set if actually exists
           domain: defaultDomain?._id || data.id || undefined,
           name: defaultDomain?.name || nameValue,
           description: defaultDomain?.description || data.description || ''
@@ -356,12 +350,23 @@ const DomainTable: React.FC = () => {
     }
   };
 
-  const handleSubCategorySelectionForDomain = (subCategoryId: string) => {
+  const handleSubCategorySelectionForDomain = (subCategoryId: string | null) => {
     setSelectedSubCategoryForDomain(subCategoryId);
     
     if (!selectedCategoryForDomain) return;
     
-    const availableDomains = getDomainsForCategoryAndSubCategoryHelper(selectedCategoryForDomain, subCategoryId);
+    let availableDomains = [];
+    
+    if (subCategoryId) {
+      // Show domains for specific sub-category
+      availableDomains = getDomainsForCategoryAndSubCategoryHelper(selectedCategoryForDomain, subCategoryId);
+    } else {
+      // Show all domains for the category when sub-category is cleared
+      availableDomains = domainsWithCategorizationData?.data?.domains
+        ?.filter((item: any) => item.category._id === selectedCategoryForDomain)
+        ?.flatMap((item: any) => item.domains) || [];
+    }
+    
     const firstDomain = availableDomains.length > 0 ? availableDomains[0] : null;
     
     form.setFieldsValue({
