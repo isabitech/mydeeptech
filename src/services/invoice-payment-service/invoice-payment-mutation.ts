@@ -9,6 +9,7 @@ const useBulkInvoicePayment = () =>  {
     const mutation = useMutation({
         mutationKey: [REACT_QUERY_KEYS.MUTATION.bulkInvoicePayment],
         mutationFn: async (payload: BulkTransferPayloadSchema) => {
+            console.log("Initiating bulk invoice payment with payload:", payload);
             const response = await axiosInstance.post(endpoints.payments.initializeBulkTransferWithInvoices, payload);
             return response.data;
         },

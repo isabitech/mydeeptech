@@ -20,6 +20,8 @@ const BulkTransferPayloadSchema = z.object({
     notes: z.string().min(1),
     batch_name: z.string().min(1),
   }),
+
+  exchangeRate: z.number().optional(),
 });
 
 type BulkTransferPayloadSchema = z.infer<typeof BulkTransferPayloadSchema>;

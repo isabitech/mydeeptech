@@ -38,7 +38,7 @@ const CreateSubDomainCategorySchema = z.object({
 const CreateDomainSchema = z.object({
   name: NameField("Domain name is required"),
   domain_category: NameField("Domain category is required"),
-  domain_sub_category: z.string().min(1, "Domain sub-category must not be empty").optional().nullable(),
+  domain_sub_category:z.string().optional().nullable(),
   description: OptionalDescription,
 });
 
@@ -123,14 +123,21 @@ const CreateDomainCategoryResponseSchema = z.object({
     data: z.object({ category: DomainCategorySchema }),
   });
 
+// const GetDomainCategoriesResponseSchema = z.object({
+//     success: z.boolean(),
+//     message: z.string(),
+//     data: z.object({ 
+//       categories: z.array(DomainCategorySchema),
+//       pagination: PaginationSchema.optional()
+//     }),
+//   }).strip();
+
 const GetDomainCategoriesResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({ 
-      categories: z.array(DomainCategorySchema),
-      pagination: PaginationSchema.optional()
-    }),
-  });
+  success: z.boolean(),
+  message: z.string(),
+  data: z.array(DomainCategorySchema),
+}).strip();
+
 
 /* Domain Sub-Category */
 const DomainSubCategorySchema = z.object({
@@ -167,6 +174,21 @@ const UpdateDomainSchema = z.object({
   description: OptionalDescription,
 });
 
+const UpdateDomainSubCategorySchema = z.object({
+  id: IdField,
+  domain_category: IdField,
+  name: NameField("Domain name is required"),
+  description: OptionalDescription,
+});
+
+const UpdateDomainDomainSchema = z.object({
+  id: IdField,
+  category: IdField,
+  subCategory: IdField,
+  name: NameField("Domain name is required"),
+  description: OptionalDescription,
+});
+
 const DeleteDomainSchema = UpdateDomainSchema.pick({ id: true });
 
 /* ──────────────────────────────
@@ -175,6 +197,8 @@ const DeleteDomainSchema = UpdateDomainSchema.pick({ id: true });
 
 type CreateDomainCategorySchema = z.infer<typeof CreateDomainCategorySchema>;
 type UpdateDomainSchema = z.infer<typeof UpdateDomainSchema>;
+type UpdateDomainSubCategorySchema = z.infer<typeof UpdateDomainSubCategorySchema>;
+type UpdateDomainDomainSchema = z.infer<typeof UpdateDomainDomainSchema>;
 type DeleteDomainSchema = z.infer<typeof DeleteDomainSchema>;
 type DomainCategorySchema = z.infer<typeof DomainCategorySchema>;
 type CreateDomainCategoryResponseSchema = z.infer<typeof CreateDomainCategoryResponseSchema>;
@@ -205,4 +229,6 @@ export {
   CreateDomainSchemaResponse,
   GetDomainsResponseSchema,
   PaginationSchema,
+  UpdateDomainSubCategorySchema,
+  UpdateDomainDomainSchema,
 };

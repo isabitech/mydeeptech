@@ -29,6 +29,7 @@ export interface UpdateProfilePayload {
     otherLanguages?: string[];
     englishFluencyLevel?: string;
   };
+    domains?: string[];
 }
 
 export interface UpdateProfileResponse {

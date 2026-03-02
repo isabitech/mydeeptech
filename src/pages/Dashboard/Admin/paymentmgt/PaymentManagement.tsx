@@ -23,9 +23,11 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
-import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
 import Unpaid from "./Unpaid";
 import Paid from "./Paid";
+import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
+import exchangeRateQueryService from "../../../../services/exchange-rate/exchange-rate-query";
+import { formatMoney } from '../../../../utils/moneyFormat';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -41,6 +43,34 @@ const PaymentManagement = () => {
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
+
+  // Country select and exchange rate state
+  const [selectedCountry, setSelectedCountry] = useState<string>('Nigeria');
+  // Adjustment input state
+  const [exchangeRateAdjustment, setExchangeRateAdjustment] = useState<number>(0);
+  // Use custom hook for exchange rate
+  const {
+    exchangeRateData,
+    isExchangeRateLoading,
+    isExchangeRateError,
+    exchangeRateError
+  } = exchangeRateQueryService.useGetExchangeRateByCountry(selectedCountry);
+
+  // Country to currency code mapping
+  const countryCurrencyMap: Record<string, string> = {
+    Nigeria: 'NGN',
+    Ghana: 'GHS',
+    Kenya: 'KES',
+    SouthAfrica: 'ZAR',
+    USA: 'USD',
+    UK: 'GBP',
+    Eurozone: 'EUR',
+    India: 'INR',
+    Canada: 'CAD',
+    Australia: 'AUD',
+  };
+
+  // ...existing code...
 
   const {
     getAllInvoices,
@@ -95,6 +125,10 @@ const PaymentManagement = () => {
 
   const handleAuthorizePayment = async () => {
     if (!selectedInvoice) return;
+    if (exchangeRateAdjustment === 0) {
+      message.warning('Adjustment value is zero. Invoice will not be sent.');
+      return;
+    }
 
     setIsAuthorizing(true);
     try {
@@ -209,6 +243,56 @@ const PaymentManagement = () => {
         </Row>
       </Card>
 
+
+      {/* Country & Exchange Rate Section */}
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={16} align="middle">
+          <Col span={24}>
+            <Space size={24} align="center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 500 }}>
+                Exchange Rate ({countryCurrencyMap[selectedCountry]} / USD):
+                {isExchangeRateLoading ? (
+                  <span style={{ marginLeft: 8 }}>Loading...</span>
+                ) : exchangeRateData && exchangeRateData.rate !== undefined ? (
+                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#1890ff' }}>
+                    {formatMoney(
+                      Math.max(0, exchangeRateData.rate - exchangeRateAdjustment),
+                      countryCurrencyMap[selectedCountry],
+                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                    )}
+                  </span>
+                ) : (
+                  <span style={{ marginLeft: 8, color: 'red' }}>N/A</span>
+                )}
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col gap-1.5">
+                  <span style={{ fontWeight: 500 }}>Select Country:</span>
+                  <Select
+                  style={{ width: 180 }}
+                  value={selectedCountry}
+                  onChange={setSelectedCountry}
+                  options={Object.keys(countryCurrencyMap).map(country => ({ label: country, value: country }))}
+                />
+                </div>
+               <div className="flex flex-col gap-1.5">
+                  <span style={{ fontWeight: 500, marginLeft: 16 }}>Adjust Price:</span>
+                   <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={exchangeRateAdjustment}
+                    onChange={e => setExchangeRateAdjustment(Number(e.target.value))}
+                    placeholder="Adjustment"
+                    style={{ width: 120, marginLeft: 16, padding: '4px 8px', borderRadius: 4, border: '1px solid #ccc' }}
+                />
+               </div>
+              </div>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
       {/* Tabs for Paid/Unpaid */}
       <Card>
         <Tabs
@@ -230,6 +314,7 @@ const PaymentManagement = () => {
                   onBulkAuthorizePayment={bulkAuthorizePayment}
                   onGeneratePaystackCSV={(invoiceIds) => generatePaystackCSV(invoiceIds)}
                   onGenerateMpesaCSV={(invoiceIds) => generateMpesaCSV(invoiceIds)}
+                  exchangeRateToSend={exchangeRateData?.rate !== undefined ? Number(Math.max(0, exchangeRateData.rate - exchangeRateAdjustment).toFixed(2)) : undefined}
                 />
               ),
             },
