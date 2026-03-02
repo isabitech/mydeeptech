@@ -43,6 +43,7 @@ interface UnpaidProps {
   onGeneratePaystackCSV?: (invoiceIds?: string[] | null) => Promise<any>;
   onGenerateMpesaCSV?: (invoiceIds?: string[] | null) => Promise<any>;
   exchangeRateToSend?: number;
+  exchangeRateError?: boolean;
 }
 
 const Unpaid: React.FC<UnpaidProps> = ({
@@ -57,6 +58,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   onGeneratePaystackCSV,
   onGenerateMpesaCSV,
   exchangeRateToSend,
+  exchangeRateError,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);

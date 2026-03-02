@@ -122,8 +122,7 @@ const InvoiceManagement: React.FC = () => {
   const getPaymentStatusColor = (status: PaymentStatus): string => {
     const colors = {
       paid: "green",
-      unpaid: "orange",
-      overdue: "red",
+      unpaid: "orange",      payment_initiated: "blue",      overdue: "red",
       cancelled: "default",
       disputed: "purple",
     };
