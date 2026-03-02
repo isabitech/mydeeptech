@@ -9,17 +9,17 @@ const SendInvoice = () => {
   const { invoices } = useInvoiceContext();
 
   const invoice = (location.state?.invoice as Invoice | undefined) ||
-    invoices.find(inv => String(inv.id) === id);
+    invoices.find(inv => inv._id === id);
 
   const [subject, setSubject] = useState(
-    invoice ? `Invoice ${invoice.number} for Your Company` : ""
+    invoice ? `Invoice for ${invoice.name}` : ""
   );
 
   const [message, setMessage] = useState(
     invoice
-      ? `Hi ${invoice.client},
-
-Please find your invoice ${invoice.number} attached.
+      ? `Hi ${invoice.name},
+      
+Please find your invoice for ${invoice.duration} service attached.
 
 Let us know if you have any questions.
 
@@ -37,13 +37,7 @@ Best regards.`
     );
   }
 
-  const subtotal = invoice.items.reduce(
-    (acc, item) => acc + item.quantity * item.rate,
-    0
-  );
-
-  const tax = subtotal * 0.16;
-  const total = subtotal + tax;
+  const total = invoice?.amount || 0;
 
   const handleSend = async () => {
     try {
@@ -55,7 +49,7 @@ Best regards.`
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          invoiceId: invoice.id,
+          invoiceId: invoice._id,
           subject,
           message,
         }),
@@ -160,31 +154,23 @@ Best regards.`
           <div className="space-y-4 text-sm text-gray-700">
 
             <div className="flex justify-between">
-              <span className="text-gray-500">Invoice #</span>
-              <span>{invoice.number}</span>
+              <span className="text-gray-500">Partner</span>
+              <span>{invoice.name}</span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-500">Client</span>
-              <span>{invoice.client}</span>
+              <span className="text-gray-500">Duration</span>
+              <span>{invoice.duration}</span>
             </div>
 
-            <div className="border-t pt-4 space-y-2">
-              {invoice.items.map((item, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>
-                    {item.description} × {item.quantity}
-                  </span>
-                  <span>
-                    €{(item.rate * item.quantity).toFixed(2)}
-                  </span>
-                </div>
-              ))}
+            <div className="flex justify-between">
+              <span className="text-gray-500">Due Date</span>
+              <span>{new Date(invoice.due_date).toLocaleDateString()}</span>
             </div>
 
             <div className="border-t pt-4 flex justify-between font-semibold text-base">
-              <span>Total</span>
-              <span>€{total.toFixed(2)}</span>
+              <span>Total Amount</span>
+              <span>€{total.toLocaleString()}</span>
             </div>
           </div>
         </div>

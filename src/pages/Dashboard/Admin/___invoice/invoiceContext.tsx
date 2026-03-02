@@ -1,32 +1,26 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-
-export interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-}
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { apiGet, apiPost, apiPatch, apiDelete } from "../../../../service/apiUtils";
+import { App } from "antd";
 
 export interface Invoice {
-  id: number;
-  number: string;
-  client: string;
+  _id?: string;
+  name: string;
+  amount: number;
   email: string;
-  location: string;
-
-  // Needed for InvoicePage table
-  amount: string;
-  status: string;
-  created: string;
-  due: string;
-
-  // Needed for Edit/New page
-  dueDate: string;
-  items: InvoiceItem[];
+  duration: string;
+  due_date: string;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
 interface InvoiceContextType {
   invoices: Invoice[];
-  addInvoice: (invoice: Invoice) => void;
-  updateInvoice: (invoice: Invoice) => void;
+  loading: boolean;
+  fetchInvoices: () => Promise<void>;
+  addInvoice: (invoice: Omit<Invoice, "_id">) => Promise<void>;
+  updateInvoice: (id: string, invoice: Partial<Invoice>) => Promise<void>;
+  deleteInvoice: (id: string) => Promise<void>;
 }
 
 const InvoiceContext = createContext<InvoiceContextType | null>(null);
@@ -38,20 +32,112 @@ export const useInvoiceContext = () => {
 };
 
 export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
+  const { message } = App.useApp();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const addInvoice = (invoice: Invoice) => {
-    setInvoices((prev) => [...prev, invoice]);
+  const fetchInvoices = async () => {
+    setLoading(true);
+    try {
+      const response = await apiGet("/partner-invoice");
+      if (response.success) {
+        // Sort by createdAt descending (newest first)
+        const sortedInvoices = [...response.data].sort((a, b) =>
+          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        setInvoices(sortedInvoices);
+      }
+    } catch (error) {
+      console.error("Failed to fetch invoices:", error);
+      message.error("Failed to load invoices");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateInvoice = (updatedInvoice: Invoice) => {
-    setInvoices((prev) =>
-      prev.map((inv) => (String(inv.id) === String(updatedInvoice.id) ? updatedInvoice : inv))
-    );
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const addInvoice = async (invoice: Omit<Invoice, "_id">) => {
+    try {
+      // Strip restricted fields
+      const { ...invoiceData } = invoice as any;
+      delete (invoiceData as any)._id;
+      delete (invoiceData as any).__v;
+      delete (invoiceData as any).createdAt;
+      delete (invoiceData as any).updatedAt;
+
+      // Ensure due_date is in YYYY-MM-DD format
+      if (invoiceData.due_date) {
+        invoiceData.due_date = invoiceData.due_date.split("T")[0];
+      }
+
+      const response = await apiPost("/partner-invoice", invoiceData);
+      if (response.success) {
+        setInvoices((prev) => [...prev, response.data]);
+        message.success("Invoice created successfully");
+      }
+    } catch (error: any) {
+      console.error("Failed to add invoice:", error);
+      message.error(error.message || "Failed to create invoice");
+      throw error;
+    }
+  };
+
+  const updateInvoice = async (id: string, updatedInvoice: Partial<Invoice>) => {
+    try {
+      // Strip restricted fields
+      const { ...invoiceData } = updatedInvoice;
+      delete invoiceData._id;
+      delete (invoiceData as any).__v;
+      delete invoiceData.createdAt;
+      delete invoiceData.updatedAt;
+
+      // Ensure due_date is in YYYY-MM-DD format
+      if (invoiceData.due_date) {
+        invoiceData.due_date = invoiceData.due_date.split("T")[0];
+      }
+
+      const response = await apiPatch(`/partner-invoice/${id}`, invoiceData);
+      if (response.success) {
+        setInvoices((prev) =>
+          prev.map((inv) => (inv._id === id ? response.data : inv))
+        );
+        message.success("Invoice updated successfully");
+      }
+    } catch (error: any) {
+      console.error("Failed to update invoice:", error);
+      message.error(error.message || "Failed to update invoice");
+      throw error;
+    }
+  };
+
+  const deleteInvoice = async (id: string) => {
+    try {
+      const response = await apiDelete(`/partner-invoice/${id}`);
+      if (response.success) {
+        setInvoices((prev) => prev.filter((inv) => inv._id !== id));
+        message.success("Invoice deleted successfully");
+      }
+    } catch (error: any) {
+      console.error("Failed to delete invoice:", error);
+      message.error(error.message || "Failed to delete invoice");
+      throw error;
+    }
   };
 
   return (
-    <InvoiceContext.Provider value={{ invoices, addInvoice, updateInvoice }}>
+    <InvoiceContext.Provider
+      value={{
+        invoices,
+        loading,
+        fetchInvoices,
+        addInvoice,
+        updateInvoice,
+        deleteInvoice,
+      }}
+    >
       {children}
     </InvoiceContext.Provider>
   );

@@ -8,56 +8,32 @@ import { useInvoiceContext, Invoice } from "./invoiceContext";
 
 const InvoicePage = () => {
   const navigate = useNavigate();
-  const { invoices } = useInvoiceContext(); // ✅ use context only
+  const { invoices, loading, deleteInvoice } = useInvoiceContext();
 
   const columns: ColumnsType<Invoice> = [
     {
-      title: "Invoice #",
-      dataIndex: "number",
-      key: "number",
-      sorter: (a, b) => a.number.localeCompare(b.number),
+      title: "Partner Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Client",
-      dataIndex: "client",
-      key: "client",
-      sorter: (a, b) => a.client.localeCompare(b.client),
-    },
-    {
-      title: "Amount",
+      title: "Amount (EUR)",
       dataIndex: "amount",
       key: "amount",
+      render: (amount: number) => `€${amount.toLocaleString()}`,
+      sorter: (a, b) => a.amount - b.amount,
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => {
-        const color =
-          status === "Paid"
-            ? "green"
-            : status === "Sent"
-            ? "blue"
-            : "orange";
-
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
-      },
-      filters: [
-        { text: "Paid", value: "Paid" },
-        { text: "Pending", value: "Pending" },
-        { text: "Sent", value: "Sent" },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: "Created",
-      dataIndex: "created",
-      key: "created",
+      title: "Duration",
+      dataIndex: "duration",
+      key: "duration",
     },
     {
       title: "Due Date",
-      dataIndex: "due",
-      key: "due",
+      dataIndex: "due_date",
+      key: "due_date",
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
       title: "Actions",
@@ -67,24 +43,25 @@ const InvoicePage = () => {
           {
             key: "view",
             label: "View invoice",
-            onClick: () =>
-              navigate(`/admin/invoice-page/${invoice.id}`),
+            onClick: () => navigate(`/admin/invoice-page/${invoice._id}`),
           },
           {
             key: "email",
             label: "Send as Email",
-            onClick: () =>
-              navigate(`/admin/invoice-page/${invoice.id}/send`),
+            onClick: () => navigate(`/admin/invoice-page/${invoice._id}/send`),
           },
           {
             key: "edit",
             label: "Edit",
-            onClick: () =>
-              navigate(`/admin/invoice-page/${invoice.id}/edit`),
+            onClick: () => navigate(`/admin/invoice-page/${invoice._id}/edit`),
           },
           {
             key: "delete",
             label: <span className="text-red-500">Delete</span>,
+            danger: true,
+            onClick: () => {
+              if (invoice._id) deleteInvoice(invoice._id);
+            },
           },
         ];
 
@@ -109,8 +86,7 @@ const InvoicePage = () => {
     },
   ];
 
-  const paidCount = invoices.filter((i) => i.status === "Paid").length;
-  const pendingCount = invoices.filter((i) => i.status === "Pending").length;
+  const totalAmount = invoices.reduce((acc, inv) => acc + inv.amount, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
@@ -127,13 +103,13 @@ const InvoicePage = () => {
           </div>
 
           <Button
-  type="primary"
-  icon={<FileTextOutlined />}
-  className="bg-black border-black font-bold px-6 py-5"
-  onClick={() => navigate("/admin/invoice-page/new")}
->
-  New Invoice
-</Button>
+            type="primary"
+            icon={<FileTextOutlined />}
+            className="bg-black border-black font-bold px-6 py-5"
+            onClick={() => navigate("/admin/invoice-page/new")}
+          >
+            New Invoice
+          </Button>
         </div>
 
         {/* Stats */}
@@ -148,16 +124,16 @@ const InvoicePage = () => {
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Paid</div>
+            <div className="text-gray-500 text-sm mb-2">Total Value</div>
             <div className="text-2xl font-bold text-green-600">
-              {paidCount}
+              €{totalAmount.toLocaleString()}
             </div>
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Pending</div>
-            <div className="text-2xl font-bold text-orange-600">
-              {pendingCount}
+            <div className="text-gray-500 text-sm mb-2">Average Invoice</div>
+            <div className="text-2xl font-bold text-blue-600">
+              €{invoices.length ? (totalAmount / invoices.length).toLocaleString(undefined, { maximumFractionDigits: 0 }) : 0}
             </div>
           </div>
         </div>
@@ -167,7 +143,8 @@ const InvoicePage = () => {
           <Table <Invoice>
             columns={columns}
             dataSource={invoices}
-            rowKey="id"
+            rowKey="_id"
+            loading={loading}
             pagination={{ pageSize: 10 }}
           />
         </div>

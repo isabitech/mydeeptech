@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
-import { useInvoiceContext, Invoice, InvoiceItem } from "./invoiceContext";
+import { useInvoiceContext, Invoice } from "./invoiceContext";
 
 const EditInvoice = () => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ const EditInvoice = () => {
   const { invoices, updateInvoice } = useInvoiceContext();
 
   const initialInvoice = (location.state?.invoice as Invoice | undefined) ||
-    invoices.find(inv => String(inv.id) === id);
+    invoices.find(inv => inv._id === id);
 
   if (!initialInvoice) {
     return (
@@ -19,42 +19,15 @@ const EditInvoice = () => {
     );
   }
 
-  const [formData, setFormData] = useState<Invoice>(initialInvoice);
-  const [taxRate, setTaxRate] = useState(16);
-
-  const handleItemChange = (
-    index: number,
-    field: keyof InvoiceItem,
-    value: string
-  ) => {
-    const updated = [...formData.items];
-    updated[index] = {
-      ...updated[index],
-      [field]: field === "description" ? value : Number(value),
-    };
-
-    setFormData({ ...formData, items: updated });
-  };
-
-  const handleAddItem = () => {
-    setFormData({
-      ...formData,
-      items: [...formData.items, { description: "", quantity: 1, rate: 0 }],
-    });
-  };
-
-  const handleDeleteItem = (index: number) => {
-    const updated = formData.items.filter((_, i) => i !== index);
-    setFormData({ ...formData, items: updated });
-  };
-
-  const subtotal = formData.items.reduce(
-    (acc, item) => acc + item.quantity * item.rate,
-    0
-  );
-
-  const tax = subtotal * (taxRate / 100);
-  const total = subtotal + tax;
+  const [formData, setFormData] = useState<Invoice>(() => {
+    if (initialInvoice.due_date) {
+      return {
+        ...initialInvoice,
+        due_date: initialInvoice.due_date.split("T")[0],
+      };
+    }
+    return initialInvoice;
+  });
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IE", {
@@ -62,15 +35,14 @@ const EditInvoice = () => {
       currency: "EUR",
     }).format(value);
 
-  const handleUpdate = () => {
-    const updatedInvoice: Invoice = {
-      ...formData,
-      amount: total.toFixed(2),
-      due: formData.dueDate,
-    };
-
-    updateInvoice(updatedInvoice);
-    navigate(-1);
+  const handleUpdate = async () => {
+    if (!id) return;
+    try {
+      await updateInvoice(id, formData);
+      navigate(-1);
+    } catch (err) {
+      // Error handled in context
+    }
   };
 
   return (
@@ -79,158 +51,102 @@ const EditInvoice = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-[gilroy-bold]">
-          Edit Invoice {formData.number}
+          Edit Invoice for {formData.name}
         </h1>
         <p className="text-gray-500 text-sm">
           Update the invoice details below
         </p>
       </div>
 
-      {/* Client Info */}
+      {/* Partner Info */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
         <h2 className="text-lg font-medium text-gray-700">
-          Client Information
+          Partner Information
         </h2>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <input
-            value={formData.number}
-            onChange={(e) =>
-              setFormData({ ...formData, number: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Invoice Number"
-          />
-
-          <input
-            type="date"
-            value={formData.dueDate}
-            onChange={(e) =>
-              setFormData({ ...formData, dueDate: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-
-          <input
-            value={formData.client}
-            onChange={(e) =>
-              setFormData({ ...formData, client: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Client Name"
-          />
-
-          <input
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="Client Email"
-          />
-        </div>
-
-        <textarea
-          value={formData.location}
-          onChange={(e) =>
-            setFormData({ ...formData, location: e.target.value })
-          }
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder="Client Address"
-        />
-      </div>
-
-      {/* Invoice Items */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-700">
-            Invoice Items
-          </h2>
-
-          <button
-            onClick={handleAddItem}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-          >
-            + Add Item
-          </button>
-        </div>
-
-        {formData.items.map((item, index) => (
-          <div key={index} className="grid grid-cols-5 gap-4 items-center">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-600">Partner Name</label>
             <input
-              value={item.description}
+              value={formData.name}
               onChange={(e) =>
-                handleItemChange(index, "description", e.target.value)
+                setFormData({ ...formData, name: e.target.value })
               }
-              className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
-              placeholder="Description"
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Partner Name"
             />
-
-            <input
-              type="number"
-              value={item.quantity}
-              onChange={(e) =>
-                handleItemChange(index, "quantity", e.target.value)
-              }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
-            />
-
-            <input
-              type="number"
-              value={item.rate}
-              onChange={(e) =>
-                handleItemChange(index, "rate", e.target.value)
-              }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
-            />
-
-            <div className="flex items-center gap-3">
-              <div className="border border-gray-300 rounded-lg px-3 py-2 w-full text-right bg-gray-50">
-                {formatCurrency(item.quantity * item.rate)}
-              </div>
-
-              <button
-                onClick={() => handleDeleteItem(index)}
-                className="text-red-500 hover:text-red-700"
-              >
-                🗑
-              </button>
-            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Summary */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-4">
-        <h2 className="text-lg font-medium text-gray-700">
-          Invoice Summary
-        </h2>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-600">Email Address</label>
+            <input
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Partner Email"
+            />
+          </div>
 
-        <div className="flex justify-between items-center">
-          <span>Tax (%)</span>
-          <input
-            type="number"
-            value={taxRate}
-            onChange={(e) => setTaxRate(Number(e.target.value))}
-            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-right focus:ring-2 focus:ring-primary"
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-600">Amount (EUR)</label>
+            <input
+              type="number"
+              value={formData.amount}
+              onChange={(e) =>
+                setFormData({ ...formData, amount: Number(e.target.value) })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-600">Due Date</label>
+            <input
+              type="date"
+              value={formData.due_date}
+              onChange={(e) =>
+                setFormData({ ...formData, due_date: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm text-gray-600">Duration</label>
+            <select
+              value={formData.duration}
+              onChange={(e) =>
+                setFormData({ ...formData, duration: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="One-time">One-time</option>
+              <option value="Weekly">Weekly</option>
+              <option value="Bi-weekly">Bi-weekly</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Half-yearly">Half-yearly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-gray-600">Description</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            placeholder="Description"
+            rows={4}
           />
         </div>
-
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{formatCurrency(subtotal)}</span>
-        </div>
-
-        <div className="flex justify-between">
-          <span>Tax ({taxRate}%)</span>
-          <span>{formatCurrency(tax)}</span>
-        </div>
-
-        <div className="flex justify-between text-lg font-semibold border-t pt-4">
-          <span>Total</span>
-          <span>{formatCurrency(total)}</span>
-        </div>
       </div>
+
 
       {/* Buttons */}
       <div className="flex justify-end gap-4">
