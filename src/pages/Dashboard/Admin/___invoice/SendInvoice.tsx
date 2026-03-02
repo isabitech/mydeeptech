@@ -1,31 +1,18 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useState } from "react";
+import { Invoice, useInvoiceContext } from "./invoiceContext";
 
-interface InvoiceItem {
-  description: string;
-  quantity: number;
-  rate: number;
-}
-
-interface Invoice {
-  id: string;
-  number: string;
-  client: string;
-  email: string;
-  location: string;
-  status: string;
-  issueDate: string;
-  dueDate: string;
-  items: InvoiceItem[];
-}
 const SendInvoice = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams<{ id: string }>();
+  const { invoices } = useInvoiceContext();
 
-  const invoice = location.state?.invoice as Invoice | undefined;
+  const invoice = (location.state?.invoice as Invoice | undefined) ||
+    invoices.find(inv => String(inv.id) === id);
 
   const [subject, setSubject] = useState(
-    invoice ? `Invoice ${invoice.number} for Your Company` : "",
+    invoice ? `Invoice ${invoice.number} for Your Company` : ""
   );
 
   const [message, setMessage] = useState(
@@ -37,26 +24,27 @@ Please find your invoice ${invoice.number} attached.
 Let us know if you have any questions.
 
 Best regards.`
-      : "",
+      : ""
   );
 
   const [loading, setLoading] = useState(false);
 
   if (!invoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center p-8">
         <p className="text-gray-500">Invoice data not found.</p>
       </div>
     );
   }
+
   const subtotal = invoice.items.reduce(
     (acc, item) => acc + item.quantity * item.rate,
-    0,
+    0
   );
 
   const tax = subtotal * 0.16;
-
   const total = subtotal + tax;
+
   const handleSend = async () => {
     try {
       setLoading(true);
@@ -83,84 +71,94 @@ Best regards.`
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl grid grid-cols-1 lg:grid-cols-2">
-        {/* LEFT SIDE - EMAIL FORM */}
-        <div className="p-10 border-r">
-          <button
-            onClick={() => navigate(-1)}
-            className="mb-6 text-sm text-gray-500 hover:underline"
-          >
-            ← Back
-          </button>
+    <div className="h-full flex flex-col gap-8 font-[gilroy-regular] p-4 md:p-8">
 
-          <h1 className="text-xl font-medium text-gray-800 mb-8">
-            Send Invoice
-          </h1>
+      {/* Page Header */}
+      <div>
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-3 text-sm text-gray-500 hover:underline"
+        >
+          ← Back
+        </button>
 
-          <div className="space-y-6">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
-                Recipient Email
-              </label>
-              <input
-                type="email"
-                value={invoice.email}
-                disabled
-                className="w-full border rounded-lg px-4 py-2 text-sm font-light text-gray-500 bg-gray-50"
-              />
-            </div>
+        <h1 className="text-2xl font-[gilroy-bold]">
+          Send Invoice
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Review and send this invoice to the client
+        </p>
+      </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
-                Subject
-              </label>
-              <input
-                type="text"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 text-sm font-light text-gray-700 focus:outline-none focus:ring-1 focus:ring-black"
-              />
-            </div>
+      {/* Main Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
-                Message
-              </label>
-              <textarea
-                rows={6}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="w-full border rounded-lg px-4 py-2 text-sm font-light text-gray-700 focus:outline-none focus:ring-1 focus:ring-black"
-              />
-            </div>
+        {/* LEFT - EMAIL FORM */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
 
-            <div className="flex justify-end gap-4 pt-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="px-5 py-2 border rounded-lg text-sm"
-              >
-                Cancel
-              </button>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Recipient Email
+            </label>
+            <input
+              type="email"
+              value={invoice.email}
+              disabled
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-500 bg-gray-50"
+            />
+          </div>
 
-              <button
-                onClick={handleSend}
-                disabled={loading}
-                className="px-5 py-2 bg-black text-white rounded-lg text-sm disabled:opacity-50"
-              >
-                {loading ? "Sending..." : "Send Invoice"}
-              </button>
-            </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Subject
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-2">
+              Message
+            </label>
+            <textarea
+              rows={6}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="px-6 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={handleSend}
+              disabled={loading}
+              className="px-6 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50 hover:opacity-90"
+            >
+              {loading ? "Sending..." : "Send Invoice"}
+            </button>
           </div>
         </div>
 
-        {/* RIGHT SIDE - INVOICE PREVIEW */}
-        <div className="p-10 bg-gray-50">
-          <h2 className="text-xs font-medium text-gray-500 mb-4">
+        {/* RIGHT - INVOICE PREVIEW */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
+
+          <h2 className="text-sm font-medium text-gray-600">
             Invoice Preview
           </h2>
 
-          <div className="bg-white border rounded-xl p-6 shadow-sm text-sm font-light text-gray-700 space-y-6">
+          <div className="space-y-4 text-sm text-gray-700">
+
             <div className="flex justify-between">
               <span className="text-gray-500">Invoice #</span>
               <span>{invoice.number}</span>
@@ -177,12 +175,14 @@ Best regards.`
                   <span>
                     {item.description} × {item.quantity}
                   </span>
-                  <span>${(item.rate * item.quantity).toFixed(2)}</span>
+                  <span>
+                    €{(item.rate * item.quantity).toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t pt-4 flex justify-between font-medium">
+            <div className="border-t pt-4 flex justify-between font-semibold text-base">
               <span>Total</span>
               <span>€{total.toFixed(2)}</span>
             </div>

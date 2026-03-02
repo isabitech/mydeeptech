@@ -1,25 +1,19 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInvoiceContext, Invoice, InvoiceItem } from "./invoiceContext";
 
-const EditInvoice = () => {
+const NewInvoice = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { id } = useParams<{ id: string }>();
-  const { invoices, updateInvoice } = useInvoiceContext();
+  const { addInvoice } = useInvoiceContext();
 
-  const initialInvoice = (location.state?.invoice as Invoice | undefined) ||
-    invoices.find(inv => String(inv.id) === id);
-
-  if (!initialInvoice) {
-    return (
-      <div className="h-full flex items-center justify-center p-8">
-        Invoice not found
-      </div>
-    );
-  }
-
-  const [formData, setFormData] = useState<Invoice>(initialInvoice);
+  const [formData, setFormData] = useState<Omit<Invoice, "id" | "amount" | "status" | "created" | "due">>({
+    number: "",
+    client: "",
+    email: "",
+    location: "",
+    dueDate: "",
+    items: [],
+  });
   const [taxRate, setTaxRate] = useState(16);
 
   const handleItemChange = (
@@ -62,27 +56,15 @@ const EditInvoice = () => {
       currency: "EUR",
     }).format(value);
 
-  const handleUpdate = () => {
-    const updatedInvoice: Invoice = {
-      ...formData,
-      amount: total.toFixed(2),
-      due: formData.dueDate,
-    };
-
-    updateInvoice(updatedInvoice);
-    navigate(-1);
-  };
-
   return (
     <div className="h-full flex flex-col gap-8 font-[gilroy-regular] p-4 md:p-8">
-
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-[gilroy-bold]">
-          Edit Invoice {formData.number}
+          Create New Invoice
         </h1>
         <p className="text-gray-500 text-sm">
-          Update the invoice details below
+          Fill in the invoice details below
         </p>
       </div>
 
@@ -98,7 +80,7 @@ const EditInvoice = () => {
             onChange={(e) =>
               setFormData({ ...formData, number: e.target.value })
             }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="border border-gray-300 rounded-lg px-4 py-2"
             placeholder="Invoice Number"
           />
 
@@ -108,7 +90,7 @@ const EditInvoice = () => {
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="border border-gray-300 rounded-lg px-4 py-2"
           />
 
           <input
@@ -116,7 +98,7 @@ const EditInvoice = () => {
             onChange={(e) =>
               setFormData({ ...formData, client: e.target.value })
             }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="border border-gray-300 rounded-lg px-4 py-2"
             placeholder="Client Name"
           />
 
@@ -125,7 +107,7 @@ const EditInvoice = () => {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="border border-gray-300 rounded-lg px-4 py-2"
             placeholder="Client Email"
           />
         </div>
@@ -135,7 +117,7 @@ const EditInvoice = () => {
           onChange={(e) =>
             setFormData({ ...formData, location: e.target.value })
           }
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full border border-gray-300 rounded-lg px-4 py-2"
           placeholder="Client Address"
         />
       </div>
@@ -149,7 +131,7 @@ const EditInvoice = () => {
 
           <button
             onClick={handleAddItem}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
           >
             + Add Item
           </button>
@@ -162,7 +144,7 @@ const EditInvoice = () => {
               onChange={(e) =>
                 handleItemChange(index, "description", e.target.value)
               }
-              className="col-span-2 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
+              className="col-span-2 border border-gray-300 rounded-lg px-3 py-2"
               placeholder="Description"
             />
 
@@ -172,7 +154,7 @@ const EditInvoice = () => {
               onChange={(e) =>
                 handleItemChange(index, "quantity", e.target.value)
               }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
+              className="border border-gray-300 rounded-lg px-3 py-2"
             />
 
             <input
@@ -181,7 +163,7 @@ const EditInvoice = () => {
               onChange={(e) =>
                 handleItemChange(index, "rate", e.target.value)
               }
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary"
+              className="border border-gray-300 rounded-lg px-3 py-2"
             />
 
             <div className="flex items-center gap-3">
@@ -191,7 +173,7 @@ const EditInvoice = () => {
 
               <button
                 onClick={() => handleDeleteItem(index)}
-                className="text-red-500 hover:text-red-700"
+                className="text-red-500"
               >
                 🗑
               </button>
@@ -212,7 +194,7 @@ const EditInvoice = () => {
             type="number"
             value={taxRate}
             onChange={(e) => setTaxRate(Number(e.target.value))}
-            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-right focus:ring-2 focus:ring-primary"
+            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-right"
           />
         </div>
 
@@ -236,20 +218,31 @@ const EditInvoice = () => {
       <div className="flex justify-end gap-4">
         <button
           onClick={() => navigate(-1)}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="px-6 py-2 border border-gray-300 rounded-lg"
         >
           Cancel
         </button>
-
         <button
-          onClick={handleUpdate}
-          className="px-6 py-2 bg-primary text-white rounded-lg hover:opacity-90"
+          onClick={() => {
+            const newInvoice: Invoice = {
+              ...formData,
+              id: Date.now(),
+              amount: total.toFixed(2), // Store total as amount for the table
+              status: "Pending",
+              created: new Date().toLocaleDateString(),
+              due: formData.dueDate,
+            };
+
+            addInvoice(newInvoice);
+            navigate("/admin/invoice-page");
+          }}
+          className="px-6 py-2 bg-primary text-white rounded-lg"
         >
-          Update Invoice
+          Create Invoice
         </button>
       </div>
     </div>
   );
 };
 
-export default EditInvoice;
+export default NewInvoice;

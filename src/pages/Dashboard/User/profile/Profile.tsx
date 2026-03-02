@@ -22,41 +22,24 @@ import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
 } from "../../../../utils/countryTimezoneMapping";
-import {  endpoints } from "../../../../store/api/endpoints";
+import { endpoints } from "../../../../store/api/endpoints";
 import { useUploadFile } from "../../../../hooks/useUploadFile";
+import { DOMAIN_OPTIONS } from "../../../../components/MultiStageSignUpForm";
 import domainQueryService from "../../../../services/domain-service/domain-query";
+import domainMutation from "../../../../services/domain-service/domain-mutation";
 
 type Domain = {
   _id: string;
   name: string;
 };
 
-type DomainSubCategory = {
-  _id: string;
-  name: string;
-  slug: string;
-  domain_category: {
-    _id: string;
-    name: string;
-    slug: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  deleted_at: string | null;
-  __v?: number;
-};
-  
 const Profile = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [step, setStep] = useState(1);
 
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-  const [availableDomains, setAvailableDomains] = useState<Domain[]>([]);
-  const [selectedDomains, setSelectedDomains] = useState([]);
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [form] = Form.useForm();
 
   const { userInfo, setUserInfo } = useUserContext();
@@ -67,20 +50,58 @@ const Profile = () => {
     error: updateError,
   } = useUpdateProfile();
   const { uploadFile, uploading } = useUploadFile();
- 
-                // domainhooks
+  const assignDomainsMutation = domainMutation.useAssignDomainsToUser();
+  const removeDomainMutation = domainMutation.useRemoveDomainFromUser();
 
-  const { data: categoriesData, isLoading: categoriesLoading } =
-  domainQueryService.useDomainCategories();
-const categories = categoriesData?.data || []; 
-const { data: domainsData, refetch: refetchDomains } = domainQueryService.useDomainsWithCategorization();
-// Fetch subcategories
-const { data: subCategoriesData } = domainQueryService.useDomainSubCategories();
-const subCategoryList: DomainSubCategory[] = subCategoriesData?.data?.domainSubCategories || [];
+  // Fetch domains with high limit to get all available options
+  const {
+    data: domainsData,
+    isLoading: domainsLoading,
+    error: domainsError,
+  } = domainQueryService.useDomainsWithCategorization({ limit: 1000 });
+  const allDomains =
+    domainsData?.data?.domains?.flatMap((cat: any) => cat.domains) || [];
 
-const hasSubCategories = selectedCategory
-  ? subCategoryList.some((sub) => sub.domain_category._id === selectedCategory)
-  : false;
+  const mergedDomains = [
+    ...allDomains,
+    ...DOMAIN_OPTIONS.filter(
+      (name) => !allDomains.some((d: any) => d.name === name)
+    ).map((name) => ({ _id: name, name })),
+  ];
+
+  // Fetch user's assigned domains
+  const { data: userDomainsData, refetch: refetchUserDomains } =
+    domainQueryService.useUserDomains();
+
+  // Normalize string domains to ObjectIds if possible
+  const normalizeDomainId = (d: any) => {
+    let rawId = typeof d === "string" ? d : d?.domain_child?._id || d?.domain?._id || d?._id;
+    if (typeof rawId === "string" && !/^[0-9a-fA-F]{24}$/.test(rawId)) {
+      const match = mergedDomains.find((m: any) => m.name === rawId);
+      if (match) return match._id;
+    }
+    return rawId;
+  };
+
+  const assignedDomainsMap = new Map();
+  const backendUserDomains = userDomainsData?.data || [];
+  const profileUserDomains = profile?.domains || [];
+
+  [...profileUserDomains, ...backendUserDomains].forEach((d: any) => {
+    const normId = normalizeDomainId(d);
+    if (normId && !assignedDomainsMap.has(normId)) {
+      assignedDomainsMap.set(normId, d);
+    }
+  });
+
+  const assignedDomains = Array.from(assignedDomainsMap.values());
+
+  useEffect(() => {
+    console.log("Domains data from backend:", domainsData);
+    console.log("Domains error:", domainsError);
+    console.log("User domains data:", userDomainsData);
+  }, [domainsData, domainsError, userDomainsData]);
+
   // Watch form values at the top level to avoid conditional hooks
   const paymentCurrency = Form.useWatch("paymentCurrency", form);
   const paymentMethod = Form.useWatch("paymentMethod", form);
@@ -109,27 +130,11 @@ const hasSubCategories = selectedCategory
     }
   }, [userInfo?.id, setUserInfo]);
 
-  
   // Fetch profile when userId becomes available
   const [hasFetchedProfile, setHasFetchedProfile] = useState(false);
 
-useEffect(() => {
-  if (step === 3 && domainsData) {
-    const source = selectedSubCategory || selectedCategory;
-
-    // Filter domains by selected category/subcategory
-    const filteredDomains = domainsData.filter(
-      (domain: any) =>
-        domain.categoryId === selectedCategory || domain.subCategoryId === selectedSubCategory
-    );
-
-    setAvailableDomains(filteredDomains);
-  }
-}, [step, selectedCategory, selectedSubCategory, domainsData]);
-
-
   useEffect(() => {
-    if (!userId || hasFetchedProfile) return; 
+    if (!userId || hasFetchedProfile) return;
 
     const fetchProfile = async () => {
       try {
@@ -154,23 +159,20 @@ useEffect(() => {
             educationField: result.data?.professionalBackground?.educationField,
             yearsOfExperience:
               result.data?.professionalBackground?.yearsOfExperience,
-            // Skills & Experience
             annotationSkills: result.data?.annotationSkills || [],
             toolExperience: result.data?.toolExperience || [],
             primaryLanguage: result.data?.languageProficiency?.primaryLanguage,
             englishFluencyLevel:
               result.data?.languageProficiency?.englishFluencyLevel,
-            // Attachments
             resumeUrl: result.data?.attachments?.resumeUrl,
             idDocumentUrl: result.data?.attachments?.idDocumentUrl,
           });
 
-          // Check if country is already selected and set state accordingly
           if (result.data?.personalInfo?.country) {
             setHasSelectedCountry(true);
           }
 
-          setHasFetchedProfile(true); // ✅ Mark as fetched
+          setHasFetchedProfile(true);
         } else {
           console.log("❌ Profile fetch error:", result.error);
         }
@@ -182,15 +184,7 @@ useEffect(() => {
     fetchProfile();
   }, [userId, hasFetchedProfile, getProfile]);
 
-
-  const selectedCategoryData = categories.find(
-  cat => cat._id === selectedCategory
-);
-
-
-
   const handleCountryChange = (countryValue: string) => {
-    // Auto-update timezone based on selected country
     const timezone = getTimezoneByCountry(countryValue);
     if (timezone) {
       const timezoneDisplayName = getTimezoneDisplayName(timezone);
@@ -200,47 +194,68 @@ useEffect(() => {
     }
   };
 
+  const handleSaveDomains = async () => {
+    try {
+      const deselectedAssignmentIds: string[] = [];
+      const initiallySelectedIds: string[] = [];
 
-    const handleEditToggle = () => {
-  setIsEditing(true);
-  setStep(1);
-  setSelectedCategory(null);
-  setSelectedSubCategory(null);
-};
+      assignedDomains.forEach((d: any) => {
+        const normId = normalizeDomainId(d);
+        if (normId && /^[0-9a-fA-F]{24}$/.test(normId)) {
+          initiallySelectedIds.push(normId);
 
+          let assignmentId = null;
+          if (typeof d === "object" && d._id && d._id !== normId) {
+            assignmentId = d._id;
+          }
 
-const handleSaveDomains = async () => {
-  if (!profile || !profile.domains || !userId) return; // safety check
+          if (
+            !selectedDomains.includes(normId) &&
+            assignmentId &&
+            /^[0-9a-fA-F]{24}$/.test(assignmentId)
+          ) {
+            deselectedAssignmentIds.push(assignmentId);
+          }
+        }
+      });
 
-  // Existing domain IDs
-  const existingIds = profile.domains.map((d: any) =>
-    typeof d === "string" ? d : d._id
-  );
+      const promises = [];
 
-  // Merge with selected domains from the form
-  const merged = [...new Set([...existingIds, ...selectedDomains])];
+      for (const id of deselectedAssignmentIds) {
+        promises.push(removeDomainMutation.mutateAsync(id));
+      }
 
-  try {
-    // Update profile with merged domains
-    await updateProfile(userId, {
-      ...profile,
-      domains: merged,
-    });
+      // Filter out any IDs that are not valid 24-character hex ObjectIds
+      const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
 
-    // Close editing UI
-    setIsEditing(false);
-    setStep(1);
+      const newDomainIds = selectedDomains.filter(
+        (id) => !initiallySelectedIds.includes(id) && isValidObjectId(id),
+      );
 
-    // Refresh profile data after save
-    await getProfile(userId);
-  } catch (error) {
-    console.error("Failed to save domains:", error);
-    notification.error({
-      message: "Error",
-      description: "Failed to save domains. Please try again.",
-    });
-  }
-};
+      if (newDomainIds.length > 0) {
+        promises.push(assignDomainsMutation.mutateAsync(newDomainIds));
+      }
+
+      if (promises.length === 0) {
+        return;
+      }
+
+      await Promise.all(promises);
+
+      notification.success({
+        message: "Domains Updated",
+        description: "Your domain preferences have been successfully updated.",
+      });
+
+      refetchUserDomains();
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "Failed to update domains.",
+      });
+      throw error;
+    }
+  };
 
   const handleSave = async () => {
     try {
@@ -253,7 +268,7 @@ const handleSaveDomains = async () => {
         });
         return;
       }
-      // Prepare the payload according to the API structure
+
       const payload = {
         personalInfo: {
           country: values.country,
@@ -277,24 +292,29 @@ const handleSaveDomains = async () => {
             ? Number(values.yearsOfExperience)
             : undefined,
         },
-        // Skills & Experience
         annotationSkills: values.annotationSkills || [],
         toolExperience: values.toolExperience || [],
         languageProficiency: {
           primaryLanguage: values.primaryLanguage,
           englishFluencyLevel: values.englishFluencyLevel,
         },
-        // Attachments
         attachments: {
           resumeUrl: values.resumeUrl,
           idDocumentUrl: values.idDocumentUrl,
         },
       };
 
-      // Remove undefined values to avoid sending empty data
-      const cleanPayload = JSON.parse(JSON.stringify(payload));
 
+      // Always send the filtered string domains, even if empty, so that if a user removes 
+      // their last string domain, it correctly updates the backend to an empty array.
+
+      const cleanPayload = JSON.parse(JSON.stringify(payload));
       const result = await updateProfile(userId, cleanPayload);
+
+      // Also save domains if any were selected
+      if (selectedDomains.length > 0) {
+        await handleSaveDomains();
+      }
 
       if (result.success) {
         notification.success({
@@ -303,10 +323,8 @@ const handleSaveDomains = async () => {
         });
         setIsEditing(false);
 
-        // Refresh the profile data to update UI with latest changes
         const refreshResult = await getProfile(userId);
         if (refreshResult.success) {
-          // Update form with fresh data
           form.setFieldsValue({
             fullName: refreshResult.data?.personalInfo?.fullName,
             phoneNumber: refreshResult.data?.personalInfo?.phoneNumber,
@@ -348,15 +366,12 @@ const handleSaveDomains = async () => {
     } catch (error: any) {
       console.error("❌ Validation or update error:", error);
 
-      // Check if it's a validation error or API error
       if (error.errorFields && error.errorFields.length > 0) {
-        // Form validation error
         notification.error({
           message: "Validation Error",
           description: "Please check all required fields and try again.",
         });
       } else {
-        // API error or other errors
         const errorMessage =
           error.response?.data?.message ||
           error.message ||
@@ -372,7 +387,6 @@ const handleSaveDomains = async () => {
   };
 
   const handleCancel = () => {
-    // Reset form to original values
     if (profile) {
       form.setFieldsValue({
         fullName: profile?.personalInfo?.fullName,
@@ -390,12 +404,10 @@ const handleSaveDomains = async () => {
         paymentCurrency: profile?.paymentInfo?.paymentCurrency,
         educationField: profile?.professionalBackground?.educationField,
         yearsOfExperience: profile?.professionalBackground?.yearsOfExperience,
-        // Skills & Experience
         annotationSkills: profile?.annotationSkills || [],
         toolExperience: profile?.toolExperience || [],
         primaryLanguage: profile?.languageProficiency?.primaryLanguage,
         englishFluencyLevel: profile?.languageProficiency?.englishFluencyLevel,
-        // Attachments
         resumeUrl: profile?.attachments?.resumeUrl,
         idDocumentUrl: profile?.attachments?.idDocumentUrl,
       });
@@ -420,7 +432,6 @@ const handleSaveDomains = async () => {
           message: "Resume uploaded",
           description: "Resume uploaded successfully.",
         });
-        // Refresh profile to update UI
         if (userId) {
           await getProfile(userId);
         }
@@ -459,7 +470,6 @@ const handleSaveDomains = async () => {
           message: "ID document uploaded",
           description: "ID document uploaded successfully.",
         });
-        // Refresh profile to update UI
         if (userId) {
           await getProfile(userId);
         }
@@ -476,22 +486,6 @@ const handleSaveDomains = async () => {
       });
     }
     return false;
-  };
-  const handleDeleteDomain = async (domainId: string) => {
-    if (!profile?.domains || !userId) return;
-
-    const updated = profile.domains.filter((d) => d !== domainId);
-
-    try {
-      await updateProfile(userId, {
-        ...(profile as any),
-        domains: updated,
-      });
-
-      await getProfile(userId);
-    } catch (error) {
-      console.error("Failed to delete domain:", error);
-    }
   };
 
   const handleViewDocument = (url: string, type: string) => {
@@ -539,16 +533,10 @@ const handleSaveDomains = async () => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       <Header title="Profile" />
       <div className="mt-10 w-[90%] m-auto">
-        {/* <div className="font-bold justify-start mb-6">
-          <p className="text-lg">Profile</p>
-          <hr />
-        </div> */}
         <div className="w-full">
           <Card title="Personal Information" className="mb-6">
-            {/* Profile Image and Actions */}
             <div className="lg:col-span-1">
               <div className="flex flex-col items-center gap-4">
-                {/* Profile Avatar */}
                 <div className="flex h-[6rem] w-[6rem] cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                   <span className="font-[gilroy-medium] font-bold text-2xl">
                     {profile?.personalInfo?.fullName
@@ -574,7 +562,6 @@ const handleSaveDomains = async () => {
                   </p>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex flex-col gap-2 w-full max-w-xs">
                   {isEditing ? (
                     <div className="flex gap-2">
@@ -594,21 +581,20 @@ const handleSaveDomains = async () => {
                     </div>
                   ) : (
                     <Button
-  className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
-  onClick={() => {
-    setIsEditing(true);
-    setStep(1);
-    setSelectedCategory(null);
-    setSelectedSubCategory(null);
-    setSelectedDomains([]);
-  }}
->
-  Edit Profile
-</Button>
+                      className="!bg-blue-500 !text-[#FFFFFF] rounded-lg !font-[gilroy-regular] w-full"
+                      onClick={() => {
+                        setIsEditing(true);
+                        if (assignedDomains) {
+                          const existingIds = assignedDomains.map((d: any) => normalizeDomainId(d));
+                          setSelectedDomains([...new Set(existingIds)]);
+                        }
+                      }}
+                    >
+                      Edit Profile
+                    </Button>
                   )}
                 </div>
 
-                {/* System Information (Read-only) */}
                 <Card
                   title="System Information"
                   className="w-full mt-4"
@@ -666,10 +652,8 @@ const handleSaveDomains = async () => {
 
         <Form form={form} layout="vertical">
           <div className="grid grid-cols-12 lg:grid-cols-12 gap-8">
-            {/* Personal Information Section */}
             <div className="col-span-12">
               <Card title="Personal Information" className="mb-6">
-                {/* Read-only fields */}
                 <Form.Item label="Email">
                   <Input
                     disabled
@@ -678,7 +662,7 @@ const handleSaveDomains = async () => {
                   />
                 </Form.Item>
 
-                <Form.Item label="Annotator Status ">
+                <Form.Item label="Annotator Status">
                   <div className="flex gap-2">
                     <Tag color={profile?.isEmailVerified ? "green" : "red"}>
                       {profile?.isEmailVerified
@@ -707,69 +691,55 @@ const handleSaveDomains = async () => {
                 </Form.Item>
 
                 <Form.Item label="Domains">
-                  <div className="flex flex-wrap gap-2">
-                    {profile?.domains?.map((domain) => (
-                      <Tag
-                        key={domain}
-                        closable={isEditing}
-                        onClose={() => handleDeleteDomain(domain)}
-                        color="blue"
-                      >
-                        {domain}
-                        {}
-                      </Tag>
-                    ))}
-                  </div>
+                  {!isEditing ? (
+                    <div className="flex flex-wrap gap-2">
+                      {assignedDomains?.map((domainParam: any) => {
+                        const dId = normalizeDomainId(domainParam);
+
+                        const domainObj = mergedDomains.find(
+                          (d: any) => d._id === dId || d.name === dId,
+                        );
+
+                        let domainName = dId;
+                        if (domainObj?.name) {
+                          domainName = domainObj.name;
+                        } else if (typeof domainParam === "object" && domainParam.name) {
+                          domainName = domainParam.name;
+                        } else if (typeof domainParam === "string") {
+                          domainName = domainParam;
+                        }
+
+                        return (
+                          <Tag key={dId} closable={false} color="blue">
+                            {domainName}
+                          </Tag>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <Select
+                      mode="multiple"
+                      showSearch
+                      placeholder="Search and select domains"
+                      value={selectedDomains}
+                      onChange={(values: string[]) =>
+                        setSelectedDomains(values)
+                      }
+                      options={mergedDomains.map((domain: any) => ({
+                        label: domain.name,
+                        value: domain._id,
+                      }))}
+                      filterOption={(input, option) =>
+                        (option?.label as string)
+                          ?.toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      style={{ width: "100%" }}
+                    />
+                  )}
                 </Form.Item>
 
-                {isEditing && step === 1 && (
-  <>
-    <Select
-      placeholder="Select Category"
-      onChange={(value) => setSelectedCategory(value)}
-      options={categories.map(cat => ({
-        label: cat.name,
-        value: cat._id
-      }))}
-    />
-
-    <Button onClick={() => setStep(2)}>Next</Button>
-  </>
-)}
-{isEditing && step === 2 && hasSubCategories && (
-  <>
-    <Select
-      placeholder="Select Subcategory"
-      onChange={(value) => setSelectedSubCategory(value)}
-      options={subCategoryList
-        .filter((sub) => sub.domain_category._id === selectedCategory)
-        .map((sub) => ({
-          label: sub.name,
-          value: sub._id,
-        }))}
-    />
-  </>
-)}
-{isEditing && step === 3 && (
-  <>
-    <Select
-      mode="multiple"
-      placeholder="Select Domains"
-      onChange={(values) => setSelectedDomains(values)}
-      options={availableDomains.map(domain => ({
-        label: domain.name,
-        value: domain._id
-      }))}
-    />
-
-    <Button type="primary" onClick={handleSaveDomains}>
-      Save
-    </Button>
-  </>
-)}
-
                 <div className="grid lg:grid-cols-2 gap-x-5">
-                  {/* Read-only personal fields */}
                   <Form.Item label="Full Name" name="fullName">
                     <Input
                       disabled={true}
@@ -785,7 +755,7 @@ const handleSaveDomains = async () => {
                       placeholder="System managed"
                     />
                   </Form.Item>
-                  {/* Editable personal fields */}
+
                   <Form.Item label="Country" name="country">
                     <Select
                       disabled={!isEditing}
@@ -845,7 +815,6 @@ const handleSaveDomains = async () => {
               </Card>
             </div>
 
-            {/* Payment Information Section */}
             <div className="col-span-12">
               <Card title="Payment Information" className="mb-6">
                 <Form.Item label="Payment Currency" name="paymentCurrency">
@@ -853,8 +822,7 @@ const handleSaveDomains = async () => {
                     disabled={!isEditing}
                     className="!font-[gilroy-regular]"
                     placeholder="Select payment currency first"
-                    onChange={(value) => {
-                      // Reset payment fields when currency changes
+                    onChange={() => {
                       form.setFieldsValue({
                         accountName: "",
                         accountNumber: "",
@@ -877,10 +845,8 @@ const handleSaveDomains = async () => {
                   />
                 </Form.Item>
 
-                {/* Currency-specific forms */}
                 {paymentCurrency && (
                   <>
-                    {/* Nigerian Naira (NGN) Form */}
                     {paymentCurrency === "NGN" && (
                       <>
                         <Form.Item
@@ -938,7 +904,6 @@ const handleSaveDomains = async () => {
                             placeholder="Select your bank"
                             showSearch
                             onChange={(value, option) => {
-                              // Auto-set bank code for Nigerian banks
                               if (
                                 option &&
                                 typeof option === "object" &&
@@ -1029,7 +994,6 @@ const handleSaveDomains = async () => {
                           />
                         </Form.Item>
 
-                        {/* Hidden field to store bank code for Paystack integration */}
                         <Form.Item name="bankCode" style={{ display: "none" }}>
                           <Input type="hidden" />
                         </Form.Item>
@@ -1050,7 +1014,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* US Dollar (USD) Form */}
                     {paymentCurrency === "USD" && (
                       <>
                         <Form.Item
@@ -1066,8 +1029,7 @@ const handleSaveDomains = async () => {
                           <Select
                             disabled={!isEditing}
                             placeholder="Select payment method"
-                            onChange={(value) => {
-                              // Reset fields when method changes
+                            onChange={() => {
                               form.setFieldsValue({
                                 accountName: "",
                                 accountNumber: "",
@@ -1266,7 +1228,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* Euro (EUR) Form */}
                     {paymentCurrency === "EUR" && (
                       <>
                         <Form.Item
@@ -1285,7 +1246,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter full name as on account"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="IBAN"
                           name="accountNumber"
@@ -1304,7 +1264,6 @@ const handleSaveDomains = async () => {
                             style={{ textTransform: "uppercase" }}
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="Bank Name"
                           name="bankName"
@@ -1321,7 +1280,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter bank name"
                           />
                         </Form.Item>
-
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
                             disabled={!isEditing}
@@ -1339,7 +1297,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* British Pound (GBP) Form */}
                     {paymentCurrency === "GBP" && (
                       <>
                         <Form.Item
@@ -1358,7 +1315,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter full name as on account"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="Sort Code"
                           name="accountNumber"
@@ -1379,7 +1335,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter sort code (e.g., 12-34-56)"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="Bank Name"
                           name="bankName"
@@ -1396,7 +1351,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter bank name"
                           />
                         </Form.Item>
-
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
                             disabled={!isEditing}
@@ -1414,7 +1368,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* South African Rand (ZAR) Form */}
                     {paymentCurrency === "ZAR" && (
                       <>
                         <Form.Item
@@ -1433,7 +1386,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter account holder name"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="Account Number"
                           name="accountNumber"
@@ -1450,7 +1402,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter account number"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="Bank Name"
                           name="bankName"
@@ -1486,7 +1437,6 @@ const handleSaveDomains = async () => {
                             ]}
                           />
                         </Form.Item>
-
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
                             disabled={!isEditing}
@@ -1503,7 +1453,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* Kenyan Shilling (KES) Form - MPESA */}
                     {paymentCurrency === "KES" && (
                       <>
                         <Form.Item
@@ -1522,7 +1471,6 @@ const handleSaveDomains = async () => {
                             placeholder="Enter your full name as registered on MPESA"
                           />
                         </Form.Item>
-
                         <Form.Item
                           label="MPESA Phone Number"
                           name="accountNumber"
@@ -1545,7 +1493,6 @@ const handleSaveDomains = async () => {
                             maxLength={12}
                           />
                         </Form.Item>
-
                         <Form.Item label="Payment Service" name="bankName">
                           <Select
                             disabled={true}
@@ -1554,7 +1501,6 @@ const handleSaveDomains = async () => {
                             options={[{ value: "MPESA", label: "MPESA" }]}
                           />
                         </Form.Item>
-
                         <Form.Item label="Payment Method" name="paymentMethod">
                           <Select
                             disabled={true}
@@ -1564,7 +1510,6 @@ const handleSaveDomains = async () => {
                             ]}
                           />
                         </Form.Item>
-
                         <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
                           <div className="flex">
                             <div className="flex-shrink-0">
@@ -1604,7 +1549,6 @@ const handleSaveDomains = async () => {
                       </>
                     )}
 
-                    {/* Generic form for other currencies */}
                     {!["NGN", "USD", "EUR", "GBP", "ZAR", "KES"].includes(
                       paymentCurrency,
                     ) &&
@@ -1626,7 +1570,6 @@ const handleSaveDomains = async () => {
                               placeholder="Enter account holder name"
                             />
                           </Form.Item>
-
                           <Form.Item
                             label="Account Details"
                             name="accountNumber"
@@ -1643,7 +1586,6 @@ const handleSaveDomains = async () => {
                               placeholder="Enter account number or relevant details"
                             />
                           </Form.Item>
-
                           <Form.Item
                             label="Bank/Institution Name"
                             name="bankName"
@@ -1660,7 +1602,6 @@ const handleSaveDomains = async () => {
                               placeholder="Enter bank or financial institution name"
                             />
                           </Form.Item>
-
                           <Form.Item
                             label="Payment Method"
                             name="paymentMethod"
@@ -1689,12 +1630,10 @@ const handleSaveDomains = async () => {
 
                 <Divider />
 
-                {/* Professional Background */}
                 <div className="mt-6">
                   <h4 className="font-semibold mb-4">
                     Professional Background
                   </h4>
-
                   <Form.Item label="Education Field" name="educationField">
                     <Input
                       disabled={!isEditing}
@@ -1702,7 +1641,6 @@ const handleSaveDomains = async () => {
                       placeholder="Enter your education field"
                     />
                   </Form.Item>
-
                   <Form.Item
                     label="Years of Experience"
                     name="yearsOfExperience"
@@ -1714,7 +1652,6 @@ const handleSaveDomains = async () => {
                       placeholder="Enter years of experience"
                     />
                   </Form.Item>
-
                   <Form.Item label="Primary Language" name="primaryLanguage">
                     <Select
                       disabled={!isEditing}
@@ -1727,7 +1664,6 @@ const handleSaveDomains = async () => {
                       ]}
                     />
                   </Form.Item>
-
                   <Form.Item
                     label="English Fluency Level"
                     name="englishFluencyLevel"
@@ -1747,8 +1683,6 @@ const handleSaveDomains = async () => {
                 </div>
               </Card>
             </div>
-
-            {/* Skills & Experience Section */}
 
             <div className="col-span-12">
               <Card title="Skills & Experience" className="mb-6">

@@ -16,6 +16,7 @@ export interface UpdateProfilePayload {
     accountName?: string;
     accountNumber?: string;
     bankName?: string;
+    bankCode?: string;
     paymentMethod?: string;
     paymentCurrency?: string;
   };
@@ -29,7 +30,13 @@ export interface UpdateProfilePayload {
     otherLanguages?: string[];
     englishFluencyLevel?: string;
   };
-    domains?: string[];
+  annotationSkills?: string[];
+  toolExperience?: string[];
+  attachments?: {
+    resumeUrl?: string;
+    idDocumentUrl?: string;
+  };
+  domains?: string[];
 }
 
 export interface UpdateProfileResponse {
@@ -49,7 +56,7 @@ export const useUpdateProfile = () => {
   const [error, setError] = useState<string | null>(null);
 
   const updateProfile = async (
-    userId: string, 
+    userId: string,
     payload: UpdateProfilePayload
   ): Promise<UpdateProfileResult> => {
     setLoading(true);

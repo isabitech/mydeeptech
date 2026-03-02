@@ -1,6 +1,6 @@
 export const baseURL = import.meta.env.VITE_API_URL;
 
-export const endpoints = {
+export const  endpoints = {
   auth: {
     login: "/auth/login",
     signup: "/auth/signup",

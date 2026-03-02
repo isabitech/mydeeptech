@@ -133,10 +133,13 @@ const CreateDomainCategoryResponseSchema = z.object({
 //   }).strip();
 
 const GetDomainCategoriesResponseSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-  data: z.array(DomainCategorySchema),
-}).strip();
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({ 
+      categories: z.array(DomainCategorySchema),
+      pagination: PaginationSchema.optional()
+    }),
+  });
 
 
 /* Domain Sub-Category */
