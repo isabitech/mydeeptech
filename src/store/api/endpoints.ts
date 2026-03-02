@@ -1,6 +1,6 @@
 export const baseURL = import.meta.env.VITE_API_URL;
 
-export const endpoints = {
+export const  endpoints = {
   auth: {
     login: "/auth/login",
     signup: "/auth/signup",
@@ -188,5 +188,12 @@ export const endpoints = {
     getDomains: "/new-domain",
     updateDomain: "/new-domain",
     deleteDomain: "/new-domain",
+  },
+  payments: {
+    initializeBulkTransfer: "/payments/bulk-transfer",
+    verifyTransfer: "/payments/verify-transfer",
+    checkUserBankDetails: "/payments/check-bank-details",
+    testRecipientCreation: "/payments/test-recipient-creation",
+    initializeBulkTransferWithInvoices: "/payments/bulk-transfer-with-invoices"
   }
 };
