@@ -25,6 +25,8 @@ const QUERY = {
     getDomains: "getDomains",
     getDomainsWithCategorization: "getDomainsWithCategorization", 
     getAllInvoices: "getAllInvoices",
+
+    getExchangeRateByCountry: "getExchangeRateByCountry",
 } as const;
 
 const REACT_QUERY_KEYS = {

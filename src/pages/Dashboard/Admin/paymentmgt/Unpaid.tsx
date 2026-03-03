@@ -9,17 +9,14 @@ import {
   message,
   Popconfirm,
   notification,
-  Divider,
   Checkbox,
 } from "antd";
 import {
   DollarCircleOutlined,
   EyeOutlined,
-  EditOutlined,
   MailOutlined,
   DeleteOutlined,
   DownloadOutlined,
-  FileTextOutlined,
   ThunderboltOutlined,
   FileExcelOutlined,
   CreditCardOutlined,
@@ -45,6 +42,8 @@ interface UnpaidProps {
   onBulkAuthorizePayment?: () => Promise<any>;
   onGeneratePaystackCSV?: (invoiceIds?: string[] | null) => Promise<any>;
   onGenerateMpesaCSV?: (invoiceIds?: string[] | null) => Promise<any>;
+  exchangeRateToSend?: number;
+  exchangeRateError?: boolean;
 }
 
 const Unpaid: React.FC<UnpaidProps> = ({
@@ -58,6 +57,8 @@ const Unpaid: React.FC<UnpaidProps> = ({
   onBulkAuthorizePayment,
   onGeneratePaystackCSV,
   onGenerateMpesaCSV,
+  exchangeRateToSend,
+  exchangeRateError,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -65,7 +66,6 @@ const Unpaid: React.FC<UnpaidProps> = ({
   const [isBulkAuthorizing, setIsBulkAuthorizing] = useState(false);
   const [isGeneratingCSV, setIsGeneratingCSV] = useState(false);
   const [isGeneratingMpesaCSV, setIsGeneratingMpesaCSV] = useState(false);
-  const [isLoggingSelected, setIsLoggingSelected] = useState(false);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
   const [showNGNOnly, setShowNGNOnly] = useState(false);
   const [showKESOnly, setShowKESOnly] = useState(false);
@@ -130,7 +130,6 @@ const Unpaid: React.FC<UnpaidProps> = ({
         format: 'a4',
         quality: 2,
       });
-      
       message.success({ content: 'Receipt downloaded successfully!', key: 'receipt' });
     } catch (error) {
       console.error('Error generating receipt:', error);
@@ -457,10 +456,15 @@ const Unpaid: React.FC<UnpaidProps> = ({
       return;
     }
 
-    paymentWithInvoiceMutation.bulkPaymentMutate(validatedPayload.data, {
-      onSuccess: () => {
-        message.success('Bulk payment mutation successful. Invoices will be processed shortly.');
+    paymentWithInvoiceMutation.bulkPaymentMutate(
+      {
+        ...validatedPayload.data,
+        exchangeRate: exchangeRateToSend,
       },
+      {
+        onSuccess: () => {
+          message.success('Bulk payment mutation successful. Invoices will be processed shortly.');
+        },
       onError: (error) =>  message.error(ErrorMessage(error)),
     })
 
@@ -724,7 +728,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   ];
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <div className="flex justify-between items-center flex-wrap gap-5">
         <p>
           Unpaid Invoices - {dayjs().format("MMMM DD, YYYY")}
@@ -776,9 +780,10 @@ const Unpaid: React.FC<UnpaidProps> = ({
             icon={<CreditCardOutlined />}
             onClick={handleLogSelectedInvoices}
             loading={paymentWithInvoiceMutation.bulkPaymentMutationIsPending}
-            disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending}
+            disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending || (typeof exchangeRateToSend === 'number' && exchangeRateToSend === 0)}
             className="border-gray-500 text-gray-600 hover:border-gray-600 hover:text-gray-700"
-          > Pay Invoice{`${selectedInvoiceIds.length > 1 ? 's' : ''}`} ({selectedInvoiceIds.length})
+          >
+            {`Pay Invoice${selectedInvoiceIds.length > 1 ? 's' : ''}`} ({selectedInvoiceIds.length})
           </Button>
         </div>
       </div>

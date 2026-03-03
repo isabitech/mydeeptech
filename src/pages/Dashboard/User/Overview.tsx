@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Spin, Alert, Button, Card } from 'antd';
 import { ReloadOutlined, TeamOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import Header from './Header';
 import { useDTUserDashboard } from '../../../hooks/User/useDTUserDashboard';
 import FinancialSummaryCards from '../../../components/Dashboard/User/FinancialSummaryCards';
 import ApplicationStatisticsCharts from '../../../components/Dashboard/User/ApplicationStatisticsCharts';
@@ -40,9 +39,7 @@ const Overview = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="DTUser Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
           <Spin size="large" />
           <span className="ml-3">Loading your dashboard...</span>
@@ -53,9 +50,7 @@ const Overview = () => {
 
   if (error) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="DTUser Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
           <Alert
             message="Dashboard Error"
@@ -81,9 +76,9 @@ const Overview = () => {
 
   if (!data) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="Your Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
+        {/* <Header title="Your Dashboard" />
+        <hr /> */}
         <div className="flex justify-center items-center h-64">
           <Alert
             message="No Data Available"
@@ -109,19 +104,12 @@ const Overview = () => {
 
   return (
     <motion.div 
-      className="h-full flex flex-col gap-4 font-[gilroy-regular]"
+      className="h-full grid gap-5 lg:gap-10 font-[gilroy-regular]"
       initial="hidden"
       animate="visible"
       variants={pageVariants}
     >
-      {/* Header */}
-      <motion.div variants={sectionVariants}>
-        <Header title={`Welcome back, ${data?.userProfile?.fullName}`} />
-      </motion.div>
-
-      {/* Content */}
-      <div className="h-full flex flex-col gap-6 overflow-auto px-2">
-              {/* Slack Community Invite Section */}
+      {/* Slack Community Invite Section */}
       <motion.div variants={sectionVariants}>
         <Card className="bg-gradient-to-r from-purple-500 to-blue-600 border-0 rounded-xl overflow-hidden">
           <div className="relative">
@@ -131,7 +119,7 @@ const Overview = () => {
                 <TeamOutlined />
               </div>
             </div>
-            
+
          <SlackNotification />
             
             {/* Additional Info */}
@@ -154,6 +142,7 @@ const Overview = () => {
           </div>
         </Card>
       </motion.div>
+<<<<<<< HEAD
         {/* Profile Completion & Welcome Section */}
         {/* <motion.div variants={sectionVariants}>
           <Row gutter={[24, 24]}>
@@ -216,6 +205,11 @@ const Overview = () => {
           </Row>
         </motion.div> */}
 
+=======
+
+      {/* Content */}
+      <div className="flex flex-col gap-3 lg:gap-6 px-2 max-w-full flex-1">
+>>>>>>> dev
         {/* Financial Summary */}
         <motion.div variants={sectionVariants}>
           <FinancialSummaryCards 

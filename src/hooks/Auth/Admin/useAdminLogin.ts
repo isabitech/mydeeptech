@@ -3,6 +3,7 @@ import { endpoints } from "../../../store/api/endpoints";
 import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { storeUserInfoToStorage, storeTokenToStorage } from "../../../helpers";
+import { useUserInfoActions } from "../../../store/useAuthStore";
 
 interface AdminLoginPayload {
   email: string;
@@ -48,6 +49,8 @@ export const useAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const { setUserInfo } = useUserInfoActions();
 
   const login = async (payload: AdminLoginPayload): Promise<AdminLoginResult> => {
     setLoading(true);
@@ -100,6 +103,7 @@ export const useAdminLogin = () => {
         };
 
         await storeUserInfoToStorage(adminInfo);
+        setUserInfo(adminInfo);
         await storeTokenToStorage(data.token);
 
         notification.success({
