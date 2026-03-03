@@ -13,7 +13,7 @@ type FormState = {
   consent: "yes" | "no" | "";
 };
 
-const DOMAIN_OPTIONS = [
+export const DOMAIN_OPTIONS = [
   "Arts and Entertainment",
   "Computing",
   "Consumer Electronics",
@@ -61,7 +61,7 @@ interface MultiStageSignUpFormProps {
 export default function MultiStageSignUpForm({ onSuccess, className = "" }: MultiStageSignUpFormProps) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
-  
+
   const [currentStage, setCurrentStage] = useState(1);
   const [form, setForm] = useState<FormState>({
     fullName: "",
@@ -73,7 +73,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
-  
+
   const { signUp, loading, error } = useSignUpApi();
 
   const stages = [
@@ -98,7 +98,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
 
   const validateStage = (stage: number) => {
     const e: Record<string, string> = {};
-    
+
     if (stage === 1) {
       if (!form.fullName.trim()) e.fullName = "Full name is required";
       if (!form.phone.trim()) e.phone = "Phone number is required";
@@ -110,7 +110,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
     } else if (stage === 3) {
       if (!form.consent) e.consent = "Please choose yes or no";
     }
-    
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -128,7 +128,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
 
   const handleSubmit = async () => {
     if (!validateStage(3)) return;
-    
+
     try {
       const payload = {
         fullName: form.fullName,
@@ -140,15 +140,15 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
       };
 
       const result = await signUp(payload);
-      
+
       if (result.error) {
         setErrors({ submit: result.error });
         return;
       }
-      
+
       setSubmitted(true);
       onSuccess?.(form);
-      
+
     } catch (err: any) {
       setErrors({ submit: err.message });
     }
@@ -237,11 +237,10 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
                     key={domain}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
-                      form.domains.includes(domain)
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-200 ${form.domains.includes(domain)
                         ? 'border-secondary bg-secondary/20 text-white'
                         : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -301,11 +300,10 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
                 Consent for Updates
               </label>
               <div className="space-y-2">
-                <motion.label 
+                <motion.label
                   whileHover={{ scale: 1.02 }}
-                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                    form.consent === "yes" ? 'border-secondary bg-secondary/20' : 'border-gray-600 bg-gray-700/50'
-                  }`}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${form.consent === "yes" ? 'border-secondary bg-secondary/20' : 'border-gray-600 bg-gray-700/50'
+                    }`}
                 >
                   <input
                     type="radio"
@@ -317,11 +315,10 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
                   />
                   <span className="text-white text-sm">Yes, keep me updated on opportunities</span>
                 </motion.label>
-                <motion.label 
+                <motion.label
                   whileHover={{ scale: 1.02 }}
-                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
-                    form.consent === "no" ? 'border-secondary bg-secondary/20' : 'border-gray-600 bg-gray-700/50'
-                  }`}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${form.consent === "no" ? 'border-secondary bg-secondary/20' : 'border-gray-600 bg-gray-700/50'
+                    }`}
                 >
                   <input
                     type="radio"
@@ -335,24 +332,24 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
                 </motion.label>
               </div>
               {errors.consent && <p className="text-xs text-red-400 mt-2">{errors.consent}</p>}
-              
+
               {/* Privacy Policy and Terms Acceptance */}
               <div className="mt-4 p-3 bg-gray-700/30 rounded-lg border border-gray-600">
                 <p className="text-xs text-gray-300 leading-relaxed">
                   By creating an account, you agree to our{' '}
-                  <a 
-                    href="/privacy-policy" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href="/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-secondary hover:text-secondary/80 underline"
                   >
                     Privacy Policy
                   </a>{' '}
                   and{' '}
-                  <a 
-                    href="/terms-of-service" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                  <a
+                    href="/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-secondary hover:text-secondary/80 underline"
                   >
                     Terms of Service
@@ -385,9 +382,9 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
             Welcome to the community! 🎉
           </h3>
           <p className="text-gray-300 mb-6">
-           Please check your mail:{" "}
+            Please check your mail:{" "}
             <span className="font-semibold text-white">{form.email}</span>
-           {" "} for further instructions.
+            {" "} for further instructions.
           </p>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -411,7 +408,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
             const Icon = stage.icon;
             const isActive = currentStage === stage.id;
             const isCompleted = currentStage > stage.id;
-            
+
             return (
               <div key={stage.id} className="flex items-center">
                 <motion.div
@@ -466,11 +463,10 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
           whileTap={{ scale: currentStage > 1 ? 0.95 : 1 }}
           onClick={handlePrevious}
           disabled={currentStage === 1 || loading}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 ${
-            currentStage === 1
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 ${currentStage === 1
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-gray-700 text-white hover:bg-gray-600'
-          }`}
+            }`}
         >
           <ChevronLeft className="w-4 h-4" />
           Previous

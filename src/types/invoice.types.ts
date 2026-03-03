@@ -55,7 +55,7 @@ export interface AdminInfo {
 
 export type Currency = "USD" | "EUR" | "GBP" | "NGN" | "KES" | "GHS";
 
-export type PaymentStatus = "unpaid" | "paid" | "overdue" | "cancelled" | "disputed";
+export type PaymentStatus = "unpaid" | "payment_initiated" | "paid" | "overdue" | "cancelled" | "disputed";
 
 export type InvoiceStatus = "draft" | "sent" | "viewed" | "paid" | "overdue" | "cancelled";
 

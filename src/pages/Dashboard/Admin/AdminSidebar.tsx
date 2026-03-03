@@ -7,7 +7,6 @@ import {
   InboxOutlined,
   LogoutOutlined,
   WalletOutlined,
-  UnorderedListOutlined,
   BookOutlined,
   BellOutlined,
   MessageOutlined,
@@ -17,10 +16,12 @@ import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button, Drawer } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
+import { useUserInfoActions } from "../../../store/useAuthStore";
 
 
 const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; handleLogOutModal: () => void }) => {
   const { handleCloseSidebar } = useSidebarContext();
+
 
   const menuItems = [
     {
@@ -159,10 +160,16 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
 const AdminSidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useSidebarContext();
-
+  const { clearUserInfo } = useUserInfoActions();
   const handleLogOutModal = () => {
     setOpenModal(!openModal);
   };
+
+  const handleLogout = () => {
+      sessionStorage.clear();
+      clearUserInfo();
+      navigate("/auth/admin-login");
+  }
 
   const navigate = useNavigate();
 
@@ -176,7 +183,7 @@ const AdminSidebar = () => {
         title={null}
         closable={false}
         className="!bg-primary text-white [&_.ant-drawer-close]:text-white [&_.ant-drawer-close:hover]:text-gray-200"
-        bodyStyle={{ padding: 5 }}
+        styles={{ body: { padding: 5 } }}
       >
         <SidebarMenus
           openModal={openModal}
@@ -197,11 +204,7 @@ const AdminSidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button onClick={() => {
-              sessionStorage.clear()
-              navigate("/auth/admin-login");
-
-            }} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+            <Button onClick={handleLogout} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
             <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">

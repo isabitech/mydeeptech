@@ -46,7 +46,6 @@ import InvoiceManagement from "./pages/Dashboard/Admin/invoicemgt/InvoiceManagem
 import { NotificationManagement } from "./pages/Dashboard/Admin/notifications";
 import ChatManagement from "./pages/Dashboard/Admin/chat/ChatManagement";
 import ResetPassword from "./pages/Auth/ResetPassword";
-import EnhancedUserChatWidget from "./components/Chat/EnhancedUserChatWidget";
 import CustomerService from "./components/CustomerService";
 import { PrivacyPolicy, TermsOfService } from "./pages/Legal";
 import MultimediaAssessmentDemo from "./components/Assessment/MultimediaAssessmentDemo";
@@ -56,10 +55,18 @@ import { AdminReelAssessmentManager } from "./components/Assessment/AdminAssessm
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
+import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
+import InvoiceDetails from "./pages/Dashboard/Admin/___invoice/InvoiceDetails";
+import SendInvoice from "./pages/Dashboard/Admin/___invoice/SendInvoice";
+import EditInvoice from "./pages/Dashboard/Admin/___invoice/EditInvoice";
+import ProtectedLayout from "./components/layouts/ProtectedLayout";
+import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
+import NewInvoice from "./pages/Dashboard/Admin/___invoice/NewInvoice";
 
 const AppRoutes = () => {
   return (
     <Router>
+      <InvoiceProvider>
       <CustomerService />
       <Toaster
         position="top-right"
@@ -115,28 +122,37 @@ const AppRoutes = () => {
         <Route path="/auth/admin-signup" element={<AdminSignup />} />
         <Route path="/auth/admin-login" element={<AdminLogin />} />
 
-        {/* Admin Dashboard */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="overview" index element={<AdminOverview />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="annotators" element={<Annotators />} />
-          <Route path="assessments" element={<AssessmentManagementList />} />
-          <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
-          <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
-          <Route path="projects" element={<ProjectManagement />} />
-          <Route path="applications" element={<ApplicationManagement />} />
-          <Route path="jobs" element={<JobManagement />} />
-          <Route path="tasks" element={<TaskManagement />} />
-          <Route path="invoices" element={<InvoiceManagement />} />
-          <Route path="payments" element={<PaymentManagement />} />
-          <Route path="notifications" element={<NotificationManagement />} />
-          <Route path="chat" element={<ChatManagement />} />
-          <Route path="settings" element={<SettingsMgt />} />
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedLayout />}>
+          {/* Admin Dashboard */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="overview" index element={<AdminOverview />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="annotators" element={<Annotators />} />
+            <Route path="assessments" element={<AssessmentManagementList />} />
+            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
+            <Route path="projects" element={<ProjectManagement />} />
+            <Route path="applications" element={<ApplicationManagement />} />
+            <Route path="jobs" element={<JobManagement />} />
+            <Route path="tasks" element={<TaskManagement />} />
+            <Route path="invoices" element={<InvoiceManagement />} />
+            <Route path="payments" element={<PaymentManagement />} />
+            <Route path="notifications" element={<NotificationManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
+            <Route path="settings" element={<SettingsMgt />} />
+            <Route path="invoice-page" element={<InvoicePage/>} />
+            <Route path="invoice-page/new" element={<NewInvoice />} />
+            <Route path="invoice-page/:id" element={<InvoiceDetails />} />
+            <Route path="invoice-page/:id/send" element={<SendInvoice />} />
+            <Route path="invoice-page/:id/edit" element={<EditInvoice  />} />
+          </Route>
         </Route>
 
         {/* Redirect unmatched routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </InvoiceProvider>
     </Router>
   );
 };

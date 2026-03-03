@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, Badge, Button, Modal } from "antd";
 import AllAnnotators from "./AllAnnotators";
@@ -12,9 +11,6 @@ import AnnotatorsDomain from "./AnnotatorsDomain";
 import DomainModal from "../../../../components/DomainModal/DomainModal";
 import { useDomainActions } from "../../../../store/useDomainStore";
 import DomainTable from "../../../../components/DomainModal/DomainTable";
-
-
-const { TabPane } = Tabs;
 
 const Annotators = () => {
   const [activeTab, setActiveTab] = useState("1");
@@ -82,176 +78,178 @@ const Annotators = () => {
               onChange={handleTabChange}
               className="w-full"
               tabBarStyle={{ borderBottom: "1px solid #e5e7eb" }}
-            >
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>All Annotators</span>
-                    <Badge
-                      count={counts.total}
-                      style={{
-                        backgroundColor: '#1890ff',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
+              items={[
+                {
+                  key: "1",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>All Annotators</span>
+                      <Badge
+                        count={counts.total}
+                        style={{
+                          backgroundColor: '#1890ff',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <AllAnnotators />
+                    </div>
+                  )
+                },
+                {
+                  key: "2",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>Approved Annotators</span>
+                      <Badge
+                        count={counts.approved}
+                        style={{
+                          backgroundColor: '#52c41a',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <ApprovedAnnotators />
+                    </div>
+                  )
+                },
+                {
+                  key: "3",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>MicroTasker</span>
+                      <Badge
+                        count={counts.microtasker}
+                        style={{
+                          backgroundColor: '#722ed1',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <MicroTasker />
+                    </div>
+                  )
+                },
+                {
+                  key: "4",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>QA Annotators</span>
+                      <Badge
+                        count={counts.qa}
+                        style={{
+                          backgroundColor: '#1890ff',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <QAAnnotators />
+                    </div>
+                  )
+                },
+                {
+                  key: "5",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>Pending Annotators</span>
+                      <Badge
+                        count={counts.pending}
+                        style={{
+                          backgroundColor: '#fa8c16',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <PendingAnnotators />
+                    </div>
+                  )
+                },
+                {
+                  key: "6",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>Submitted Annotators</span>
+                      <Badge
+                        count={counts.submitted}
+                        style={{
+                          backgroundColor: '#13c2c2',
+                          color: 'white',
+                          fontSize: '12px',
+                          minWidth: '20px',
+                          height: '20px',
+                          lineHeight: '20px',
+                          padding: '0 6px',
+                          borderRadius: '10px'
+                        }}
+                      />
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <SubmittedAnnotators />
+                    </div>
+                  )
+                },
+                {
+                  key: "7",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span>Domain Overview</span>
+                    </div>
+                  ),
+                  children: (
+                    <div className="pt-4">
+                      <DomainTable />
+                    </div>
+                  )
                 }
-                key="1"
-              >
-                <div className="pt-4">
-                  <AllAnnotators />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>Approved Annotators</span>
-                    <Badge
-                      count={counts.approved}
-                      style={{
-                        backgroundColor: '#52c41a',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
-                }
-                key="2"
-              >
-                <div className="pt-4">
-                  <ApprovedAnnotators />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>MicroTasker</span>
-                    <Badge
-                      count={counts.microtasker}
-                      style={{
-                        backgroundColor: '#722ed1',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
-                }
-                key="3"
-              >
-                <div className="pt-4">
-                  <MicroTasker />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>QA Annotators</span>
-                    <Badge
-                      count={counts.qa}
-                      style={{
-                        backgroundColor: '#1890ff',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
-                }
-                key="4"
-              >
-                <div className="pt-4">
-                  <QAAnnotators />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>Pending Annotators</span>
-                    <Badge
-                      count={counts.pending}
-                      style={{
-                        backgroundColor: '#fa8c16',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
-                }
-                key="5"
-              >
-                <div className="pt-4">
-                  <PendingAnnotators />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>Submitted Annotators</span>
-                    <Badge
-                      count={counts.submitted}
-                      style={{
-                        backgroundColor: '#13c2c2',
-                        color: 'white',
-                        fontSize: '12px',
-                        minWidth: '20px',
-                        height: '20px',
-                        lineHeight: '20px',
-                        padding: '0 6px',
-                        borderRadius: '10px'
-                      }}
-                    />
-                  </div>
-                }
-                key="6"
-              >
-                <div className="pt-4">
-                  <SubmittedAnnotators />
-                </div>
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <div className="flex items-center gap-2">
-                    <span>Domain Overview</span>
-                  </div>
-                }
-                key="7"
-              >
-                <div className="pt-4">
-                  <DomainTable />
-                </div>
-              </TabPane>
-            </Tabs>
+              ]}
+            />
           </div>
         </div>
       </div>

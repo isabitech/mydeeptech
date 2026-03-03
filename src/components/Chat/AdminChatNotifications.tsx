@@ -40,8 +40,6 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
   useEffect(() => {
     if (!token) return;
 
-    console.log('🔔 [AdminChatNotifications] Initializing with token:', token ? 'Present' : 'Missing');
-
     // Connect to admin socket for notifications
     ChatSocketService.connect(token, 'admin');
 
@@ -61,7 +59,6 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
     };
 
     const handleUserMessage = (data: any) => {
-      console.log('👤 [AdminChatNotifications] User message via user_message event:', data);
       const notification: ChatNotification = {
         id: `${data.ticketId}-${Date.now()}`,
         ticketId: data.ticketId,
@@ -78,17 +75,9 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
     // Handle new_message events - filter for user messages (non-@mydeeptech.ng emails)
     const handleNewMessage = (data: any) => {
-      console.log('💬 [AdminChatNotifications] New message received:', data);
-
       // Use email to identify if it's a user message (NOT @mydeeptech.ng domain)
       const senderEmail = data.senderEmail || data.userEmail || '';
       const isFromAdmin = senderEmail.includes('@mydeeptech.ng');
-
-      console.log('🔍 [AdminChatNotifications] Message identification:', {
-        senderEmail,
-        isFromAdmin,
-        messageType: isFromAdmin ? 'ADMIN MESSAGE - SKIP' : 'USER MESSAGE - NOTIFY'
-      });
 
       // Only create notifications for user messages (non-admin)
       if (!isFromAdmin) {
@@ -111,12 +100,10 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
           );
 
           if (!exists) {
-            console.log('📨 [AdminChatNotifications] Adding user message notification:', notification);
             setUnreadCount(prevCount => prevCount + 1);
             return [notification, ...prev.slice(0, 9)];
           }
 
-          console.log('⚠️ [AdminChatNotifications] Duplicate notification detected, skipping');
           return prev;
         });
       }
@@ -135,17 +122,6 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
   // Debug effect to track notifications
   useEffect(() => {
-    console.log('🔔 [AdminChatNotifications] State updated:', {
-      notificationCount: notifications.length,
-      unreadCount,
-      notifications: notifications.map(n => ({
-        id: n.id,
-        ticketId: n.ticketId,
-        userName: n.userName,
-        message: n.message.substring(0, 30) + '...',
-        isRead: n.isRead
-      }))
-    });
   }, [notifications, unreadCount]);
 
   const handleNotificationClick = (notification: ChatNotification) => {
@@ -272,7 +248,7 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
   return (
     <Dropdown
-      overlay={dropdownContent}
+      dropdownRender={() => dropdownContent}
       trigger={['click']}
       open={isOpen}
       onOpenChange={setIsOpen}

@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CommentOutlined } from "@ant-design/icons";
 import { FloatButton } from "antd";
-import FloatingChat from "./Chat/FloatingChat";
-import { retrieveTokenFromStorage } from "../helpers";
 import AdminChatNotifications from "./Chat/AdminChatNotifications";
 import EnhancedUserChatWidget from "./Chat/EnhancedUserChatWidget";
 

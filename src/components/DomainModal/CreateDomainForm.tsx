@@ -75,14 +75,6 @@ const CreateDomainForm: React.FC = () => {
             onFinish={handleCategorySubmit}
         >
             <Form.Item
-                name="name"
-                label="Domain Name"
-                rules={[{ required: true, message: "Please enter domain name" }]}
-            >
-                <Input placeholder="Enter domain name" />
-            </Form.Item>
-
-            <Form.Item
               name="domain_category"
               label="Category"
               rules={[{ required: true, message: "Please select a category" }]}
@@ -120,6 +112,15 @@ const CreateDomainForm: React.FC = () => {
                 ))}
               </Select>
             </Form.Item>
+
+              <Form.Item
+                name="name"
+                label="Domain Name"
+                rules={[{ required: true, message: "Please enter domain name" }]}
+            >
+                <Input placeholder="Enter domain name" />
+            </Form.Item>
+
 
             <Form.Item
                 name="description"

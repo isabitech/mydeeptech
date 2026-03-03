@@ -48,6 +48,7 @@ export const useAdminApplications = () => {
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.limit) queryParams.limit = params.limit.toString();
         if (params?.search) queryParams.search = params.search;
+        
         const data: ApplicationsResponse = await apiGet(
           endpoints.adminProject.getAllApplications,
           { params: queryParams },

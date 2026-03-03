@@ -2,8 +2,8 @@ import AdminSidebar from './AdminSidebar';
 import AdminHeader from '../../../components/Admin/AdminHeader';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from './_context/SidebarContext';
-
 const AdminLayout = () => {
+ 
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full">

@@ -53,6 +53,8 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       loadInitialData();
     }
   }, [open]);
+  
+
 
   const loadInitialData = async () => {
     setLoadingData(true);
@@ -103,7 +105,24 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     form.setFieldValue('dtUserId', undefined);
     
     try {
-      console.log('📋 Fetching applications for project:', projectId);
+      // First, check if there are any applications at all for this project
+      const allApplicationsParams = {
+        projectId,
+        limit: 1000,
+      };
+      
+      const allApplicationsResult = await getAllApplications(allApplicationsParams);
+      
+      let allAppsData: any[] = [];
+      if (allApplicationsResult.success) {
+        allAppsData = allApplicationsResult.data.data.applications;
+        
+        // If no applications exist at all, show specific message
+        if (allAppsData.length === 0) {
+          message.info('No one has applied to this project yet. Users must apply to the project first before invoices can be created.');
+          return;
+        }
+      }
       
       // Get approved applications for this project to find assigned DTUsers
       const applicationsResult = await getAllApplications({
@@ -112,41 +131,52 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
         limit: 1000,
       });
 
-      console.log('📋 Applications result:', applicationsResult);
-
       if (applicationsResult.success) {
         const applications = applicationsResult.data.data.applications;
-        console.log('📋 Approved applications found:', applications);
         
         if (!applications || applications.length === 0) {
-          console.log('⚠️ No approved applications found for this project');
-          message.info('No approved users found for this project');
+          // Check if there were any applications at all from our earlier call
+          if (allAppsData.length > 0) {
+            message.info(`This project has ${allAppsData.length} application(s), but none are approved yet. Please review and approve applications first.`);
+          }
           return;
         }
         
-        // Extract DTUsers directly from approved applications
+        // Extract DTUsers directly from approved applications and map to DTUser format
         const assignedDTUsers = applications
           .map((app: Application) => {
-            console.log('📋 Processing application:', app);
-            // Use applicantId directly from Application type
-            return app.applicantId;
+            // Map Application.applicantId to DTUser format
+            if (!app.applicantId) {
+              return null;
+            }
+            
+            const dtUser: DTUser = {
+              _id: app.applicantId._id,  // Use the MongoDB ObjectId directly
+              fullName: app.applicantId.fullName,
+              email: app.applicantId.email,
+              annotatorStatus: app.applicantId.annotatorStatus || 'unknown',
+              microTaskerStatus: app.applicantId.microTaskerStatus || 'unknown',
+              isEmailVerified: true, // Default for approved users  
+              hasSetPassword: true, // Default for approved users
+              skills: app.applicantId.professionalBackground?.skills || [],
+              domains: [] // Not available in Application.applicantId
+            };
+            
+            return dtUser;
           })
           .filter((user: DTUser | null) => user !== null) as DTUser[];
 
-        console.log('✅ Final assigned DTUsers:', assignedDTUsers);
         setProjectDTUsers(assignedDTUsers);
-        
+
         if (assignedDTUsers.length === 0) {
           message.warning('No DTUsers found in approved applications');
         } else {
           message.success(`Found ${assignedDTUsers.length} assigned user(s) for this project`);
         }
       } else {
-        console.error('❌ Failed to get applications:', applicationsResult.error);
         message.error('Failed to load project applications: ' + (applicationsResult.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('❌ Error loading project DTUsers:', error);
       message.error('Failed to load project users: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
@@ -239,7 +269,7 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                     String(option?.label || '').toLowerCase().includes(input.toLowerCase())
                   }
                 >
-                  {projects.map((project) => (
+                  {projects.filter(project => project && project._id).map((project) => (
                     <Option key={project._id} value={project._id} label={`${project.projectName} (${project.projectCategory})`}>
                       {project.projectName} ({project.projectCategory})
                     </Option>
@@ -253,7 +283,7 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                 label={`DTUser ${selectedProjectId ? `(${projectDTUsers.length} available)` : ''}`}
                 rules={[{ required: true, message: "Please select a DTUser" }]}
                 extra={selectedProjectId && projectDTUsers.length === 0 ? 
-                  "No DTUsers are assigned to this project. Please assign users to the project first." : 
+                  "No approved users found for this project." : 
                   selectedProjectId ? 
                   `Select from ${projectDTUsers.length} user(s) assigned to this project` : 
                   "Select a project first to see available DTUsers"
@@ -264,7 +294,7 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                     selectedProjectId 
                       ? projectDTUsers.length > 0 
                         ? "Select DTUser assigned to this project" 
-                        : "No DTUsers assigned to this project"
+                        : "No approved applicants available"
                       : "Please select a project first"
                   }
                   disabled={!selectedProjectId}
@@ -275,15 +305,18 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                   }
                   notFoundContent={
                     selectedProjectId && projectDTUsers.length === 0 
-                      ? "No DTUsers assigned to this project. Please assign users in the project management section." 
+                      ? "No approved applicants found. Users must apply to the project and be approved before invoices can be created." 
                       : "No DTUsers found"
                   }
                 >
-                  {projectDTUsers.map((user) => (
-                    <Option key={user._id} value={user._id} label={`${user.fullName} (${user.email})`}>
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{user.fullName}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
+                  {projectDTUsers.map((user, index) => (
+                    <Option 
+                    key={user._id || `user-${index}`} 
+                    value={user._id} 
+                    >
+                      <div className="block">
+                        <div style={{ fontWeight: 'bold' }}>{user.fullName || 'Unknown User'}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>{user.email || 'No email'}</div>
                         <div style={{ fontSize: '11px', color: '#999' }}>
                           Status: {user.annotatorStatus || 'Unknown'}
                         </div>

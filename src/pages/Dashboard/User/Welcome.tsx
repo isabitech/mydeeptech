@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import { useEffect, useState } from "react";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
-import Header, { UserInfoProps } from "./Header";
+import { UserInfoProps } from "./Header";
 import { Link, useSearchParams } from "react-router-dom";
 import Overview from "./Overview";
 
@@ -26,7 +26,6 @@ const Welcome = () => {
   ) {
     return (
       <div className=" font-[gilroy-regular]">
-        <Header title="Welcome" key={""} />
         <div className="font-[gilroy-regular] h-[70svh] flex justify-center items-center flex-col gap-4">
           <p className="font-semibold">Welcome! {userInfo?.fullName} </p>
           <img
@@ -55,8 +54,7 @@ const Welcome = () => {
     resultSubmitted
   ) {
     return (
-      <div className=" font-[gilroy-regular]">
-        <Header title="Welcome" key={""} />
+      <div className="flex-1 font-[gilroy-regular]">
         <div className="font-[gilroy-regular] h-[70svh] flex justify-center items-center flex-col gap-4">
           <p className="font-semibold">Welcome! {userInfo?.fullName} </p>
           <img

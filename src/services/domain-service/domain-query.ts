@@ -12,7 +12,7 @@ interface PaginationParams {
 
 const useDomainCategories = (paginationParams?: PaginationParams) => {
   const { page = 1, limit = 10, search = '' } = paginationParams || {};
-  
+
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getDomainCategories, { page, limit, search }],
     queryFn: async () => {
@@ -20,7 +20,7 @@ const useDomainCategories = (paginationParams?: PaginationParams) => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       if (search) params.append('search', search);
-      
+
       const response = await axiosInstance.get<GetDomainCategoriesResponseSchema>(
         `${endpoints.domain.getCategories}/find?${params.toString()}`
       );
@@ -31,7 +31,7 @@ const useDomainCategories = (paginationParams?: PaginationParams) => {
 
 const useDomainSubCategories = (paginationParams?: PaginationParams) => {
   const { page = 1, limit = 10, search = '' } = paginationParams || {};
-  
+
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getDomainSubCategories, { page, limit, search }],
     queryFn: async () => {
@@ -39,7 +39,7 @@ const useDomainSubCategories = (paginationParams?: PaginationParams) => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       if (search) params.append('search', search);
-      
+
       const response = await axiosInstance.get<GetDomainSubCategoriesResponseSchema>(
         `${endpoints.domain.getSubCategories}/find?${params.toString()}`
       );
@@ -50,7 +50,7 @@ const useDomainSubCategories = (paginationParams?: PaginationParams) => {
 
 const useDomains = (paginationParams?: PaginationParams) => {
   const { page = 1, limit = 10, search = '' } = paginationParams || {};
-  
+
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getDomains, { page, limit, search }],
     queryFn: async () => {
@@ -58,7 +58,7 @@ const useDomains = (paginationParams?: PaginationParams) => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       if (search) params.append('search', search);
-      
+
       const response = await axiosInstance.get<GetDomainsResponseSchema>(
         `${endpoints.domain.getDomains}/find?${params.toString()}`
       );
@@ -70,7 +70,7 @@ const useDomains = (paginationParams?: PaginationParams) => {
 
 const useDomainsWithCategorization = (paginationParams?: PaginationParams) => {
   const { page = 1, limit = 50, search = '' } = paginationParams || {};
-  
+
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getDomainsWithCategorization, { page, limit, search }],
     queryFn: async () => {
@@ -78,9 +78,22 @@ const useDomainsWithCategorization = (paginationParams?: PaginationParams) => {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
       if (search) params.append('search', search);
-      
+
       const response = await axiosInstance.get(
         `${endpoints.domain.getDomains}/all-with-categorization?${params.toString()}`
+      );
+      return response.data;
+    },
+  });
+};
+
+
+const useUserDomains = () => {
+  return useQuery({
+    queryKey: ['getUserDomains'],
+    queryFn: async () => {
+      const response = await axiosInstance.get(
+        '/new-domain/user/domains'
       );
       return response.data;
     },
@@ -93,6 +106,7 @@ const domainQueryService = {
   useDomainSubCategories,
   useDomains,
   useDomainsWithCategorization,
+  useUserDomains,
 };
 
 export default domainQueryService;

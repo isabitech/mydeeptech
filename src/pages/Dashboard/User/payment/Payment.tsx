@@ -108,7 +108,6 @@ const Payment = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Payments" />
 
       {/* Summary Statistics */}
       <Row gutter={16}>

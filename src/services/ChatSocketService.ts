@@ -37,8 +37,6 @@ class ChatSocketService {
         }
 
         const serverUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
-        
-        console.log('🔗 Connecting to chat socket server:', serverUrl);
 
         this.socket = io(`${serverUrl}`, { // Use correct namespace
           auth: { token },
@@ -54,7 +52,6 @@ class ChatSocketService {
 
         // Connection successful
         this.socket.on('connect', () => {
-          console.log('✅ Socket.IO connected successfully');
           this.isConnected = true;
           this.reconnectAttempts = 0;
           this.emit('connection_status', { connected: true });
@@ -62,10 +59,8 @@ class ChatSocketService {
           
           // Join appropriate room based on user type
           if (userType === 'admin') {
-            console.log('👨‍💼 Admin connected, joining admin room');
             this.socket?.emit('join_admin_room');
           } else {
-            console.log('👤 User connected, requesting active tickets');
             this.socket?.emit('get_active_tickets');
           }
           
@@ -74,14 +69,12 @@ class ChatSocketService {
 
         // Connection error
         this.socket.on('connect_error', (error) => {
-          console.error('❌ Socket connection error:', error);
           this.isConnected = false;
           this.emit('connection_status', { connected: false, error: error.message });
           
           // Auto-reconnect logic
           if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`🔄 Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
             setTimeout(() => {
               this.socket?.connect();
             }, 2000 * this.reconnectAttempts); // Exponential backoff
@@ -92,14 +85,14 @@ class ChatSocketService {
 
         // Disconnection
         this.socket.on('disconnect', (reason) => {
-          console.log('🔌 Socket disconnected:', reason);
+
           this.isConnected = false;
           this.emit('connection_status', { connected: false, reason });
         });
 
         // Authentication error
         this.socket.on('error', (error) => {
-          console.error('🚫 Socket authentication error:', error);
+
           this.isConnected = false;
           reject(new Error(`Authentication failed: ${error}`));
         });
@@ -108,7 +101,6 @@ class ChatSocketService {
         this.socket.connect();
 
       } catch (error) {
-        console.error('❌ Failed to initialize socket connection:', error);
         reject(error);
       }
     });
@@ -129,38 +121,38 @@ class ChatSocketService {
 
     // Chat events
     this.socket.on('new_message', (data) => {
-      console.log('📨 New message received:', data);
+
       this.emit('new_message', data);
     });
 
     // Auto-rejoin events for session persistence
     this.socket.on('active_tickets', (data) => {
-      console.log('📋 Active tickets received:', data.tickets);
+
       this.emit('active_tickets', data);
     });
 
     this.socket.on('chat_history', (data) => {
-      console.log('📋 Chat history received:', data);
+
       this.emit('chat_history', data);
     });
 
     this.socket.on('ticket_rejoined', (data) => {
-      console.log('🔄 Ticket rejoined:', data);
+
       this.emit('ticket_rejoined', data);
     });
 
     this.socket.on('chat_started', (data) => {
-      console.log('🚀 Chat started:', data);
+
       this.emit('chat_started', data);
     });
 
     this.socket.on('agent_joined', (data) => {
-      console.log('👨‍💼 Agent joined chat:', data);
+
       this.emit('agent_joined', data);
     });
 
     this.socket.on('chat_closed', (data) => {
-      console.log('🔒 Chat closed:', data);
+
       this.emit('chat_closed', data);
     });
 
@@ -169,30 +161,30 @@ class ChatSocketService {
     });
 
     this.socket.on('message_sent', (data) => {
-      console.log('✅ Message sent confirmation:', data);
+
       this.emit('message_sent', data);
     });
 
     // Listen for message delivery confirmations
     this.socket.on('message_delivered', (data) => {
-      console.log('📬 Message delivered:', data);
+
       this.emit('message_delivered', data);
     });
 
     // Listen for errors
     this.socket.on('chat_error', (data) => {
-      console.error('❌ Chat error received:', data);
+
       this.emit('chat_error', data);
     });
 
     // Admin events (if admin)
     this.socket.on('new_chat_ticket', (data) => {
-      console.log('🎫 New chat ticket:', data);
+
       this.emit('new_chat_ticket', data);
     });
 
     this.socket.on('user_message', (data) => {
-      console.log('👤 User message:', data);
+
       this.emit('user_message', data);
     });
   }
@@ -205,7 +197,6 @@ class ChatSocketService {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
-      console.log('🔌 Socket disconnected manually');
     }
   }
 
@@ -221,15 +212,13 @@ class ChatSocketService {
    */
   joinChatRoom(ticketId: string, isAdmin: boolean = false) {
     if (this.isSocketConnected()) {
-      console.log('🏠 Joining chat room:', ticketId);
-      
       if (isAdmin) {
         this.socket?.emit('join_ticket', { ticketId });
       } else {
         this.socket?.emit('join_chat_room', { ticketId });
       }
     } else {
-      console.error('❌ Cannot join chat room: Socket not connected');
+      throw new Error('Cannot join chat room: Socket not connected');
     }
   }
 
@@ -238,8 +227,6 @@ class ChatSocketService {
    */
   sendMessage(ticketId: string, message: string, attachments: any[] = [], isAdmin: boolean = false) {
     if (this.isSocketConnected()) {
-      console.log('📤 Sending message:', { ticketId, message, isAdmin });
-      
       if (isAdmin) {
         this.socket?.emit('admin_send_message', {
           ticketId,
@@ -257,7 +244,6 @@ class ChatSocketService {
         });
       }
     } else {
-      console.error('❌ Cannot send message: Socket not connected');
       throw new Error('Socket not connected');
     }
   }
@@ -285,25 +271,22 @@ class ChatSocketService {
    */
   rejoinTicket(ticketId: string) {
     if (this.isSocketConnected()) {
-      console.log('🔄 Rejoining ticket:', ticketId);
       this.socket?.emit('rejoin_ticket', { ticketId });
     } else {
-      console.error('❌ Cannot rejoin ticket: Socket not connected');
+      throw new Error('Cannot rejoin ticket: Socket not connected');
     }
   }
 
   startChat(message: string, category: string = 'general_inquiry', priority: string = 'medium') {
     if (this.isSocketConnected()) {
-      console.log('🚀 Starting new chat:', { message, category, priority });
       this.socket?.emit('start_chat', { message, category, priority });
     } else {
-      console.error('❌ Cannot start chat: Socket not connected');
+      throw new Error('Cannot start chat: Socket not connected');
     }
   }
 
   getActiveTickets() {
     if (this.isSocketConnected()) {
-      console.log('📋 Requesting active tickets');
       this.socket?.emit('get_active_tickets');
     }
   }

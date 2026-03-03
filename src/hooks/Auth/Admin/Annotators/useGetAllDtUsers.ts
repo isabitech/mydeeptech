@@ -71,7 +71,6 @@ export const useGetAllDtUsers = () => {
         // Extract users array from the new API structure
         const usersArray = data.data.users || [];
 
-        console.log(usersArray)
         setUsers(usersArray);
         setPagination(data.data.pagination);
         setSummary(data.data.summary);

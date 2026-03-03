@@ -1,4 +1,3 @@
-import Header from "../Header";
 import Reset from "./Reset";
 import { Card, Button, Divider } from 'antd';
 import { FileTextOutlined, SafetyOutlined, DownloadOutlined } from '@ant-design/icons';
@@ -6,7 +5,6 @@ import { FileTextOutlined, SafetyOutlined, DownloadOutlined } from '@ant-design/
 const Settings = () => {
   return (
     <div className="h-full grid grid-cols-1 gap-4 font-[gilroy-regular]">
-      <Header title="Settings" />
 
       {/* Reset Password Section */}
       <Reset />

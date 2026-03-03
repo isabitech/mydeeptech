@@ -77,6 +77,7 @@ export interface Application {
   resumeUrl: string;
   workStartedAt: string | null;
   applicantId: {
+    _id: string;        // MongoDB ObjectId
     id: string;
     fullName: string;
     email: string;

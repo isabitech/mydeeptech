@@ -1,64 +1,53 @@
-
 import React, { useState, useMemo, useCallback } from "react";
-import { Table, Card, Typography, Tag, Spin, Alert, Space, Input, Row, Col } from "antd";
-import { DatabaseOutlined, FolderOutlined, BranchesOutlined, SearchOutlined } from "@ant-design/icons";
+import { Form, message } from "antd";
 import domainQueryService from "../../services/domain-service/domain-query";
 
-const { Title, Text } = Typography;
+// Import extracted components
+import DomainTableCore from "./_domain_modal_components/DomainTableCore";
+import EditModal from "./_domain_modal_components/EditModal";
+import DeleteModal from "./_domain_modal_components/DeleteModal";
+import { createTableColumns } from "./_domain_modal_components/TableColumns";
 
-const debounce = <T extends (...args: any[]) => void>(fn: T, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-};
-
-interface DomainWithCategorizationItem {
-  category: {
-    _id: string;
-    name: string;
-    slug: string;
-  };
-  subCategory: {
-    _id: string | null;
-    name: string;
-    slug: string | null;
-  };
-  domains: {
-    _id: string;
-    name: string;
-    slug: string;
-  }[];
-  totalDomains: number;
-}
-
-interface TableDataType {
-  key: string;
-  categoryName: string;
-  categoryRowSpan: number;
-  subCategoryName: string;
-  subCategorySlug: string | null;
-  domains: {
-    _id: string;
-    name: string;
-    slug: string;
-  }[];
-}
+// Import types and utilities
+import type { ModalType, ModalEntity, ModalData } from "./_domain_modal_components/types";
+import {
+  debounce,
+  processTableData,
+  getAvailableCategories,
+  getSubCategoriesForCategory,
+  getDomainsForCategoryAndSubCategory
+} from "./_domain_modal_components/utils";
 
 const DomainTable: React.FC = () => {
   // Pagination and search state
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  
-  const pageSize = 20; // Reasonable page size for grouped data
+
+  // Modal state management
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>('edit');
+  const [modalEntity, setModalEntity] = useState<ModalEntity>('category');
+  const [modalData, setModalData] = useState<ModalData | null>(null);
+  const [selectedCategoryForSubCategory, setSelectedCategoryForSubCategory] = useState<string | null>(null);
+  const [selectedCategoryForDomain, setSelectedCategoryForDomain] = useState<string | null>(null);
+  const [selectedSubCategoryForDomain, setSelectedSubCategoryForDomain] = useState<string | null>(null);
+  const [isNameFieldDisabled, setIsNameFieldDisabled] = useState(false);
+  const [form] = Form.useForm();
+
+  const pageSize = 20;
+
+  // API call
+  const { data: domainsWithCategorizationData, isLoading, error } = domainQueryService.useDomainsWithCategorization({
+    page: currentPage,
+    limit: pageSize,
+    search: debouncedSearchTerm
+  });
 
   // Debounced search function
   const debouncedSearch = useCallback(
     debounce((value: string) => {
       setDebouncedSearchTerm(value);
-      // Reset to page 1 when searching
       setCurrentPage(1);
     }, 500),
     []
@@ -71,221 +60,437 @@ const DomainTable: React.FC = () => {
     debouncedSearch(value);
   };
 
-  // Single API call with pagination
-  const { data: domainsWithCategorizationData, isLoading, error } = domainQueryService.useDomainsWithCategorization({
-    page: currentPage,
-    limit: pageSize,
-    search: debouncedSearchTerm
-  });
+  // Processed data
+  const tableData = useMemo(() =>
+    processTableData(domainsWithCategorizationData?.data?.domains),
+    [domainsWithCategorizationData]
+  );
 
-  // Process data to create flattened table rows
-  const processTableData = (): TableDataType[] => {
-    if (!domainsWithCategorizationData?.data?.domains) {
-      return [];
-    }
+  const availableCategories = useMemo(() =>
+    getAvailableCategories(domainsWithCategorizationData?.data?.domains),
+    [domainsWithCategorizationData]
+  );
 
-    const domainsData: DomainWithCategorizationItem[] = domainsWithCategorizationData.data.domains;
-    
-    // Group by category to calculate rowSpans
-    const categoryGroups: { [categoryId: string]: DomainWithCategorizationItem[] } = {};
-    
-    domainsData.forEach(item => {
-      const categoryId = item.category._id;
-      if (!categoryGroups[categoryId]) {
-        categoryGroups[categoryId] = [];
-      }
-      categoryGroups[categoryId].push(item);
-    });
+  // Helper functions
+  const getSubCategoriesForCategoryHelper = (categoryId: string) =>
+    getSubCategoriesForCategory(categoryId, domainsWithCategorizationData?.data?.domains);
 
-    // Flatten data for table display with proper rowSpan calculation
-    const flattenedData: TableDataType[] = [];
-    
-    Object.values(categoryGroups).forEach(categoryItems => {
-      categoryItems.forEach((item, index) => {
-        flattenedData.push({
-          key: `${item.category._id}-${item.subCategory._id || 'no-sub'}-${index}`,
-          categoryName: index === 0 ? item.category.name : '',
-          categoryRowSpan: index === 0 ? categoryItems.length : 0,
-          subCategoryName: item.subCategory.name,
-          subCategorySlug: item.subCategory.slug,
-          domains: item.domains,
+  const getDomainsForCategoryAndSubCategoryHelper = (categoryId: string, subCategoryId: string) =>
+    getDomainsForCategoryAndSubCategory(categoryId, subCategoryId, domainsWithCategorizationData?.data?.domains);
+
+  // Modal handlers
+  const openModal = (type: ModalType, entity: ModalEntity, data: ModalData) => {
+    setModalType(type);
+    setModalEntity(entity);
+    setModalData(data);
+    setIsModalOpen(true);
+
+    if (type === 'edit') {
+      // Pre-populate form for editing
+      let nameValue = data.name;
+
+      if (entity === 'category') {
+        setSelectedCategoryForSubCategory(data.id);
+        form.setFieldsValue({
+          category: data.id,
+          subcategory: data.subCategoryId || undefined,
+          name: nameValue,
+          description: data.description || ''
         });
-      });
-    });
+      } else if (entity === 'subcategory') {
+        if (data.categoryId) {
+          setSelectedCategoryForSubCategory(data.categoryId);
+        }
 
-    return flattenedData;
+        if (nameValue === 'No Sub-Category' || nameValue?.toLowerCase().includes('no sub-category')) {
+          nameValue = '';
+          setIsNameFieldDisabled(true);
+        } else {
+          setIsNameFieldDisabled(false);
+        }
+
+        const availableSubCategories = data.categoryId ? getSubCategoriesForCategoryHelper(data.categoryId) : [];
+
+        let subCategoryValue = undefined;
+        if (availableSubCategories.length > 0) {
+          if (nameValue !== 'No Sub-Category' && !nameValue?.toLowerCase().includes('no sub-category')) {
+            subCategoryValue = data.id;
+          }
+        }
+
+        form.setFieldsValue({
+          category: data.categoryId || undefined,
+          subcategory: subCategoryValue,
+          name: nameValue,
+          description: data.description || ''
+        });
+      } else {
+        // Domain modal
+        if (data.categoryId) {
+          setSelectedCategoryForDomain(data.categoryId);
+
+          // Only set the sub-category if the domain actually has one
+          setSelectedSubCategoryForDomain(data.subCategoryId || null);
+        }
+
+        let availableDomains = [];
+        // Only use the actual subCategoryId if it exists, don't fall back to first available
+        const actualSubCategoryId = data.subCategoryId;
+
+        if (data.categoryId && actualSubCategoryId) {
+          availableDomains = getDomainsForCategoryAndSubCategoryHelper(data.categoryId, actualSubCategoryId);
+        } else if (data.categoryId) {
+          availableDomains = domainsWithCategorizationData?.data?.domains
+            ?.filter((item: any) => item.category._id === data.categoryId)
+            ?.flatMap((item: any) => item.domains) || [];
+        }
+
+        const defaultDomain = availableDomains.find((domain: any) => domain._id === data.id) ||
+          (availableDomains.length > 0 ? availableDomains[0] : null);
+
+        form.setFieldsValue({
+          category: data.categoryId || undefined,
+          subcategory: actualSubCategoryId || undefined, // Only set if actually exists
+          domain: defaultDomain?._id || data.id || undefined,
+          name: defaultDomain?.name || nameValue,
+          description: defaultDomain?.description || data.description || ''
+        });
+      }
+    }
   };
 
-  // Memoize processed data
-  const tableData = useMemo(() => processTableData(), [domainsWithCategorizationData]);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalData(null);
+    setSelectedCategoryForSubCategory(null);
+    setSelectedCategoryForDomain(null);
+    setSelectedSubCategoryForDomain(null);
+    setIsNameFieldDisabled(false);
+    form.resetFields();
+  };
 
-  const columns = [
-    {
-      title: (
-        <Space>
-          <FolderOutlined />
-          <span>Category</span>
-        </Space>
-      ),
-      dataIndex: 'categoryName',
-      key: 'category',
-      render: (text: string, record: any) => ({
-        children: (
-          <div  style={{ fontSize: '12px', fontWeight: 'bold' }}>
-            {text}
-          </div>
-        ),
-        props: {
-          rowSpan: record.categoryRowSpan,
-        },
-      }),
-      width: '20%',
-    },
-    {
-      title: (
-        <Space>
-          <BranchesOutlined />
-          <span>Sub-Category</span>
-        </Space>
-      ),
-      dataIndex: 'subCategoryName',
-      key: 'subCategory',
-      render: (text: string) => (
-        <Tag color={text === 'No Sub-Category' ? 'default' : 'cyan'} style={{ fontSize: '12px' }}>
-          {text}
-        </Tag>
-      ),
-      width: '40%',
-    },
-    {
-      title: (
-        <Space>
-          <DatabaseOutlined />
-          <span>Domains</span>
-        </Space>
-      ),
-      dataIndex: 'domains',
-      key: 'domains',
-      render: (domains: { _id: string; name: string; slug: string; }[]) => (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px' }}>
-          {domains.map((domain) => (
-            <div key={domain._id} style={{ marginBottom: '4px' }}>
-              <Tag 
-                color="green" 
-                style={{ 
-                  borderRadius: '4px',
-                  display: 'block',
-                  textAlign: 'center'
-                }}
-              >
-                <div>{domain.name}</div>
-              </Tag>
-            </div>
-          ))}
-          {domains.length === 0 && (
-            <Text type="secondary" style={{ fontSize: '12px', fontStyle: 'italic' }}>
-              No domains
-            </Text>
-          )}
-        </div>
-      ),
-      width: '40%',
-    },
-  ];
+  const handleSubmit = () => {
+    if (modalType === 'edit') {
+      form.validateFields().then(values => {
+        console.log('Edit values:', values, 'for', modalEntity, modalData);
+        message.success(`${modalEntity} updated successfully!`);
+        closeModal();
+        // TODO: Implement actual API call
+      }).catch(err => {
+        console.log('Validation failed:', err);
+      });
+    } else {
+      if (modalEntity === 'category') {
+        console.log('Delete category:', modalData);
+        message.success(`Category deleted successfully!`);
+        closeModal();
+      } else {
+        form.validateFields().then(values => {
+          if (modalEntity === 'subcategory') {
+            console.log('Delete subcategory:', values.subcategoryToDelete);
+            message.success(`Sub-category deleted successfully!`);
+          } else if (modalEntity === 'domain') {
+            console.log('Delete domain:', values.domainToDelete);
+            message.success(`Domain deleted successfully!`);
+          }
+          closeModal();
+        }).catch(err => {
+          console.log('Delete validation failed:', err);
+        });
+      }
+    }
+  };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <Spin size="large" />
-          <div style={{ marginTop: '16px' }}>
-            <Text>Loading domain data...</Text>
-          </div>
-        </div>
-      </Card>
+  // Action handlers
+  const handleEditCategory = (categoryId: string, categoryName: string) => {
+    const categoryData = domainsWithCategorizationData?.data?.domains?.find(
+      (item: any) => item.category._id === categoryId
     );
-  }
 
-  if (error) {
-    return (
-      <Card>
-        <Alert
-          message="Error Loading Data"
-          description="There was an error loading the domain data. Please try again later."
-          type="error"
-          showIcon
-        />
-      </Card>
-    );
-  }
+    const modalDataObj: ModalData = {
+      id: categoryId,
+      name: categoryName,
+      subCategoryId: categoryData?.subCategory?._id || undefined,
+      description: categoryData?.category?.description || ''
+    };
+
+    openModal('edit', 'category', modalDataObj);
+  };
+
+  const handleDeleteCategory = (categoryId: string, categoryName: string) => {
+    openModal('delete', 'category', { id: categoryId, name: categoryName });
+  };
+
+  const handleEditSubCategory = (subCategoryId: string, subCategoryName: string, categoryId?: string) => {
+    let categoryData;
+
+    if (subCategoryId && subCategoryId !== categoryId) {
+      categoryData = domainsWithCategorizationData?.data?.domains?.find(
+        (item: any) => item.subCategory._id === subCategoryId
+      );
+    }
+
+    if (!categoryData && categoryId) {
+      categoryData = domainsWithCategorizationData?.data?.domains?.find(
+        (item: any) => item.category._id === categoryId
+      );
+    }
+
+    if (!categoryData) {
+      categoryData = domainsWithCategorizationData?.data?.domains?.find(
+        (item: any) =>
+          item.subCategory._id === subCategoryId || item.category._id === (categoryId || subCategoryId)
+      );
+    }
+
+    const modalDataObj: ModalData = {
+      id: subCategoryId,
+      name: subCategoryName,
+      categoryId: categoryData?.category?._id || categoryId || subCategoryId,
+      categoryName: categoryData?.category?.name || '',
+      description: categoryData?.subCategory?.description || ''
+    };
+
+    openModal('edit', 'subcategory', modalDataObj);
+  };
+
+  const handleDeleteSubCategory = (subCategoryId: string, subCategoryName: string, categoryId: string) => {
+    openModal('delete', 'subcategory', {
+      id: subCategoryId,
+      name: subCategoryName,
+      categoryId: categoryId
+    });
+  };
+
+  const handleEditDomain = (domainId: string, domainName: string, categoryId: string, subCategoryId: string | null) => {
+    const modalDataObj: ModalData = {
+      id: domainId,
+      name: domainName,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+      description: ''
+    };
+    openModal('edit', 'domain', modalDataObj);
+  };
+
+  const handleDeleteDomain = (domainId: string, domainName: string, categoryId: string, subCategoryId?: string) => {
+    openModal('delete', 'domain', {
+      id: domainId,
+      name: domainName,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId
+    });
+  };
+
+  // Form handlers for edit modal
+  const handleCategorySelection = (categoryId: string) => {
+    setSelectedCategoryForSubCategory(categoryId);
+
+    const availableSubCategories = getSubCategoriesForCategoryHelper(categoryId);
+
+    if (availableSubCategories.length > 0) {
+      const firstSubCategory = availableSubCategories[0];
+
+      form.setFieldsValue({
+        category: categoryId,
+        subcategory: firstSubCategory.id,
+        name: '',
+        description: ''
+      });
+
+      setTimeout(() => {
+        handleSubCategorySelectionForSubCategory(firstSubCategory.id);
+      }, 100);
+    } else {
+      form.setFieldsValue({
+        category: categoryId,
+        subcategory: undefined,
+        name: '',
+        description: ''
+      });
+    }
+
+    setIsNameFieldDisabled(false);
+  };
+
+  const handleCategorySelectionForDomain = (categoryId: string) => {
+    setSelectedCategoryForDomain(categoryId);
+
+    const availableSubCategories = getSubCategoriesForCategoryHelper(categoryId);
+
+    if (availableSubCategories.length > 0) {
+      const firstSubCategory = availableSubCategories[0];
+      setSelectedSubCategoryForDomain(firstSubCategory.id);
+
+      const availableDomains = getDomainsForCategoryAndSubCategoryHelper(categoryId, firstSubCategory.id);
+      const firstDomain = availableDomains.length > 0 ? availableDomains[0] : null;
+
+      form.setFieldsValue({
+        category: categoryId,
+        subcategory: firstSubCategory.id,
+        domain: firstDomain?._id || undefined,
+        name: firstDomain?.name || '',
+        description: firstDomain?.description || ''
+      });
+    } else {
+      setSelectedSubCategoryForDomain(null);
+      const allDomainsForCategory = domainsWithCategorizationData?.data?.domains
+        ?.filter((item: any) => item.category._id === categoryId)
+        ?.flatMap((item: any) => item.domains) || [];
+
+      const firstDomain = allDomainsForCategory.length > 0 ? allDomainsForCategory[0] : null;
+
+      form.setFieldsValue({
+        category: categoryId,
+        subcategory: undefined,
+        domain: firstDomain?._id || undefined,
+        name: firstDomain?.name || '',
+        description: firstDomain?.description || ''
+      });
+    }
+  };
+
+  const handleSubCategorySelectionForDomain = (subCategoryId: string | null) => {
+    setSelectedSubCategoryForDomain(subCategoryId);
+
+    if (!selectedCategoryForDomain) return;
+
+    let availableDomains = [];
+
+    if (subCategoryId) {
+      // Show domains for specific sub-category
+      availableDomains = getDomainsForCategoryAndSubCategoryHelper(selectedCategoryForDomain, subCategoryId);
+    } else {
+      // Show all domains for the category when sub-category is cleared
+      availableDomains = domainsWithCategorizationData?.data?.domains
+        ?.filter((item: any) => item.category._id === selectedCategoryForDomain)
+        ?.flatMap((item: any) => item.domains) || [];
+    }
+
+    const firstDomain = availableDomains.length > 0 ? availableDomains[0] : null;
+
+    form.setFieldsValue({
+      subcategory: subCategoryId,
+      domain: firstDomain?._id || undefined,
+      name: firstDomain?.name || '',
+      description: firstDomain?.description || ''
+    });
+  };
+
+  const handleDomainSelection = (domainId: string) => {
+    let selectedDomain = null;
+
+    if (selectedCategoryForDomain && selectedSubCategoryForDomain) {
+      const domains = getDomainsForCategoryAndSubCategoryHelper(selectedCategoryForDomain, selectedSubCategoryForDomain);
+      selectedDomain = domains.find((domain: any) => domain._id === domainId);
+    } else if (selectedCategoryForDomain) {
+      const allDomainsForCategory = domainsWithCategorizationData?.data?.domains
+        ?.filter((item: any) => item.category._id === selectedCategoryForDomain)
+        ?.flatMap((item: any) => item.domains) || [];
+
+      selectedDomain = allDomainsForCategory.find((domain: any) => domain._id === domainId);
+    }
+
+    if (selectedDomain) {
+      form.setFieldsValue({
+        domain: domainId,
+        name: selectedDomain.name,
+        description: selectedDomain.description || ''
+      });
+    }
+  };
+
+  const handleSubCategorySelectionForSubCategory = (subCategoryId: string) => {
+    if (!selectedCategoryForSubCategory) return;
+
+    if (domainsWithCategorizationData?.data?.domains) {
+      const categoryData = domainsWithCategorizationData.data.domains.find(
+        (item: any) =>
+          item.category._id === selectedCategoryForSubCategory && item.subCategory._id === subCategoryId
+      );
+
+      if (categoryData && categoryData.subCategory) {
+        const subCategoryName = categoryData.subCategory.name;
+        const isNoSubCategory = subCategoryName === 'No Sub-Category' || subCategoryName.toLowerCase().includes('no sub-category');
+        setIsNameFieldDisabled(isNoSubCategory);
+
+        const nameValue = isNoSubCategory ? '' : subCategoryName;
+
+        form.setFieldsValue({
+          subcategory: subCategoryId,
+          name: nameValue,
+          description: categoryData.subCategory.description || ''
+        });
+
+        if (isNoSubCategory) {
+          setTimeout(() => {
+            form.setFieldValue('name', '');
+          }, 100);
+        }
+      }
+    }
+  };
+
+  // Create table columns
+  const columns = createTableColumns({
+    onEditCategory: handleEditCategory,
+    onEditSubCategory: handleEditSubCategory,
+    onEditDomain: handleEditDomain,
+    onDeleteCategory: handleDeleteCategory,
+    onDeleteSubCategory: handleDeleteSubCategory,
+    onDeleteDomain: handleDeleteDomain
+  });
 
   return (
-    <div>
-      <Card>
-        <div style={{ marginBottom: '20px' }}>
-          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-            Domain, Category & Sub-Category Overview
-          </Title>
-          <Text type="secondary">
-            Complete listing of all domains with their associated categories and sub-categories
-          </Text>
-        </div>
+    <>
+      <DomainTableCore
+        tableData={tableData}
+        columns={columns}
+        isLoading={isLoading}
+        error={error}
+        searchTerm={searchTerm}
+        debouncedSearchTerm={debouncedSearchTerm}
+        currentPage={currentPage}
+        paginationData={domainsWithCategorizationData?.data?.pagination}
+        onSearchChange={handleSearchChange}
+        onPageChange={setCurrentPage}
+      />
 
-        {/* Search Input */}
-        <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
-          <Col xs={24} sm={12} md={8}>
-            <Input
-              placeholder="Search domains, categories, or subcategories..."
-              prefix={<SearchOutlined />}
-              value={searchTerm}
-              onChange={handleSearchChange}
-              allowClear
-            />
-          </Col>
-        </Row>
-
-        {tableData.length === 0 ? (
-          <Alert
-            message="No Data Available"
-            description={
-              debouncedSearchTerm 
-                ? `No results found for "${debouncedSearchTerm}". Try adjusting your search terms.`
-                : "No domains, categories, or sub-categories have been created yet."
-            }
-            type="info"
-            showIcon
-            style={{ marginTop: '20px' }}
-          />
-        ) : (
-          <>
-            <Table
-              columns={columns}
-              dataSource={tableData}
-              rowKey="key"
-              pagination={{
-                current: domainsWithCategorizationData?.data?.pagination?.currentPage || currentPage,
-                pageSize: domainsWithCategorizationData?.data?.pagination?.limit || pageSize,
-                total: domainsWithCategorizationData?.data?.pagination?.totalCount || 0,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                position: ['bottomCenter'],
-                showTotal: (total, range) => {
-                  const currentPage = domainsWithCategorizationData?.data?.pagination?.currentPage || 1;
-                  return `Showing (${currentPage} of ${domainsWithCategorizationData?.data?.pagination?.totalPages || 1})`;
-                },
-                onChange: (page, size) => {
-                  setCurrentPage(page);
-                }
-              }}
-              scroll={{ x: 800 }}
-              size="small"
-              bordered
-              style={{ backgroundColor: '#fafafa' }}
-            />
-          </>
-        )}
-      </Card>
-    </div>
+      {modalType === 'edit' ? (
+        <EditModal
+          isOpen={isModalOpen}
+          entity={modalEntity}
+          data={modalData}
+          form={form}
+          availableCategories={availableCategories}
+          selectedCategoryForSubCategory={selectedCategoryForSubCategory}
+          selectedCategoryForDomain={selectedCategoryForDomain}
+          selectedSubCategoryForDomain={selectedSubCategoryForDomain}
+          domainsData={domainsWithCategorizationData?.data?.domains}
+          onCancel={closeModal}
+          onSubmit={handleSubmit}
+          onCategorySelection={handleCategorySelection}
+          onCategorySelectionForDomain={handleCategorySelectionForDomain}
+          onSubCategorySelection={handleSubCategorySelectionForSubCategory}
+          onSubCategorySelectionForDomain={handleSubCategorySelectionForDomain}
+          onDomainSelection={handleDomainSelection}
+          getSubCategoriesForCategory={getSubCategoriesForCategoryHelper}
+          getDomainsForCategoryAndSubCategory={getDomainsForCategoryAndSubCategoryHelper}
+        />
+      ) : (
+        <DeleteModal
+          isOpen={isModalOpen}
+          entity={modalEntity}
+          data={modalData}
+          form={form}
+          domainsData={domainsWithCategorizationData?.data?.domains}
+          onCancel={closeModal}
+          onSubmit={handleSubmit}
+          getSubCategoriesForCategory={getSubCategoriesForCategoryHelper}
+          getDomainsForCategoryAndSubCategory={getDomainsForCategoryAndSubCategoryHelper}
+        />
+      )}
+    </>
   );
 };
 
