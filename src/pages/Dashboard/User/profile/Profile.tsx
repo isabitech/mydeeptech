@@ -8,6 +8,7 @@ import {
   Card,
   Upload,
   Space,
+  Spin,
 } from "antd";
 import { UploadOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import Header from "../Header";
@@ -18,10 +19,12 @@ import { useUserContext } from "../../../../UserContext";
 import { retrieveUserInfoFromStorage } from "../../../../helpers";
 import { notification } from "antd";
 import { africanCountries } from "../../../../utils/africanCountries";
+import { supportedBanks } from "../../../../store/supportedBanks";
 import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
 } from "../../../../utils/countryTimezoneMapping";
+import { useVerifyAccountNumber } from "../../../../hooks/Auth/User/Paystack/useVerifyAccountNumber";
 import { endpoints } from "../../../../store/api/endpoints";
 import { useUploadFile } from "../../../../hooks/useUploadFile";
 import { DOMAIN_OPTIONS } from "../../../../components/MultiStageSignUpForm";
@@ -105,6 +108,18 @@ const Profile = () => {
   // Watch form values at the top level to avoid conditional hooks
   const paymentCurrency = Form.useWatch("paymentCurrency", form);
   const paymentMethod = Form.useWatch("paymentMethod", form);
+  const accountNumber = Form.useWatch("accountNumber", form);
+  const bankCode = Form.useWatch("bankCode", form);
+
+  // Account verification
+  const {
+    data: verificationData,
+    isLoading: isVerifying,
+    error: verificationError,
+    isSuccess: verificationSuccess,
+  } = useVerifyAccountNumber(accountNumber || "", bankCode || "");
+
+  const [hasVerifiedAccount, setHasVerifiedAccount] = useState(false);
 
   // Load user from storage (if not already in context)
   useEffect(() => {
@@ -172,6 +187,15 @@ const Profile = () => {
             setHasSelectedCountry(true);
           }
 
+          // Check if we have existing account details that might be pre-verified
+          if (
+            result.data?.paymentInfo?.accountName && 
+            result.data?.paymentInfo?.accountNumber && 
+            result.data?.paymentInfo?.bankCode
+          ) {
+            setHasVerifiedAccount(true); // Assume existing accounts are verified
+          }
+
           setHasFetchedProfile(true);
         } else {
           console.log("❌ Profile fetch error:", result.error);
@@ -190,6 +214,68 @@ const Profile = () => {
       const timezoneDisplayName = getTimezoneDisplayName(timezone);
       form.setFieldsValue({
         timeZone: timezoneDisplayName,
+      });
+    }
+  };
+
+  // Handle account verification result
+  useEffect(() => {
+    if (verificationSuccess && verificationData?.status) {
+      const accountName = verificationData.data?.account_name;
+      if (accountName) {
+        form.setFieldsValue({
+          accountName: accountName,
+        });
+        setHasVerifiedAccount(true);
+        notification.success({
+          message: "Account Verified",
+          description: `Account verified successfully for ${accountName}`,
+          duration: 3,
+        });
+      }
+    } else if (verificationError) {
+      setHasVerifiedAccount(false);
+      form.setFieldsValue({
+        accountName: "",
+      });
+      notification.error({
+        message: "Verification Failed",
+        description: "Unable to verify account details. Please check your account number and bank selection.",
+        duration: 4,
+      });
+    }
+  }, [verificationSuccess, verificationData, verificationError, form]);
+
+  // Reset verification status when account number or bank changes
+  useEffect(() => {
+    if (accountNumber || bankCode) {
+      // Only reset if we're in editing mode and the account details have changed
+      if (isEditing) {
+        setHasVerifiedAccount(false);
+        if (!isVerifying && !verificationSuccess) {
+          // Only clear account name if it hasn't been verified yet
+          const currentAccountName = form.getFieldValue("accountName");
+          if (currentAccountName && !hasVerifiedAccount) {
+            form.setFieldsValue({
+              accountName: "",
+            });
+          }
+        }
+      }
+    }
+  }, [accountNumber, bankCode, isEditing, isVerifying, verificationSuccess, hasVerifiedAccount, form]);
+
+  const handleManualVerification = async () => {
+    if (accountNumber?.length === 10 && bankCode) {
+      // The hook will automatically trigger due to dependency change
+      setHasVerifiedAccount(false);
+      form.setFieldsValue({
+        accountName: "",
+      });
+    } else {
+      notification.warning({
+        message: "Incomplete Information",
+        description: "Please enter a valid 10-digit account number and select your bank first.",
       });
     }
   };
@@ -267,6 +353,17 @@ const Profile = () => {
           description: "User ID not found. Please try logging in again.",
         });
         return;
+      }
+
+      // Validate account verification for NGN payments
+      if (values.paymentCurrency === "NGN" && values.accountNumber && values.bankCode) {
+        if (!hasVerifiedAccount && !verificationSuccess) {
+          notification.error({
+            message: "Account Verification Required",
+            description: "Please verify your account details before saving. Ensure your account number and bank are correct.",
+          });
+          return;
+        }
       }
 
       const payload = {
@@ -353,6 +450,15 @@ const Profile = () => {
             resumeUrl: refreshResult.data?.attachments?.resumeUrl,
             idDocumentUrl: refreshResult.data?.attachments?.idDocumentUrl,
           });
+          
+          // Preserve verification status after save
+          if (
+            refreshResult.data?.paymentInfo?.accountName && 
+            refreshResult.data?.paymentInfo?.accountNumber && 
+            refreshResult.data?.paymentInfo?.bankCode
+          ) {
+            setHasVerifiedAccount(true);
+          }
         }
       } else {
         notification.error({
@@ -847,19 +953,74 @@ const Profile = () => {
                     {paymentCurrency === "NGN" && (
                       <>
                         <Form.Item
-                          label="Account Name"
+                          label={
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span>Account Name</span>
+                                {isVerifying && (
+                                  <Spin size="small" />
+                                )}
+                                {verificationSuccess && (
+                                  <span className="text-green-500 text-xs">✓ Verified</span>
+                                )}
+                                {verificationError && (
+                                  <span className="text-red-500 text-xs">✗ Verification failed</span>
+                                )}
+                              </div>
+                              {isEditing && accountNumber?.length === 10 && bankCode && !isVerifying && (
+                                <Button
+                                  type="link"
+                                  size="small"
+                                  onClick={handleManualVerification}
+                                  style={{ padding: 0, height: "auto" }}
+                                >
+                                  {verificationError ? "Retry" : "Verify"}
+                                </Button>
+                              )}
+                            </div>
+                          }
                           name="accountName"
                           rules={[
                             {
                               required: true,
-                              message: "Account name is required",
+                              message: "Account verification is required",
                             },
                           ]}
+                          help={
+                            !hasVerifiedAccount && accountNumber && bankCode && accountNumber.length === 10
+                              ? "Verifying account details..."
+                              : hasVerifiedAccount
+                              ? "Account verified with Paystack"
+                              : isEditing
+                              ? "Enter a 10-digit account number and select your bank for automatic verification"
+                              : "Account name from verification"
+                          }
                         >
                           <Input
-                            disabled={!isEditing}
-                            className="!font-[gilroy-regular]"
-                            placeholder="Enter account name as it appears on your bank"
+                            disabled={true} // Always disabled - populated by verification
+                            className={`!font-[gilroy-regular] ${
+                              verificationSuccess
+                                ? "border-green-500 bg-green-50"
+                                : verificationError
+                                ? "border-red-500 bg-red-50"
+                                : isVerifying
+                                ? "border-blue-500 bg-blue-50"
+                                : ""
+                            }`}
+                            placeholder={
+                              isVerifying
+                                ? "Verifying account..."
+                                : "Account name will appear after verification"
+                            }
+                            suffix={
+                              isVerifying ? (
+                                <Spin size="small" />
+                              ) : verificationSuccess ? (
+                                <span className="text-green-500">✓</span>
+                              ) : verificationError ? (
+                                <span className="text-red-500">✗</span>
+                              ) : null
+                            }
                           />
                         </Form.Item>
 
@@ -876,10 +1037,31 @@ const Profile = () => {
                               message: "Account number must be 10 digits",
                             },
                           ]}
+                          help={
+                            accountNumber?.length === 10 && bankCode
+                              ? isVerifying
+                                ? "Verifying account..."
+                                : verificationSuccess
+                                ? "Account verified ✓"
+                                : verificationError
+                                ? "Verification failed. Please check your details."
+                                : "Ready for verification"
+                              : "Enter your 10-digit account number"
+                          }
                         >
                           <Input
                             disabled={!isEditing}
-                            className="!font-[gilroy-regular]"
+                            className={`!font-[gilroy-regular] ${
+                              accountNumber?.length === 10 && bankCode
+                                ? verificationSuccess
+                                  ? "border-green-500"
+                                  : verificationError
+                                  ? "border-red-500"
+                                  : isVerifying
+                                  ? "border-blue-500"
+                                  : ""
+                                : ""
+                            }`}
                             placeholder="Enter 10-digit account number"
                             maxLength={10}
                           />
@@ -916,78 +1098,7 @@ const Profile = () => {
                                 .toLowerCase()
                                 .includes(input.toLowerCase())
                             }
-                            options={[
-                              {
-                                value: "Access Bank",
-                                label: "Access Bank",
-                                bankCode: "access-bank",
-                              },
-                              {
-                                value: "Fidelity Bank",
-                                label: "Fidelity Bank",
-                                bankCode: "fidelity-bank",
-                              },
-                              {
-                                value: "First Bank of Nigeria",
-                                label: "First Bank of Nigeria",
-                                bankCode: "first-bank-of-nigeria",
-                              },
-                              {
-                                value: "Guaranty Trust Bank",
-                                label: "Guaranty Trust Bank (GTBank)",
-                                bankCode: "guaranty-trust-bank",
-                              },
-                              {
-                                value: "United Bank for Africa",
-                                label: "United Bank for Africa (UBA)",
-                                bankCode: "united-bank-for-africa",
-                              },
-                              {
-                                value: "Zenith Bank",
-                                label: "Zenith Bank",
-                                bankCode: "zenith-bank",
-                              },
-                              {
-                                value: "Ecobank Nigeria",
-                                label: "Ecobank Nigeria",
-                                bankCode: "ecobank-nigeria",
-                              },
-                              {
-                                value: "Union Bank of Nigeria",
-                                label: "Union Bank of Nigeria",
-                                bankCode: "union-bank-of-nigeria",
-                              },
-                              {
-                                value: "Stanbic IBTC Bank",
-                                label: "Stanbic IBTC Bank",
-                                bankCode: "union-bank-of-nigeria",
-                              },
-                              {
-                                value: "Sterling Bank",
-                                label: "Sterling Bank",
-                                bankCode: "sterling-bank",
-                              },
-                              {
-                                value: "Wema Bank",
-                                label: "Wema Bank",
-                                bankCode: "wema-bank",
-                              },
-                              {
-                                value: "Polaris Bank",
-                                label: "Polaris Bank",
-                                bankCode: "polaris-bank",
-                              },
-                              {
-                                value: "Kuda Bank",
-                                label: "Kuda Bank",
-                                bankCode: "kuda-bank",
-                              },
-                              {
-                                value: "VFD Microfinance Bank",
-                                label: "VFD Microfinance Bank",
-                                bankCode: "vfd",
-                              },
-                            ]}
+                            options={supportedBanks}
                           />
                         </Form.Item>
 
