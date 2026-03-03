@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+
 import {
   Card,
   Tabs,
@@ -51,6 +52,8 @@ const PaymentManagement = () => {
   const [exchangeRateAdjustment, setExchangeRateAdjustment] = useState<number>(0);
   // Retry counter for exchange rate
   const [retryCount, setRetryCount] = useState<number>(0);
+  // Selected invoices tracking
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
   
   // Use custom hook for exchange rate
   const {
@@ -123,6 +126,28 @@ const PaymentManagement = () => {
   useEffect(() => {
     setRetryCount(0);
   }, [selectedCountry]);
+
+  // Calculate total sum of selected invoices
+  const selectedInvoicesTotal = React.useMemo(() => {
+    if (selectedInvoiceIds.length === 0 || !invoices) return 0;
+    
+    return invoices
+      .filter(invoice => selectedInvoiceIds.includes(invoice._id))
+      .reduce((total, invoice) => total + (invoice.invoiceAmount || 0), 0);
+  }, [selectedInvoiceIds, invoices]);
+
+  // Calculate converted total based on exchange rate
+  const convertedSelectedTotal = React.useMemo(() => {
+    if (selectedInvoicesTotal === 0) return 0;
+    
+    const exchangeRate = !isExchangeRateError && exchangeRateData?.rate !== undefined 
+      ? Math.max(0, exchangeRateData.rate - exchangeRateAdjustment)
+      : isExchangeRateError && exchangeRateAdjustment > 0
+        ? exchangeRateAdjustment
+        : 0;
+    
+    return selectedInvoicesTotal * exchangeRate;
+  }, [selectedInvoicesTotal, isExchangeRateError, exchangeRateData?.rate, exchangeRateAdjustment]);
 
   const loadInvoices = () => {
     const paymentStatus = activeTab === "paid" ? "paid" : "unpaid";
@@ -203,7 +228,7 @@ const PaymentManagement = () => {
           <Card>
             <Statistic
               title="Total Invoices"
-              value={summary?.totalAmount || 0}
+              value={summary?.totalInvoices || 0}
               prefix={<FileTextOutlined />}
             />
           </Card>
@@ -362,6 +387,46 @@ const PaymentManagement = () => {
             </Space>
           </Col>
         </Row>
+        
+        {/* Selected Invoices Total */}
+        {selectedInvoiceIds.length > 0 && (
+          <Row gutter={16} align="middle" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+            <Col span={24}>
+              <Space size={24} align="center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontWeight: 500, marginRight: 8 }}>Selected Invoices Total:</span>
+                  <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#1890ff' }}>
+                    {selectedInvoiceIds.length} invoice{selectedInvoiceIds.length > 1 ? 's' : ''}
+                  </span>
+                  <span style={{ marginLeft: 12, color: '#666' }}>|</span>
+                  <span style={{ marginLeft: 12, fontWeight: 'bold', fontSize: '18px', color: '#52c41a' }}>
+                    ${selectedInvoicesTotal.toFixed(2)} USD
+                  </span>
+                  {convertedSelectedTotal > 0 && (
+                    <>
+                      <span style={{ marginLeft: 12, color: '#666' }}>→</span>
+                      <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: '18px', color: '#f39c12' }}>
+                        {formatMoney(
+                          convertedSelectedTotal,
+                          countryCurrencyMap[selectedCountry],
+                          selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                        )}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <Button 
+                  size="small" 
+                  type="link" 
+                  onClick={() => setSelectedInvoiceIds([])}
+                  style={{ color: '#999' }}
+                >
+                  Clear Selection
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        )}
       </Card>
 
       {/* Exchange Rate Error Warning */}
@@ -432,6 +497,8 @@ const PaymentManagement = () => {
                         : undefined
                   }
                   exchangeRateError={isExchangeRateError}
+                  selectedInvoiceIds={selectedInvoiceIds}
+                  onSelectedInvoiceIdsChange={setSelectedInvoiceIds}
                 />
               ),
             },
