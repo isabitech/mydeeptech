@@ -44,6 +44,8 @@ interface UnpaidProps {
   onGenerateMpesaCSV?: (invoiceIds?: string[] | null) => Promise<any>;
   exchangeRateToSend?: number;
   exchangeRateError?: boolean;
+  selectedInvoiceIds?: string[];
+  onSelectedInvoiceIdsChange?: (selectedIds: string[]) => void;
 }
 
 const Unpaid: React.FC<UnpaidProps> = ({
@@ -59,6 +61,8 @@ const Unpaid: React.FC<UnpaidProps> = ({
   onGenerateMpesaCSV,
   exchangeRateToSend,
   exchangeRateError,
+  selectedInvoiceIds: propSelectedInvoiceIds,
+  onSelectedInvoiceIdsChange,
 }) => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -66,9 +70,21 @@ const Unpaid: React.FC<UnpaidProps> = ({
   const [isBulkAuthorizing, setIsBulkAuthorizing] = useState(false);
   const [isGeneratingCSV, setIsGeneratingCSV] = useState(false);
   const [isGeneratingMpesaCSV, setIsGeneratingMpesaCSV] = useState(false);
-  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  const [localSelectedInvoiceIds, setLocalSelectedInvoiceIds] = useState<string[]>([]);
   const [showNGNOnly, setShowNGNOnly] = useState(false);
   const [showKESOnly, setShowKESOnly] = useState(false);
+
+  // Use prop selectedInvoiceIds if provided, otherwise use local state
+  const selectedInvoiceIds = propSelectedInvoiceIds || localSelectedInvoiceIds;
+  
+  // Function to update selected invoice IDs
+  const updateSelectedInvoiceIds = (newIds: string[]) => {
+    if (onSelectedInvoiceIdsChange) {
+      onSelectedInvoiceIdsChange(newIds);
+    } else {
+      setLocalSelectedInvoiceIds(newIds);
+    }
+  };
 
   const paymentWithInvoiceMutation = paymentMutationService.useBulkInvoicePayment();
 
@@ -253,7 +269,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   const rowSelection = {
     selectedRowKeys: selectedInvoiceIds,
     onChange: (selectedRowKeys: React.Key[]) => {
-      setSelectedInvoiceIds(selectedRowKeys as string[]);
+      updateSelectedInvoiceIds(selectedRowKeys as string[]);
     },
     getCheckboxProps: (record: AdminInvoice) => ({
       disabled: record.paymentStatus === 'paid',
@@ -818,7 +834,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
                   checked={showNGNOnly}
                   onChange={(e) => {
                     setShowNGNOnly(e.target.checked);
-                    setSelectedInvoiceIds([]); // Clear selection when filter changes
+                    updateSelectedInvoiceIds([]); // Clear selection when filter changes
                   }}
                 >
                   Nigerian users (NGN)
@@ -827,7 +843,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
                   checked={showKESOnly}
                   onChange={(e) => {
                     setShowKESOnly(e.target.checked);
-                    setSelectedInvoiceIds([]); // Clear selection when filter changes
+                    updateSelectedInvoiceIds([]); // Clear selection when filter changes
                   }}
                 >
                   Kenyan users (KES)
@@ -845,7 +861,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
               {selectedInvoiceIds.length > 0 && (
                 <Button 
                   size="small" 
-                  onClick={() => setSelectedInvoiceIds([])}
+                  onClick={() => updateSelectedInvoiceIds([])}
                 >
                   Clear Selection
                 </Button>
@@ -858,7 +874,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
                     const selectableIds = filteredInvoices
                       .filter(inv => inv.paymentStatus !== 'paid')
                       .map(inv => inv._id);
-                    setSelectedInvoiceIds(selectableIds);
+                    updateSelectedInvoiceIds(selectableIds);
                   }}
                 >
                   Select All {showNGNOnly && showKESOnly ? 'NGN/KES ' : showNGNOnly ? 'NGN ' : showKESOnly ? 'KES ' : ''}Unpaid

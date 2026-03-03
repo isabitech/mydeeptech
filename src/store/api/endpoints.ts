@@ -198,5 +198,8 @@ export const  endpoints = {
   },
   exchangeRate: {
     getByCountry: "/",
+  },
+  payStack : {
+    verifyAccountDetails: "https://api.paystack.co/bank/resolve"
   }
 };
