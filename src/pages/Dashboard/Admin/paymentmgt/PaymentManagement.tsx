@@ -427,7 +427,9 @@ const PaymentManagement = () => {
                   exchangeRateToSend={
                     !isExchangeRateError && exchangeRateData?.rate !== undefined 
                       ? Number(Math.max(0, exchangeRateData.rate - exchangeRateAdjustment).toFixed(2)) 
-                      : undefined
+                      : isExchangeRateError && exchangeRateAdjustment > 0
+                        ? Number(exchangeRateAdjustment.toFixed(2))
+                        : undefined
                   }
                   exchangeRateError={isExchangeRateError}
                 />
