@@ -142,74 +142,9 @@ const Overview = () => {
           </div>
         </Card>
       </motion.div>
-<<<<<<< HEAD
-        {/* Profile Completion & Welcome Section */}
-        {/* <motion.div variants={sectionVariants}>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} lg={8}>
-              <ProfileCompletionCard 
-                profileCompletion={data.profileCompletion}
-                recommendations={data.recommendations}
-              />
-            </Col>
-            <Col xs={24} lg={16}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg p-6 text-white h-full"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <UserOutlined className="text-2xl" />
-                  <div>
-                    <h2 className="text-xl font-bold">Account Overview</h2>
-                    <p className="text-blue-100">Your platform status and recent activity</p>
-                  </div>
-                </div>
-                
-                <Row gutter={[16, 16]} className="mt-4">
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Annotator Status</div>
-                      <div className="font-medium capitalize">{data.userProfile.annotatorStatus}</div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Member Since</div>
-                      <div className="font-medium">
-                        {new Date(data.userProfile.joinedDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Email Status</div>
-                      <div className="font-medium">
-                        {data.userProfile.isEmailVerified ? 'Verified' : 'Unverified'}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">MicroTasker Status</div>
-                      <div className="font-medium capitalize">{data.userProfile.microTaskerStatus}</div>
-                    </div>
-                  </Col>
-                </Row>
-              </motion.div>
-            </Col>
-          </Row>
-        </motion.div> */}
-
-=======
 
       {/* Content */}
       <div className="flex flex-col gap-3 lg:gap-6 px-2 max-w-full flex-1">
->>>>>>> dev
         {/* Financial Summary */}
         <motion.div variants={sectionVariants}>
           <FinancialSummaryCards 

@@ -59,13 +59,8 @@ import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
 import InvoiceDetails from "./pages/Dashboard/Admin/___invoice/InvoiceDetails";
 import SendInvoice from "./pages/Dashboard/Admin/___invoice/SendInvoice";
 import EditInvoice from "./pages/Dashboard/Admin/___invoice/EditInvoice";
-<<<<<<< HEAD
+import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
-import NewInvoice from "./pages/Dashboard/Admin/___invoice/NewInvoice";
-import ProtectedLayout from "./components/layouts/ProtectedLayout";
-=======
-import ProtectedLayout from "./components/layouts/ProtectedLayout";
->>>>>>> dev
 
 const AppRoutes = () => {
   return (
