@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Row, Col, Spin, Alert, Button, Card } from 'antd';
+import { useEffect } from 'react';
+import { Spin, Alert, Button, Card } from 'antd';
 import { ReloadOutlined, TeamOutlined } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import Header from './Header';
@@ -119,9 +119,9 @@ const Overview = () => {
         <Header title={`Welcome back, ${data?.userProfile?.fullName}`} />
       </motion.div>
 
-      <hr />
-
-      {/* Slack Community Invite Section */}
+      {/* Content */}
+      <div className="h-full flex flex-col gap-6 overflow-auto px-2">
+              {/* Slack Community Invite Section */}
       <motion.div variants={sectionVariants}>
         <Card className="bg-gradient-to-r from-purple-500 to-blue-600 border-0 rounded-xl overflow-hidden">
           <div className="relative">
@@ -154,9 +154,6 @@ const Overview = () => {
           </div>
         </Card>
       </motion.div>
-
-      {/* Content */}
-      <div className="h-full flex flex-col gap-6 overflow-auto px-2">
         {/* Profile Completion & Welcome Section */}
         {/* <motion.div variants={sectionVariants}>
           <Row gutter={[24, 24]}>
