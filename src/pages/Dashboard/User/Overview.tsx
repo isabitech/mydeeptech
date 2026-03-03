@@ -40,9 +40,7 @@ const Overview = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="DTUser Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
           <Spin size="large" />
           <span className="ml-3">Loading your dashboard...</span>
@@ -53,9 +51,7 @@ const Overview = () => {
 
   if (error) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="DTUser Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
           <Alert
             message="Dashboard Error"
@@ -81,9 +77,9 @@ const Overview = () => {
 
   if (!data) {
     return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="Your Dashboard" />
-        <hr />
+      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
+        {/* <Header title="Your Dashboard" />
+        <hr /> */}
         <div className="flex justify-center items-center h-64">
           <Alert
             message="No Data Available"
@@ -109,18 +105,11 @@ const Overview = () => {
 
   return (
     <motion.div 
-      className="h-full flex flex-col gap-4 font-[gilroy-regular]"
+      className="h-full grid gap-5 lg:gap-10 font-[gilroy-regular]"
       initial="hidden"
       animate="visible"
       variants={pageVariants}
     >
-      {/* Header */}
-      <motion.div variants={sectionVariants}>
-        <Header title={`Welcome back, ${data?.userProfile?.fullName}`} />
-      </motion.div>
-
-      <hr />
-
       {/* Slack Community Invite Section */}
       <motion.div variants={sectionVariants}>
         <Card className="bg-gradient-to-r from-purple-500 to-blue-600 border-0 rounded-xl overflow-hidden">
@@ -131,7 +120,7 @@ const Overview = () => {
                 <TeamOutlined />
               </div>
             </div>
-            
+
          <SlackNotification />
             
             {/* Additional Info */}
@@ -156,69 +145,7 @@ const Overview = () => {
       </motion.div>
 
       {/* Content */}
-      <div className="h-full flex flex-col gap-6 overflow-auto px-2">
-        {/* Profile Completion & Welcome Section */}
-        {/* <motion.div variants={sectionVariants}>
-          <Row gutter={[24, 24]}>
-            <Col xs={24} lg={8}>
-              <ProfileCompletionCard 
-                profileCompletion={data.profileCompletion}
-                recommendations={data.recommendations}
-              />
-            </Col>
-            <Col xs={24} lg={16}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg p-6 text-white h-full"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <UserOutlined className="text-2xl" />
-                  <div>
-                    <h2 className="text-xl font-bold">Account Overview</h2>
-                    <p className="text-blue-100">Your platform status and recent activity</p>
-                  </div>
-                </div>
-                
-                <Row gutter={[16, 16]} className="mt-4">
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Annotator Status</div>
-                      <div className="font-medium capitalize">{data.userProfile.annotatorStatus}</div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Member Since</div>
-                      <div className="font-medium">
-                        {new Date(data.userProfile.joinedDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">Email Status</div>
-                      <div className="font-medium">
-                        {data.userProfile.isEmailVerified ? 'Verified' : 'Unverified'}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-sm text-blue-100">MicroTasker Status</div>
-                      <div className="font-medium capitalize">{data.userProfile.microTaskerStatus}</div>
-                    </div>
-                  </Col>
-                </Row>
-              </motion.div>
-            </Col>
-          </Row>
-        </motion.div> */}
-
+      <div className="flex flex-col gap-3 lg:gap-6 px-2 max-w-full flex-1">
         {/* Financial Summary */}
         <motion.div variants={sectionVariants}>
           <FinancialSummaryCards 

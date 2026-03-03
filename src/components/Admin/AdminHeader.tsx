@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, Button, Dropdown, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, MenuOutlined } from '@ant-design/icons';
 import { retrieveUserInfoFromStorage } from '../../helpers';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
+import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
 
 const { Text } = Typography;
 
@@ -26,15 +27,23 @@ interface UserInfo {
 }
 
 const AdminHeader: React.FC = () => {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toggleSidebar } = useSidebarContext();
-
+  const { setUserInfo, clearUserInfo } = useUserInfoActions();
+  const { userInfo } = useUserInfoStates();
 
   useEffect(() => {
     const loadUser = async () => {
-      const user = await retrieveUserInfoFromStorage();
-      setUserInfo(user);
+      try {
+        const user = await retrieveUserInfoFromStorage();
+        setUserInfo(user);
+      } catch (error) {
+        console.error('Failed to load user info:', error);
+        clearUserInfo();
+      } finally {
+        setIsLoading(false);
+      }
     };
     loadUser();
   }, []);
@@ -44,9 +53,32 @@ const AdminHeader: React.FC = () => {
     sessionStorage.removeItem('ACCESS_TOKEN');
     sessionStorage.removeItem('userInfo');
 
+    // Clear local storage as well (in case any auth data is stored there)
+    localStorage.removeItem('ACCESS_TOKEN');
+    localStorage.removeItem('userInfo');
+
+    // Clear all storage to ensure complete logout
+    sessionStorage.clear();
+    clearUserInfo();
     // Navigate to login
-    navigate('/auth/admin-login');
+    navigate('/auth/admin-login', { replace: true });
+
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="bg-white shadow-sm border-b px-6 py-3 flex items-center justify-center">
+        <div className="text-sm text-gray-500">Loading...</div>
+      </div>
+    );
+  }
+
+  // Only redirect after we've finished loading
+  if (!userInfo) {
+    return <Navigate to="/auth/admin-login" replace />;
+  }
+
 
   const userMenuItems = [
     {

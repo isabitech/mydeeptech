@@ -99,7 +99,7 @@ const AdminLogin: React.FC = () => {
 
     // Navigation is handled in the useAdminLogin hook
     if (result.success) {
-      navigate("/admin/overview");
+      navigate("/admin/overview", { replace: true });
       console.log("Admin login successful, navigating to dashboard");
     }
   };

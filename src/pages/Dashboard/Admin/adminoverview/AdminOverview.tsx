@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Button, Spin, Alert } from "antd";
 import { PlusSquareOutlined, ReloadOutlined } from "@ant-design/icons";
 import { motion } from 'framer-motion';
-import Header from "../../User/Header";
 import { useNavigate } from "react-router-dom";
 import { useAdminDashboard } from "../../../../hooks/Auth/Admin/useAdminDashboard";
 import OverviewCards from "./components/OverviewCards";
@@ -31,7 +30,6 @@ const AdminOverview = () => {
   if (error) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="Admin Overview" />
         <Alert
           message="Error Loading Dashboard"
           description={error}

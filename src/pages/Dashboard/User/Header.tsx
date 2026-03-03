@@ -1,4 +1,4 @@
-import { LogoutOutlined, SearchOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
+import { LogoutOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -37,9 +37,19 @@ const Header: React.FC<Props> = ({ title }) => {
     // Clear session storage
     sessionStorage.removeItem('ACCESS_TOKEN');
     sessionStorage.removeItem('userInfo');
-
-    // Navigate to login
-    navigate('/login');
+    
+    // Clear local storage as well (in case any auth data is stored there)
+    localStorage.removeItem('ACCESS_TOKEN');
+    localStorage.removeItem('userInfo');
+    
+    // Clear all storage to ensure complete logout
+    sessionStorage.clear();
+    
+    // Navigate to login and replace current history entry
+    navigate('/login', { replace: true });
+    
+    // Optional: Force a page reload to clear any cached state
+    window.location.replace('/login');
   };
 
   const userMenuItems = [
@@ -87,9 +97,9 @@ const Header: React.FC<Props> = ({ title }) => {
 
   return (
     // 
-    <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center -mx-6 -mt-6">
-      <div className="pl-10 lg:pl-0">
-        <h2 className="font-bold text-lg">{title}</h2>
+    <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
+      <div className="pl-10 lg:pl-0 hidden lg:block">
+        <h2 className="font-medium text-lg">{title}</h2>
       </div>
 
       <div className="flex items-center space-x-4 ml-auto">

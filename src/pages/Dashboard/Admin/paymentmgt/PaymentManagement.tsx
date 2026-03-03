@@ -298,7 +298,7 @@ const PaymentManagement = () => {
                 Exchange Rate ({countryCurrencyMap[selectedCountry]} / USD):
                 {isExchangeRateLoading ? (
                   <span style={{ marginLeft: 8, color: '#1890ff' }}>Loading...</span>
-                ) : isExchangeRateError ? (
+                ) : isExchangeRateError && exchangeRateAdjustment <= 0 ? (
                   <span style={{ marginLeft: 8 }}>
                     <span style={{ color: 'red', marginRight: 8 }}>
                       Error loading rate
@@ -320,6 +320,17 @@ const PaymentManagement = () => {
                       countryCurrencyMap[selectedCountry],
                       selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
                     )}
+                  </span>
+                ) : exchangeRateAdjustment > 0 ? (
+                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#f39c12' }}>
+                    {formatMoney(
+                      exchangeRateAdjustment,
+                      countryCurrencyMap[selectedCountry],
+                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                    )}
+                    <span style={{ fontSize: "12px", color: '#666', marginLeft: 4 }}>
+                      (using adjusted price)
+                    </span>
                   </span>
                 ) : (
                   <span style={{ marginLeft: 8, color: 'red' }}>N/A</span>

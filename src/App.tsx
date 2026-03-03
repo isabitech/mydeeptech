@@ -59,6 +59,7 @@ import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
 import InvoiceDetails from "./pages/Dashboard/Admin/___invoice/InvoiceDetails";
 import SendInvoice from "./pages/Dashboard/Admin/___invoice/SendInvoice";
 import EditInvoice from "./pages/Dashboard/Admin/___invoice/EditInvoice";
+import ProtectedLayout from "./components/layouts/ProtectedLayout";
 
 const AppRoutes = () => {
   return (
@@ -118,27 +119,30 @@ const AppRoutes = () => {
         <Route path="/auth/admin-signup" element={<AdminSignup />} />
         <Route path="/auth/admin-login" element={<AdminLogin />} />
 
-        {/* Admin Dashboard */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="overview" index element={<AdminOverview />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="annotators" element={<Annotators />} />
-          <Route path="assessments" element={<AssessmentManagementList />} />
-          <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
-          <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
-          <Route path="projects" element={<ProjectManagement />} />
-          <Route path="applications" element={<ApplicationManagement />} />
-          <Route path="jobs" element={<JobManagement />} />
-          <Route path="tasks" element={<TaskManagement />} />
-          <Route path="invoices" element={<InvoiceManagement />} />
-          <Route path="payments" element={<PaymentManagement />} />
-          <Route path="notifications" element={<NotificationManagement />} />
-          <Route path="chat" element={<ChatManagement />} />
-          <Route path="settings" element={<SettingsMgt />} />
-          <Route path="invoice-page" element={<InvoicePage/>} />
-          <Route path="invoice-page/:id" element={<InvoiceDetails />} />
-          <Route path="invoice-page/:id/send" element={<SendInvoice />} />
-          <Route path="invoice-page/:id/edit" element={<EditInvoice />} />
+        {/* Protected Admin Routes */}
+        <Route element={<ProtectedLayout />}>
+          {/* Admin Dashboard */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="overview" index element={<AdminOverview />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="annotators" element={<Annotators />} />
+            <Route path="assessments" element={<AssessmentManagementList />} />
+            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
+            <Route path="projects" element={<ProjectManagement />} />
+            <Route path="applications" element={<ApplicationManagement />} />
+            <Route path="jobs" element={<JobManagement />} />
+            <Route path="tasks" element={<TaskManagement />} />
+            <Route path="invoices" element={<InvoiceManagement />} />
+            <Route path="payments" element={<PaymentManagement />} />
+            <Route path="notifications" element={<NotificationManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
+            <Route path="settings" element={<SettingsMgt />} />
+            <Route path="invoice-page" element={<InvoicePage/>} />
+            <Route path="invoice-page/:id" element={<InvoiceDetails />} />
+            <Route path="invoice-page/:id/send" element={<SendInvoice />} />
+            <Route path="invoice-page/:id/edit" element={<EditInvoice />} />
+          </Route>
         </Route>
 
         {/* Redirect unmatched routes */}
