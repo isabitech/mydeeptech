@@ -98,8 +98,8 @@ const Header: React.FC<Props> = ({ title }) => {
   return (
     // 
     <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
-      <div className="pl-10 lg:pl-0 hidden lg:block">
-        <h2 className="font-medium text-lg">{title}</h2>
+      <div className="pl-10 lg:pl-0 hidden lg:block w-1/2">
+        <h2 className="font-medium text-lg capitalize truncate">{title}</h2>
       </div>
 
       <div className="flex items-center space-x-4 ml-auto">

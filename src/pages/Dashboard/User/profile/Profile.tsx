@@ -516,7 +516,6 @@ const handleSaveDomains = async () => {
   if (!userLoaded || loading) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="Profile" />
         <div className="flex items-center justify-center h-64">
           <p className="text-lg">Loading profile...</p>
         </div>
@@ -527,7 +526,6 @@ const handleSaveDomains = async () => {
   if (error) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-        <Header title="Profile" />
         <div className="flex items-center justify-center h-64">
           <p className="text-lg text-red-500">Error loading profile: {error}</p>
         </div>
@@ -537,7 +535,6 @@ const handleSaveDomains = async () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Profile" />
       <div className="mt-10 w-[90%] m-auto">
         {/* <div className="font-bold justify-start mb-6">
           <p className="text-lg">Profile</p>

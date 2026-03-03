@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Header from "../Header";
 import ActiveProjects from "./ActiveProjects";
 import AvailableProjects from "./AvailableProjects";
 import PendingProjects from "./PendingProjects";
@@ -35,9 +34,6 @@ const Projects = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      {/* Header */}
-      <Header title="Projects" />
-      
       {/* Navigation Buttons */}
       <div className="flex gap-2 flex-wrap">
         {list.map((item) => (
