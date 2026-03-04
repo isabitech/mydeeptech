@@ -200,6 +200,7 @@ export const  endpoints = {
     getByCountry: "/",
   },
   payStack : {
-    verifyAccountDetails: "https://api.paystack.co/bank/resolve"
+    verifyAccountDetails: "/payments/verify-account-number",
+    listAllNGNBanks: "/payments/get-banks-by-country",
   }
 };

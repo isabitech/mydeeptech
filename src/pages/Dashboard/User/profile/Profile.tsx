@@ -9,17 +9,18 @@ import {
   Upload,
   Space,
   Spin,
+  notification,
 } from "antd";
 import { UploadOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
 import Header from "../Header";
 import { useState, useEffect } from "react";
 import { useGetProfile } from "../../../../hooks/useGetProfile";
 import { useUpdateProfile } from "../../../../hooks/useUpdateProfile";
 import { useUserContext } from "../../../../UserContext";
 import { retrieveUserInfoFromStorage } from "../../../../helpers";
-import { notification } from "antd";
 import { africanCountries } from "../../../../utils/africanCountries";
-import { supportedBanks } from "../../../../store/supportedBanks";
+// import { supportedBanks } from "../../../../store/supportedBanks";
 import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
@@ -30,6 +31,7 @@ import { useUploadFile } from "../../../../hooks/useUploadFile";
 import { DOMAIN_OPTIONS } from "../../../../components/MultiStageSignUpForm";
 import domainQueryService from "../../../../services/domain-service/domain-query";
 import domainMutation from "../../../../services/domain-service/domain-mutation";
+import { Bank, useListAllNGNBanks } from "../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
 
 type Domain = {
   _id: string;
@@ -37,6 +39,7 @@ type Domain = {
 };
 
 const Profile = () => {
+  const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [userLoaded, setUserLoaded] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
@@ -111,15 +114,33 @@ const Profile = () => {
   const accountNumber = Form.useWatch("accountNumber", form);
   const bankCode = Form.useWatch("bankCode", form);
 
-  // Account verification
+  // Account verification state
+  const [hasVerifiedAccount, setHasVerifiedAccount] = useState(false);
+
+  // Account verification (only when editing and both accountNumber and bankCode are available)
   const {
     data: verificationData,
     isLoading: isVerifying,
     error: verificationError,
     isSuccess: verificationSuccess,
-  } = useVerifyAccountNumber(accountNumber || "", bankCode || "");
+    refetch: verificationRefetch
+  } = useVerifyAccountNumber(
+    isEditing ? (accountNumber || "") : "",
+    isEditing ? (bankCode || "") : ""
+  );
 
-  const [hasVerifiedAccount, setHasVerifiedAccount] = useState(false);
+  console.log("🔍 Verification Debug:", {
+    accountNumber,
+    bankCode,
+    isEditing,
+    isVerifying,
+    verificationSuccess,
+    hasVerified: hasVerifiedAccount,
+    canVerify: !!(accountNumber && bankCode && accountNumber.length === 10 && isEditing),
+    queryEnabled: !!(accountNumber && bankCode && accountNumber.length === 10 && isEditing)
+  });
+
+  const { allNGNBanks, isErrorALLNGNBanks, isLoadingALLNGNBanks } = useListAllNGNBanks()
 
   // Load user from storage (if not already in context)
   useEffect(() => {
@@ -144,6 +165,9 @@ const Profile = () => {
       setUserLoaded(true);
     }
   }, [userInfo?.id, setUserInfo]);
+
+
+  
 
   // Fetch profile when userId becomes available
   const [hasFetchedProfile, setHasFetchedProfile] = useState(false);
@@ -220,8 +244,9 @@ const Profile = () => {
 
   // Handle account verification result
   useEffect(() => {
-    if (verificationSuccess && verificationData?.status) {
-      const accountName = verificationData.data?.account_name;
+    const bankCode = form.getFieldValue("bankCode");
+    if (verificationSuccess && verificationData?.success) {
+      const accountName = verificationData.data?.accountName;
       if (accountName) {
         form.setFieldsValue({
           accountName: accountName,
@@ -248,30 +273,31 @@ const Profile = () => {
 
   // Reset verification status when account number or bank changes
   useEffect(() => {
-    if (accountNumber || bankCode) {
-      // Only reset if we're in editing mode and the account details have changed
-      if (isEditing) {
-        setHasVerifiedAccount(false);
-        if (!isVerifying && !verificationSuccess) {
-          // Only clear account name if it hasn't been verified yet
-          const currentAccountName = form.getFieldValue("accountName");
-          if (currentAccountName && !hasVerifiedAccount) {
-            form.setFieldsValue({
-              accountName: "",
-            });
-          }
-        }
-      }
-    }
-  }, [accountNumber, bankCode, isEditing, isVerifying, verificationSuccess, hasVerifiedAccount, form]);
-
-  const handleManualVerification = async () => {
-    if (accountNumber?.length === 10 && bankCode) {
-      // The hook will automatically trigger due to dependency change
+    if (isEditing && (accountNumber || bankCode)) {
       setHasVerifiedAccount(false);
       form.setFieldsValue({
         accountName: "",
       });
+    }
+  }, [accountNumber, bankCode, isEditing, form]);
+
+  const handleManualVerification = async () => {
+    if (accountNumber?.length === 10 && bankCode) {
+      console.log("🔄 Manual verification triggered");
+      
+      // Reset verification state
+      setHasVerifiedAccount(false);
+      form.setFieldsValue({
+        accountName: "",
+      });
+      
+      // Invalidate and refetch the verification query
+      await queryClient.invalidateQueries({
+        queryKey: ["verifyAccountNumber", accountNumber, bankCode]
+      });
+      
+      // Manually trigger refetch
+      verificationRefetch();
     } else {
       notification.warning({
         message: "Incomplete Information",
@@ -379,7 +405,7 @@ const Profile = () => {
           accountName: values.accountName,
           accountNumber: values.accountNumber,
           bankName: values.bankName,
-          bankCode: values.bankCode,
+          bankCode: values.slug,
           paymentMethod: values.paymentMethod,
           paymentCurrency: values.paymentCurrency,
         },
@@ -1088,9 +1114,28 @@ const Profile = () => {
                                 typeof option === "object" &&
                                 "bankCode" in option
                               ) {
+                                console.log('🏦 Bank selected:', {
+                                  bankName: value,
+                                  bankCode: option.bankCode,
+                                  slug: option.slug
+                                });
+
                                 form.setFieldsValue({
                                   bankCode: option.bankCode,
+                                  slug: option.slug,
+                                }); 
+
+                                console.log('🔄 Form values after bank selection:', {
+                                  bankCode: form.getFieldValue("bankCode"),
+                                  accountNumber: form.getFieldValue("accountNumber")
                                 });
+                                
+                                // Manual verification trigger if account number is ready
+                                const currentAccountNumber = form.getFieldValue("accountNumber");
+                                if (currentAccountNumber?.length === 10) {
+                                  console.log('🔄 Triggering verification after bank change');
+                                  verificationRefetch();
+                                }
                               }
                             }}
                             filterOption={(input, option) =>
@@ -1098,11 +1143,22 @@ const Profile = () => {
                                 .toLowerCase()
                                 .includes(input.toLowerCase())
                             }
-                            options={supportedBanks}
+                            options={allNGNBanks.map((bank: Bank) => ({
+                              label: bank.name,
+                              value: bank.name,
+                              bankCode: bank.code,
+                              slug: bank.slug,
+                            }))}
                           />
+
                         </Form.Item>
 
+                        {/* Hidden form fields for bankCode and slug */}
                         <Form.Item name="bankCode" style={{ display: "none" }}>
+                          <Input type="hidden" />
+                        </Form.Item>
+
+                        <Form.Item name="slug" style={{ display: "none" }}>
                           <Input type="hidden" />
                         </Form.Item>
 

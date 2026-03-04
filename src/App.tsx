@@ -62,6 +62,7 @@ import EditInvoice from "./pages/Dashboard/Admin/___invoice/EditInvoice";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
 import NewInvoice from "./pages/Dashboard/Admin/___invoice/NewInvoice";
+import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 
 const AppRoutes = () => {
   return (
@@ -146,6 +147,7 @@ const AppRoutes = () => {
             <Route path="invoice-page/:id" element={<InvoiceDetails />} />
             <Route path="invoice-page/:id/send" element={<SendInvoice />} />
             <Route path="invoice-page/:id/edit" element={<EditInvoice  />} />
+            <Route path="employees" element={<EmployeeMgt />} />
           </Route>
         </Route>
 

@@ -103,6 +103,13 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
     },
 
     {
+      key: "employees",
+      label: "Employees Mgt",
+      icon: <UserOutlined />,
+      path: "/employees",
+    },
+
+    {
       key: "settings",
       label: "Settings",
       icon: <SettingOutlined />,
