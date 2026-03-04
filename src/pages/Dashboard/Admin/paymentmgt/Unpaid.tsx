@@ -426,10 +426,6 @@ const Unpaid: React.FC<UnpaidProps> = ({
   };
 
   const handleLogSelectedInvoices = () => {
-    // console.log('Selected Invoice IDs:', selectedInvoiceIds);
-    // console.log('Selected Invoice Objects:', selectedInvoices);
-    // console.log('Number of selected items:', selectedInvoices.length);
-
 
     if (selectedInvoices.length === 0) {
       message.info('No invoices selected');
@@ -480,6 +476,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
       {
         onSuccess: () => {
           message.success('Bulk payment mutation successful. Invoices will be processed shortly.');
+          onRefresh(); // Refresh the page after successful payment
         },
       onError: (error) =>  message.error(ErrorMessage(error)),
     })
