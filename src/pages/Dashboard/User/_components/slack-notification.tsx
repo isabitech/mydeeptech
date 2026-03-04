@@ -28,7 +28,7 @@ const SlackNotification = () => {
                 <Button
                   type="primary"
                   size="large"
-                  href="https://join.slack.com/t/mydeeptechnologies/shared_invite/zt-3pkts41ec-Zx2N6XgLl_e5TjQvYz0wvg"
+                  href="https://join.slack.com/t/mydeeptechnologies/shared_invite/zt-3rw5u518g-aI_Rvd7O_LwKg9jUZARDJw"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white text-purple-600 border-0 hover:!bg-yellow-500 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold px-6 py-5 h-auto animate-bounce [animation-duration:2s]"
