@@ -279,7 +279,7 @@ const NotificationManagement: React.FC = () => {
     <div className="p-6 font-[gilroy-regular]">
       {/* Header */}
       {/* <Header title="Notifications" /> */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center flex-wrap gap-5 mb-6">
         <div>
           <Title level={2} style={{ marginBottom: 8 }}>
             Notification Management
@@ -351,8 +351,8 @@ const NotificationManagement: React.FC = () => {
 
       {/* Filters */}
       <Card className="mb-4">
-        <Row gutter={16} align="middle">
-          <Col span={6}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={12} md={6} lg={4}>
             <Select
               placeholder="Filter by type"
               allowClear
@@ -368,7 +368,7 @@ const NotificationManagement: React.FC = () => {
               <Option value="system_announcement">System Announcement</Option>
             </Select>
           </Col>
-          <Col span={6}>
+          <Col xs={24} sm={12} md={6} lg={4}>
             <Select
               placeholder="Filter by priority"
               allowClear
@@ -383,7 +383,7 @@ const NotificationManagement: React.FC = () => {
               <Option value="low">Low</Option>
             </Select>
           </Col>
-          <Col span={8}>
+          <Col xs={24} sm={12} md={12} lg={8}>
             <RangePicker
               placeholder={["Start Date", "End Date"]}
               onChange={(dates) => {
@@ -397,7 +397,7 @@ const NotificationManagement: React.FC = () => {
               style={{ width: "100%" }}
             />
           </Col>
-          <Col span={4}>
+          <Col xs={24} sm={12} md={6} lg={4}>
             <Button
               icon={<ReloadOutlined />}
               onClick={() => refreshNotifications(filters)}

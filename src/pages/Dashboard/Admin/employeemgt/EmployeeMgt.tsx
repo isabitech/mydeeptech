@@ -346,17 +346,17 @@ const EmployeeMgt: React.FC = () => {
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
       <div className="bg-white rounded-lg shadow-sm w-full p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
           <div>
-            <Title level={2} className="!mb-2">
-              <BankOutlined className="mr-3 text-blue-600" />
-              Employee Payout Management
+            <Title level={2} className="!mb-2 !text-xl sm:!text-2xl lg:!text-3xl">
+              <BankOutlined className="mr-2 sm:mr-3 text-blue-600 text-lg sm:text-xl lg:text-2xl" />
+              <span className="text-base sm:text-xl lg:text-2xl">Employee Payout Management</span>
             </Title>
-            <Text type="secondary">
+            <Text type="secondary" className="text-sm sm:text-base">
               Manage monthly employee payouts and allowances
             </Text>
           </div>
-          <Space>
+          <Space className='flex items-center flex-wrap lg:ml-auto'>
             <Button 
               icon={<DownloadOutlined />}
               onClick={downloadTemplate}
@@ -380,8 +380,8 @@ const EmployeeMgt: React.FC = () => {
         </div>
 
         {/* Summary Cards */}
-        <Row gutter={24} className="mb-6">
-          <Col span={8}>
+        <Row gutter={[24, 16]} className="my-6">
+          <Col xs={24} sm={24} md={12} lg={8} xl={8}>
             <Card>
               <div className="flex items-center">
                 <div className="bg-blue-100 p-3 rounded-full mr-4">
@@ -396,7 +396,7 @@ const EmployeeMgt: React.FC = () => {
               </div>
             </Card>
           </Col>
-          <Col span={8}>
+          <Col xs={24} sm={24} md={12} lg={8} xl={8}>
             <Card>
               <div className="flex items-center">
                 <div className="bg-green-100 p-3 rounded-full mr-4">
@@ -411,7 +411,7 @@ const EmployeeMgt: React.FC = () => {
               </div>
             </Card>
           </Col>
-          <Col span={8}>
+          <Col xs={24} sm={24} md={24} lg={8} xl={8}>
             <Card>
               <div className="flex items-center">
                 <div className="bg-purple-100 p-3 rounded-full mr-4">
