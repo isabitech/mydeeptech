@@ -67,7 +67,7 @@ import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 const AppRoutes = () => {
   return (
     <Router>
-      <InvoiceProvider>
+      {/* <InvoiceProvider> */}
       <CustomerService />
       <Toaster
         position="top-right"
@@ -154,7 +154,7 @@ const AppRoutes = () => {
         {/* Redirect unmatched routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      </InvoiceProvider>
+      {/* </InvoiceProvider> */}
     </Router>
   );
 };
