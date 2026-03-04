@@ -117,7 +117,7 @@ const Profile = () => {
   // Account verification state
   const [hasVerifiedAccount, setHasVerifiedAccount] = useState(false);
 
-  // Account verification (only when editing and both accountNumber and bankCode are available and valid)
+  // Account verification (only when editing, NGN currency, and both accountNumber and bankCode are available and valid)
   const {
     data: verificationData,
     isLoading: isVerifying,
@@ -125,11 +125,11 @@ const Profile = () => {
     isSuccess: verificationSuccess,
     refetch: verificationRefetch
   } = useVerifyAccountNumber(
-    isEditing && bankCode && !isNaN(Number(bankCode)) ? (accountNumber || "") : "",
-    isEditing && bankCode && !isNaN(Number(bankCode)) ? (bankCode || "") : ""
+    isEditing && paymentCurrency === "NGN" && bankCode && !isNaN(Number(bankCode)) ? (accountNumber || "") : "",
+    isEditing && paymentCurrency === "NGN" && bankCode && !isNaN(Number(bankCode)) ? (bankCode || "") : ""
   );
 
-  const { allNGNBanks, isErrorALLNGNBanks, isLoadingALLNGNBanks } = useListAllNGNBanks()
+  const { allNGNBanks } = useListAllNGNBanks();
 
   // Load user from storage (if not already in context)
   useEffect(() => {
@@ -232,8 +232,10 @@ const Profile = () => {
     }
   };
 
-  // Handle account verification result
+  // Handle account verification result (only for NGN currency)
   useEffect(() => {
+    if (paymentCurrency !== "NGN") return;
+    
     const bankCode = form.getFieldValue("bankCode");
     if (verificationSuccess && verificationData?.success) {
       const accountName = verificationData.data?.accountName;
@@ -255,10 +257,12 @@ const Profile = () => {
         duration: 4,
       });
     }
-  }, [verificationSuccess, verificationData, verificationError, form]);
+  }, [verificationSuccess, verificationData, verificationError, form, paymentCurrency]);
 
-  // Reset verification status when account number or bank changes
+  // Reset verification status when account number or bank changes (only for NGN currency)
   useEffect(() => {
+    if (paymentCurrency !== "NGN") return;
+    
     console.log("🔄 Account details changed, resetting verification status", {
       accountNumber,
       bankCode,
@@ -271,7 +275,7 @@ const Profile = () => {
       setHasVerifiedAccount(false);
       form.setFieldsValue({ accountName: "" });
     }
-  }, [accountNumber, bankCode, isEditing, form]);
+  }, [accountNumber, bankCode, isEditing, form, paymentCurrency]);
 
   const handleManualVerification = async () => {
     if (accountNumber?.length === 10 && bankCode) {
@@ -945,7 +949,7 @@ const Profile = () => {
             </div>
 
             <div className="col-span-12">
-              <Card title={<div className="flex items-center flex-wrap"><span>Payment Information</span> { isNaN(Number(bankCode)) && (<span className="text-red-500 text-xs"><span className="text-black ml-1">:</span> Kindly verify your account information now!</span>)}</div>} className="mb-6">
+              <Card title={<div className="flex items-center flex-wrap"><span>Payment Information</span> { paymentCurrency === "NGN" && isNaN(Number(bankCode)) && (<span className="text-red-500 text-xs"><span className="text-black ml-1">:</span> Kindly verify your account information now!</span>)}</div>} className="mb-6">
                
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
