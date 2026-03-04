@@ -198,5 +198,9 @@ export const  endpoints = {
   },
   exchangeRate: {
     getByCountry: "/",
+  },
+  payStack : {
+    verifyAccountDetails: "/payments/verify-account-number",
+    listAllNGNBanks: "/payments/get-banks-by-country",
   }
 };
