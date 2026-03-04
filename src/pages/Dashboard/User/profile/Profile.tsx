@@ -166,6 +166,8 @@ const Profile = () => {
       try {
         const result = await getProfile(userId);
 
+        console.log("Profile fetch result:", result.data);
+
         if (result.success) {
           form.setFieldsValue({
             fullName: result.data?.personalInfo?.fullName,
@@ -404,6 +406,7 @@ const Profile = () => {
           accountNumber: values.accountNumber,
           bankName: values.bankName,
           bankCode: values.bankCode,
+          bank_slug: values.bank_slug,
           paymentMethod: values.paymentMethod,
           paymentCurrency: values.paymentCurrency,
         },
