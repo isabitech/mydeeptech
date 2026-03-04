@@ -45,6 +45,7 @@ export interface PaymentInfo {
   paymentMethod: string
   paymentCurrency: string
   bankCode: string
+  bank_slug: string
 }
 
 export interface ProfessionalBackground {
