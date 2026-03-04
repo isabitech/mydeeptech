@@ -117,7 +117,7 @@ const Profile = () => {
   // Account verification state
   const [hasVerifiedAccount, setHasVerifiedAccount] = useState(false);
 
-  // Account verification (only when editing and both accountNumber and bankCode are available)
+  // Account verification (only when editing and both accountNumber and bankCode are available and valid)
   const {
     data: verificationData,
     isLoading: isVerifying,
@@ -125,20 +125,9 @@ const Profile = () => {
     isSuccess: verificationSuccess,
     refetch: verificationRefetch
   } = useVerifyAccountNumber(
-    isEditing ? (accountNumber || "") : "",
-    isEditing ? (bankCode || "") : ""
+    isEditing && bankCode && !isNaN(Number(bankCode)) ? (accountNumber || "") : "",
+    isEditing && bankCode && !isNaN(Number(bankCode)) ? (bankCode || "") : ""
   );
-
-  console.log("🔍 Verification Debug:", {
-    accountNumber,
-    bankCode,
-    isEditing,
-    isVerifying,
-    verificationSuccess,
-    hasVerified: hasVerifiedAccount,
-    canVerify: !!(accountNumber && bankCode && accountNumber.length === 10 && isEditing),
-    queryEnabled: !!(accountNumber && bankCode && accountNumber.length === 10 && isEditing)
-  });
 
   const { allNGNBanks, isErrorALLNGNBanks, isLoadingALLNGNBanks } = useListAllNGNBanks()
 
@@ -167,8 +156,6 @@ const Profile = () => {
   }, [userInfo?.id, setUserInfo]);
 
 
-  
-
   // Fetch profile when userId becomes available
   const [hasFetchedProfile, setHasFetchedProfile] = useState(false);
 
@@ -191,8 +178,9 @@ const Profile = () => {
               result.data?.personalInfo?.preferredCommunicationChannel,
             accountName: result.data?.paymentInfo?.accountName,
             accountNumber: result.data?.paymentInfo?.accountNumber,
-            bankName: result.data?.paymentInfo?.bankName,
+            bankName: result.data?.paymentInfo?.bank_slug ? result.data?.paymentInfo?.bankName : undefined,
             bankCode: result.data?.paymentInfo?.bankCode,
+            bank_slug: result.data?.paymentInfo?.bank_slug,
             paymentMethod: result.data?.paymentInfo?.paymentMethod,
             paymentCurrency: result.data?.paymentInfo?.paymentCurrency,
             educationField: result.data?.professionalBackground?.educationField,
@@ -248,9 +236,7 @@ const Profile = () => {
     if (verificationSuccess && verificationData?.success) {
       const accountName = verificationData.data?.accountName;
       if (accountName) {
-        form.setFieldsValue({
-          accountName: accountName,
-        });
+        form.setFieldsValue({ accountName: accountName });
         setHasVerifiedAccount(true);
         notification.success({
           message: "Account Verified",
@@ -260,9 +246,7 @@ const Profile = () => {
       }
     } else if (verificationError) {
       setHasVerifiedAccount(false);
-      form.setFieldsValue({
-        accountName: "",
-      });
+      form.setFieldsValue({ accountName: "" });
       notification.error({
         message: "Verification Failed",
         description: "Unable to verify account details. Please check your account number and bank selection.",
@@ -273,22 +257,36 @@ const Profile = () => {
 
   // Reset verification status when account number or bank changes
   useEffect(() => {
+    console.log("🔄 Account details changed, resetting verification status", {
+      accountNumber,
+      bankCode,
+      isEditing,
+      bankCodeValue: form.getFieldValue("bankCode"),
+      bank_slug: form.getFieldValue("bank_slug"),
+    });
+    
     if (isEditing && (accountNumber || bankCode)) {
       setHasVerifiedAccount(false);
-      form.setFieldsValue({
-        accountName: "",
-      });
+      form.setFieldsValue({ accountName: "" });
     }
   }, [accountNumber, bankCode, isEditing, form]);
 
   const handleManualVerification = async () => {
     if (accountNumber?.length === 10 && bankCode) {
-      console.log("🔄 Manual verification triggered");
-      
+
       // Reset verification state
       setHasVerifiedAccount(false);
-      form.setFieldsValue({
-        accountName: "",
+      form.setFieldsValue({ accountName: "" });
+      if (isNaN(Number(bankCode))) {
+        return notification.error({
+          message: "Invalid Account Code",
+          description: "Please select your bank",
+        });
+      }
+
+      console.log("🔍 Manually triggering account verification for:", {
+        accountNumber,
+        bankCode,
       });
       
       // Invalidate and refetch the verification query
@@ -405,7 +403,7 @@ const Profile = () => {
           accountName: values.accountName,
           accountNumber: values.accountNumber,
           bankName: values.bankName,
-          bankCode: values.slug,
+          bankCode: values.bankCode,
           paymentMethod: values.paymentMethod,
           paymentCurrency: values.paymentCurrency,
         },
@@ -496,7 +494,6 @@ const Profile = () => {
         });
       }
     } catch (error: any) {
-      console.error("❌ Validation or update error:", error);
 
       if (error.errorFields && error.errorFields.length > 0) {
         notification.error({
@@ -945,7 +942,8 @@ const Profile = () => {
             </div>
 
             <div className="col-span-12">
-              <Card title="Payment Information" className="mb-6">
+              <Card title={<div className="flex items-center flex-wrap"><span>Payment Information</span> { isNaN(Number(bankCode)) && (<span className="text-red-500 text-xs"><span className="text-black ml-1">:</span> Kindly verify your account information now!</span>)}</div>} className="mb-6">
+               
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
                     disabled={!isEditing}
@@ -953,10 +951,10 @@ const Profile = () => {
                     placeholder="Select payment currency first"
                     onChange={() => {
                       form.setFieldsValue({
-                        accountName: "",
-                        accountNumber: "",
-                        bankName: "",
-                        paymentMethod: "",
+                        accountName: undefined,
+                        accountNumber: undefined,
+                        bankName: undefined,
+                        paymentMethod: undefined,
                       });
                     }}
                     options={[
@@ -983,15 +981,9 @@ const Profile = () => {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span>Account Name</span>
-                                {isVerifying && (
-                                  <Spin size="small" />
-                                )}
-                                {verificationSuccess && (
-                                  <span className="text-green-500 text-xs">✓ Verified</span>
-                                )}
-                                {verificationError && (
-                                  <span className="text-red-500 text-xs">✗ Verification failed</span>
-                                )}
+                                {isVerifying && ( <Spin size="small" /> )}
+                                {verificationSuccess && ( <span className="text-green-500 text-xs">✓ Verified</span> )}
+                                {verificationError && ( <span className="text-red-500 text-xs">✗ Verification failed</span> )}
                               </div>
                               {isEditing && accountNumber?.length === 10 && bankCode && !isVerifying && (
                                 <Button
@@ -1109,31 +1101,15 @@ const Profile = () => {
                             placeholder="Select your bank"
                             showSearch
                             onChange={(value, option) => {
-                              if (
-                                option &&
-                                typeof option === "object" &&
-                                "bankCode" in option
-                              ) {
-                                console.log('🏦 Bank selected:', {
-                                  bankName: value,
-                                  bankCode: option.bankCode,
-                                  slug: option.slug
-                                });
-
+                              if ( option &&  typeof option === "object" && "bankCode" in option && "bank_slug" in option ) {
                                 form.setFieldsValue({
                                   bankCode: option.bankCode,
-                                  slug: option.slug,
+                                  bank_slug: option.bank_slug,
                                 }); 
-
-                                console.log('🔄 Form values after bank selection:', {
-                                  bankCode: form.getFieldValue("bankCode"),
-                                  accountNumber: form.getFieldValue("accountNumber")
-                                });
                                 
                                 // Manual verification trigger if account number is ready
                                 const currentAccountNumber = form.getFieldValue("accountNumber");
                                 if (currentAccountNumber?.length === 10) {
-                                  console.log('🔄 Triggering verification after bank change');
                                   verificationRefetch();
                                 }
                               }
@@ -1147,18 +1123,18 @@ const Profile = () => {
                               label: bank.name,
                               value: bank.name,
                               bankCode: bank.code,
-                              slug: bank.slug,
+                              bank_slug: bank.slug,
                             }))}
                           />
 
                         </Form.Item>
 
-                        {/* Hidden form fields for bankCode and slug */}
+                        {/* Hidden form fields for bankCode and bank_slug */}
                         <Form.Item name="bankCode" style={{ display: "none" }}>
                           <Input type="hidden" />
                         </Form.Item>
 
-                        <Form.Item name="slug" style={{ display: "none" }}>
+                        <Form.Item name="bank_slug" style={{ display: "none" }}>
                           <Input type="hidden" />
                         </Form.Item>
 
@@ -1195,9 +1171,9 @@ const Profile = () => {
                             placeholder="Select payment method"
                             onChange={() => {
                               form.setFieldsValue({
-                                accountName: "",
-                                accountNumber: "",
-                                bankName: "",
+                                accountName: undefined,
+                                accountNumber: undefined,
+                                bankName: undefined,
                               });
                             }}
                             options={[
