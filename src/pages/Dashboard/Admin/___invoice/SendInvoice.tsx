@@ -1,177 +1,191 @@
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useState } from "react";
 import { Invoice, useInvoiceContext } from "./invoiceContext";
+import React, { useEffect } from "react";
+import { Card, Input, Button, Typography, Space, Divider, message } from "antd";
+import {
+  MailOutlined,
+  ArrowLeftOutlined,
+  SendOutlined,
+  UserOutlined,
+  EuroCircleOutlined,
+  CalendarOutlined,
+} from "@ant-design/icons";
 
-const SendInvoice = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const { Title, Text, Paragraph } = Typography;
+const { TextArea } = Input;
+
+const SendInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { invoices } = useInvoiceContext();
+  const navigate = useNavigate();
+  const { invoices, sendInvoice } = useInvoiceContext();
 
-  const invoice = (location.state?.invoice as Invoice | undefined) ||
-    invoices.find(inv => inv._id === id);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [subject, setSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const [subject, setSubject] = useState(
-    invoice ? `Invoice for ${invoice.name}` : ""
-  );
+  useEffect(() => {
+    const foundInvoice = invoices.find((inv) => inv._id === id);
+    if (foundInvoice) {
+      setInvoice(foundInvoice);
+      setSubject(`Invoice for ${foundInvoice.name}`);
+      setEmailMessage(
+        `Hello ${foundInvoice.name},\n\nPlease find the details for your invoice.\nAmount: €${foundInvoice.amount}\nDue Date: ${new Date(
+          foundInvoice.due_date
+        ).toLocaleDateString()}\n\nRegards,\nTeam`
+      );
+    }
+  }, [id, invoices]);
 
-  const [message, setMessage] = useState(
-    invoice
-      ? `Hi ${invoice.name},
-      
-Please find your invoice for ${invoice.duration} service attached.
-
-Let us know if you have any questions.
-
-Best regards.`
-      : ""
-  );
-
-  const [loading, setLoading] = useState(false);
+  const handleSend = async () => {
+    if (!id) return;
+    setSending(true);
+    try {
+      await sendInvoice(id, subject, emailMessage);
+      navigate("/admin/invoice-page");
+    } catch (error) {
+      console.error("Error sending invoice:", error);
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (!invoice) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
-        <p className="text-gray-500">Invoice data not found.</p>
+      <div className="flex justify-center items-center h-screen">
+        <Title level={4}>Invoice not found</Title>
       </div>
     );
   }
 
-  const total = invoice?.amount || 0;
-
-  const handleSend = async () => {
-    try {
-      setLoading(true);
-
-      await fetch("/api/send-invoice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          invoiceId: invoice._id,
-          subject,
-          message,
-        }),
-      });
-
-      alert("Invoice sent successfully!");
-      navigate(-1);
-    } catch (error) {
-      alert("Failed to send invoice.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="h-full flex flex-col gap-8 font-[gilroy-regular] p-4 md:p-8">
-
-      {/* Page Header */}
-      <div>
-        <button
+    <div className="min-h-screen bg-gray-50 p-6 font-[gilroy-regular]">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          icon={<ArrowLeftOutlined />}
           onClick={() => navigate(-1)}
-          className="mb-3 text-sm text-gray-500 hover:underline"
+          className="mb-6"
         >
-          ← Back
-        </button>
+          Back
+        </Button>
 
-        <h1 className="text-2xl font-[gilroy-bold]">
-          Send Invoice
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Review and send this invoice to the client
-        </p>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Email Form */}
+          <div className="lg:col-span-2">
+            <Card className="shadow-sm">
+              <Title level={4} className="mb-6 flex items-center">
+                <MailOutlined className="mr-2" />
+                Send Invoice via Email
+              </Title>
 
-      {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <Space direction="vertical" className="w-full" size="large">
+                <div>
+                  <Text strong className="block mb-2 text-gray-600">
+                    Recipient Email
+                  </Text>
+                  <Input
+                    value={invoice.email}
+                    disabled
+                    prefix={<UserOutlined className="text-gray-400" />}
+                    className="bg-gray-50"
+                  />
+                </div>
 
-        {/* LEFT - EMAIL FORM */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
+                <div>
+                  <Text strong className="block mb-2 text-gray-600">
+                    Subject
+                  </Text>
+                  <Input
+                    placeholder="Enter email subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
+                </div>
 
+                <div>
+                  <Text strong className="block mb-2 text-gray-600">
+                    Message
+                  </Text>
+                  <TextArea
+                    rows={8}
+                    placeholder="Write your message here..."
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                  />
+                </div>
+
+                <Divider />
+
+                <div className="flex justify-end">
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<SendOutlined />}
+                    onClick={handleSend}
+                    loading={sending}
+                    className="bg-black border-black h-12 px-8"
+                  >
+                    Send Invoice
+                  </Button>
+                </div>
+              </Space>
+            </Card>
+          </div>
+
+          {/* Right Column: Invoice Summary */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2">
-              Recipient Email
-            </label>
-            <input
-              type="email"
-              value={invoice.email}
-              disabled
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-500 bg-gray-50"
-            />
-          </div>
+            <Card className="shadow-sm">
+              <Title level={5} className="mb-4">
+                Invoice Summary
+              </Title>
+              <Paragraph className="text-gray-500 mb-6">
+                Preview of the invoice details that will be attached.
+              </Paragraph>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2">
-              Subject
-            </label>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+              <Space direction="vertical" className="w-full" size="middle">
+                <div className="flex items-start">
+                  <EuroCircleOutlined className="text-xl text-gray-400 mr-3 mt-1" />
+                  <div>
+                    <Text type="secondary" className="text-xs uppercase">
+                      Amount
+                    </Text>
+                    <div className="text-lg font-bold">
+                      €{invoice.amount.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2">
-              Message
-            </label>
-            <textarea
-              rows={6}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+                <div className="flex items-start">
+                  <CalendarOutlined className="text-xl text-gray-400 mr-3 mt-1" />
+                  <div>
+                    <Text type="secondary" className="text-xs uppercase">
+                      Due Date
+                    </Text>
+                    <div className="font-semibold">
+                      {new Date(invoice.due_date).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
 
-          <div className="flex justify-end gap-4 pt-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-            >
-              Cancel
-            </button>
+                <div className="flex items-start">
+                  <UserOutlined className="text-xl text-gray-400 mr-3 mt-1" />
+                  <div>
+                    <Text type="secondary" className="text-xs uppercase">
+                      Partner
+                    </Text>
+                    <div className="font-semibold">{invoice.name}</div>
+                  </div>
+                </div>
+              </Space>
 
-            <button
-              onClick={handleSend}
-              disabled={loading}
-              className="px-6 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50 hover:opacity-90"
-            >
-              {loading ? "Sending..." : "Send Invoice"}
-            </button>
-          </div>
-        </div>
-
-        {/* RIGHT - INVOICE PREVIEW */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8 space-y-6">
-
-          <h2 className="text-sm font-medium text-gray-600">
-            Invoice Preview
-          </h2>
-
-          <div className="space-y-4 text-sm text-gray-700">
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Partner</span>
-              <span>{invoice.name}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Duration</span>
-              <span>{invoice.duration}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-500">Due Date</span>
-              <span>{new Date(invoice.due_date).toLocaleDateString()}</span>
-            </div>
-
-            <div className="border-t pt-4 flex justify-between font-semibold text-base">
-              <span>Total Amount</span>
-              <span>€{total.toLocaleString()}</span>
-            </div>
+              <div className="mt-8 pt-8 border-t">
+                <Paragraph className="text-xs text-gray-400 italic">
+                  Note: A professional PDF version of this invoice will be
+                  automatically generated and linked in the email.
+                </Paragraph>
+              </div>
+            </Card>
           </div>
         </div>
       </div>

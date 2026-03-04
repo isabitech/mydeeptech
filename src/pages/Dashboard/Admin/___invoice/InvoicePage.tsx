@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { Button, Table, Tag, Dropdown, MenuProps } from "antd";
+import { useEffect } from "react";
+import { Button, Table, Dropdown, MenuProps } from "antd";
 import { MoreOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useInvoiceContext, Invoice } from "./invoiceContext";
@@ -8,7 +9,11 @@ import { useInvoiceContext, Invoice } from "./invoiceContext";
 
 const InvoicePage = () => {
   const navigate = useNavigate();
-  const { invoices, loading, deleteInvoice } = useInvoiceContext();
+  const { invoices, loading, deleteInvoice, fetchInvoices } = useInvoiceContext();
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
 
   const columns: ColumnsType<Invoice> = [
     {

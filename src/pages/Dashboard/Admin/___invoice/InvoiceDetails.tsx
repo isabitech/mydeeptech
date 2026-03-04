@@ -3,6 +3,20 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
 import { useInvoiceContext } from "./invoiceContext";
+import { Button, Typography, Card, Space, Descriptions, Divider, Tag } from "antd";
+import {
+  ArrowLeftOutlined,
+  FilePdfOutlined,
+  EditOutlined,
+  SendOutlined,
+  UserOutlined,
+  EuroCircleOutlined,
+  CalendarOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
+
+const { Title, Text } = Typography;
+
 const InvoiceDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -15,7 +29,11 @@ const InvoiceDetails = () => {
   );
 
   if (!invoice) {
-    return <div className="p-8">Invoice not found</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Title level={4}>Invoice not found</Title>
+      </div>
+    );
   }
 
   const handleExportPDF = async () => {
@@ -38,8 +56,6 @@ const InvoiceDetails = () => {
     });
   };
 
-  const total = invoice.amount;
-
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IE", {
       style: "currency",
@@ -47,94 +63,120 @@ const InvoiceDetails = () => {
     }).format(value);
 
   return (
-    <div className="h-full flex flex-col gap-6 font-[gilroy-regular] p-4 md:p-8">
-      <div
-        ref={invoiceRef}
-        className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 md:p-8"
-      >
+    <div className="min-h-screen bg-gray-50 p-6 font-[gilroy-regular]">
+      <div className="max-w-4xl mx-auto">
         {/* Back Button */}
-        <button
+        <Button
+          icon={<ArrowLeftOutlined />}
           onClick={() => navigate(-1)}
-          className="mb-4 text-sm text-gray-500 hover:underline"
+          className="mb-6"
         >
-          ← Back
-        </button>
+          Back
+        </Button>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-[gilroy-bold]">
-              Invoice for {invoice.name}
-            </h1>
-            <p className="text-gray-500 text-sm">
-              Created on {invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : 'N/A'}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleExportPDF}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
-            >
+        {/* Action Header */}
+        <div className="flex justify-between items-center mb-6">
+          <Title level={2} className="m-0">Invoice Details</Title>
+          <Space>
+            <Button icon={<FilePdfOutlined />} onClick={handleExportPDF}>
               Export PDF
-            </button>
-
-            <button
+            </Button>
+            <Button
+              icon={<EditOutlined />}
               onClick={() =>
                 navigate(`/admin/invoice-page/${invoice._id}/edit`, {
                   state: { invoice },
                 })
               }
-              className="px-4 py-2 bg-primary text-white rounded-lg text-sm"
             >
-              Edit Invoice
-            </button>
-
-            <button
+              Edit
+            </Button>
+            <Button
+              type="primary"
+              icon={<SendOutlined />}
               onClick={handleSendToClient}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+              className="bg-blue-600 border-blue-600"
             >
               Send to Client
-            </button>
-          </div>
+            </Button>
+          </Space>
         </div>
 
-        {/* Client + Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h3 className="mb-3 font-medium text-gray-600">Partner Details</h3>
-            <p className="font-semibold text-lg">{invoice.name}</p>
-            <p className="text-gray-600">{invoice.email}</p>
-          </div>
+        {/* Invoice Body for PDF */}
+        <div ref={invoiceRef}>
+          <Card className="shadow-sm overflow-hidden" bodyStyle={{ padding: 0 }}>
+            {/* Top Banner */}
+            <div className="h-2 bg-primary" />
 
-          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h3 className="mb-3 font-medium text-gray-600">Invoice Details</h3>
-            <p>
-              <strong>Duration:</strong> {invoice.duration}
-            </p>
-            <p>
-              <strong>Due Date:</strong> {new Date(invoice.due_date).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-10">
+                <div>
+                  <Title level={3} className="m-0 text-primary">INVOICE</Title>
+                  <Text type="secondary">#{invoice._id?.slice(-8).toUpperCase()}</Text>
+                </div>
+                <div className="text-right">
+                  <Tag color="blue" className="px-3 py-1 text-sm font-semibold uppercase">
+                    Partner Invoice
+                  </Tag>
+                  <div className="mt-2">
+                    <Text type="secondary" className="block">Date Created</Text>
+                    <Text strong>{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : 'N/A'}</Text>
+                  </div>
+                </div>
+              </div>
 
-        {/* Description Section */}
-        {invoice.description && (
-          <div className="mb-8">
-            <h3 className="mb-3 font-medium text-gray-600 border-b pb-2">Description / Notes</h3>
-            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap">
-              {invoice.description}
+              <Descriptions
+                title="Partner Information"
+                bordered
+                column={1}
+                className="mb-10"
+                labelStyle={{ width: '200px', backgroundColor: '#fafafa' }}
+              >
+                <Descriptions.Item label={<Space><UserOutlined /> Name</Space>}>
+                  <Text strong className="text-lg">{invoice.name}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Email Address">
+                  {invoice.email}
+                </Descriptions.Item>
+              </Descriptions>
+
+              <Descriptions
+                title="Service Details"
+                bordered
+                column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+                className="mb-10"
+                labelStyle={{ width: '200px', backgroundColor: '#fafafa' }}
+              >
+                <Descriptions.Item label={<Space><ClockCircleOutlined /> Duration</Space>}>
+                  <Tag color="gold">{invoice.duration}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label={<Space><CalendarOutlined /> Due Date</Space>}>
+                  <Text strong>{new Date(invoice.due_date).toLocaleDateString()}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+
+              {invoice.description && (
+                <div className="mb-10">
+                  <Title level={5} className="mb-4 text-gray-600 border-b pb-2">Description / Notes</Title>
+                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-100 text-gray-700 whitespace-pre-wrap italic">
+                    {invoice.description}
+                  </div>
+                </div>
+              )}
+
+              <Divider />
+
+              <div className="flex justify-end pr-4">
+                <div className="text-right space-y-2">
+                  <Text type="secondary">Grand Total Amount</Text>
+                  <div className="text-4xl font-bold text-primary flex items-center justify-end">
+                    <EuroCircleOutlined className="mr-2 text-2xl" />
+                    {formatCurrency(invoice.amount)}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div className="flex justify-end mt-8">
-          <div className="w-full sm:w-80 space-y-3">
-            <div className="flex justify-between border-t pt-3 font-semibold text-xl">
-              <span className="text-gray-900">Total Amount</span>
-              <span className="text-primary">{formatCurrency(total)}</span>
-            </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ interface InvoiceContextType {
   addInvoice: (invoice: Omit<Invoice, "_id">) => Promise<void>;
   updateInvoice: (id: string, invoice: Partial<Invoice>) => Promise<void>;
   deleteInvoice: (id: string) => Promise<void>;
+  sendInvoice: (invoiceId: string, subject: string, message: string) => Promise<void>;
 }
 
 const InvoiceContext = createContext<InvoiceContextType | null>(null);
@@ -39,7 +40,7 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const response = await apiGet("/partner-invoice");
+      const response = await apiGet("partner-invoice");
       if (response.success) {
         // Sort by createdAt descending (newest first)
         const sortedInvoices = [...response.data].sort((a, b) =>
@@ -55,9 +56,6 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
 
   const addInvoice = async (invoice: Omit<Invoice, "_id">) => {
     try {
@@ -127,6 +125,26 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const sendInvoice = async (invoiceId: string, subject: string, emailMessage: string) => {
+    try {
+      setLoading(true);
+      const response = await apiPost("/partner-invoice/send", {
+        invoiceId,
+        subject,
+        message: emailMessage,
+      });
+      if (response.success) {
+        message.success("Invoice sent successfully via email");
+      }
+    } catch (error: any) {
+      console.error("Failed to send invoice:", error);
+      message.error(error.message || "Failed to send invoice email");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <InvoiceContext.Provider
       value={{
@@ -136,6 +154,7 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
         addInvoice,
         updateInvoice,
         deleteInvoice,
+        sendInvoice,
       }}
     >
       {children}

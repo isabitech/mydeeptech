@@ -55,17 +55,13 @@ import { AdminReelAssessmentManager } from "./components/Assessment/AdminAssessm
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
-import InvoicePage from "./pages/Dashboard/Admin/___invoice/InvoicePage";
-import InvoiceDetails from "./pages/Dashboard/Admin/___invoice/InvoiceDetails";
-import SendInvoice from "./pages/Dashboard/Admin/___invoice/SendInvoice";
-import EditInvoice from "./pages/Dashboard/Admin/___invoice/EditInvoice";
 import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
-import NewInvoice from "./pages/Dashboard/Admin/___invoice/NewInvoice";
+import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 
 const AppRoutes = () => {
   return (
     <Router>
-      <InvoiceProvider>
+
       <CustomerService />
       <Toaster
         position="top-right"
@@ -138,17 +134,12 @@ const AppRoutes = () => {
           <Route path="notifications" element={<NotificationManagement />} />
           <Route path="chat" element={<ChatManagement />} />
           <Route path="settings" element={<SettingsMgt />} />
-          <Route path="invoice-page" element={<InvoicePage/>} />
-          <Route path="invoice-page/new" element={<NewInvoice />} />
-          <Route path="invoice-page/:id" element={<InvoiceDetails />} />
-          <Route path="invoice-page/:id/send" element={<SendInvoice />} />
-          <Route path="invoice-page/:id/edit" element={<EditInvoice  />} />
+          <Route path="invoice-page/*" element={<InvoiceRoutes />} />
         </Route>
 
         {/* Redirect unmatched routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      </InvoiceProvider>
     </Router>
   );
 };
