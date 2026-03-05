@@ -27,6 +27,7 @@ import {
 } from "@ant-design/icons";
 import { useUserNotifications } from "../../hooks/Auth/User/useUserNotifications";
 import { Notification, NotificationType, Priority } from "../../types/notification.types";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -34,7 +35,11 @@ dayjs.extend(relativeTime);
 
 const { Text } = Typography;
 
-const NotificationDropdown: React.FC = () => {
+interface NotificationDropdownProps {
+  isAdmin?: boolean;
+}
+
+const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isAdmin = false }) => {
   const {
     loading,
     notifications,
@@ -46,6 +51,7 @@ const NotificationDropdown: React.FC = () => {
     getSummary,
   } = useUserNotifications();
 
+  const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
   const [keepDropdownOpen, setKeepDropdownOpen] = useState(false);
@@ -169,9 +175,13 @@ const NotificationDropdown: React.FC = () => {
 
     // Navigate to action URL if provided
     if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
+      // window.location.href = notification.actionUrl;
+      if (isAdmin) {
+          navigate('/admin/notifications');
+        } else {
+            navigate('/dashboard/notifications');
+        }
     }
-
     setDropdownOpen(false);
   };
 
@@ -327,25 +337,29 @@ const NotificationDropdown: React.FC = () => {
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <>
-          <Divider style={{ margin: 0 }} />
+        <>          <Divider style={{ margin: 0 }} />
           <div
             style={{
               padding: '8px 16px',
               textAlign: 'center'
             }}
           >
-            {/* <Button 
+            <Button 
               type="link" 
               size="small"
               onClick={() => {
-                // Navigate to notifications page
-                window.location.href = '/dashboard/notifications';
+                // Navigate to appropriate notifications page based on user type
+                if (isAdmin) {
+                  navigate('/admin/notifications');
+                } else {
+                  // For users, use window.location to ensure proper navigation
+                  window.location.href = '/dashboard/notifications';
+                }
                 setDropdownOpen(false);
               }}
             >
               View all notifications
-            </Button> */}
+            </Button>
           </div>
         </>
       )}

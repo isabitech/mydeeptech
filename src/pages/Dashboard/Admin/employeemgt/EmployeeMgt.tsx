@@ -44,6 +44,7 @@ interface EmployeePayment {
   transferReference: string;
   recipientCode?: string;
   bankCode: string;
+  bankSlug: string;
   accountNumber: string;
   accountName: string;
   recipientEmail?: string;
@@ -113,6 +114,7 @@ const EmployeeMgt: React.FC = () => {
               transferReference: row['Transfer Reference (Optional)'] || '',
               recipientCode: row['Recipient Code (This overrides all other details if available)'] || '',
               bankCode: bankCode,
+              bankSlug: bankCode, // For now, use the same value for both
               accountNumber: accountNumber,
               accountName: accountName.trim(),
               recipientEmail: '', // Will need to be filled manually if required
@@ -245,7 +247,7 @@ const EmployeeMgt: React.FC = () => {
       // Update existing employee
       setEmployees(prev => prev.map(emp => 
         emp.key === editingEmployee.key 
-          ? { ...emp, ...values }
+          ? { ...emp, ...values, bankSlug: values.bankCode } // The form bankCode is actually a slug
           : emp
       ));
       message.success('Employee updated successfully');
@@ -253,6 +255,7 @@ const EmployeeMgt: React.FC = () => {
       // Add new employee
       const newEmployee: EmployeePayment = {
         key: `employee-${Date.now()}`,
+        bankSlug: values.bankCode, // The form bankCode is actually a slug
         ...values,
       };
       setEmployees(prev => [...prev, newEmployee]);
@@ -299,6 +302,7 @@ const EmployeeMgt: React.FC = () => {
             recipientName: emp.accountName,
             recipientEmail: emp.recipientEmail || 'employee@company.com', // Default email if not provided
             bankCode: emp.bankCode,
+            bankSlug: emp.bankSlug,
             accountNumber: emp.accountNumber,
             recipientPhone: emp.recipientPhone || '+2340000000000', // Default phone if not provided
           }));

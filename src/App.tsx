@@ -63,6 +63,7 @@ import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
 import NewInvoice from "./pages/Dashboard/Admin/___invoice/NewInvoice";
 import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
+import UserNotifications from "./pages/Dashboard/User/user-notifications/UserNotifications";
 
 const AppRoutes = () => {
   return (
@@ -112,6 +113,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<Settings />} />
           <Route path="support" element={<SupportCenter />} />
           <Route path="assessment" element={<Assessment />} />
+          <Route path="notifications" element={<UserNotifications />} />
           <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
           <Route path="qa-review" element={<QAReviewDashboard />} />
           <Route path="assessments" element={<AssessmentList />} />

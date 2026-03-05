@@ -123,7 +123,7 @@ const AdminHeader: React.FC = () => {
 
         {/* User Menu */}
         <div className="h-10 w-10 flex items-center justify-center">
-          <NotificationDropdown />
+          <NotificationDropdown isAdmin={true} />
         </div>
         <Dropdown
           menu={{ items: userMenuItems }}

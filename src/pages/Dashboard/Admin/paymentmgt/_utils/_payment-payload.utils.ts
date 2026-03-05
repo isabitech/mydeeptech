@@ -7,6 +7,7 @@ export interface BulkTransferPayload {
     recipientName: string;
     recipientEmail: string;
     bankCode: string;
+    bankSlug: string;
     accountNumber: string;
     recipientPhone: string;
   }[];
@@ -44,7 +45,8 @@ export const constructBulkTransferPayload = (
         invoiceId: invoice._id,
         recipientName: typeof dtUser === 'string' ? dtUser : (dtUser?.fullName || 'Unknown User'),
         recipientEmail: typeof dtUser === 'string' ? 'N/A' : (dtUser?.email || 'N/A'),
-        bankCode: paymentInfo ? (paymentInfo as any)?.bank_slug || '' : '',
+        bankCode: paymentInfo ? (paymentInfo as any)?.bank_code || '' : '',
+        bankSlug: paymentInfo ? (paymentInfo as any)?.bank_slug || '' : '',
         accountNumber: paymentInfo?.account_number || '',
         recipientPhone: paymentInfo ? (paymentInfo as any)?.phone || (dtUser as any)?.phone || '' : ''
       };
