@@ -42,9 +42,10 @@ export interface NotificationSummary {
 export interface PaginationInfo {
   currentPage: number;
   totalPages: number;
-  totalCount: number;
-  hasNext: boolean;
-  hasPrev: boolean;
+  totalNotifications: number; // Changed from totalCount to match backend response
+  hasNextPage: boolean; // Changed from hasNext to match backend
+  hasPrevPage: boolean; // Changed from hasPrev to match backend
+  limit: number; // Added limit field from backend response
 }
 
 export interface NotificationsResponse {

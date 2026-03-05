@@ -107,7 +107,7 @@ const Header: React.FC<Props> = ({ title }) => {
 
         {/* User Menu */}
         <div className="h-10 w-10 flex items-center justify-center">
-          <NotificationDropdown />
+          <NotificationDropdown isAdmin={false} />
         </div>
         <Dropdown
           menu={{ items: userMenuItems }}

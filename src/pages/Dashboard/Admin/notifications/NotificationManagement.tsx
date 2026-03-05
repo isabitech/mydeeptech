@@ -487,7 +487,7 @@ const NotificationManagement: React.FC = () => {
               ? {
                 current: pagination.currentPage,
                 pageSize: filters.limit || 20,
-                total: pagination.totalCount,
+                total: pagination.totalNotifications,
                 showSizeChanger: true,
                 showQuickJumper: true,
                 position: ["bottomCenter"],

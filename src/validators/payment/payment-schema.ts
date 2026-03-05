@@ -7,6 +7,7 @@ const BulkTransferPayloadSchema = z.object({
       recipientName: z.string().min(1, "Recipient name is required"),
       recipientEmail: z.email("Invalid email address"),
       bankCode: z.string().min(1, "Bank code is required"),
+      bankSlug: z.string().min(1, "Bank slug is required"),
       accountNumber: z.string().min(1, "Account number is required"),
       recipientPhone: z.string().min(1, "Recipient phone is required"),
     })
