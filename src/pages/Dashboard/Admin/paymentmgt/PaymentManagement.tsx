@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+
 import {
   Card,
   Tabs,
@@ -22,10 +23,13 @@ import {
   FileTextOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
 import Unpaid from "./Unpaid";
 import Paid from "./Paid";
+import { useAdminInvoices } from "../../../../hooks/Auth/Admin/Invoices/useAdminInvoices";
+import exchangeRateQueryService from "../../../../services/exchange-rate/exchange-rate-query";
+import { formatMoney } from '../../../../utils/moneyFormat';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -41,6 +45,40 @@ const PaymentManagement = () => {
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isAuthorizing, setIsAuthorizing] = useState(false);
+
+  // Country select and exchange rate state
+  const [selectedCountry, setSelectedCountry] = useState<string>('Nigeria');
+  // Adjustment input state
+  const [exchangeRateAdjustment, setExchangeRateAdjustment] = useState<number>(0);
+  // Retry counter for exchange rate
+  const [retryCount, setRetryCount] = useState<number>(0);
+  // Selected invoices tracking
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  
+  // Use custom hook for exchange rate
+  const {
+    exchangeRateData,
+    isExchangeRateLoading,
+    isExchangeRateError,
+    exchangeRateError,
+    refetch: refetchExchangeRate
+  } = exchangeRateQueryService.useGetExchangeRateByCountry(selectedCountry);
+
+  // Country to currency code mapping
+  const countryCurrencyMap: Record<string, string> = {
+    Nigeria: 'NGN',
+    Ghana: 'GHS',
+    Kenya: 'KES',
+    SouthAfrica: 'ZAR',
+    USA: 'USD',
+    UK: 'GBP',
+    Eurozone: 'EUR',
+    India: 'INR',
+    Canada: 'CAD',
+    Australia: 'AUD',
+  };
+
+  // ...existing code...
 
   const {
     getAllInvoices,
@@ -58,6 +96,58 @@ const PaymentManagement = () => {
   useEffect(() => {
     loadInvoices();
   }, [activeTab, filters]);
+
+  // Handle exchange rate errors
+  useEffect(() => {
+    if (isExchangeRateError && exchangeRateError) {
+      console.error('Exchange rate error:', exchangeRateError);
+      
+      // Create user-friendly error message
+      let errorMessage = 'Unknown error occurred';
+      if (exchangeRateError?.message?.includes('429')) {
+        errorMessage = 'Rate limit exceeded. Please try again in a few minutes.';
+      } else if (exchangeRateError?.message?.toLowerCase().includes('network')) {
+        errorMessage = 'Network connection error. Please check your internet connection.';
+      } else if (exchangeRateError?.message?.toLowerCase().includes('timeout')) {
+        errorMessage = 'Request timeout. Please try again.';
+      } else if (exchangeRateError?.message) {
+        errorMessage = exchangeRateError.message;
+      }
+      
+      message.error({
+        content: `Failed to fetch exchange rate for ${selectedCountry}: ${errorMessage}`,
+        duration: 5,
+        key: 'exchange-rate-error'
+      });
+    }
+  }, [isExchangeRateError, exchangeRateError, selectedCountry]);
+ 
+  // Reset retry count when country changes
+  useEffect(() => {
+    setRetryCount(0);
+  }, [selectedCountry]);
+
+  // Calculate total sum of selected invoices
+  const selectedInvoicesTotal = React.useMemo(() => {
+    if (selectedInvoiceIds.length === 0 || !invoices) return 0;
+    
+    return invoices
+      .filter(invoice => selectedInvoiceIds.includes(invoice._id))
+      .reduce((total, invoice) => total + (invoice.invoiceAmount || 0), 0);
+  }, [selectedInvoiceIds, invoices]);
+
+  // Calculate converted total based on exchange rate
+  const convertedSelectedTotal = React.useMemo(() => {
+    if (selectedInvoicesTotal === 0) return 0;
+    
+    const exchangeRate = !isExchangeRateError && exchangeRateData?.rate !== undefined 
+      ? Math.max(0, exchangeRateData.rate - exchangeRateAdjustment)
+      : isExchangeRateError && exchangeRateAdjustment > 0
+        ? exchangeRateAdjustment
+        : 0;
+    
+    return selectedInvoicesTotal * exchangeRate;
+  }, [selectedInvoicesTotal, isExchangeRateError, exchangeRateData?.rate, exchangeRateAdjustment]);
 
   const loadInvoices = () => {
     const paymentStatus = activeTab === "paid" ? "paid" : "unpaid";
@@ -82,6 +172,16 @@ const PaymentManagement = () => {
     message.success("Data refreshed");
   };
 
+  const handleRetryExchangeRate = () => {
+    setRetryCount(prev => prev + 1);
+    message.loading({
+      content: `Retrying exchange rate fetch for ${selectedCountry}... (Attempt ${retryCount + 1})`,
+      key: 'exchange-rate-retry',
+      duration: 2
+    });
+    refetchExchangeRate();
+  };
+
   const showPaymentModal = (invoice: any) => {
     setSelectedInvoice(invoice);
     setIsPaymentModalVisible(true);
@@ -95,6 +195,10 @@ const PaymentManagement = () => {
 
   const handleAuthorizePayment = async () => {
     if (!selectedInvoice) return;
+    if (exchangeRateAdjustment === 0) {
+      message.warning('Adjustment value is zero. Invoice will not be sent.');
+      return;
+    }
 
     setIsAuthorizing(true);
     try {
@@ -119,17 +223,17 @@ const PaymentManagement = () => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
 
       {/* Summary Statistics */}
-      <Row gutter={16}>
-        <Col span={6}>
+      <Row gutter={[16, 16]}>
+        <Col span={6} xs={24} sm={24} md={12} lg={6}>
           <Card>
             <Statistic
               title="Total Invoices"
-              value={summary?.totalAmount || 0}
+              value={summary?.totalInvoices || 0}
               prefix={<FileTextOutlined />}
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={24} md={12} lg={6}>
           <Card>
             <Statistic
               title="Total Amount"
@@ -140,7 +244,7 @@ const PaymentManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={24} md={12} lg={6}>
           <Card>
             <Statistic
               title="Paid Amount"
@@ -152,7 +256,7 @@ const PaymentManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={24} md={12} lg={6}>
           <Card>
             <Statistic
               title="Unpaid Amount"
@@ -166,19 +270,62 @@ const PaymentManagement = () => {
         </Col>
       </Row>
 
+  
+      {/* Exchange Rate Error Warning */}
+      {isExchangeRateError && (
+        <Card style={{ marginBottom: 16 }}>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <ExclamationCircleOutlined className="text-yellow-600 mt-1 text-lg" />
+              <div className="flex-1">
+                <Typography.Text strong className="text-yellow-800 block mb-2">
+                  Exchange Rate Service Warning
+                </Typography.Text>
+                <Typography.Text className="text-yellow-700 block mb-3">
+                  Unable to fetch current exchange rates for {selectedCountry}. This may affect bulk payment processing.
+                </Typography.Text>
+                <div className="text-yellow-600 text-sm mb-3">
+                  <strong>Error:</strong> {exchangeRateError?.message || 'Unknown error occurred'}
+                </div>
+                <Space>
+                  <Button 
+                    size="small" 
+                    type="primary" 
+                    ghost 
+                    onClick={handleRetryExchangeRate}
+                    disabled={retryCount >= 3 || isExchangeRateLoading}
+                    loading={isExchangeRateLoading}
+                  >
+                    {isExchangeRateLoading ? 'Retrying...' : `Retry (${retryCount}/3)`}
+                  </Button>
+                  {retryCount >= 3 && (
+                    <Typography.Text className="text-yellow-600 text-xs">
+                      Max retries reached. You can still process payments manually.
+                    </Typography.Text>
+                  )}
+                </Space>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+
       {/* Filters */}
       <Card>
-        <Row gutter={16} align="middle">
-          <Col>
+        <Row gutter={[16, 16]} >
+          <Col xs={24} sm={12} md={6}>
             <RangePicker
               onChange={handleDateRangeChange}
               placeholder={["Start Date", "End Date"]}
+              className="w-full lg:w-auto"
+              size="middle"
             />
           </Col>
-          <Col>
+          <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="Select Project"
-              style={{ width: 200 }}
+              className="w-full"
               allowClear
               onChange={(value) => setFilters(prev => ({ ...prev, projectId: value }))}
             >
@@ -187,10 +334,10 @@ const PaymentManagement = () => {
               <Option value="project2">Sample Project 2</Option>
             </Select>
           </Col>
-          <Col>
+          <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="Select DTUser"
-              style={{ width: 200 }}
+              className="w-full"
               allowClear
               onChange={(value) => setFilters(prev => ({ ...prev, dtUserId: value }))}
             >
@@ -199,14 +346,131 @@ const PaymentManagement = () => {
               <Option value="user2">Sample User 2</Option>
             </Select>
           </Col>
-          <Col>
-            <Space>
-              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
-                Refresh
-              </Button>
+          <Col xs={24} sm={12} md={4}>
+            <Button 
+              icon={<ReloadOutlined />} 
+              onClick={handleRefresh}
+              className="w-full"
+            >
+              Refresh
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Country & Exchange Rate Section */}
+      <Card style={{ marginBottom: 16 }}>
+        <Row gutter={16} align="middle">
+          <Col span={24}>
+            <Space size={24} align="center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 500 }}>
+                Exchange Rate ({countryCurrencyMap[selectedCountry]} / USD):
+                {isExchangeRateLoading ? (
+                  <span style={{ marginLeft: 8, color: '#1890ff' }}>Loading...</span>
+                ) : isExchangeRateError && exchangeRateAdjustment <= 0 ? (
+                  <span style={{ marginLeft: 8 }}>
+                    <span style={{ color: 'red', marginRight: 8 }}>
+                      Error loading rate
+                    </span>
+                    <Button 
+                      size="small" 
+                      type="link" 
+                      onClick={handleRetryExchangeRate}
+                      style={{ padding: 0, height: 'auto', fontSize: '12px' }}
+                      disabled={retryCount >= 3}
+                    >
+                      {retryCount >= 3 ? 'Max retries reached' : `Retry (${retryCount}/3)`}
+                    </Button>
+                  </span>
+                ) : exchangeRateData && exchangeRateData.rate !== undefined ? (
+                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#1890ff' }}>
+                    {formatMoney(
+                      Math.max(0, exchangeRateData.rate - exchangeRateAdjustment),
+                      countryCurrencyMap[selectedCountry],
+                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                    )}
+                  </span>
+                ) : exchangeRateAdjustment > 0 ? (
+                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#f39c12' }}>
+                    {formatMoney(
+                      exchangeRateAdjustment,
+                      countryCurrencyMap[selectedCountry],
+                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                    )}
+                    <span style={{ fontSize: "12px", color: '#666', marginLeft: 4 }}>
+                      (using adjusted price)
+                    </span>
+                  </span>
+                ) : (
+                  <span style={{ marginLeft: 8, color: 'red' }}>N/A</span>
+                )}
+              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col gap-1.5">
+                  <span style={{ fontWeight: 500 }}>Select Country:</span>
+                  <Select
+                  style={{ width: 180 }}
+                  value={selectedCountry}
+                  onChange={setSelectedCountry}
+                  options={Object.keys(countryCurrencyMap).map(country => ({ label: country, value: country }))}
+                />
+                </div>
+               <div className="flex flex-col gap-1.5">
+                  <span style={{ fontWeight: 500, marginLeft: 16 }}>Adjust Price:</span>
+                   <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={exchangeRateAdjustment}
+                    onChange={e => setExchangeRateAdjustment(Number(e.target.value))}
+                    placeholder="Adjustment"
+                    style={{ width: 120, marginLeft: 16, padding: '4px 8px', borderRadius: 4, border: '1px solid #ccc' }}
+                />
+               </div>
+              </div>
             </Space>
           </Col>
         </Row>
+        
+        {/* Selected Invoices Total */}
+        {selectedInvoiceIds.length > 0 && (
+          <Row gutter={16} align="middle" style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
+            <Col span={24}>
+              <Space size={24} align="center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', flexWrap: 'wrap' }}>
+                <div>
+                  <span style={{ fontWeight: 500, marginRight: 8 }}>Selected Invoices Total:</span>
+                  <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#1890ff' }}>
+                    {selectedInvoiceIds.length} invoice{selectedInvoiceIds.length > 1 ? 's' : ''}
+                  </span>
+                  <span style={{ marginLeft: 12, color: '#666' }}>|</span>
+                  <span style={{ marginLeft: 12, fontWeight: 'bold', fontSize: '18px', color: '#52c41a' }}>
+                    ${selectedInvoicesTotal.toFixed(2)} USD
+                  </span>
+                  {convertedSelectedTotal > 0 && (
+                    <>
+                      <span style={{ marginLeft: 12, color: '#666' }}>→</span>
+                      <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: '18px', color: '#f39c12' }}>
+                        {formatMoney(
+                          convertedSelectedTotal,
+                          countryCurrencyMap[selectedCountry],
+                          selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                        )}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <Button 
+                  size="small" 
+                  type="link" 
+                  onClick={() => setSelectedInvoiceIds([])}
+                  style={{ color: '#999' }}
+                >
+                  Clear Selection
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        )}
       </Card>
 
       {/* Tabs for Paid/Unpaid */}
@@ -230,6 +494,16 @@ const PaymentManagement = () => {
                   onBulkAuthorizePayment={bulkAuthorizePayment}
                   onGeneratePaystackCSV={(invoiceIds) => generatePaystackCSV(invoiceIds)}
                   onGenerateMpesaCSV={(invoiceIds) => generateMpesaCSV(invoiceIds)}
+                  exchangeRateToSend={
+                    !isExchangeRateError && exchangeRateData?.rate !== undefined 
+                      ? Number(Math.max(0, exchangeRateData.rate - exchangeRateAdjustment).toFixed(2)) 
+                      : isExchangeRateError && exchangeRateAdjustment > 0
+                        ? Number(exchangeRateAdjustment.toFixed(2))
+                        : undefined
+                  }
+                  exchangeRateError={isExchangeRateError}
+                  selectedInvoiceIds={selectedInvoiceIds}
+                  onSelectedInvoiceIdsChange={setSelectedInvoiceIds}
                 />
               ),
             },

@@ -5,12 +5,10 @@ import {
   Button,
   Space,
   Tag,
-  Tooltip,
   message,
   Row,
   Col,
   Statistic,
-  Popconfirm,
   Badge,
   Select,
   DatePicker,
@@ -124,8 +122,7 @@ const InvoiceManagement: React.FC = () => {
   const getPaymentStatusColor = (status: PaymentStatus): string => {
     const colors = {
       paid: "green",
-      unpaid: "orange",
-      overdue: "red",
+      unpaid: "orange",      payment_initiated: "blue",      overdue: "red",
       cancelled: "default",
       disputed: "purple",
     };
@@ -358,8 +355,8 @@ const InvoiceManagement: React.FC = () => {
 
       {/* Summary Statistics */}
       {summary && (
-        <Row gutter={16} className="mb-6">
-          <Col span={6}>
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col span={6} xs={24} sm={24} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Total Invoices"
@@ -368,7 +365,7 @@ const InvoiceManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col span={6} xs={24} sm={24} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Total Amount"
@@ -379,7 +376,7 @@ const InvoiceManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col span={6} xs={24} sm={24} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Paid Amount"
@@ -390,7 +387,7 @@ const InvoiceManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col span={6} xs={24} sm={24} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Unpaid Amount"

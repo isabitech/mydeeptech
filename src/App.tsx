@@ -55,13 +55,11 @@ import { AdminReelAssessmentManager } from "./components/Assessment/AdminAssessm
 import AssessmentList from "./components/Assessment/AssessmentList";
 import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
-import { InvoiceProvider } from "./pages/Dashboard/Admin/___invoice/invoiceContext";
 import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 
 const AppRoutes = () => {
   return (
     <Router>
-
       <CustomerService />
       <Toaster
         position="top-right"
@@ -135,6 +133,7 @@ const AppRoutes = () => {
           <Route path="chat" element={<ChatManagement />} />
           <Route path="settings" element={<SettingsMgt />} />
           <Route path="invoice-page/*" element={<InvoiceRoutes />} />
+          <Route path="partner-invoices/*" element={<InvoiceRoutes />} />
         </Route>
 
         {/* Redirect unmatched routes */}

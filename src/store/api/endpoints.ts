@@ -195,5 +195,12 @@ export const endpoints = {
     checkUserBankDetails: "/payments/check-bank-details",
     testRecipientCreation: "/payments/test-recipient-creation",
     initializeBulkTransferWithInvoices: "/payments/bulk-transfer-with-invoices"
+  },
+  exchangeRate: {
+    getByCountry: "/",
+  },
+  payStack : {
+    verifyAccountDetails: "/payments/verify-account-number",
+    listAllNGNBanks: "/payments/get-banks-by-country",
   }
 };

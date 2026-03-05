@@ -75,6 +75,7 @@ const UserInvoiceDashboard: React.FC = () => {
     const statusMap = {
       paid: "green",
       unpaid: "orange",
+      payment_initiated: "blue",
       overdue: "red",
       cancelled: "default",
       disputed: "red",

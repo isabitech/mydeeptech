@@ -51,7 +51,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const getStatusColor = (status: PaymentStatus) => {
     const statusMap = {
       paid: "green",
-      unpaid: "orange", 
+      unpaid: "orange",
+      payment_initiated: "blue",
       overdue: "red",
       cancelled: "default",
       disputed: "red",

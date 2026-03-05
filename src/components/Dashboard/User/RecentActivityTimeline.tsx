@@ -128,22 +128,24 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
           variants={timelineVariants}
           initial="hidden"
           animate="visible"
+          className="max-w-full overflow-hidden"
         >
-          <Timeline
-            items={allActivities.slice(0, 10).map((activity, index) => ({
-              dot: activity.icon,
-              children: (
-                <motion.div variants={itemVariants} key={index}>
-                  <div className="mb-2">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-800">{activity.title}</h4>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
+          <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <Timeline
+              items={allActivities.slice(0, 10).map((activity, index) => ({
+                dot: activity.icon,
+                children: (
+                  <motion.div variants={itemVariants} key={index}>
+                    <div className="mb-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-800 truncate">{activity.title}</h4>
+                          <p className="text-sm text-gray-600 break-words">{activity.description}</p>
+                        </div>
+                        <Tag className="flex-shrink-0">
+                          {activity.type}
+                        </Tag>
                       </div>
-                      <Tag className="ml-2">
-                        {activity.type}
-                      </Tag>
-                    </div>
                     <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                       <CalendarOutlined />
                       {activity.type === 'payment' ? formatPaymentDate(activity.data) : formatDate(activity.date)}
@@ -153,6 +155,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
               )
             }))}
           />
+          </div>
         </motion.div>
       )
     },
@@ -165,21 +168,22 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
         </span>
       ),
       children: (
-        <List
-          dataSource={recentActivity.recentApplications || []}
-          renderItem={(app: any, index) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <List.Item
-                className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+        <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <List
+            dataSource={recentActivity.recentApplications || []}
+            renderItem={(app: any, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <div className="w-full">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-medium text-gray-800">
+                <List.Item
+                  className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-full overflow-hidden">
+                  <div className="flex justify-between items-start mb-2 gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-800 truncate">
                         {app.projectId?.projectName || 'Unknown Project'}
                       </h4>
                       <div className="text-sm text-gray-600 flex items-center gap-2">
@@ -187,7 +191,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
                         <span className="capitalize">{app.status || 'unknown'}</span>
                       </div>
                     </div>
-                    <div className="text-right text-sm text-gray-500">
+                    <div className="text-right text-sm text-gray-500 flex-shrink-0">
                       <div>{formatDate(app.appliedAt || new Date().toISOString())}</div>
                       {app.projectId?.budget && (
                         <div className="font-medium text-green-600">
@@ -207,7 +211,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
             </motion.div>
           )}
         />
-      )
+        </div>      )
     },
     {
       key: 'invoices',
@@ -218,21 +222,22 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
         </span>
       ),
       children: (
-        <List
-          dataSource={recentActivity.recentInvoices || []}
-          renderItem={(invoice: any, index) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <List.Item
-                className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+        <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <List
+            dataSource={recentActivity.recentInvoices || []}
+            renderItem={(invoice: any, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <div className="w-full">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-medium text-gray-800">
+                <List.Item
+                  className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-full overflow-hidden">
+                  <div className="flex justify-between items-start mb-2 gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-800 truncate">
                         {invoice.projectId?.projectName || 'Unknown Project'}
                       </h4>
                       <div className="text-sm text-gray-600 flex items-center gap-2">
@@ -240,7 +245,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
                         <span className="capitalize">{invoice.paymentStatus || 'unknown'}</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <div className="font-bold text-lg text-green-600">
                         ${invoice.invoiceAmount ? invoice.invoiceAmount.toLocaleString() : '0'}
                       </div>
@@ -249,10 +254,10 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <div>Due: {formatDate(invoice.dueDate || new Date().toISOString())}</div>
+                  <div className="flex justify-between text-xs text-gray-500 gap-2">
+                    <div className="truncate">Due: {formatDate(invoice.dueDate || new Date().toISOString())}</div>
                     {invoice.paidAt && (
-                      <div className="text-green-600">
+                      <div className="text-green-600 flex-shrink-0">
                         Paid: {formatDate(invoice.paidAt)}
                       </div>
                     )}
@@ -262,6 +267,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
             </motion.div>
           )}
         />
+        </div>
       )
     },
     {
@@ -273,46 +279,48 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
         </span>
       ),
       children: (
-        <List
-          dataSource={recentActivity.recentPayments || []}
-          renderItem={(payment: any, index) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <List.Item
-                className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+        <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <List
+            dataSource={recentActivity.recentPayments || []}
+            renderItem={(payment: any, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <div className="w-full">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <DollarOutlined className="text-green-600" />
+                <List.Item
+                  className="border border-gray-100 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+                >
+                  <div className="w-full overflow-hidden">
+                    <div className="flex justify-between items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <DollarOutlined className="text-green-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-medium text-gray-800">
+                            Daily Earnings
+                          </h4>
+                          <div className="text-sm text-gray-600 truncate">
+                            {payment.invoiceCount || 0} invoice{(payment.invoiceCount || 0) !== 1 ? 's' : ''} processed
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-medium text-gray-800">
-                          Daily Earnings
-                        </h4>
-                        <div className="text-sm text-gray-600">
-                          {payment.invoiceCount || 0} invoice{(payment.invoiceCount || 0) !== 1 ? 's' : ''} processed
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-lg text-green-600">
+                          ${payment.dailyEarnings ? payment.dailyEarnings.toLocaleString() : '0'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {payment._id ? formatPaymentDate(payment) : 'Unknown date'}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg text-green-600">
-                        ${payment.dailyEarnings ? payment.dailyEarnings.toLocaleString() : '0'}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {payment._id ? formatPaymentDate(payment) : 'Unknown date'}
-                      </div>
-                    </div>
                   </div>
-                </div>
               </List.Item>
             </motion.div>
           )}
         />
+        </div>
       )
     }
   ];
@@ -322,6 +330,7 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
+      className='grid grid-cols-1 overflow-hidden'
     >
       <Card 
         title={
@@ -331,16 +340,18 @@ const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({
           </div>
         }
         extra={
-          <Button type="link" icon={<SendOutlined />}>
+          <Button type="link" icon={<SendOutlined />} className="flex-shrink-0">
             View All
           </Button>
         }
+        className="h-full"
       >
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={tabItems}
           size="small"
+          className="overflow-hidden"
         />
       </Card>
     </motion.div>
