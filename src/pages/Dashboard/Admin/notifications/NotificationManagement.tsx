@@ -15,6 +15,8 @@ import {
   message,
   Popconfirm,
   Tooltip,
+  Modal,
+  Descriptions,
 } from "antd";
 import {
   PlusOutlined,
@@ -59,6 +61,10 @@ const NotificationManagement: React.FC = () => {
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editingNotification, setEditingNotification] = useState<Notification | null>(null);
+  const [viewingNotification, setViewingNotification] = useState<Notification | null>(null);
   const [filters, setFilters] = useState<NotificationFilters>({
     page: 1,
     limit: 20,
@@ -82,6 +88,23 @@ const NotificationManagement: React.FC = () => {
     setBroadcastModalOpen(false);
     refreshNotifications(filters);
     message.success("Broadcast notification sent successfully!");
+  };
+
+  const handleEditSuccess = () => {
+    setEditModalOpen(false);
+    setEditingNotification(null);
+    refreshNotifications(filters);
+    message.success("Notification updated successfully!");
+  };
+
+  const handleEditNotification = (notification: Notification) => {
+    setEditingNotification(notification);
+    setEditModalOpen(true);
+  };
+
+  const handleViewNotification = (notification: Notification) => {
+    setViewingNotification(notification);
+    setViewModalOpen(true);
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
@@ -248,10 +271,7 @@ const NotificationManagement: React.FC = () => {
             <Button
               icon={<EyeOutlined />}
               size="small"
-              onClick={() => {
-                // Open details modal (to be implemented)
-                console.log("View details:", record);
-              }}
+              onClick={() => handleViewNotification(record)}
             />
           </Tooltip>
 
@@ -270,6 +290,14 @@ const NotificationManagement: React.FC = () => {
               />
             </Tooltip>
           </Popconfirm>
+          <Tooltip title="Edit">
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEditNotification(record)}
+            >
+            </Button>
+          </Tooltip>
         </Space>
       ),
     },
@@ -364,8 +392,12 @@ const NotificationManagement: React.FC = () => {
             >
               <Option value="account_update">Account Update</Option>
               <Option value="project_update">Project Update</Option>
+              <Option value="application_update">Application Update</Option>
+              <Option value="assessment_result">Assessment Result</Option>
               <Option value="system_alert">System Alert</Option>
               <Option value="system_announcement">System Announcement</Option>
+              <Option value="security_alert">Security Alert</Option>
+              <Option value="payment_update">Payment Update</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={6} lg={4}>
@@ -383,9 +415,27 @@ const NotificationManagement: React.FC = () => {
               <Option value="low">Low</Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={12} lg={8}>
+          <Col xs={24} sm={12} md={6} lg={4}>
+            <Select
+              placeholder="Filter by status"
+              allowClear
+              value={filters.isRead}
+              onChange={(value) =>
+                setFilters({ ...filters, isRead: value, page: 1 })
+              }
+              style={{ width: "100%" }}
+            >
+              <Option value={false}>Unread</Option>
+              <Option value={true}>Read</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <RangePicker
               placeholder={["Start Date", "End Date"]}
+              value={filters.startDate && filters.endDate ? [
+                dayjs(filters.startDate), 
+                dayjs(filters.endDate)
+              ] : undefined}
               onChange={(dates) => {
                 setFilters({
                   ...filters,
@@ -397,14 +447,30 @@ const NotificationManagement: React.FC = () => {
               style={{ width: "100%" }}
             />
           </Col>
-          <Col xs={24} sm={12} md={6} lg={4}>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => refreshNotifications(filters)}
-              loading={loading}
-            >
-              Refresh
-            </Button>
+          <Col xs={24} sm={12} md={6} lg={6}>
+            <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => refreshNotifications(filters)}
+                loading={loading}
+              >
+                Refresh
+              </Button>
+              <Button
+                onClick={() => {
+                  setFilters({ page: 1, limit: 20 });
+                }}
+                disabled={!Boolean(
+                  filters.type || 
+                  filters.priority || 
+                  filters.isRead !== undefined || 
+                  filters.startDate || 
+                  filters.endDate
+                )}
+              >
+                Clear Filters
+              </Button>
+            </Space>
           </Col>
         </Row>
       </Card>
@@ -444,11 +510,113 @@ const NotificationManagement: React.FC = () => {
         onSuccess={handleCreateSuccess}
       />
 
+      <CreateNotificationModal
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingNotification(null);
+        }}
+        onSuccess={handleEditSuccess}
+        editingNotification={editingNotification}
+        isEdit={true}
+      />
+
       <BroadcastNotificationModal
         open={broadcastModalOpen}
         onClose={() => setBroadcastModalOpen(false)}
         onSuccess={handleBroadcastSuccess}
       />
+
+      {/* View Notification Modal */}
+      <Modal
+        title="Notification Details"
+        open={viewModalOpen}
+        onCancel={() => {
+          setViewModalOpen(false);
+          setViewingNotification(null);
+        }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              setViewModalOpen(false);
+              setViewingNotification(null);
+            }}
+          >
+            Close
+          </Button>,
+        ]}
+        width={700}
+      >
+        {viewingNotification && (
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="Title">
+              <Text strong>{viewingNotification.title}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Message">
+              <Text>{viewingNotification.message}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Type">
+              <Tag color={getTypeColor(viewingNotification.type)}>
+                {viewingNotification.type.replace("_", " ").toUpperCase()}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Priority">
+              <Tag color={getPriorityColor(viewingNotification.priority)}>
+                {viewingNotification.priority.toUpperCase()}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="Recipient">
+              {viewingNotification.recipientType === 'all' ? (
+                <span>
+                  <GlobalOutlined style={{ marginRight: 8, color: "#1890ff" }} />
+                  All Users
+                </span>
+              ) : (
+                <span>
+                  <UserOutlined style={{ marginRight: 8 }} />
+                  Specific User
+                </span>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label="Status">
+              <Tag color={viewingNotification.isRead ? "green" : "orange"}>
+                {viewingNotification.isRead ? "Read" : "Unread"}
+              </Tag>
+            </Descriptions.Item>
+            {(viewingNotification.actionUrl || viewingNotification.data?.actionUrl) && (
+              <Descriptions.Item label="Action URL">
+                <a 
+                  href={viewingNotification.actionUrl || viewingNotification.data?.actionUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ color: '#1890ff', textDecoration: 'underline' }}
+                >
+                  {viewingNotification.actionUrl || viewingNotification.data?.actionUrl}
+                </a>
+              </Descriptions.Item>
+            )}
+            {(viewingNotification.actionText || viewingNotification.data?.actionText) && (
+              <Descriptions.Item label="Action Button Text">
+                <Text code>{viewingNotification.actionText || viewingNotification.data?.actionText}</Text>
+              </Descriptions.Item>
+            )}
+            {viewingNotification.scheduleFor && (
+              <Descriptions.Item label="Scheduled For">
+                <Text>{dayjs(viewingNotification.scheduleFor).format("MMM DD, YYYY HH:mm:ss")}</Text>
+              </Descriptions.Item>
+            )}
+            <Descriptions.Item label="Created">
+              <Text>{dayjs(viewingNotification.createdAt).format("MMM DD, YYYY HH:mm:ss")}</Text>
+            </Descriptions.Item>
+            {viewingNotification.readAt && (
+              <Descriptions.Item label="Read At">
+                <Text>{dayjs(viewingNotification.readAt).format("MMM DD, YYYY HH:mm:ss")}</Text>
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        )}
+      </Modal>
 
       {error && (
         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded">

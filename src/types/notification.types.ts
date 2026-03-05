@@ -7,9 +7,16 @@ export interface Notification {
   isRead: boolean;
   actionUrl?: string;
   actionText?: string;
-  relatedData?: any;
+  data?: {
+    actionUrl?: string;
+    actionText?: string;
+    [key: string]: any;
+  };
   createdAt: string;
   readAt?: string;
+  recipientId?: string;
+  recipientType?: 'user' | 'all';
+  scheduleFor?: string;
 }
 
 export interface NotificationSummary {
@@ -67,6 +74,7 @@ export interface CreateNotificationForm {
   actionText?: string;
   relatedData?: any;
   scheduleFor?: string;
+  data?: any;
 }
 
 export interface BroadcastNotificationForm {

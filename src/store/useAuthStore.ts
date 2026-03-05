@@ -24,7 +24,6 @@ interface UserInfo {
 type UserRoleType = "admin" | "user";
 
 
-
 type UserInfoStates = {
   userInfo: UserInfo | null;
   userRoleType: UserRoleType | null;
