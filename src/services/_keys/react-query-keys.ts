@@ -16,6 +16,10 @@ const MUTATION = {
     deleteDomain: "deleteDomain",
 
     bulkInvoicePayment: "bulkInvoicePayment",
+    createPartnerInvoice: "createPartnerInvoice",
+    updatePartnerInvoice: "updatePartnerInvoice",
+    deletePartnerInvoice: "deletePartnerInvoice",
+    sendPartnerInvoice: "sendPartnerInvoice",
 } as const;
 
 const QUERY = {
@@ -23,10 +27,11 @@ const QUERY = {
     getDomainCategories: "getDomainCategories",
     getDomainSubCategories: "getDomainSubCategories",
     getDomains: "getDomains",
-    getDomainsWithCategorization: "getDomainsWithCategorization", 
+    getDomainsWithCategorization: "getDomainsWithCategorization",
     getAllInvoices: "getAllInvoices",
 
     getExchangeRateByCountry: "getExchangeRateByCountry",
+    getPartnerInvoices: "getPartnerInvoices",
 } as const;
 
 const REACT_QUERY_KEYS = {
