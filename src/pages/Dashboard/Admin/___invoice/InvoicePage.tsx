@@ -3,17 +3,25 @@ import { useEffect } from "react";
 import { Button, Table, Dropdown, MenuProps } from "antd";
 import { MoreOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { useInvoiceContext, Invoice } from "./invoiceContext";
-
-
+import { useInvoiceStates, useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
+import { formatMoney } from "../../../../utils/moneyFormat";
+import { App } from "antd";
+import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
+import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 
 const InvoicePage = () => {
   const navigate = useNavigate();
-  const { invoices, loading, deleteInvoice, fetchInvoices } = useInvoiceContext();
+  const { message } = App.useApp();
+  const { data: invoices = [], isLoading: loading, error } = partnerInvoiceQueryService.useFetchPartnerInvoices();
+  const { mutate: deleteInvoiceAction } = partnerInvoiceMutationService.useDeletePartnerInvoice();
+  const { setError } = useInvoiceActions();
 
   useEffect(() => {
-    fetchInvoices();
-  }, []);
+    if (error) {
+      message.error((error as any).message || "An error occurred");
+      setError(null);
+    }
+  }, [error, message, setError]);
 
   const columns: ColumnsType<Invoice> = [
     {
@@ -23,10 +31,10 @@ const InvoicePage = () => {
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Amount (EUR)",
+      title: "Amount",
       dataIndex: "amount",
       key: "amount",
-      render: (amount: number) => `€${amount.toLocaleString()}`,
+      render: (amount: number, record: Invoice) => formatMoney(amount, record.currency || "USD"),
       sorter: (a, b) => a.amount - b.amount,
     },
     {
@@ -65,7 +73,7 @@ const InvoicePage = () => {
             label: <span className="text-red-500">Delete</span>,
             danger: true,
             onClick: () => {
-              if (invoice._id) deleteInvoice(invoice._id);
+              if (invoice._id) deleteInvoiceAction(invoice._id);
             },
           },
         ];
@@ -92,6 +100,10 @@ const InvoicePage = () => {
   ];
 
   const totalAmount = invoices.reduce((acc, inv) => acc + inv.amount, 0);
+  const currencies = [...new Set(invoices.map((inv) => inv.currency || "USD"))];
+  const isUniform = currencies.length === 1;
+  const primaryCurrency = isUniform ? currencies[0] : "USD";
+  const avgAmount = invoices.length ? totalAmount / invoices.length : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
@@ -131,14 +143,14 @@ const InvoicePage = () => {
           <div className="bg-gray-50 border rounded-lg p-5">
             <div className="text-gray-500 text-sm mb-2">Total Value</div>
             <div className="text-2xl font-bold text-green-600">
-              €{totalAmount.toLocaleString()}
+              {isUniform ? formatMoney(totalAmount, primaryCurrency) : `${totalAmount.toLocaleString()} (Mixed)`}
             </div>
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-5">
             <div className="text-gray-500 text-sm mb-2">Average Invoice</div>
             <div className="text-2xl font-bold text-blue-600">
-              €{invoices.length ? (totalAmount / invoices.length).toLocaleString(undefined, { maximumFractionDigits: 0 }) : 0}
+              {isUniform ? formatMoney(avgAmount, primaryCurrency) : `${avgAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} (Mixed)`}
             </div>
           </div>
         </div>
@@ -150,12 +162,11 @@ const InvoicePage = () => {
             dataSource={invoices}
             rowKey="_id"
             loading={loading}
-            pagination={{ pageSize: 10 }}
+            pagination={{ pageSize: 10, position: ["bottomCenter"] }}
           />
         </div>
       </div>
     </div>
   );
 };
-
 export default InvoicePage;

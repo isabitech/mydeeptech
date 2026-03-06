@@ -1,7 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Space, Card, Divider } from "antd";
-import { useInvoiceContext, Invoice } from "./invoiceContext";
 import dayjs from "dayjs";
+import { useEffect } from "react";
+import { App } from "antd";
+import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
+import { useInvoiceStates, useInvoiceActions } from "../../../../store/useInvoiceStore";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -9,8 +12,18 @@ const { Option } = Select;
 
 const NewInvoice = () => {
   const navigate = useNavigate();
-  const { addInvoice } = useInvoiceContext();
+  const { message } = App.useApp();
+  const { loading: storeLoading, error } = useInvoiceStates();
+  const { setError } = useInvoiceActions();
+  const { mutateAsync: addInvoice, isPending: loading } = partnerInvoiceMutationService.useAddPartnerInvoice();
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      setError(null);
+    }
+  }, [error, message, setError]);
 
   const onFinish = async (values: any) => {
     try {
@@ -21,7 +34,7 @@ const NewInvoice = () => {
       await addInvoice(formattedValues);
       navigate("/admin/invoice-page");
     } catch (err) {
-      // Error handled in context/toast
+      // Error handled by store/effect
     }
   };
 
@@ -38,7 +51,7 @@ const NewInvoice = () => {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ duration: "Monthly" }}
+          initialValues={{ duration: "Monthly", currency: "USD" }}
         >
           <Title level={4} className="mb-6">Partner Information</Title>
 
@@ -63,18 +76,46 @@ const NewInvoice = () => {
             </Form.Item>
 
             <Form.Item
-              name="amount"
-              label="Amount (EUR)"
-              rules={[{ required: true, message: "Please enter amount" }]}
+              name="currency"
+              label="Currency"
+              rules={[{ required: true, message: "Please select currency" }]}
             >
-              <InputNumber
-                className="w-full"
-                placeholder="500"
-                size="large"
-                min={0}
-                formatter={(value) => `€ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                parser={(value) => value!.replace(/€\s?|(,*)/g, "") as any}
-              />
+              <Select size="large">
+                <Option value="NGN">NGN (₦)</Option>
+                <Option value="USD">USD ($)</Option>
+                <Option value="EUR">EUR (€)</Option>
+                <Option value="GBP">GBP (£)</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.currency !== currentValues.currency}>
+              {({ getFieldValue }) => {
+                const currency = getFieldValue("currency") || "USD";
+                const currencySymbols: Record<string, string> = {
+                  NGN: "₦",
+                  USD: "$",
+                  EUR: "€",
+                  GBP: "£",
+                };
+                const symbol = currencySymbols[currency] || "";
+
+                return (
+                  <Form.Item
+                    name="amount"
+                    label={`Amount (${currency})`}
+                    rules={[{ required: true, message: "Please enter amount" }]}
+                  >
+                    <InputNumber
+                      className="w-full"
+                      placeholder="500"
+                      size="large"
+                      min={0}
+                      formatter={(value) => `${symbol} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                      parser={(value) => value!.replace(new RegExp(`\\${symbol}\\s?|(,*)`, "g"), "") as any}
+                    />
+                  </Form.Item>
+                );
+              }}
             </Form.Item>
 
             <Form.Item
@@ -123,6 +164,7 @@ const NewInvoice = () => {
               htmlType="submit"
               size="large"
               className="bg-primary border-primary"
+              loading={loading}
             >
               Create Invoice
             </Button>

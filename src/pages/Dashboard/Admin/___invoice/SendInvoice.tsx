@@ -1,14 +1,15 @@
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useState } from "react";
-import { Invoice, useInvoiceContext } from "./invoiceContext";
-import React, { useEffect } from "react";
-import { Card, Input, Button, Typography, Space, Divider, message } from "antd";
+import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
+import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
+import { Invoice, useInvoiceActions, useInvoiceStates } from "../../../../store/useInvoiceStore";
+import { formatMoney } from "../../../../utils/moneyFormat";
+import { Card, Input, Button, Typography, Space, Divider, App } from "antd";
 import {
   MailOutlined,
   ArrowLeftOutlined,
   SendOutlined,
   UserOutlined,
-  EuroCircleOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
 
@@ -18,20 +19,38 @@ const { TextArea } = Input;
 const SendInvoice: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { invoices, sendInvoice } = useInvoiceContext();
+  const { message } = App.useApp();
+  const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
+  const { mutateAsync: sendPartnerInvoice, isPending: loading } = partnerInvoiceMutationService.useSendPartnerInvoice();
+  const { error } = useInvoiceStates();
+  const { setError } = useInvoiceActions();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [subject, setSubject] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
-  const [sending, setSending] = useState(false);
+
+  const currencySymbols: Record<string, string> = {
+    NGN: "₦",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+  };
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      setError(null);
+    }
+  }, [error, message, setError]);
 
   useEffect(() => {
     const foundInvoice = invoices.find((inv) => inv._id === id);
     if (foundInvoice) {
       setInvoice(foundInvoice);
       setSubject(`Invoice for ${foundInvoice.name}`);
+      const symbol = currencySymbols[foundInvoice.currency] || "";
       setEmailMessage(
-        `Hello ${foundInvoice.name},\n\nPlease find the details for your invoice.\nAmount: €${foundInvoice.amount}\nDue Date: ${new Date(
+        `Hello ${foundInvoice.name},\n\nPlease find the details for your invoice.\nAmount: ${symbol}${foundInvoice.amount}\nDue Date: ${new Date(
           foundInvoice.due_date
         ).toLocaleDateString()}\n\nRegards,\nTeam`
       );
@@ -40,14 +59,12 @@ const SendInvoice: React.FC = () => {
 
   const handleSend = async () => {
     if (!id) return;
-    setSending(true);
     try {
-      await sendInvoice(id, subject, emailMessage);
+      await sendPartnerInvoice({ invoiceId: id, subject, message: emailMessage });
+      message.success("Invoice sent successfully");
       navigate("/admin/invoice-page");
-    } catch (error) {
-      console.error("Error sending invoice:", error);
-    } finally {
-      setSending(false);
+    } catch (err) {
+      // Error handled by store/effect
     }
   };
 
@@ -123,7 +140,7 @@ const SendInvoice: React.FC = () => {
                     size="large"
                     icon={<SendOutlined />}
                     onClick={handleSend}
-                    loading={sending}
+                    loading={loading}
                     className="bg-black border-black h-12 px-8"
                   >
                     Send Invoice
@@ -145,13 +162,15 @@ const SendInvoice: React.FC = () => {
 
               <Space direction="vertical" className="w-full" size="middle">
                 <div className="flex items-start">
-                  <EuroCircleOutlined className="text-xl text-gray-400 mr-3 mt-1" />
+                  <div className="mr-3 mt-1 text-xl text-gray-400 font-bold">
+                    {currencySymbols[invoice.currency] || ""}
+                  </div>
                   <div>
                     <Text type="secondary" className="text-xs uppercase">
                       Amount
                     </Text>
                     <div className="text-lg font-bold">
-                      €{invoice.amount.toLocaleString()}
+                      {formatMoney(invoice.amount, invoice.currency)}
                     </div>
                   </div>
                 </div>

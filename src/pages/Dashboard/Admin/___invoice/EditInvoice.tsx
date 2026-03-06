@@ -1,18 +1,33 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Card, Divider } from "antd";
-import { useInvoiceContext, Invoice } from "./invoiceContext";
+import { useInvoiceStates, useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
 import dayjs from "dayjs";
 import { useEffect } from "react";
+import { App } from "antd";
+import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
+import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 const EditInvoice = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { message } = App.useApp();
   const { id } = useParams<{ id: string }>();
-  const { invoices, updateInvoice } = useInvoiceContext();
+  const { updateInvoice: _, setError } = useInvoiceActions();
+  const { mutateAsync: updateInvoice, isPending: loading } = partnerInvoiceMutationService.useUpdatePartnerInvoice();
+  const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
+  const { error } = useInvoiceStates();
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (error) {
+      message.error(error);
+      setError(null);
+    }
+  }, [error, message, setError]);
 
   // Try to get invoice from state or context
   const initialInvoice = (location.state?.invoice as Invoice | undefined) ||
@@ -22,7 +37,8 @@ const EditInvoice = () => {
     if (initialInvoice) {
       form.setFieldsValue({
         ...initialInvoice,
-        due_date: initialInvoice.due_date ? dayjs(initialInvoice.due_date) : null,
+        currency: initialInvoice?.currency || "USD",
+        due_date: initialInvoice?.due_date ? dayjs(initialInvoice.due_date) : null,
       });
     }
   }, [initialInvoice, form]);
@@ -42,10 +58,10 @@ const EditInvoice = () => {
         ...values,
         due_date: values.due_date ? values.due_date.format("YYYY-MM-DD") : undefined,
       };
-      await updateInvoice(id, formattedValues);
+      await updateInvoice({ id, updatedInvoice: formattedValues });
       navigate(-1);
     } catch (err) {
-      console.error("Submit Error:", err);
+      // Error handled by store/effect
     }
   };
 
@@ -87,17 +103,45 @@ const EditInvoice = () => {
             </Form.Item>
 
             <Form.Item
-              name="amount"
-              label="Amount (EUR)"
-              rules={[{ required: true, message: "Please enter amount" }]}
+              name="currency"
+              label="Currency"
+              rules={[{ required: true, message: "Please select currency" }]}
             >
-              <InputNumber
-                className="w-full"
-                size="large"
-                min={0}
-                formatter={(value) => `€ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                parser={(value) => value!.replace(/€\s?|(,*)/g, "") as any}
-              />
+              <Select size="large">
+                <Option value="NGN">NGN (₦)</Option>
+                <Option value="USD">USD ($)</Option>
+                <Option value="EUR">EUR (€)</Option>
+                <Option value="GBP">GBP (£)</Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item noStyle shouldUpdate={(prevValues, currentValues) => prevValues.currency !== currentValues.currency}>
+              {({ getFieldValue }) => {
+                const currency = getFieldValue("currency") || "NGN";
+                const currencySymbols: Record<string, string> = {
+                  NGN: "₦",
+                  USD: "$",
+                  EUR: "€",
+                  GBP: "£",
+                };
+                const symbol = currencySymbols[currency] || "";
+
+                return (
+                  <Form.Item
+                    name="amount"
+                    label={`Amount (${currency})`}
+                    rules={[{ required: true, message: "Please enter amount" }]}
+                  >
+                    <InputNumber
+                      className="w-full"
+                      size="large"
+                      min={0}
+                      formatter={(value) => `${symbol} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                      parser={(value) => value!.replace(new RegExp(`\\${symbol}\\s?|(,*)`, "g"), "") as any}
+                    />
+                  </Form.Item>
+                );
+              }}
             </Form.Item>
 
             <Form.Item
@@ -143,6 +187,7 @@ const EditInvoice = () => {
               htmlType="submit"
               size="large"
               className="bg-primary border-primary"
+              loading={loading}
             >
               Update Invoice
             </Button>

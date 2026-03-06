@@ -2,7 +2,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
-import { useInvoiceContext } from "./invoiceContext";
+import { useInvoiceStates, Invoice } from "../../../../store/useInvoiceStore";
+import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
+import { formatMoney } from "../../../../utils/moneyFormat";
 import { Button, Typography, Card, Space, Descriptions, Divider, Tag } from "antd";
 import {
   ArrowLeftOutlined,
@@ -10,7 +12,6 @@ import {
   EditOutlined,
   SendOutlined,
   UserOutlined,
-  EuroCircleOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
@@ -22,7 +23,7 @@ const InvoiceDetails = () => {
   const navigate = useNavigate();
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const { invoices } = useInvoiceContext();
+  const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
 
   const invoice = invoices.find(
     (inv) => inv._id === id
@@ -55,12 +56,6 @@ const InvoiceDetails = () => {
       state: { invoice },
     });
   };
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IE", {
-      style: "currency",
-      currency: "EUR",
-    }).format(value);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-[gilroy-regular]">
@@ -170,8 +165,7 @@ const InvoiceDetails = () => {
                 <div className="text-right space-y-2">
                   <Text type="secondary">Grand Total Amount</Text>
                   <div className="text-4xl font-bold text-primary flex items-center justify-end">
-                    <EuroCircleOutlined className="mr-2 text-2xl" />
-                    {formatCurrency(invoice.amount)}
+                    {formatMoney(invoice.amount, invoice.currency || "USD")}
                   </div>
                 </div>
               </div>

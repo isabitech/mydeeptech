@@ -102,6 +102,15 @@ export const endpoints = {
     generateMpesaCSV: "/admin/invoices/generate-mpesa-csv",
   },
 
+  // Admin partner invoice management endpoints (Simplified System)
+  partnerInvoice: {
+    create: "/partner-invoice",
+    getAll: "/partner-invoice",
+    update: "/partner-invoice",
+    delete: "/partner-invoice",
+    send: "/partner-invoice/send",
+  },
+
   // User invoice endpoints
   userInvoice: {
     getUserInvoices: "/auth/invoices",
@@ -199,7 +208,7 @@ export const endpoints = {
   exchangeRate: {
     getByCountry: "/",
   },
-  payStack : {
+  payStack: {
     verifyAccountDetails: "/payments/verify-account-number",
     listAllNGNBanks: "/payments/get-banks-by-country",
   }
