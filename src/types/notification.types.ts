@@ -7,9 +7,16 @@ export interface Notification {
   isRead: boolean;
   actionUrl?: string;
   actionText?: string;
-  relatedData?: any;
+  data?: {
+    actionUrl?: string;
+    actionText?: string;
+    [key: string]: any;
+  };
   createdAt: string;
   readAt?: string;
+  recipientId?: string;
+  recipientType?: 'user' | 'all';
+  scheduleFor?: string;
 }
 
 export interface NotificationSummary {
@@ -35,9 +42,10 @@ export interface NotificationSummary {
 export interface PaginationInfo {
   currentPage: number;
   totalPages: number;
-  totalCount: number;
-  hasNext: boolean;
-  hasPrev: boolean;
+  totalNotifications: number; // Changed from totalCount to match backend response
+  hasNextPage: boolean; // Changed from hasNext to match backend
+  hasPrevPage: boolean; // Changed from hasPrev to match backend
+  limit: number; // Added limit field from backend response
 }
 
 export interface NotificationsResponse {
@@ -67,6 +75,7 @@ export interface CreateNotificationForm {
   actionText?: string;
   relatedData?: any;
   scheduleFor?: string;
+  data?: any;
 }
 
 export interface BroadcastNotificationForm {

@@ -20,6 +20,7 @@ import {
   ThunderboltOutlined,
   FileExcelOutlined,
   CreditCardOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -266,13 +267,34 @@ const Unpaid: React.FC<UnpaidProps> = ({
            dtUser?.payment_info?.bank_name);
   };
 
+  // Check if user is missing required bank details (bank code, bank slug, or account number)
+  const isMissingBankDetails = (invoice: AdminInvoice): boolean => {
+    const dtUser = invoice.dtUserId;
+    if (typeof dtUser === 'string') return true;
+    
+    const paymentInfo = dtUser?.payment_info;
+    if (!paymentInfo) return true;
+
+    // Check for missing bank code
+    const hasBankCode = !!(paymentInfo.bank_code);
+    
+    // Check for missing bank slug
+    const hasBankSlug = !!(paymentInfo.bank_slug);
+    
+    // Check for missing account number
+    const hasAccountNumber = !!(paymentInfo.account_number);
+    
+    // Return true if any of the required fields are missing
+    return !hasBankCode || !hasBankSlug || !hasAccountNumber;
+  };
+
   const rowSelection = {
     selectedRowKeys: selectedInvoiceIds,
     onChange: (selectedRowKeys: React.Key[]) => {
       updateSelectedInvoiceIds(selectedRowKeys as string[]);
     },
     getCheckboxProps: (record: AdminInvoice) => ({
-      disabled: record.paymentStatus === 'paid',
+      disabled: record.paymentStatus === 'paid' || isMissingBankDetails(record),
       name: record.invoiceNumber,
     }),
   };
@@ -641,16 +663,21 @@ const Unpaid: React.FC<UnpaidProps> = ({
       key: "dtUserId",
       render: (dtUserId, record) => (
         <Space direction="vertical" size={0}>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{getDTUserName(dtUserId)}</span>
-            {hasNGNPaymentInfo(record) && (
-              <Tag color="green">NGN</Tag>
-            )}
-            {hasKESPaymentInfo(record) && (
-              <Tag color="blue">KES</Tag>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+                <span className="font-medium">{getDTUserName(dtUserId)} </span>
+                {hasNGNPaymentInfo(record) && ( <Tag color="green">NGN</Tag> )}
+                {hasKESPaymentInfo(record) && ( <Tag color="blue">KES</Tag> )}
+            </div>
+          <span className="text-xs text-gray-500">{getDTUserEmail(dtUserId)}</span>
+            {isMissingBankDetails(record) && (
+              <Tooltip title="Missing bank details: Bank code, bank slug, or account number is required for payments">
+                <Tag color="red" icon={<ExclamationCircleOutlined />}>
+                  Missing Bank Info
+                </Tag>
+              </Tooltip>
             )}
           </div>
-          <span className="text-xs text-gray-500">{getDTUserEmail(dtUserId)}</span>
         </Space>
       ),
     },
@@ -869,7 +896,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
                   size="small" 
                   onClick={() => {
                     const selectableIds = filteredInvoices
-                      .filter(inv => inv.paymentStatus !== 'paid')
+                      .filter(inv => inv.paymentStatus !== 'paid' && !isMissingBankDetails(inv))
                       .map(inv => inv._id);
                     updateSelectedInvoiceIds(selectableIds);
                   }}
@@ -894,6 +921,12 @@ const Unpaid: React.FC<UnpaidProps> = ({
         loading={loading}
         rowKey="_id"
         rowSelection={onGeneratePaystackCSV ? rowSelection : undefined}
+        rowClassName={(record) => {
+          if (isMissingBankDetails(record)) {
+            return 'bg-red-50 opacity-60 cursor-not-allowed';
+          }
+          return '';
+        }}
         pagination={{
           pageSize: 10,
           showSizeChanger: true,

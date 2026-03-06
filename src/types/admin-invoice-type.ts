@@ -55,6 +55,8 @@ export interface PaymentInfo {
   bank_name: string
   payment_currency: string
   payment_method: string
+  bank_code?: string
+  bank_slug?: string
 }
 
 export interface DtUserId {

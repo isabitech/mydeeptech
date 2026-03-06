@@ -19,7 +19,9 @@ import {
   CreateNotificationForm,
   NotificationType,
   Priority,
+  Notification,
 } from "../../../../types/notification.types";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -28,14 +30,18 @@ interface CreateNotificationModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingNotification?: Notification | null;
+  isEdit?: boolean;
 }
 
 const CreateNotificationModal: React.FC<CreateNotificationModalProps> = ({
   open,
   onClose,
   onSuccess,
+  editingNotification = null,
+  isEdit = false,
 }) => {
-  const { createNotification, loading } = useAdminNotifications();
+  const { createNotification, updateNotification, loading } = useAdminNotifications();
   const { users: dtUsers , loading: usersLoading, getAllDTUsers } = useGetAllDtUsers();
   const [form] = Form.useForm();
   const [isBroadcast, setIsBroadcast] = useState(false);
@@ -50,10 +56,28 @@ useEffect(() => {
     }
 }, [open, getAllDTUsers]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('dtUsers:', dtUsers, 'Type:', typeof dtUsers, 'Is Array:', Array.isArray(dtUsers));
-  }, [dtUsers]);
+// Populate form when editing
+useEffect(() => {
+  if (open) {
+    if (isEdit && editingNotification) {
+      setIsBroadcast(false); // Always default to specific user mode
+      form.setFieldsValue({
+        recipientId: editingNotification.recipientId,
+        title: editingNotification.title,
+        message: editingNotification.message,
+        type: editingNotification.type,
+        priority: editingNotification.priority,
+        actionUrl: editingNotification.actionUrl || editingNotification.data?.actionUrl,
+        actionText: editingNotification.actionText || editingNotification.data?.actionText,
+        scheduleFor: editingNotification.scheduleFor ? dayjs(editingNotification.scheduleFor) : undefined,
+      });
+    } else {
+      // Reset form for create mode - default to specific user
+      form.resetFields();
+      setIsBroadcast(false);
+    }
+  }
+}, [open, isEdit, editingNotification, form]);
 
   const handleSubmit = async (values: any) => {
     try {
@@ -64,23 +88,62 @@ useEffect(() => {
         message: values.message,
         type: values.type,
         priority: values.priority,
-        actionUrl: values.actionUrl || undefined,
-        actionText: values.actionText || undefined,
+        relatedData: {
+          ...(values.actionUrl && { actionUrl: values.actionUrl }),
+          ...(values.actionText && { actionText: values.actionText })
+        },
+        scheduleFor: values.scheduleFor ? values.scheduleFor.toISOString() : undefined,
+      };
+
+      let result;
+      if (isEdit && editingNotification) {
+        result = await updateNotification(editingNotification._id, notificationData);
+      } else {
+        result = await createNotification(notificationData);
+      }
+
+      if (result.success) {
+        message.success(`Notification ${isEdit ? 'updated' : 'created'} successfully!`);
+        form.resetFields();
+        onSuccess();
+        onClose();
+      } else {
+        message.error(result.error || `Failed to ${isEdit ? 'update' : 'create'} notification`);
+      }
+    } catch (error) {
+      message.error(`Failed to ${isEdit ? 'update' : 'create'} notification`);
+    }
+  };
+
+  const handleReshare = async () => {
+    try {
+      const values = await form.validateFields();
+      const notificationData: CreateNotificationForm = {
+        recipientId: isBroadcast ? undefined : values.recipientId,
+        recipientType: isBroadcast ? "all" : "user",
+        title: values.title,
+        message: values.message,
+        type: values.type,
+        priority: values.priority,
+        relatedData: {
+          ...(values.actionUrl && { actionUrl: values.actionUrl }),
+          ...(values.actionText && { actionText: values.actionText })
+        },
         scheduleFor: values.scheduleFor ? values.scheduleFor.toISOString() : undefined,
       };
 
       const result = await createNotification(notificationData);
 
       if (result.success) {
-        message.success("Notification created successfully!");
+        message.success('Notification reshared successfully!');
         form.resetFields();
         onSuccess();
         onClose();
       } else {
-        message.error(result.error || "Failed to create notification");
+        message.error(result.error || 'Failed to reshare notification');
       }
     } catch (error) {
-      message.error("Failed to create notification");
+      message.error('Failed to reshare notification');
     }
   };
 
@@ -91,21 +154,34 @@ useEffect(() => {
 
   return (
     <Modal
-      title="Create Notification"
+      title={isEdit ? "Edit Notification" : "Create Notification"}
       open={open}
       onCancel={handleCancel}
       width={700}
+      style={{ top: 20 }}
+      bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
       footer={[
         <Button key="cancel" onClick={handleCancel}>
           Cancel
         </Button>,
+        ...(isEdit ? [
+          <Button
+            key="reshare"
+            type="default"
+            loading={loading}
+            onClick={handleReshare}
+            style={{ backgroundColor: '#52c41a', borderColor: '#52c41a', color: 'white' }}
+          >
+            Re-share
+          </Button>
+        ] : []),
         <Button
           key="submit"
           type="primary"
           loading={loading}
           onClick={() => form.submit()}
         >
-          Create Notification
+          {isEdit ? "Update Notification" : "Create Notification"}
         </Button>,
       ]}
     >
@@ -270,6 +346,7 @@ useEffect(() => {
                   showTime
                   style={{ width: "100%" }}
                   placeholder="Select date and time to send"
+                  format="YYYY-MM-DD HH:mm:ss"
                 />
               </Form.Item>
             </Col>

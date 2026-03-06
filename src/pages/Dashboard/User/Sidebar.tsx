@@ -14,6 +14,7 @@ import {
   CustomerServiceOutlined,
   PlayCircleOutlined,
   UnorderedListOutlined as AssessmentListOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -51,6 +52,7 @@ const Sidebar = () => {
     { key: "assessment", label: "Assessment", icon: <BookOutlined />, path: "/dashboard/assessment" },
     { key: "assessment-history", label: "Assessment History", icon: <HistoryOutlined />, path: "/dashboard/assessment-history" },
     { key: "projects", label: "Projects", icon: <CodeSandboxOutlined />, path: "/dashboard/projects" },
+    { key: "notifications", label: "Notifications", icon: <BellOutlined />, path: "/dashboard/notifications" },
     // { key: "jobs", label: "Jobs", icon: <InboxOutlined />, path: "/dashboard/jobs" },
     // { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
     { key: "payment", label: "Payment", icon: <WalletOutlined />, path: "/dashboard/payment" },
