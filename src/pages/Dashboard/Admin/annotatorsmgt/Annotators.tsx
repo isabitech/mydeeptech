@@ -63,7 +63,7 @@ const Annotators = () => {
       
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
-            <div className=" flex justify-between items-center mb-8">
+            <div className="flex justify-between flex-wrap gap-3 items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
           
             <Button

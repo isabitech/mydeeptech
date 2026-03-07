@@ -10,7 +10,7 @@ const Hiring = () => {
       </div>
       <div className="max-w-3xl text-center">
         <h2 className="text-3xl font-bold text-gray-800 mb-4">
-          🚀 We’re Hiring: Frontend Developer (AI Training)
+          🚀 We're Hiring: Frontend Developer (AI Training)
         </h2>
 
         <p className="text-gray-600 mb-6">
@@ -46,7 +46,7 @@ const Hiring = () => {
 
           <div>
             <h3 className="font-semibold text-lg">
-              We’re looking for people with…
+              We're looking for people with…
             </h3>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>

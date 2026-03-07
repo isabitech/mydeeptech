@@ -198,7 +198,7 @@ const AssessmentManagementList = () => {
     <div className="p-6 font-[gilroy-regular]">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between flex-wrap gap-3 items-start mb-4">
           <div>
             <Title level={2} className="!mb-2 !text-[#333333] font-[gilroy-regular]">
               <BookOutlined className="mr-3 text-[#F6921E]" />

@@ -9,8 +9,7 @@ interface PaginationParams {
   search?: string;
 }
 
-
-const useGetExchangeRateByCountry = (country: string, paginationParams?: PaginationParams) => {
+const useGetExchangeRateByCountry = (country: string, paginationParams?: PaginationParams, enabled: boolean = true) => {
   const { page = 1, limit = 50, search = '' } = paginationParams || {};
   
   const queryResponse =  useQuery({
@@ -22,9 +21,9 @@ const useGetExchangeRateByCountry = (country: string, paginationParams?: Paginat
       if (search) params.append('search', search);
       if (country) params.append('country', country);
       const response = await axiosInstance.get(`${endpoints.exchangeRate.getByCountry}exchange-rate-by-country?${params.toString()}`);
-      console.log('Exchange Rate API Response:', response.data?.data);
       return response.data;
     },
+    enabled: !!country && enabled, // Only run the query if country is provided AND enabled is true
   });
 
   return {
