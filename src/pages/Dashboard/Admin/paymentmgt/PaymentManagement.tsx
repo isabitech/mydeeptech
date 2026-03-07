@@ -420,7 +420,7 @@ const PaymentManagement = () => {
                     disabled={isExchangeRateLoading}
                     style={{ marginLeft: 16, width: 120 }}
                   >
-                    {!shouldFetchExchangeRate && !exchangeRateData ? 'Load Rate' : isExchangeRateError ? 'Retry' : 'Loading...'}
+                    {isExchangeRateLoading ? 'Loading...' : isExchangeRateError ? 'Retry' : 'Load Rate'}
                   </Button>
                 </div>
               </div>
