@@ -454,6 +454,16 @@ const Unpaid: React.FC<UnpaidProps> = ({
       return;
     }
 
+    // Check if exchange rate is available
+    if (exchangeRateError || !exchangeRateToSend || exchangeRateToSend === 0) {
+      message.error({
+        content: 'Exchange rate is not available. Please load the exchange rate first before processing payments.',
+        duration: 5,
+        key: 'exchange-rate-required'
+      });
+      return;
+    }
+
     const payload = constructBulkTransferPayload(selectedInvoices, {
       currency: showNGNOnly ? "NGN" : showKESOnly ? "KES" : undefined,
       source: "balance",

@@ -10,6 +10,7 @@ import {
   BookOutlined,
   BellOutlined,
   MessageOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
@@ -79,6 +80,12 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       label: "Invoice",
       icon: <WalletOutlined />,
       path: "/invoices",
+    },
+    {
+      key: "partner-invoice",
+      label: "Partners Invoice",
+      icon: <FileTextOutlined />,
+      path: "/partner-invoices",
     },
 
     {
@@ -173,9 +180,9 @@ const AdminSidebar = () => {
   };
 
   const handleLogout = () => {
-      sessionStorage.clear();
-      clearUserInfo();
-      navigate("/auth/admin-login");
+    sessionStorage.clear();
+    clearUserInfo();
+    navigate("/auth/admin-login");
   }
 
   const navigate = useNavigate();

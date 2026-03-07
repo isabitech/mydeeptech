@@ -54,15 +54,21 @@ const PaymentManagement = () => {
   const [retryCount, setRetryCount] = useState<number>(0);
   // Selected invoices tracking
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  // Control when exchange rate query should run
+  const [shouldFetchExchangeRate, setShouldFetchExchangeRate] = useState<boolean>(false);
   
-  // Use custom hook for exchange rate
+  // Use custom hook for exchange rate with enabled control
   const {
     exchangeRateData,
     isExchangeRateLoading,
     isExchangeRateError,
     exchangeRateError,
     refetch: refetchExchangeRate
-  } = exchangeRateQueryService.useGetExchangeRateByCountry(selectedCountry);
+  } = exchangeRateQueryService.useGetExchangeRateByCountry(
+    selectedCountry, 
+    undefined, // pagination params
+    shouldFetchExchangeRate // enabled parameter
+  );
 
   // Country to currency code mapping
   const countryCurrencyMap: Record<string, string> = {
@@ -122,10 +128,23 @@ const PaymentManagement = () => {
     }
   }, [isExchangeRateError, exchangeRateError, selectedCountry]);
  
-  // Reset retry count when country changes
+  // Reset states when country changes
   useEffect(() => {
     setRetryCount(0);
+    setShouldFetchExchangeRate(false); // Disable auto-fetch for new country
   }, [selectedCountry]);
+
+  // Handle successful exchange rate fetch
+  useEffect(() => {
+    if (shouldFetchExchangeRate && exchangeRateData) {
+      message.success(`Exchange rate loaded for ${selectedCountry}`);
+    }
+  }, [exchangeRateData, shouldFetchExchangeRate, selectedCountry]);
+
+  // Handle exchange rate fetch function
+  const handleFetchExchangeRate = () => {
+    setShouldFetchExchangeRate(true);
+  };
 
   // Calculate total sum of selected invoices
   const selectedInvoicesTotal = React.useMemo(() => {
@@ -269,47 +288,7 @@ const PaymentManagement = () => {
           </Card>
         </Col>
       </Row>
-
-  
-      {/* Exchange Rate Error Warning */}
-      {isExchangeRateError && (
-        <Card style={{ marginBottom: 16 }}>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <ExclamationCircleOutlined className="text-yellow-600 mt-1 text-lg" />
-              <div className="flex-1">
-                <Typography.Text strong className="text-yellow-800 block mb-2">
-                  Exchange Rate Service Warning
-                </Typography.Text>
-                <Typography.Text className="text-yellow-700 block mb-3">
-                  Unable to fetch current exchange rates for {selectedCountry}. This may affect bulk payment processing.
-                </Typography.Text>
-                <div className="text-yellow-600 text-sm mb-3">
-                  <strong>Error:</strong> {exchangeRateError?.message || 'Unknown error occurred'}
-                </div>
-                <Space>
-                  <Button 
-                    size="small" 
-                    type="primary" 
-                    ghost 
-                    onClick={handleRetryExchangeRate}
-                    disabled={retryCount >= 3 || isExchangeRateLoading}
-                    loading={isExchangeRateLoading}
-                  >
-                    {isExchangeRateLoading ? 'Retrying...' : `Retry (${retryCount}/3)`}
-                  </Button>
-                  {retryCount >= 3 && (
-                    <Typography.Text className="text-yellow-600 text-xs">
-                      Max retries reached. You can still process payments manually.
-                    </Typography.Text>
-                  )}
-                </Space>
-              </div>
-            </div>
-          </div>
-        </Card>
-      )}
-
+      
 
       {/* Filters */}
       <Card>
@@ -365,7 +344,9 @@ const PaymentManagement = () => {
             <Space size={24} align="center" style={{ width: '100%', justifyContent: 'space-between', display: 'flex', flexWrap: 'wrap' }}>
               <span style={{ fontWeight: 500 }}>
                 Exchange Rate ({countryCurrencyMap[selectedCountry]} / USD):
-                {isExchangeRateLoading ? (
+                {!shouldFetchExchangeRate && !exchangeRateData ? (
+                  <span style={{ marginLeft: 8, color: '#666' }}>Rate Not Loaded</span>
+                ) : isExchangeRateLoading ? (
                   <span style={{ marginLeft: 8, color: '#1890ff' }}>Loading...</span>
                 ) : isExchangeRateError && exchangeRateAdjustment <= 0 ? (
                   <span style={{ marginLeft: 8 }}>
@@ -415,6 +396,7 @@ const PaymentManagement = () => {
                   options={Object.keys(countryCurrencyMap).map(country => ({ label: country, value: country }))}
                 />
                 </div>
+                
                <div className="flex flex-col gap-1.5">
                   <span style={{ fontWeight: 500, marginLeft: 16 }}>Adjust Price:</span>
                    <input
@@ -427,6 +409,20 @@ const PaymentManagement = () => {
                     style={{ width: 120, marginLeft: 16, padding: '4px 8px', borderRadius: 4, border: '1px solid #ccc' }}
                 />
                </div>
+
+               <div className="flex flex-col gap-1.5">
+                  <span style={{ fontWeight: 500, marginLeft: 16, opacity: 0 }}>Exchange Rate:</span>
+                  <Button 
+                    type="primary"
+                    size="middle"
+                    onClick={isExchangeRateError ? handleRetryExchangeRate : handleFetchExchangeRate}
+                    loading={isExchangeRateLoading}
+                    disabled={isExchangeRateLoading}
+                    style={{ marginLeft: 16, width: 120 }}
+                  >
+                    {!shouldFetchExchangeRate && !exchangeRateData ? 'Load Rate' : isExchangeRateError ? 'Retry' : 'Loading...'}
+                  </Button>
+                </div>
               </div>
             </Space>
           </Col>

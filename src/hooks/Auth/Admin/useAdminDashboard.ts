@@ -1,27 +1,7 @@
 import { useState, useCallback } from "react";
 import { message } from "antd";
 import apiUtils from "../../../service/axiosApi";
-import {
-  AdminDashboardResponse,
-  AdminDashboardData,
-  Overview,
-  DtUserStatistics,
-  ProjectStatistics,
-  ApplicationStatistics,
-  InvoiceStatistics,
-  RecentRegistration,
-  RecentInvoiceActivity,
-  Trends,
-  TopAnnotator,
-  TopPerformers,
-  RecentUser,
-  RecentProject,
-  RecentActivities,
-  DomainDistribution,
-  ConversionRates,
-  FinancialHealth,
-  Insights,
-} from "./admin-dashboard-type";
+import { AdminDashboardResponse, AdminDashboardData } from "./admin-dashboard-type";
 
 export interface HookOperationResult {
   success: boolean;
