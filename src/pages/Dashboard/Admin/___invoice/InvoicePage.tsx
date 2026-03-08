@@ -99,11 +99,32 @@ const InvoicePage = () => {
     },
   ];
 
-  const totalAmount = invoices.reduce((acc, inv) => acc + inv.amount, 0);
-  const currencies = [...new Set(invoices.map((inv) => inv.currency || "USD"))];
-  const isUniform = currencies.length === 1;
-  const primaryCurrency = isUniform ? currencies[0] : "USD";
-  const avgAmount = invoices.length ? totalAmount / invoices.length : 0;
+  // Note: These are mock conversion rates as the backend doesn't provide them. 
+  // Adjust these according to real exchange rates.
+  const conversionRatesToNGN: Record<string, number> = {
+    NGN: 1,
+    USD: 1500,
+    EUR: 1600,
+    GBP: 1900,
+  };
+
+  const totalsByCurrency = invoices.reduce((acc, inv) => {
+    const currency = inv.currency || "USD";
+    if (!acc[currency]) {
+      acc[currency] = { total: 0, count: 0 };
+    }
+    acc[currency].total += inv.amount;
+    acc[currency].count += 1;
+    return acc;
+  }, {} as Record<string, { total: number; count: number }>);
+
+  let grandTotalNGN = 0;
+  Object.entries(totalsByCurrency).forEach(([cur, data]) => {
+    const rate = conversionRatesToNGN[cur] || 1500;
+    grandTotalNGN += data.total * rate;
+  });
+
+  const grandAvgNGN = invoices.length ? grandTotalNGN / invoices.length : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
@@ -141,16 +162,38 @@ const InvoicePage = () => {
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Total Value</div>
-            <div className="text-2xl font-bold text-green-600">
-              {isUniform ? formatMoney(totalAmount, primaryCurrency) : `${totalAmount.toLocaleString()} (Mixed)`}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-500 text-sm font-medium">Total Value</span>
+              {invoices.length > 0 && <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">Grand Total: {formatMoney(grandTotalNGN, "NGN")}</span>}
+            </div>
+            <div className="space-y-2">
+              {Object.entries(totalsByCurrency).map(([currency, data]) => (
+                <div key={currency} className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">{currency} Total:</span>
+                  <span className="font-bold text-green-600">{formatMoney(data.total, currency)}</span>
+                </div>
+              ))}
+              {Object.keys(totalsByCurrency).length === 0 && (
+                <div className="text-2xl font-bold text-green-600">{formatMoney(0, "NGN")}</div>
+              )}
             </div>
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Average Invoice</div>
-            <div className="text-2xl font-bold text-blue-600">
-              {isUniform ? formatMoney(avgAmount, primaryCurrency) : `${avgAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} (Mixed)`}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-gray-500 text-sm font-medium">Average Invoice</span>
+              {invoices.length > 0 && <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">Overall Avg: {formatMoney(grandAvgNGN, "NGN")}</span>}
+            </div>
+            <div className="space-y-2">
+              {Object.entries(totalsByCurrency).map(([currency, data]) => (
+                <div key={currency} className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm">{currency} Avg:</span>
+                  <span className="font-bold text-blue-600">{formatMoney(data.count ? data.total / data.count : 0, currency)}</span>
+                </div>
+              ))}
+              {Object.keys(totalsByCurrency).length === 0 && (
+                <div className="text-2xl font-bold text-blue-600">{formatMoney(0, "NGN")}</div>
+              )}
             </div>
           </div>
         </div>

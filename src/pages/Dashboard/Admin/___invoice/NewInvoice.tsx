@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Space, Card, Divider } from "antd";
-import dayjs from "dayjs";
+import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Card, Divider } from "antd";
 import { useEffect } from "react";
 import { App } from "antd";
+import { AxiosError } from "axios";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 import { useInvoiceStates, useInvoiceActions } from "../../../../store/useInvoiceStore";
 
@@ -25,16 +25,24 @@ const NewInvoice = () => {
     }
   }, [error, message, setError]);
 
+
   const onFinish = async (values: any) => {
     try {
       const formattedValues = {
         ...values,
-        due_date: values.due_date.format("YYYY-MM-DD"),
+        due_date: values.dueDate ? values.dueDate.format("YYYY-MM-DD") : undefined,
       };
       await addInvoice(formattedValues);
+
+      message.success("Invoice created successfully");
       navigate("/admin/invoice-page");
+
     } catch (err) {
-      // Error handled by store/effect
+      const error = err as AxiosError<{ message: string }>;
+
+      setError(
+        error.response?.data?.message || "Failed to create invoice"
+      );
     }
   };
 
@@ -119,7 +127,7 @@ const NewInvoice = () => {
             </Form.Item>
 
             <Form.Item
-              name="due_date"
+              name="dueDate"
               label="Due Date"
               rules={[{ required: true, message: "Please select due date" }]}
             >

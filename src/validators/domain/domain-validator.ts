@@ -38,7 +38,7 @@ const CreateSubDomainCategorySchema = z.object({
 const CreateDomainSchema = z.object({
   name: NameField("Domain name is required"),
   domain_category: NameField("Domain category is required"),
-  domain_sub_category:z.string().optional().nullable(),
+  domain_sub_category: z.string().optional().nullable(),
   description: OptionalDescription,
 });
 
@@ -70,34 +70,34 @@ const PaginationSchema = z.object({
 
 /* Domain (child) */
 const DomainChildSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().optional(),
+  domain_category: DomainCategoryRefSchema,
+  domain_sub_category: z.object({
     _id: z.string(),
     name: z.string(),
     slug: z.string(),
-    description: z.string().optional(),
-    domain_category: DomainCategoryRefSchema,
-    domain_sub_category: z.object({
-      _id: z.string(),
-      name: z.string(),
-      slug: z.string(),
-    }).strip(),
-    ...MongoMeta,
-    ...Timestamps,
-  }).strip();
+  }).strip(),
+  ...MongoMeta,
+  ...Timestamps,
+}).strip();
 
 const CreateDomainSchemaResponse = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({ domain: DomainEntitySchema }),
-  })
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({ domain: DomainEntitySchema }),
+})
 
 const GetDomainsResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-      domain: z.array(DomainChildSchema),
-      pagination: PaginationSchema.optional()
-    }),
-  }).strip();
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({
+    domain: z.array(DomainChildSchema),
+    pagination: PaginationSchema.optional()
+  }),
+}).strip();
 
 /* ──────────────────────────────
  * Reference & entity schemas
@@ -118,10 +118,10 @@ const DomainCategorySchema = z.object({
  * ────────────────────────────── */
 
 const CreateDomainCategoryResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({ category: DomainCategorySchema }),
-  });
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({ category: DomainCategorySchema }),
+});
 
 // const GetDomainCategoriesResponseSchema = z.object({
 //     success: z.boolean(),
@@ -133,13 +133,10 @@ const CreateDomainCategoryResponseSchema = z.object({
 //   }).strip();
 
 const GetDomainCategoriesResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({ 
-      categories: z.array(DomainCategorySchema),
-      pagination: PaginationSchema.optional()
-    }),
-  });
+  success: z.boolean(),
+  message: z.string(),
+  data: z.array(DomainCategorySchema),
+});
 
 
 /* Domain Sub-Category */
@@ -153,19 +150,19 @@ const DomainSubCategorySchema = z.object({
 });
 
 const CreateDomainSubCategoryResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({ domainSubCategory: DomainSubCategorySchema }),
-  })
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({ domainSubCategory: DomainSubCategorySchema }),
+})
 
 const GetDomainSubCategoriesResponseSchema = z.object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({
-      domainSubCategories: z.array(DomainSubCategorySchema),
-      pagination: PaginationSchema.optional()
-    }),
-  });
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({
+    domainSubCategories: z.array(DomainSubCategorySchema),
+    pagination: PaginationSchema.optional()
+  }),
+});
 
 /* ──────────────────────────────
  * Update / Delete
