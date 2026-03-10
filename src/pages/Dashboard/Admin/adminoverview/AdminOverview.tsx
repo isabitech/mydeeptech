@@ -135,19 +135,19 @@ const AdminOverview = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-2">Conversion Rates</h3>
                   <div className="space-y-2 text-sm">
-                    <div>Email Verification: {dashboardData.insights.conversionRates?.emailVerificationRate}%</div>
-                    <div>Password Setup: {dashboardData.insights.conversionRates?.passwordSetupRate}%</div>
-                    <div>Result Submission: {dashboardData.insights.conversionRates?.resultSubmissionRate}%</div>
-                    <div>Approval Rate: {dashboardData.insights.conversionRates?.approvalRate}%</div>
+                    <div>Email Verification: {dashboardData.insights.conversionRates?.emailVerificationRate || 0}%</div>
+                    <div>Password Setup: {dashboardData.insights.conversionRates?.passwordSetupRate || 0}%</div>
+                    <div>Result Submission: {dashboardData.insights.conversionRates?.resultSubmissionRate || 0}%</div>
+                    <div>Approval Rate: {dashboardData.insights.conversionRates?.approvalRate || 0}%</div>
                   </div>
                 </div>
 
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-2">Financial Health</h3>
                   <div className="space-y-2 text-sm">
-                    <div>Payment Rate: {dashboardData.insights.financialHealth?.paymentRate}%</div>
-                    <div>Avg Invoice: ${dashboardData.insights.financialHealth?.averageInvoiceAmount}</div>
-                    <div>Outstanding: ${dashboardData.insights.financialHealth?.outstandingBalance.toLocaleString()}</div>
+                    <div>Payment Rate: {dashboardData.insights.financialHealth?.paymentRate || 0}%</div>
+                    <div>Avg Invoice: ${dashboardData.insights.financialHealth?.averageInvoiceAmount || 0}</div>
+                    <div>Outstanding: ${dashboardData.insights.financialHealth?.outstandingBalance?.toLocaleString() || 0}</div>
                   </div>
                 </div>
 

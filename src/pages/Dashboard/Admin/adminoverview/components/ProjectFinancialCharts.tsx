@@ -1,21 +1,21 @@
 import React from 'react';
 import { Card, Progress } from 'antd';
 import { motion } from 'framer-motion';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area
 } from 'recharts';
-import { 
-  ProjectStatistics, 
+import {
+  ProjectStatistics,
   InvoiceStatistics,
-  Trends 
+  Trends
 } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
 
 interface ProjectFinancialChartsProps {
@@ -24,10 +24,10 @@ interface ProjectFinancialChartsProps {
   trendsData: Trends;
 }
 
-const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({ 
-  projectData, 
-  invoiceData, 
-  trendsData 
+const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
+  projectData,
+  invoiceData,
+  trendsData
 }) => {
   // Project status data
   const projectStatusData = [
@@ -37,11 +37,11 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
   ];
 
   // Budget vs Spent
-  const budgetSpent = projectData.totalBudget > 0 ? 
+  const budgetSpent = projectData.totalBudget > 0 ?
     (projectData.totalSpent / projectData.totalBudget) * 100 : 0;
 
   // Payment rate
-  const paymentRate = invoiceData.totalAmount > 0 ? 
+  const paymentRate = invoiceData.totalAmount > 0 ?
     (invoiceData.paidAmount / invoiceData.totalAmount) * 100 : 0;
 
   // Registration trends - format for chart
@@ -74,9 +74,9 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
               </div>
               <div className="text-sm text-gray-500">Active Projects</div>
             </div>
-            <Progress 
-              type="circle" 
-              percent={Math.round((projectData.activeProjects / projectData.totalProjects) * 100)} 
+            <Progress
+              type="circle"
+              percent={projectData.totalProjects > 0 ? Math.round((projectData.activeProjects / projectData.totalProjects) * 100) : 0}
               size={60}
               strokeColor="#1890ff"
             />
@@ -95,9 +95,9 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
               </div>
               <div className="text-sm text-gray-500">Budget Utilized</div>
             </div>
-            <Progress 
-              type="circle" 
-              percent={Math.round(budgetSpent)} 
+            <Progress
+              type="circle"
+              percent={Math.round(budgetSpent)}
               size={60}
               strokeColor="#52c41a"
             />
@@ -116,9 +116,9 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
               </div>
               <div className="text-sm text-gray-500">Paid Invoices</div>
             </div>
-            <Progress 
-              type="circle" 
-              percent={Math.round(paymentRate)} 
+            <Progress
+              type="circle"
+              percent={Math.round(paymentRate)}
               size={60}
               strokeColor="#722ed1"
             />
@@ -137,9 +137,9 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
               </div>
               <div className="text-sm text-gray-500">Unpaid Amount</div>
             </div>
-            <Progress 
-              type="circle" 
-              percent={Math.round((invoiceData.unpaidAmount / invoiceData.totalAmount) * 100)} 
+            <Progress
+              type="circle"
+              percent={invoiceData.totalAmount > 0 ? Math.round((invoiceData.unpaidAmount / invoiceData.totalAmount) * 100) : 0}
               size={60}
               strokeColor="#ff4d4f"
             />
@@ -162,10 +162,10 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="registrations" 
-                  stroke="#1890ff" 
+                <Area
+                  type="monotone"
+                  dataKey="registrations"
+                  stroke="#1890ff"
                   fill="#1890ff"
                   fillOpacity={0.3}
                   animationDuration={1500}
@@ -188,18 +188,18 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="created" 
-                  stroke="#52c41a" 
+                <Line
+                  type="monotone"
+                  dataKey="created"
+                  stroke="#52c41a"
                   strokeWidth={2}
                   name="Created"
                   animationDuration={1500}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="paid" 
-                  stroke="#1890ff" 
+                <Line
+                  type="monotone"
+                  dataKey="paid"
+                  stroke="#1890ff"
                   strokeWidth={2}
                   name="Paid"
                   animationDuration={1500}

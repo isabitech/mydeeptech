@@ -1,13 +1,10 @@
-import { useNavigate, useParams } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 import { Invoice, useInvoiceActions, useInvoiceStates } from "../../../../store/useInvoiceStore";
 import { formatMoney } from "../../../../utils/moneyFormat";
-import { Card, Input, Button, Typography, Space, Divider, App } from "antd";
+import { Card, Button, Typography, Space, App, Modal, Input } from "antd";
 import {
-  MailOutlined,
-  ArrowLeftOutlined,
   SendOutlined,
   UserOutlined,
   CalendarOutlined,
@@ -16,9 +13,13 @@ import {
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
-const SendInvoice: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+interface SendInvoiceProps {
+  open: boolean;
+  invoiceId: string | null;
+  onClose: () => void;
+}
+
+const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
   const { message } = App.useApp();
   const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
   const { mutateAsync: sendPartnerInvoice, isPending: loading } = partnerInvoiceMutationService.useSendPartnerInvoice();
@@ -44,7 +45,7 @@ const SendInvoice: React.FC = () => {
   }, [error, message, setError]);
 
   useEffect(() => {
-    const foundInvoice = invoices.find((inv) => inv._id === id);
+    const foundInvoice = invoices.find((inv) => inv._id === invoiceId);
     if (foundInvoice) {
       setInvoice(foundInvoice);
       setSubject(`Invoice for ${foundInvoice.name}`);
@@ -55,160 +56,111 @@ const SendInvoice: React.FC = () => {
         ).toLocaleDateString()}\n\nRegards,\nTeam`
       );
     }
-  }, [id, invoices]);
+  }, [invoiceId, invoices]);
 
   const handleSend = async () => {
-    if (!id) return;
+    if (!invoiceId) return;
     try {
-      await sendPartnerInvoice({ invoiceId: id, subject, message: emailMessage });
+      await sendPartnerInvoice({ id: invoiceId });
       message.success("Invoice sent successfully");
-      navigate("/admin/invoice-page");
-    } catch (err) {
-      // Error handled by store/effect
+      onClose();
+    } catch (err: any) {
+      message.error(err?.response?.data?.message || err?.message || "Failed to send invoice");
     }
   };
 
   if (!invoice) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Title level={4}>Invoice not found</Title>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-[gilroy-regular]">
-      <div className="max-w-4xl mx-auto">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          Back
-        </Button>
+    <Modal
+      title={
+        <div>
+          <Title level={4} className="m-0 flex items-center">
+            Send Invoice via Email
+          </Title>
+        </div>
+      }
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={500}
+      destroyOnClose
+      className="font-[gilroy-regular]"
+    >
+      <div className="mt-4">
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Email Form */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-sm">
-              <Title level={4} className="mb-6 flex items-center">
-                <MailOutlined className="mr-2" />
-                Send Invoice via Email
-              </Title>
+        <div className="max-w-md mx-auto">
+          <Card className="shadow-sm">
+            <Title level={5} className="mb-4">
+              Invoice Summary
+            </Title>
+            <Paragraph className="text-gray-500 mb-6">
+              Preview of the invoice details that will be attached.
+            </Paragraph>
 
-              <Space direction="vertical" className="w-full" size="large">
+            <Space direction="vertical" className="w-full" size="middle">
+              <div className="flex items-start">
+                <div className="mr-3 mt-1 text-xl text-gray-400 font-bold">
+                  {currencySymbols[invoice.currency] || ""}
+                </div>
                 <div>
-                  <Text strong className="block mb-2 text-gray-600">
-                    Recipient Email
+                  <Text type="secondary" className="text-xs uppercase">
+                    Amount
                   </Text>
-                  <Input
-                    value={invoice.email}
-                    disabled
-                    prefix={<UserOutlined className="text-gray-400" />}
-                    className="bg-gray-50"
-                  />
+                  <div className="text-lg font-bold">
+                    {formatMoney(invoice.amount, invoice.currency)}
+                  </div>
                 </div>
+              </div>
 
+              <div className="flex items-start">
+                <CalendarOutlined className="text-xl text-gray-400 mr-3 mt-1" />
                 <div>
-                  <Text strong className="block mb-2 text-gray-600">
-                    Subject
+                  <Text type="secondary" className="text-xs uppercase">
+                    Due Date
                   </Text>
-                  <Input
-                    placeholder="Enter email subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
+                  <div className="font-semibold">
+                    {new Date(invoice.due_date).toLocaleDateString()}
+                  </div>
                 </div>
+              </div>
 
+              <div className="flex items-start">
+                <UserOutlined className="text-xl text-gray-400 mr-3 mt-1" />
                 <div>
-                  <Text strong className="block mb-2 text-gray-600">
-                    Message
+                  <Text type="secondary" className="text-xs uppercase">
+                    Partner
                   </Text>
-                  <TextArea
-                    rows={8}
-                    placeholder="Write your message here..."
-                    value={emailMessage}
-                    onChange={(e) => setEmailMessage(e.target.value)}
-                  />
+                  <div className="font-semibold">{invoice.name}</div>
                 </div>
+              </div>
+            </Space>
 
-                <Divider />
-
-                <div className="flex justify-end">
-                  <Button
-                    type="primary"
-                    size="large"
-                    icon={<SendOutlined />}
-                    onClick={handleSend}
-                    loading={loading}
-                    className="bg-black border-black h-12 px-8"
-                  >
-                    Send Invoice
-                  </Button>
-                </div>
-              </Space>
-            </Card>
-          </div>
-
-          {/* Right Column: Invoice Summary */}
-          <div>
-            <Card className="shadow-sm">
-              <Title level={5} className="mb-4">
-                Invoice Summary
-              </Title>
-              <Paragraph className="text-gray-500 mb-6">
-                Preview of the invoice details that will be attached.
+            <div className="mt-8 pt-6 border-t">
+              <Paragraph className="text-xs text-gray-400 italic mb-6">
+                Note: A professional PDF version of this invoice will be
+                automatically generated and linked in the email.
               </Paragraph>
 
-              <Space direction="vertical" className="w-full" size="middle">
-                <div className="flex items-start">
-                  <div className="mr-3 mt-1 text-xl text-gray-400 font-bold">
-                    {currencySymbols[invoice.currency] || ""}
-                  </div>
-                  <div>
-                    <Text type="secondary" className="text-xs uppercase">
-                      Amount
-                    </Text>
-                    <div className="text-lg font-bold">
-                      {formatMoney(invoice.amount, invoice.currency)}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="flex items-start">
-                  <CalendarOutlined className="text-xl text-gray-400 mr-3 mt-1" />
-                  <div>
-                    <Text type="secondary" className="text-xs uppercase">
-                      Due Date
-                    </Text>
-                    <div className="font-semibold">
-                      {new Date(invoice.due_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <UserOutlined className="text-xl text-gray-400 mr-3 mt-1" />
-                  <div>
-                    <Text type="secondary" className="text-xs uppercase">
-                      Partner
-                    </Text>
-                    <div className="font-semibold">{invoice.name}</div>
-                  </div>
-                </div>
-              </Space>
-
-              <div className="mt-8 pt-8 border-t">
-                <Paragraph className="text-xs text-gray-400 italic">
-                  Note: A professional PDF version of this invoice will be
-                  automatically generated and linked in the email.
-                </Paragraph>
+              <div className="flex justify-end gap-3">
+                <Button onClick={onClose}>Cancel</Button>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  onClick={handleSend}
+                  loading={loading}
+                >
+                  Send
+                </Button>
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

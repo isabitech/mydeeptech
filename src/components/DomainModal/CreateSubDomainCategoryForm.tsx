@@ -26,7 +26,7 @@ const CreateSubDomainCategoryForm: React.FC = () => {
 
     const isDomainMutationLoading = addSubDomainCategory.isPending;
     const { data, refetch: refetchDomainCategories, isFetching: isFetchingDomainCategories } = fetchDomainCategories || {};
-    const domainCategories = Array.isArray(data?.data?.categories) ? data.data.categories : [];
+    const domainCategories = Array.isArray(data?.data) ? data.data : [];
 
     const handleSubCategorySubmit = async (formValues: CreateSubDomainCategorySchema) => {
         addSubDomainCategory.mutate(formValues, {
@@ -34,7 +34,7 @@ const CreateSubDomainCategoryForm: React.FC = () => {
                 message.success("Sub-Domain Category created successfully!");
                 subDomainForm.resetFields();
             },
-             onError: (error) => {
+            onError: (error) => {
                 message.error(ErrorMessage(error));
             }
         })
@@ -48,55 +48,55 @@ const CreateSubDomainCategoryForm: React.FC = () => {
 
     return (
         <>
-         <div className="w-full flex items-center justify-end">
-        <Button size="small" onClick={() => refetchDomainCategories()} disabled={isDomainMutationLoading || isFetchingDomainCategories}>
-            <SyncOutlined spin={isFetchingDomainCategories} /> Refresh
-        </Button>
-       </div>
-        <Form
-            form={subDomainForm}
-            layout="vertical"
-            onFinish={handleSubCategorySubmit}
-        >
-
-            <Form.Item
-              name="domain_category"
-              label="Category"
-              rules={[{ required: true, message: "Please select a category" }]}
+            <div className="w-full flex items-center justify-end">
+                <Button size="small" onClick={() => refetchDomainCategories()} disabled={isDomainMutationLoading || isFetchingDomainCategories}>
+                    <SyncOutlined spin={isFetchingDomainCategories} /> Refresh
+                </Button>
+            </div>
+            <Form
+                form={subDomainForm}
+                layout="vertical"
+                onFinish={handleSubCategorySubmit}
             >
-              <Select placeholder="Select category">
-                {domainCategories.map((option) => (
-                  <Option key={option._id} value={option._id}>
-                    {option.name}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
 
-            <Form.Item
-                name="name"
-                label="Sub-Category Name"
-                rules={[{ required: true, message: "Please enter sub-category name" }]}
-            >
-                <Input placeholder="Enter sub-category name" />
-            </Form.Item>
+                <Form.Item
+                    name="domain_category"
+                    label="Category"
+                    rules={[{ required: true, message: "Please select a category" }]}
+                >
+                    <Select placeholder="Select category">
+                        {domainCategories.map((option) => (
+                            <Option key={option._id} value={option._id}>
+                                {option.name}
+                            </Option>
+                        ))}
+                    </Select>
+                </Form.Item>
 
-            <Form.Item
-                name="description"
-                label="Description"
-                rules={[{ message: "Please enter sub-category description" }]}
-            >
-                <TextArea rows={4} placeholder="Enter sub-category description" />
-            </Form.Item>
-            <Form.Item>
-                <div className="flex justify-end gap-2">
-                    <Button onClick={handleCancel} disabled={isDomainMutationLoading}>Cancel</Button>
-                    <Button type="primary" htmlType="submit" loading={isDomainMutationLoading}>
-                        Create Sub-Category
-                    </Button>
-                </div>
-            </Form.Item>
-        </Form>
+                <Form.Item
+                    name="name"
+                    label="Sub-Category Name"
+                    rules={[{ required: true, message: "Please enter sub-category name" }]}
+                >
+                    <Input placeholder="Enter sub-category name" />
+                </Form.Item>
+
+                <Form.Item
+                    name="description"
+                    label="Description"
+                    rules={[{ message: "Please enter sub-category description" }]}
+                >
+                    <TextArea rows={4} placeholder="Enter sub-category description" />
+                </Form.Item>
+                <Form.Item>
+                    <div className="flex justify-end gap-2">
+                        <Button onClick={handleCancel} disabled={isDomainMutationLoading}>Cancel</Button>
+                        <Button type="primary" htmlType="submit" loading={isDomainMutationLoading}>
+                            Create Sub-Category
+                        </Button>
+                    </div>
+                </Form.Item>
+            </Form>
         </>
     )
 }
