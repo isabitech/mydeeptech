@@ -96,6 +96,16 @@ const UserInvoiceDashboard: React.FC = () => {
     }
   };
 
+  // Same as the above with switch statement
+  const getStatIcon = (status: PaymentStatus) => {
+    const statusMap: any = {
+      paid:    <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+      unpaid:  <ClockCircleOutlined style={{ color: "#faad14" }} />,
+      overdue: <CalendarOutlined style={{ color: "#ff4d4f" }} />,
+    } as const;
+    return statusMap[status] ?? <FileTextOutlined />
+  }
+
   const calculateDaysOverdue = (dueDate: string, paymentStatus: PaymentStatus) => {
     if (paymentStatus === "paid" || paymentStatus === "cancelled") return 0;
     const now = dayjs();
