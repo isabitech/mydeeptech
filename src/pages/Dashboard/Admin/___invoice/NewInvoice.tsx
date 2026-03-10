@@ -1,7 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Card, Divider } from "antd";
+import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Divider, Modal, App } from "antd";
 import { useEffect } from "react";
-import { App } from "antd";
 import { AxiosError } from "axios";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 import { useInvoiceStates, useInvoiceActions } from "../../../../store/useInvoiceStore";
@@ -10,10 +8,14 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const NewInvoice = () => {
-  const navigate = useNavigate();
+interface NewInvoiceProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const NewInvoice = ({ open, onClose }: NewInvoiceProps) => {
   const { message } = App.useApp();
-  const { loading: storeLoading, error } = useInvoiceStates();
+  const { error } = useInvoiceStates();
   const { setError } = useInvoiceActions();
   const { mutateAsync: addInvoice, isPending: loading } = partnerInvoiceMutationService.useAddPartnerInvoice();
   const [form] = Form.useForm();
@@ -35,7 +37,8 @@ const NewInvoice = () => {
       await addInvoice(formattedValues);
 
       message.success("Invoice created successfully");
-      navigate("/admin/invoice-page");
+      form.resetFields();
+      onClose();
 
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
@@ -47,14 +50,21 @@ const NewInvoice = () => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-8 font-[gilroy-regular] p-4 md:p-8">
-      {/* Page Header */}
-      <div>
-        <Title level={2} className="m-0">Create New Invoice</Title>
-        <Text type="secondary">Fill in the invoice details below</Text>
-      </div>
-
-      <Card className="shadow-sm">
+    <Modal
+      title={
+        <div>
+          <Title level={4} className="m-0">Create New Invoice</Title>
+          <Text type="secondary" className="text-sm font-normal">Fill in the invoice details below</Text>
+        </div>
+      }
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={700}
+      destroyOnClose
+      className="font-[gilroy-regular]"
+    >
+      <div className="mt-6">
         <Form
           form={form}
           layout="vertical"
@@ -110,7 +120,7 @@ const NewInvoice = () => {
                 return (
                   <Form.Item
                     name="amount"
-                    label={`Amount (${currency})`}
+                    label={`Amount (${symbol})`}
                     rules={[{ required: true, message: "Please enter amount" }]}
                   >
                     <InputNumber
@@ -118,8 +128,8 @@ const NewInvoice = () => {
                       placeholder="500"
                       size="large"
                       min={0}
-                      formatter={(value) => `${symbol} ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                      parser={(value) => value!.replace(new RegExp(`\\${symbol}\\s?|(,*)`, "g"), "") as any}
+                      formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                      parser={(value) => value!.replace(/,/g, "") as any}
                     />
                   </Form.Item>
                 );
@@ -164,7 +174,7 @@ const NewInvoice = () => {
           <Divider />
 
           <div className="flex justify-end gap-4 mt-6">
-            <Button size="large" onClick={() => navigate(-1)}>
+            <Button size="large" onClick={onClose}>
               Cancel
             </Button>
             <Button
@@ -178,8 +188,8 @@ const NewInvoice = () => {
             </Button>
           </div>
         </Form>
-      </Card>
-    </div>
+      </div>
+    </Modal>
   );
 };
 

@@ -171,8 +171,7 @@ const useRemoveDomainFromUser = () => {
   return useMutation({
     mutationFn: async (assignmentId: string) => {
       const response = await axiosInstance.post(
-        `/new-domain/user/remove`,
-        { data: { id: assignmentId } }
+        `/new-domain/user/${assignmentId}/remove`
       );
       return response.data;
     },

@@ -39,7 +39,7 @@ const useUpdatePartnerInvoice = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ id, updatedInvoice }: { id: string; updatedInvoice: Partial<Invoice> }) => {
-            const { name, email, amount, due_date, dueDate, currency, description, duration } = updatedInvoice as any;
+            const { name, email, amount, due_date, currency, description, duration } = updatedInvoice;
 
             const invoiceData: any = {};
             if (name) invoiceData.name = name.trim();
@@ -49,8 +49,8 @@ const useUpdatePartnerInvoice = () => {
             if (description) invoiceData.description = description.trim();
             if (duration) invoiceData.duration = duration;
 
-            let finalDueDate = dueDate || due_date;
-            if (finalDueDate) {
+            if (due_date) {
+                let finalDueDate = due_date as string;
                 if (finalDueDate.includes("T")) finalDueDate = finalDueDate.split("T")[0];
                 invoiceData.due_date = finalDueDate;
             }
@@ -85,11 +85,9 @@ const useDeletePartnerInvoice = () => {
 
 const useSendPartnerInvoice = () => {
     return useMutation({
-        mutationFn: async ({ invoiceId, subject, message }: { invoiceId: string; subject: string; message: string }) => {
+        mutationFn: async ({ id }: { id: string }) => {
             const response = await axiosInstance.post(endpoints.partnerInvoice.send, {
-                invoiceId,
-                subject,
-                message,
+                id,
             });
             if (!response.data.success) {
                 throw new Error(response.data.message || "Failed to send invoice email");

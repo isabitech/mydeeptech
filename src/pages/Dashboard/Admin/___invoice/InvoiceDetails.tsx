@@ -1,11 +1,10 @@
-import { useParams, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
 import { useInvoiceStates, Invoice } from "../../../../store/useInvoiceStore";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 import { formatMoney } from "../../../../utils/moneyFormat";
-import { Button, Typography, Card, Space, Descriptions, Divider, Tag } from "antd";
+import { Button, Typography, Card, Space, Descriptions, Divider, Tag, Modal } from "antd";
 import {
   ArrowLeftOutlined,
   FilePdfOutlined,
@@ -18,23 +17,25 @@ import {
 
 const { Title, Text } = Typography;
 
-const InvoiceDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+interface InvoiceDetailsProps {
+  open: boolean;
+  invoiceId: string | null;
+  onClose: () => void;
+  onEdit?: (id: string) => void;
+  onSend?: (id: string) => void;
+}
+
+const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDetailsProps) => {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
 
   const invoice = invoices.find(
-    (inv) => inv._id === id
+    (inv) => inv._id === invoiceId
   );
 
   if (!invoice) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Title level={4}>Invoice not found</Title>
-      </div>
-    );
+    return null;
   }
 
   const handleExportPDF = async () => {
@@ -52,51 +53,49 @@ const InvoiceDetails = () => {
   };
 
   const handleSendToClient = () => {
-    navigate(`/admin/invoice-page/${invoice._id}/send`, {
-      state: { invoice },
-    });
+    if (onSend && invoice._id) {
+      onSend(invoice._id);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-[gilroy-regular]">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          Back
-        </Button>
-
-        {/* Action Header */}
-        <div className="flex justify-between items-center mb-6">
-          <Title level={2} className="m-0">Invoice Details</Title>
+    <Modal
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={800}
+      destroyOnClose
+      className="font-[gilroy-regular]"
+      title={
+        <div className="flex justify-between items-center pr-8">
+          <Title level={4} className="m-0">Invoice Details</Title>
           <Space>
             <Button icon={<FilePdfOutlined />} onClick={handleExportPDF}>
               Export PDF
             </Button>
-            <Button
-              icon={<EditOutlined />}
-              onClick={() =>
-                navigate(`/admin/invoice-page/${invoice._id}/edit`, {
-                  state: { invoice },
-                })
-              }
-            >
-              Edit
-            </Button>
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              onClick={handleSendToClient}
-              className="bg-blue-600 border-blue-600"
-            >
-              Send to Client
-            </Button>
+            {onEdit && (
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => invoice._id && onEdit(invoice._id)}
+              >
+                Edit
+              </Button>
+            )}
+            {onSend && (
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSendToClient}
+                className="bg-blue-600 border-blue-600"
+              >
+                Send
+              </Button>
+            )}
           </Space>
         </div>
-
+      }
+    >
+      <div className="mt-4">
         {/* Invoice Body for PDF */}
         <div ref={invoiceRef}>
           <Card className="shadow-sm overflow-hidden" bodyStyle={{ padding: 0 }}>
@@ -173,7 +172,7 @@ const InvoiceDetails = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

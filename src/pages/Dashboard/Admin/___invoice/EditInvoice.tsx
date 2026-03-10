@@ -1,9 +1,7 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Card, Divider } from "antd";
+import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Divider, Modal, App } from "antd";
 import { useInvoiceStates, useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
 import dayjs from "dayjs";
 import { useEffect } from "react";
-import { App } from "antd";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 
@@ -11,11 +9,14 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const EditInvoice = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+interface EditInvoiceProps {
+  open: boolean;
+  invoiceId: string | null;
+  onClose: () => void;
+}
+
+const EditInvoice = ({ open, invoiceId, onClose }: EditInvoiceProps) => {
   const { message } = App.useApp();
-  const { id } = useParams<{ id: string }>();
   const { updateInvoice: _, setError } = useInvoiceActions();
   const { mutateAsync: updateInvoice, isPending: loading } = partnerInvoiceMutationService.useUpdatePartnerInvoice();
   const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
@@ -29,9 +30,7 @@ const EditInvoice = () => {
     }
   }, [error, message, setError]);
 
-  // Try to get invoice from state or context
-  const initialInvoice = (location.state?.invoice as Invoice | undefined) ||
-    invoices.find(inv => inv._id === id);
+  const initialInvoice = invoices.find(inv => inv._id === invoiceId);
 
   useEffect(() => {
     if (initialInvoice) {
@@ -44,37 +43,43 @@ const EditInvoice = () => {
   }, [initialInvoice, form]);
 
   if (!initialInvoice) {
-    return (
-      <div className="h-full flex items-center justify-center p-8">
-        <Typography.Title level={4}>Invoice not found</Typography.Title>
-      </div>
-    );
+    return null;
   }
 
   const onFinish = async (values: any) => {
-    if (!id) return;
+    if (!invoiceId) return;
     try {
       const formattedValues = {
         ...values,
         due_date: values.due_date ? values.due_date.format("YYYY-MM-DD") : undefined,
       };
-      await updateInvoice({ id, updatedInvoice: formattedValues });
-      navigate(-1);
-    } catch (err) {
-      // Error handled by store/effect
+      await updateInvoice({ id: invoiceId, updatedInvoice: formattedValues });
+      message.success("Invoice updated successfully");
+      onClose();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update invoice";
+      message.error(errorMessage);
     }
   };
 
   return (
-    <div className="h-full flex flex-col gap-8 font-[gilroy-regular] p-4 md:p-8">
-      <div>
-        <Title level={2} className="m-0">Edit Invoice</Title>
-        <Text type="secondary">
-          Update the invoice details for <Text strong>{initialInvoice.name}</Text>
-        </Text>
-      </div>
-
-      <Card className="shadow-sm">
+    <Modal
+      title={
+        <div>
+          <Title level={4} className="m-0">Edit Invoice</Title>
+          <Text type="secondary" className="text-sm font-normal">
+            Update the invoice details for <Text strong>{initialInvoice.name}</Text>
+          </Text>
+        </div>
+      }
+      open={open}
+      onCancel={onClose}
+      footer={null}
+      width={700}
+      destroyOnClose
+      className="font-[gilroy-regular]"
+    >
+      <div className="mt-6">
         <Form
           form={form}
           layout="vertical"
@@ -179,7 +184,7 @@ const EditInvoice = () => {
           <Divider />
 
           <div className="flex justify-end gap-x-4 mt-6">
-            <Button size="large" onClick={() => navigate(-1)}>
+            <Button size="large" onClick={onClose}>
               Cancel
             </Button>
             <Button
@@ -193,8 +198,8 @@ const EditInvoice = () => {
             </Button>
           </div>
         </Form>
-      </Card>
-    </div>
+      </div>
+    </Modal>
   );
 };
 
