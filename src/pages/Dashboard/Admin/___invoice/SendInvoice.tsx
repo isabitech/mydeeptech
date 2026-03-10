@@ -146,14 +146,12 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
 
 
               <div className="flex justify-end gap-3">
-                <Button onClick={onClose} size="large">Cancel</Button>
+                <Button onClick={onClose}>Cancel</Button>
                 <Button
                   type="primary"
-                  size="large"
                   icon={<SendOutlined />}
                   onClick={handleSend}
                   loading={loading}
-                  className="bg-black border-black px-8"
                 >
                   Send
                 </Button>

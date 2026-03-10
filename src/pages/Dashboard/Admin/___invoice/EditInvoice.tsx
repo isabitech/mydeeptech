@@ -184,14 +184,12 @@ const EditInvoice = ({ open, invoiceId, onClose }: EditInvoiceProps) => {
           <Divider />
 
           <div className="flex justify-end gap-x-4 mt-6">
-            <Button size="large" onClick={onClose}>
+            <Button onClick={onClose}>
               Cancel
             </Button>
             <Button
               type="primary"
               htmlType="submit"
-              size="large"
-              className="bg-primary border-primary"
               loading={loading}
             >
               Update Invoice

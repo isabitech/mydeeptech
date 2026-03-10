@@ -25,7 +25,7 @@ const Annotators = () => {
   });
 
   const { getAllDTUsers, summary } = useGetAllDtUsers();
-   const { setOpenDomainModal } = useDomainActions();
+  const { setOpenDomainModal } = useDomainActions();
 
   // Fetch counts when component mounts
   useEffect(() => {
@@ -60,17 +60,17 @@ const Annotators = () => {
       {/* <Header title="Annotators Management" /> */}
 
       <div className=" w-full">
-      
+
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
             <div className="flex justify-between flex-wrap gap-3 items-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
-          
-            <Button
-              onClick={() => setOpenDomainModal(true)}
-              className="border-2 px-6 py-5 text-gray-900 border-black font-bold">
-              Create Domains
-            </Button>
+              <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
+
+              <Button
+                type="primary"
+                onClick={() => setOpenDomainModal(true)}>
+                Create Domains
+              </Button>
             </div>
             {/* Tabs for different annotator views */}
             <Tabs
@@ -253,18 +253,18 @@ const Annotators = () => {
           </div>
         </div>
       </div>
-                
+
       <DomainModal />
-        <Modal
-          title="Create Domains"
-          open={showCaModal}
-          onCancel={() => setShowCaModal(false)}
-          footer={null}
-          width={800}
-          destroyOnClose
-          >
-            <AnnotatorsDomain/>
-          </Modal>
+      <Modal
+        title="Create Domains"
+        open={showCaModal}
+        onCancel={() => setShowCaModal(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <AnnotatorsDomain />
+      </Modal>
     </div>
   );
 };

@@ -84,7 +84,8 @@ const InvoicePage = () => {
           },
           {
             key: "delete",
-            label: <span className="text-red-500">Delete</span>,
+            className: "group",
+            label: <span className="text-red-500 group-hover:!text-white">Delete</span>,
             danger: true,
             onClick: () => {
               modal.confirm({
@@ -130,8 +131,6 @@ const InvoicePage = () => {
     },
   ];
 
-  // Note: These are mock conversion rates as the backend doesn't provide them. 
-  // Adjust these according to real exchange rates.
   const conversionRatesToNGN: Record<string, number> = {
     NGN: 1,
     USD: 1500,
@@ -166,7 +165,6 @@ const InvoicePage = () => {
           <Button
             type="primary"
             icon={<FileTextOutlined />}
-            className="bg-black border-black font-bold px-6 py-5"
             onClick={() => setIsNewModalOpen(true)}
           >
             New Invoice

@@ -70,7 +70,7 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
         <div className="flex justify-between items-center pr-8">
           <Title level={4} className="m-0">Invoice Details</Title>
           <Space>
-            <Button icon={<FilePdfOutlined />} onClick={handleExportPDF}>
+            <Button icon={<FilePdfOutlined />} onClick={handleExportPDF} >
               Export PDF
             </Button>
             {onEdit && (
@@ -86,7 +86,6 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
                 type="primary"
                 icon={<SendOutlined />}
                 onClick={handleSendToClient}
-                className="bg-blue-600 border-blue-600"
               >
                 Send
               </Button>

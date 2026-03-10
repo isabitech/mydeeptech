@@ -174,14 +174,12 @@ const NewInvoice = ({ open, onClose }: NewInvoiceProps) => {
           <Divider />
 
           <div className="flex justify-end gap-4 mt-6">
-            <Button size="large" onClick={onClose}>
+            <Button onClick={onClose}>
               Cancel
             </Button>
             <Button
               type="primary"
               htmlType="submit"
-              size="large"
-              className="bg-primary border-primary"
               loading={loading}
             >
               Create Invoice
