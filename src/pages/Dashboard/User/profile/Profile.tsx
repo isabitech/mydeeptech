@@ -64,9 +64,9 @@ const Profile = () => {
     data: domainsData,
     isLoading: domainsLoading,
     error: domainsError,
-  } = domainQueryService.useDomainsWithCategorization({ limit: 1000 });
-  const allDomains =
-    domainsData?.data?.domains?.flatMap((cat: any) => cat.domains) || [];
+  } = domainQueryService.useDomains({ limit: 1000 });
+
+  const allDomains = domainsData?.data?.domain || [];
 
   const mergedDomains = [
     ...allDomains,
@@ -203,8 +203,8 @@ const Profile = () => {
 
           // Check if we have existing account details that might be pre-verified
           if (
-            result.data?.paymentInfo?.accountName && 
-            result.data?.paymentInfo?.accountNumber && 
+            result.data?.paymentInfo?.accountName &&
+            result.data?.paymentInfo?.accountNumber &&
             result.data?.paymentInfo?.bankCode
           ) {
             setHasVerifiedAccount(true); // Assume existing accounts are verified
@@ -235,7 +235,7 @@ const Profile = () => {
   // Handle account verification result (only for NGN currency)
   useEffect(() => {
     if (paymentCurrency !== "NGN") return;
-    
+
     const bankCode = form.getFieldValue("bankCode");
     if (verificationSuccess && verificationData?.success) {
       const accountName = verificationData.data?.accountName;
@@ -262,7 +262,7 @@ const Profile = () => {
   // Reset verification status when account number or bank changes (only for NGN currency)
   useEffect(() => {
     if (paymentCurrency !== "NGN") return;
-    
+
     console.log("🔄 Account details changed, resetting verification status", {
       accountNumber,
       bankCode,
@@ -270,7 +270,7 @@ const Profile = () => {
       bankCodeValue: form.getFieldValue("bankCode"),
       bank_slug: form.getFieldValue("bank_slug"),
     });
-    
+
     if (isEditing && (accountNumber || bankCode)) {
       setHasVerifiedAccount(false);
       form.setFieldsValue({ accountName: "" });
@@ -294,12 +294,12 @@ const Profile = () => {
         accountNumber,
         bankCode,
       });
-      
+
       // Invalidate and refetch the verification query
       await queryClient.invalidateQueries({
         queryKey: ["verifyAccountNumber", accountNumber, bankCode]
       });
-      
+
       // Manually trigger refetch
       verificationRefetch();
     } else {
@@ -320,17 +320,8 @@ const Profile = () => {
         if (normId && /^[0-9a-fA-F]{24}$/.test(normId)) {
           initiallySelectedIds.push(normId);
 
-          let assignmentId = null;
-          if (typeof d === "object" && d._id && d._id !== normId) {
-            assignmentId = d._id;
-          }
-
-          if (
-            !selectedDomains.includes(normId) &&
-            assignmentId &&
-            /^[0-9a-fA-F]{24}$/.test(assignmentId)
-          ) {
-            deselectedAssignmentIds.push(assignmentId);
+          if (!selectedDomains.includes(normId)) {
+            deselectedAssignmentIds.push(normId);
           }
         }
       });
@@ -481,11 +472,11 @@ const Profile = () => {
             resumeUrl: refreshResult.data?.attachments?.resumeUrl,
             idDocumentUrl: refreshResult.data?.attachments?.idDocumentUrl,
           });
-          
+
           // Preserve verification status after save
           if (
-            refreshResult.data?.paymentInfo?.accountName && 
-            refreshResult.data?.paymentInfo?.accountNumber && 
+            refreshResult.data?.paymentInfo?.accountName &&
+            refreshResult.data?.paymentInfo?.accountNumber &&
             refreshResult.data?.paymentInfo?.bankCode
           ) {
             setHasVerifiedAccount(true);
@@ -949,8 +940,8 @@ const Profile = () => {
             </div>
 
             <div className="col-span-12">
-              <Card title={<div className="flex items-center flex-wrap"><span>Payment Information</span> { paymentCurrency === "NGN" && isNaN(Number(bankCode)) && (<span className="text-red-500 text-xs"><span className="text-black ml-1">:</span> Kindly verify your account information now!</span>)}</div>} className="mb-6">
-               
+              <Card title={<div className="flex items-center flex-wrap"><span>Payment Information</span> {paymentCurrency === "NGN" && isNaN(Number(bankCode)) && (<span className="text-red-500 text-xs"><span className="text-black ml-1">:</span> Kindly verify your account information now!</span>)}</div>} className="mb-6">
+
                 <Form.Item label="Payment Currency" name="paymentCurrency">
                   <Select
                     disabled={!isEditing}
@@ -988,9 +979,9 @@ const Profile = () => {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span>Account Name</span>
-                                {isVerifying && ( <Spin size="small" /> )}
-                                {verificationSuccess && ( <span className="text-green-500 text-xs">✓ Verified</span> )}
-                                {verificationError && ( <span className="text-red-500 text-xs">✗ Verification failed</span> )}
+                                {isVerifying && (<Spin size="small" />)}
+                                {verificationSuccess && (<span className="text-green-500 text-xs">✓ Verified</span>)}
+                                {verificationError && (<span className="text-red-500 text-xs">✗ Verification failed</span>)}
                               </div>
                               {isEditing && accountNumber?.length === 10 && bankCode && !isVerifying && (
                                 <Button
@@ -1015,23 +1006,22 @@ const Profile = () => {
                             !hasVerifiedAccount && accountNumber && bankCode && accountNumber.length === 10
                               ? "Verifying account details..."
                               : hasVerifiedAccount
-                              ? "Account verified with Paystack"
-                              : isEditing
-                              ? "Enter a 10-digit account number and select your bank for automatic verification"
-                              : "Account name from verification"
+                                ? "Account verified with Paystack"
+                                : isEditing
+                                  ? "Enter a 10-digit account number and select your bank for automatic verification"
+                                  : "Account name from verification"
                           }
                         >
                           <Input
                             disabled={true} // Always disabled - populated by verification
-                            className={`!font-[gilroy-regular] ${
-                              verificationSuccess
-                                ? "border-green-500 bg-green-50"
-                                : verificationError
+                            className={`!font-[gilroy-regular] ${verificationSuccess
+                              ? "border-green-500 bg-green-50"
+                              : verificationError
                                 ? "border-red-500 bg-red-50"
                                 : isVerifying
-                                ? "border-blue-500 bg-blue-50"
-                                : ""
-                            }`}
+                                  ? "border-blue-500 bg-blue-50"
+                                  : ""
+                              }`}
                             placeholder={
                               isVerifying
                                 ? "Verifying account..."
@@ -1067,26 +1057,25 @@ const Profile = () => {
                               ? isVerifying
                                 ? "Verifying account..."
                                 : verificationSuccess
-                                ? "Account verified ✓"
-                                : verificationError
-                                ? "Verification failed. Please check your details."
-                                : "Ready for verification"
+                                  ? "Account verified ✓"
+                                  : verificationError
+                                    ? "Verification failed. Please check your details."
+                                    : "Ready for verification"
                               : "Enter your 10-digit account number"
                           }
                         >
                           <Input
                             disabled={!isEditing}
-                            className={`!font-[gilroy-regular] ${
-                              accountNumber?.length === 10 && bankCode
-                                ? verificationSuccess
-                                  ? "border-green-500"
-                                  : verificationError
+                            className={`!font-[gilroy-regular] ${accountNumber?.length === 10 && bankCode
+                              ? verificationSuccess
+                                ? "border-green-500"
+                                : verificationError
                                   ? "border-red-500"
                                   : isVerifying
-                                  ? "border-blue-500"
-                                  : ""
-                                : ""
-                            }`}
+                                    ? "border-blue-500"
+                                    : ""
+                              : ""
+                              }`}
                             placeholder="Enter 10-digit account number"
                             maxLength={10}
                           />
@@ -1108,12 +1097,12 @@ const Profile = () => {
                             placeholder="Select your bank"
                             showSearch
                             onChange={(value, option) => {
-                              if ( option &&  typeof option === "object" && "bankCode" in option && "bank_slug" in option ) {
+                              if (option && typeof option === "object" && "bankCode" in option && "bank_slug" in option) {
                                 form.setFieldsValue({
                                   bankCode: option.bankCode,
                                   bank_slug: option.bank_slug,
-                                }); 
-                                
+                                });
+
                                 // Manual verification trigger if account number is ready
                                 const currentAccountNumber = form.getFieldValue("accountNumber");
                                 if (currentAccountNumber?.length === 10) {

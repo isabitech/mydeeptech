@@ -1,20 +1,28 @@
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Table, Dropdown, MenuProps } from "antd";
 import { MoreOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { useInvoiceStates, useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
+import { useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
 import { formatMoney } from "../../../../utils/moneyFormat";
 import { App } from "antd";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
+import NewInvoice from "./NewInvoice";
+import EditInvoice from "./EditInvoice";
+import InvoiceDetails from "./InvoiceDetails";
+import SendInvoice from "./SendInvoice";
 
 const InvoicePage = () => {
-  const navigate = useNavigate();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const { data: invoices = [], isLoading: loading, error } = partnerInvoiceQueryService.useFetchPartnerInvoices();
-  const { mutate: deleteInvoiceAction } = partnerInvoiceMutationService.useDeletePartnerInvoice();
+  const { mutateAsync: deleteInvoiceActionAsync } = partnerInvoiceMutationService.useDeletePartnerInvoice();
   const { setError } = useInvoiceActions();
+
+  // Modal States
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
+  const [sendInvoiceId, setSendInvoiceId] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) {
@@ -34,7 +42,13 @@ const InvoicePage = () => {
       title: "Amount",
       dataIndex: "amount",
       key: "amount",
-      render: (amount: number, record: Invoice) => formatMoney(amount, record.currency || "USD"),
+      render: (amount: number, record: Invoice) => {
+        const currency = record.currency || "USD";
+        if (currency === "NGN") {
+          return `₦${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        return formatMoney(amount, currency);
+      },
       sorter: (a, b) => a.amount - b.amount,
     },
     {
@@ -56,24 +70,42 @@ const InvoicePage = () => {
           {
             key: "view",
             label: "View invoice",
-            onClick: () => navigate(`/admin/invoice-page/${invoice._id}`),
+            onClick: () => setViewInvoiceId(invoice._id || null),
           },
           {
             key: "email",
             label: "Send as Email",
-            onClick: () => navigate(`/admin/invoice-page/${invoice._id}/send`),
+            onClick: () => setSendInvoiceId(invoice._id || null),
           },
           {
             key: "edit",
             label: "Edit",
-            onClick: () => navigate(`/admin/invoice-page/${invoice._id}/edit`),
+            onClick: () => setEditInvoiceId(invoice._id || null),
           },
           {
             key: "delete",
-            label: <span className="text-red-500">Delete</span>,
+            className: "group",
+            label: <span className="text-red-500 group-hover:!text-white">Delete</span>,
             danger: true,
             onClick: () => {
-              if (invoice._id) deleteInvoiceAction(invoice._id);
+              modal.confirm({
+                title: 'Delete Invoice',
+                content: `Are you sure you want to delete the invoice for "${invoice.name}"?`,
+                okText: 'Yes',
+                okType: 'danger',
+                cancelText: 'No',
+                onOk: async () => {
+                  if (invoice._id) {
+                    try {
+                      await deleteInvoiceActionAsync(invoice._id);
+                      message.success("Invoice deleted successfully");
+                    } catch (err: any) {
+                      const errorMessage = err.response?.data?.message || err.message || "Failed to delete invoice";
+                      message.error(errorMessage);
+                    }
+                  }
+                }
+              });
             },
           },
         ];
@@ -99,11 +131,22 @@ const InvoicePage = () => {
     },
   ];
 
-  const totalAmount = invoices.reduce((acc, inv) => acc + inv.amount, 0);
-  const currencies = [...new Set(invoices.map((inv) => inv.currency || "USD"))];
-  const isUniform = currencies.length === 1;
-  const primaryCurrency = isUniform ? currencies[0] : "USD";
-  const avgAmount = invoices.length ? totalAmount / invoices.length : 0;
+  const conversionRatesToNGN: Record<string, number> = {
+    NGN: 1,
+    USD: 1500,
+    EUR: 1600,
+    GBP: 1900,
+  };
+
+  const totalsByCurrency = invoices.reduce((acc, inv) => {
+    const currency = inv.currency || "USD";
+    if (!acc[currency]) {
+      acc[currency] = { total: 0, count: 0 };
+    }
+    acc[currency].total += inv.amount;
+    acc[currency].count += 1;
+    return acc;
+  }, {} as Record<string, { total: number; count: number }>);
 
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
@@ -122,8 +165,7 @@ const InvoicePage = () => {
           <Button
             type="primary"
             icon={<FileTextOutlined />}
-            className="bg-black border-black font-bold px-6 py-5"
-            onClick={() => navigate("/admin/invoice-page/new")}
+            onClick={() => setIsNewModalOpen(true)}
           >
             New Invoice
           </Button>
@@ -131,26 +173,41 @@ const InvoicePage = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Card 1: Total Invoices */}
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">
-              Total Invoices
-            </div>
-            <div className="text-2xl font-bold text-gray-900">
-              {invoices.length}
+            <div className="text-gray-500 text-sm mb-2">Total Invoices</div>
+            <div className="text-2xl font-bold text-gray-900">{invoices.length}</div>
+          </div>
+
+          {/* Card 2: Total Amount per Currency */}
+          <div className="bg-gray-50 border rounded-lg p-5">
+            <div className="text-gray-500 text-sm font-medium mb-4">Total Amount by Currency</div>
+            <div className="space-y-2">
+              {Object.entries(totalsByCurrency).map(([currency, data]) => (
+                <div key={currency} className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm font-medium">{currency}</span>
+                  <span className="font-bold text-green-600">{formatMoney(data.total, currency)}</span>
+                </div>
+              ))}
+              {Object.keys(totalsByCurrency).length === 0 && (
+                <div className="text-sm text-gray-400">No invoices yet</div>
+              )}
             </div>
           </div>
 
+          {/* Card 3: Invoice Count per Currency */}
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Total Value</div>
-            <div className="text-2xl font-bold text-green-600">
-              {isUniform ? formatMoney(totalAmount, primaryCurrency) : `${totalAmount.toLocaleString()} (Mixed)`}
-            </div>
-          </div>
-
-          <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm mb-2">Average Invoice</div>
-            <div className="text-2xl font-bold text-blue-600">
-              {isUniform ? formatMoney(avgAmount, primaryCurrency) : `${avgAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} (Mixed)`}
+            <div className="text-gray-500 text-sm font-medium mb-4">Invoice Count by Currency</div>
+            <div className="space-y-2">
+              {Object.entries(totalsByCurrency).map(([currency, data]) => (
+                <div key={currency} className="flex justify-between items-center">
+                  <span className="text-gray-600 text-sm font-medium">{currency}</span>
+                  <span className="font-bold text-gray-900">{data.count} invoice{data.count !== 1 ? "s" : ""}</span>
+                </div>
+              ))}
+              {Object.keys(totalsByCurrency).length === 0 && (
+                <div className="text-sm text-gray-400">No invoices yet</div>
+              )}
             </div>
           </div>
         </div>
@@ -166,6 +223,38 @@ const InvoicePage = () => {
           />
         </div>
       </div>
+
+      {/* Modals */}
+      <NewInvoice
+        open={isNewModalOpen}
+        onClose={() => setIsNewModalOpen(false)}
+      />
+
+      <EditInvoice
+        open={!!editInvoiceId}
+        invoiceId={editInvoiceId}
+        onClose={() => setEditInvoiceId(null)}
+      />
+
+      <InvoiceDetails
+        open={!!viewInvoiceId}
+        invoiceId={viewInvoiceId}
+        onClose={() => setViewInvoiceId(null)}
+        onEdit={(id) => {
+          setViewInvoiceId(null);
+          setEditInvoiceId(id);
+        }}
+        onSend={(id) => {
+          setViewInvoiceId(null);
+          setSendInvoiceId(id);
+        }}
+      />
+
+      <SendInvoice
+        open={!!sendInvoiceId}
+        invoiceId={sendInvoiceId}
+        onClose={() => setSendInvoiceId(null)}
+      />
     </div>
   );
 };

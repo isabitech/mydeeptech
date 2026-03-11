@@ -40,6 +40,7 @@ export interface DtUserStatistics {
   verifiedEmails: number
   usersWithPasswords: number
   usersWithResults: number
+  fullyOnboardedUsers: number
 }
 
 export interface ProjectStatistics {
@@ -125,6 +126,7 @@ export interface RecentUser {
   isEmailVerified: boolean
   annotatorStatus: string
   microTaskerStatus: string
+  qaStatus?: string
   createdAt: string
 }
 

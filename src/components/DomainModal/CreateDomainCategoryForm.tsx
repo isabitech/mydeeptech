@@ -9,19 +9,17 @@ const { TextArea } = Input;
 
 import { useDomainActions } from "../../store/useDomainStore";
 import domainMutation from "../../services/domain-service/domain-mutation";
-import { CreateDomainSchema } from "../../validators/domain/domain-validator";
+import { CreateDomainCategorySchema } from "../../validators/domain/domain-validator";
 import ErrorMessage from "../../lib/error-message";
 
 const CreateDomainCategoryForm = () => {
     const [categoryForm] = Form.useForm();
-    const [subDomainForm] = Form.useForm();
-    const [domainForm] = Form.useForm();
 
     const { onCancel, setActiveTab } = useDomainActions();
     const addDomainCategory = domainMutation.useAddDomainCategory();
     const isDomainMutationLoading = addDomainCategory.isPending;
 
-    const handleCategorySubmit = async (formValues: CreateDomainSchema) => {
+    const handleCategorySubmit = async (formValues: CreateDomainCategorySchema) => {
         addDomainCategory.mutate(formValues, {
             onSuccess: () => {
                 message.success("Domain Category created successfully!");
@@ -35,8 +33,6 @@ const CreateDomainCategoryForm = () => {
 
     const handleCancel = () => {
         categoryForm.resetFields();
-        subDomainForm.resetFields();
-        domainForm.resetFields();
         setActiveTab("1");
         onCancel();
     };
@@ -63,12 +59,12 @@ const CreateDomainCategoryForm = () => {
                 <TextArea rows={4} placeholder="Enter category description" />
             </Form.Item>
             <Form.Item>
-              <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2">
                     <Button onClick={handleCancel} disabled={isDomainMutationLoading}>Cancel</Button>
                     <Button type="primary" htmlType="submit" loading={isDomainMutationLoading}>
                         Create Category
                     </Button>
-              </div>
+                </div>
             </Form.Item>
         </Form>
     )

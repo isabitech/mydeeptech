@@ -1,13 +1,13 @@
 import React from 'react';
 import { Card } from 'antd';
 import { motion } from 'framer-motion';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -34,7 +34,7 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
     { name: 'Total Users', value: data.totalUsers },
     { name: 'Verified Emails', value: data.verifiedEmails },
     { name: 'Set Passwords', value: data.usersWithPasswords },
-    { name: 'Submitted Results', value: data.usersWithResults },
+    { name: 'Fully Onboarded', value: data.fullyOnboardedUsers },
   ];
 
   const RADIAN = Math.PI / 180;
@@ -46,11 +46,11 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"
@@ -72,39 +72,39 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
           <div className="space-y-4">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-          <Pie
-            data={annotatorData}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderCustomizedLabel}
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
-            animationBegin={0}
-            animationDuration={1500}
-          >
-            {annotatorData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip />
+                <Pie
+                  data={annotatorData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={renderCustomizedLabel}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  animationBegin={0}
+                  animationDuration={1500}
+                >
+                  {annotatorData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-            
+
             {/* Annotator Data Text Summary */}
             <div className="grid grid-cols-2 gap-2 mt-4">
               {annotatorData.map((item, index) => (
-          <div key={index} className="flex items-center justify-between p-2 border rounded">
-            <div className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: item.color }}
-              />
-              <span className="text-sm font-medium">{item.name}</span>
-            </div>
-            <span className="text-sm font-bold">{item.value}</span>
-          </div>
+                <div key={index} className="flex items-center justify-between p-2 border rounded">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-sm font-medium">{item.name}</span>
+                  </div>
+                  <span className="text-sm font-bold">{item.value}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -121,8 +121,8 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={engagementData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
+              <XAxis
+                dataKey="name"
                 tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
@@ -130,8 +130,8 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
               />
               <YAxis />
               <Tooltip />
-              <Bar 
-                dataKey="value" 
+              <Bar
+                dataKey="value"
                 fill="#1890ff"
                 radius={[4, 4, 0, 0]}
                 animationDuration={1500}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, Avatar, Tag, List, Timeline } from 'antd';
 import { motion } from 'framer-motion';
-import { 
-  UserOutlined, 
-  ProjectOutlined, 
+import {
+  UserOutlined,
+  ProjectOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined
@@ -15,9 +15,9 @@ interface RecentActivitiesProps {
   topPerformers: TopPerformers;
 }
 
-const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({ 
-  recentData, 
-  topPerformers 
+const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
+  recentData,
+  topPerformers
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -69,8 +69,8 @@ const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
                 <List.Item>
                   <List.Item.Meta
                     avatar={
-                      <Avatar 
-                        icon={<UserOutlined />} 
+                      <Avatar
+                        icon={<UserOutlined />}
                         style={{ backgroundColor: '#1890ff' }}
                       />
                     }
@@ -85,20 +85,28 @@ const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
                     description={
                       <div className="space-y-1">
                         <div className="text-xs text-gray-500">{user.email}</div>
-                        <div className="flex gap-1">
-                          <Tag 
+                        <div className="flex flex-wrap gap-1">
+                          <Tag
                             color={getStatusColor(user.annotatorStatus)}
                             icon={getStatusIcon(user.annotatorStatus)}
-                            className="text-xs"
+                            className="text-xs m-0"
                           >
                             A: {user.annotatorStatus}
                           </Tag>
-                          <Tag 
+                          <Tag
                             color={getStatusColor(user.microTaskerStatus)}
-                            className="text-xs"
+                            className="text-xs m-0"
                           >
                             M: {user.microTaskerStatus}
                           </Tag>
+                          {user.qaStatus && (
+                            <Tag
+                              color={getStatusColor(user.qaStatus)}
+                              className="text-xs m-0"
+                            >
+                              QA: {user.qaStatus}
+                            </Tag>
+                          )}
                         </div>
                         <div className="text-xs text-gray-400">
                           {formatDate(user.createdAt)}
@@ -170,9 +178,9 @@ const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
                 <List.Item>
                   <List.Item.Meta
                     avatar={
-                      <Avatar 
-                        style={{ 
-                          backgroundColor: index < 3 ? '#faad14' : '#1890ff' 
+                      <Avatar
+                        style={{
+                          backgroundColor: index < 3 ? '#faad14' : '#1890ff'
                         }}
                       >
                         {index + 1}

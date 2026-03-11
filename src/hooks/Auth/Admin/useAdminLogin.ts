@@ -69,8 +69,6 @@ export const useAdminLogin = () => {
 
       const data: AdminLoginResponse = await response.json();
 
-      console.log(data);
-
       if (data.success && data.admin) {
         // Check if admin has verified email and set password
         if (!data.admin.isEmailVerified) {
