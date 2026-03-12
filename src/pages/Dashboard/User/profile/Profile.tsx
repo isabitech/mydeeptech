@@ -28,7 +28,6 @@ import {
 import { useVerifyAccountNumber } from "../../../../hooks/Auth/User/Paystack/useVerifyAccountNumber";
 import { endpoints } from "../../../../store/api/endpoints";
 import { useUploadFile } from "../../../../hooks/useUploadFile";
-import { DOMAIN_OPTIONS } from "../../../../components/MultiStageSignUpForm";
 import domainQueryService from "../../../../services/domain-service/domain-query";
 import domainMutation from "../../../../services/domain-service/domain-mutation";
 import { Bank, useListAllNGNBanks } from "../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
@@ -68,12 +67,7 @@ const Profile = () => {
 
   const allDomains = domainsData?.data?.domain || [];
 
-  const mergedDomains = [
-    ...allDomains,
-    ...DOMAIN_OPTIONS.filter(
-      (name) => !allDomains.some((d: any) => d.name === name)
-    ).map((name) => ({ _id: name, name })),
-  ];
+  const mergedDomains = allDomains;
 
   // Fetch user's assigned domains
   const { data: userDomainsData, refetch: refetchUserDomains } =
@@ -89,14 +83,38 @@ const Profile = () => {
     return rawId;
   };
 
+  // Build map of assigned domains, prioritizing real assignments from backendUserDomains
   const assignedDomainsMap = new Map();
   const backendUserDomains = userDomainsData?.data || [];
   const profileUserDomains = profile?.domains || [];
 
-  [...profileUserDomains, ...backendUserDomains].forEach((d: any) => {
+  // Add backend assignments first (these have assignment IDs)
+  backendUserDomains.forEach((d: any) => {
+    const domainId = d?.domain?._id || d?.domain_child?._id || d?._id;
+    if (domainId && !assignedDomainsMap.has(domainId)) {
+      // Find full domain info from mergedDomains for better display
+      const fullDomain = mergedDomains.find((m: any) => m._id === domainId);
+      
+      assignedDomainsMap.set(domainId, {
+        ...d,
+        domain: fullDomain || d.domain || d.domain_child || { _id: domainId },
+        id: d._id, // Store assignment ID
+        domainId: domainId // Store domain ID for keying
+      });
+    }
+  });
+
+  // Add optional profile domains if not already present
+  profileUserDomains.forEach((d: any) => {
     const normId = normalizeDomainId(d);
     if (normId && !assignedDomainsMap.has(normId)) {
-      assignedDomainsMap.set(normId, d);
+      const fullDomain = mergedDomains.find((m: any) => m._id === normId);
+      
+      assignedDomainsMap.set(normId, {
+        domain: fullDomain || (typeof d === "object" ? d : { _id: normId, name: d }),
+        id: null, // Legacy domains don't have assignment IDs
+        domainId: normId
+      });
     }
   });
 
@@ -312,40 +330,31 @@ const Profile = () => {
 
   const handleSaveDomains = async () => {
     try {
-      const deselectedAssignmentIds: string[] = [];
-      const initiallySelectedIds: string[] = [];
+      const initiallySelectedIds = assignedDomains.map(d => d.domainId);
 
-      assignedDomains.forEach((d: any) => {
-        const normId = normalizeDomainId(d);
-        if (normId && /^[0-9a-fA-F]{24}$/.test(normId)) {
-          initiallySelectedIds.push(normId);
+      // Domains to remove (ones that were in assignedDomains but not in selectedDomains)
+      const toRemove = assignedDomains.filter(d =>
+        d.id && !selectedDomains.includes(d.domainId)
+      );
 
-          if (!selectedDomains.includes(normId)) {
-            deselectedAssignmentIds.push(normId);
-          }
-        }
-      });
+      // Domains to add (ones that are in selectedDomains but weren't in assignedDomains)
+      const toAdd = selectedDomains.filter(id =>
+        !initiallySelectedIds.includes(id) && /^[0-9a-fA-F]{24}$/.test(id)
+      );
 
       const promises = [];
 
-      for (const id of deselectedAssignmentIds) {
-        promises.push(removeDomainMutation.mutateAsync(id));
+      // Remove deselected domains
+      for (const assignment of toRemove) {
+        promises.push(removeDomainMutation.mutateAsync(assignment.id));
       }
 
-      // Filter out any IDs that are not valid 24-character hex ObjectIds
-      const isValidObjectId = (id: string) => /^[0-9a-fA-F]{24}$/.test(id);
-
-      const newDomainIds = selectedDomains.filter(
-        (id) => !initiallySelectedIds.includes(id) && isValidObjectId(id),
-      );
-
-      if (newDomainIds.length > 0) {
-        promises.push(assignDomainsMutation.mutateAsync(newDomainIds));
+      // Add newly selected domains
+      if (toAdd.length > 0) {
+        promises.push(assignDomainsMutation.mutateAsync(toAdd));
       }
 
-      if (promises.length === 0) {
-        return;
-      }
+      if (promises.length === 0) return;
 
       await Promise.all(promises);
 
@@ -354,12 +363,10 @@ const Profile = () => {
         description: "Your domain preferences have been successfully updated.",
       });
 
+      // Invaliding queries is already handled by mutation onSuccess, but we can refetch manually too
       refetchUserDomains();
     } catch (error) {
-      notification.error({
-        message: "Error",
-        description: "Failed to update domains.",
-      });
+      console.error("Failed to update domains:", error);
       throw error;
     }
   };
@@ -423,17 +430,11 @@ const Profile = () => {
         },
       };
 
-
-      // Always send the filtered string domains, even if empty, so that if a user removes 
-      // their last string domain, it correctly updates the backend to an empty array.
-
       const cleanPayload = JSON.parse(JSON.stringify(payload));
       const result = await updateProfile(userId, cleanPayload);
 
-      // Also save domains if any were selected
-      if (selectedDomains.length > 0) {
-        await handleSaveDomains();
-      }
+      // Also save domains (even if empty, to handle removals)
+      await handleSaveDomains();
 
       if (result.success) {
         notification.success({
@@ -709,7 +710,7 @@ const Profile = () => {
                       onClick={() => {
                         setIsEditing(true);
                         if (assignedDomains) {
-                          const existingIds = assignedDomains.map((d: any) => normalizeDomainId(d));
+                          const existingIds = assignedDomains.map((d: any) => d.domainId);
                           setSelectedDomains([...new Set(existingIds)]);
                         }
                       }}
@@ -818,20 +819,12 @@ const Profile = () => {
                   {!isEditing ? (
                     <div className="flex flex-wrap gap-2">
                       {assignedDomains?.map((domainParam: any) => {
-                        const dId = normalizeDomainId(domainParam);
-
-                        const domainObj = mergedDomains.find(
-                          (d: any) => d._id === dId || d.name === dId,
-                        );
-
-                        let domainName = dId;
-                        if (domainObj?.name) {
-                          domainName = domainObj.name;
-                        } else if (typeof domainParam === "object" && domainParam.name) {
-                          domainName = domainParam.name;
-                        } else if (typeof domainParam === "string") {
-                          domainName = domainParam;
-                        }
+                        const dId = domainParam.domainId;
+                        const domainObj = domainParam.domain || {};
+                        // Defensive name lookup: check domain object's name, then look up in mergedDomains, finally fallback to ID
+                        const domainName = domainObj?.name || 
+                                          mergedDomains.find((m: any) => m._id === dId)?.name || 
+                                          dId;
 
                         return (
                           <Tag key={dId} closable={false} color="blue">

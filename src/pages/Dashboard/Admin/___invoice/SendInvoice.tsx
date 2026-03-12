@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
-import { Invoice, useInvoiceActions, useInvoiceStates } from "../../../../store/useInvoiceStore";
+import { Invoice } from "../../../../store/useInvoiceStore";
 import { formatMoney } from "../../../../utils/moneyFormat";
 import { Card, Button, Typography, Space, App, Modal, Input } from "antd";
 import {
@@ -23,8 +23,6 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
   const { message } = App.useApp();
   const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
   const { mutateAsync: sendPartnerInvoice, isPending: loading } = partnerInvoiceMutationService.useSendPartnerInvoice();
-  const { error } = useInvoiceStates();
-  const { setError } = useInvoiceActions();
 
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [subject, setSubject] = useState("");
@@ -36,13 +34,6 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
     EUR: "€",
     GBP: "£",
   };
-
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-      setError(null);
-    }
-  }, [error, message, setError]);
 
   useEffect(() => {
     const foundInvoice = invoices.find((inv) => inv._id === invoiceId);
@@ -61,11 +52,14 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
   const handleSend = async () => {
     if (!invoiceId) return;
     try {
-      await sendPartnerInvoice({ id: invoiceId });
+      await sendPartnerInvoice({
+        id: invoiceId,
+      });
       message.success("Invoice sent successfully");
       onClose();
     } catch (err: any) {
-      message.error(err?.response?.data?.message || err?.message || "Failed to send invoice");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to send invoice";
+      message.error(errorMessage);
     }
   };
 

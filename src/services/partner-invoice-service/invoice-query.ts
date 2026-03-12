@@ -8,16 +8,15 @@ const useFetchPartnerInvoices = () => {
     return useQuery({
         queryKey: [REACT_QUERY_KEYS.QUERY.getPartnerInvoices],
         queryFn: async () => {
-            const response = await axiosInstance.get(endpoints.partnerInvoice.getAll, {
-                params: { sort: '-createdAt' }
-            });
+            const response = await axiosInstance.get(endpoints.partnerInvoice.getAll);
             if (response.data.success) {
                 return (response.data.data as any[]).map(inv => ({
                     ...inv,
                     amount: inv.invoiceAmount || inv.amount,
-                    currency: inv.currency || "USD",
                     due_date: inv.dueDate || inv.due_date
-                })) as Invoice[];
+                })).sort((a, b) =>
+                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                ) as Invoice[];
             }
             throw new Error(response.data.message || "Failed to fetch invoices");
         },

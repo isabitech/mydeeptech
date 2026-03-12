@@ -16,7 +16,6 @@ export interface UpdateProfilePayload {
     accountName?: string;
     accountNumber?: string;
     bankName?: string;
-    bankCode?: string;
     paymentMethod?: string;
     paymentCurrency?: string;
   };
@@ -29,12 +28,6 @@ export interface UpdateProfilePayload {
     primaryLanguage?: string;
     otherLanguages?: string[];
     englishFluencyLevel?: string;
-  };
-  annotationSkills?: string[];
-  toolExperience?: string[];
-  attachments?: {
-    resumeUrl?: string;
-    idDocumentUrl?: string;
   };
   domains?: string[];
 }

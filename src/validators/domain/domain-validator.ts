@@ -79,7 +79,7 @@ const DomainChildSchema = z.object({
     _id: z.string(),
     name: z.string(),
     slug: z.string(),
-  }).strip(),
+  }).strip().optional().nullable(),
   ...MongoMeta,
   ...Timestamps,
 }).strip();
@@ -184,7 +184,7 @@ const UpdateDomainSubCategorySchema = z.object({
 const UpdateDomainDomainSchema = z.object({
   id: IdField,
   category: IdField,
-  subCategory: IdField,
+  subCategory: z.string().optional().nullable(),
   name: NameField("Domain name is required"),
   description: OptionalDescription,
 });

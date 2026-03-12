@@ -90,7 +90,7 @@ const useDomainsWithCategorization = (paginationParams?: PaginationParams) => {
 
 const useUserDomains = () => {
   return useQuery({
-    queryKey: ['getUserDomains'],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getUserDomains],
     queryFn: async () => {
       const response = await axiosInstance.get(
         '/new-domain/user/domains'

@@ -96,7 +96,7 @@ const CreateDomainForm: React.FC = () => {
           label="Sub-Category"
           rules={[
             {
-              required: filteredSubCategories.length > 0,
+              required: false,
               message: "Please select a sub-category"
             }
           ]}

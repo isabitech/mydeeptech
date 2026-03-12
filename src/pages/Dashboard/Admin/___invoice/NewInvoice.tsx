@@ -1,8 +1,6 @@
 import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Divider, Modal, App } from "antd";
 import { useEffect } from "react";
-import { AxiosError } from "axios";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
-import { useInvoiceStates, useInvoiceActions } from "../../../../store/useInvoiceStore";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -15,38 +13,25 @@ interface NewInvoiceProps {
 
 const NewInvoice = ({ open, onClose }: NewInvoiceProps) => {
   const { message } = App.useApp();
-  const { error } = useInvoiceStates();
-  const { setError } = useInvoiceActions();
-  const { mutateAsync: addInvoice, isPending: loading } = partnerInvoiceMutationService.useAddPartnerInvoice();
+  const { mutate: addInvoice, isPending: loading } = partnerInvoiceMutationService.useAddPartnerInvoice();
   const [form] = Form.useForm();
 
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-      setError(null);
-    }
-  }, [error, message, setError]);
+  const onFinish = (values: any) => {
+    const formattedValues = {
+      ...values,
+      due_date: values.dueDate ? values.dueDate.format("YYYY-MM-DD") : undefined,
+    };
 
-
-  const onFinish = async (values: any) => {
-    try {
-      const formattedValues = {
-        ...values,
-        due_date: values.dueDate ? values.dueDate.format("YYYY-MM-DD") : undefined,
-      };
-      await addInvoice(formattedValues);
-
-      message.success("Invoice created successfully");
-      form.resetFields();
-      onClose();
-
-    } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-
-      setError(
-        error.response?.data?.message || "Failed to create invoice"
-      );
-    }
+    addInvoice(formattedValues, {
+      onSuccess: () => {
+        message.success("Invoice created successfully");
+        form.resetFields();
+        onClose();
+      },
+      onError: (err: any) => {
+        message.error(err.response?.data?.message || err.message || "Failed to create invoice");
+      }
+    });
   };
 
   return (
