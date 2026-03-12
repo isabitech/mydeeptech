@@ -57,8 +57,8 @@ const NotificationCarousel = () => {
   };
 
   return (
-    <motion.div 
-      whileHover={{ 
+    <motion.div
+      whileHover={{
         scale: 1.005,
         boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1), 0 0 20px 2px rgba(255, 255, 255, 0.05)"
       }}
@@ -110,10 +110,7 @@ const NotificationCarousel = () => {
             className="w-full"
           >
             {/* SLIDE 1 */}
-            {activeSlide === 0 && <SlackNotification />}
-
-            {/* SLIDE 2 */}
-            {activeSlide === 1 && (
+            {activeSlide === 0 && (
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -156,6 +153,9 @@ const NotificationCarousel = () => {
                 </div>
               </div>
             )}
+
+            {/* SLIDE 2 */}
+            {activeSlide === 1 && <SlackNotification />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -166,9 +166,8 @@ const NotificationCarousel = () => {
           <button
             key={i}
             onClick={() => goToSlide(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              activeSlide === i ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
-            }`}
+            className={`h-1.5 rounded-full transition-all duration-300 ${activeSlide === i ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
+              }`}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}
