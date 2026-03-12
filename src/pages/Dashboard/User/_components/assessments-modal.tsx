@@ -10,12 +10,12 @@ interface AssessmentsModalProps {
 }
 
 const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) => {
-  const britishCouncilSteps = [
-    "Download and install Flonnect on Chrome on your PC.",
+  const britishCouncilSteps: React.ReactNode[] = [
+    <>Download and install <a href="https://flonnect.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
     "Enable screen + Camera recording.",
     "Enable mic + system audio.",
     "Start recording.",
-    "Go to the British Council English score Website [https://www.englishscore.com/] to access the test.",
+    <>Go to the British Council English score Website [<a href="https://www.englishscore.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://www.englishscore.com/</a>] to access the test.</>,
     "Take the core skills test, speaking test and writing test.",
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
@@ -23,12 +23,12 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
     "Share folder link via google form."
   ];
 
-  const skillAssessmentSteps = [
-    "Download and install Flonnect on Chrome on your PC.",
+  const skillAssessmentSteps: React.ReactNode[] = [
+    <>Download and install <a href="https://flonnect.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
     "Enable screen + Camera recording.",
     "Enable mic + system audio.",
     "Start recording.",
-    "Go to https://aptitude-test.com/ to access the test.",
+    <>Go to <a href="https://aptitude-test.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://aptitude-test.com/</a> to access the test.</>,
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
