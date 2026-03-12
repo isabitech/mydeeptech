@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HVNC Remote Access - User Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F6921E",
+                        "charcoal": "#333333",
+                        "card-bg": "#2B2B2B",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background: linear-gradient(135deg, #333333 0%, #F6921E 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(43, 43, 43, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="font-display text-slate-100 antialiased">
+<div class="relative flex flex-col min-h-screen">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 w-full glass-card border-b border-white/10 px-6 py-3">
+<div class="max-w-7xl mx-auto flex items-center justify-between">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<div class="bg-primary p-1.5 rounded-lg text-charcoal">
+<span class="material-symbols-outlined block text-2xl font-bold">leak_add</span>
+</div>
+<h1 class="text-white text-xl font-extrabold tracking-tight">HVNC <span class="text-primary">REMOTE</span></h1>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-300 hover:text-primary transition-colors text-sm font-semibold" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-1 text-sm font-semibold" href="#">Users</a>
+<a class="text-slate-300 hover:text-primary transition-colors text-sm font-semibold" href="#">Devices</a>
+<a class="text-slate-300 hover:text-primary transition-colors text-sm font-semibold" href="#">Logs</a>
+<a class="text-slate-300 hover:text-primary transition-colors text-sm font-semibold" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="bg-white/5 border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm focus:ring-primary focus:border-primary w-64" placeholder="Search resources..." type="text"/>
+</div>
+<button class="p-2 text-slate-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-slate-700 border border-white/20 overflow-hidden" data-alt="User avatar placeholder">
+<img alt="User Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGjAJmmWb8dpo936ONia9kVtFKPGqyoE99rkmJk_vf6DcwbxpHjUo4abJMdmmISsCIpOU4YdZtI5ly2VMSko32rAt_QRstPuShjGA4_xc6JQJt10HgNrilnKdtJkZxlfCbAa022I_CaZXc-Wcbne6RiNB1k0lwGd-idVLOADd7BhfAtBU0L3XCA3pfQ5VRbSDjVn2iBaERAPZOftLO-anDzanF6I_89nRWgFtERni0KbnrpMIDKHE25xKawQYqcM-wUmTqfsHR0CkA"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<div>
+<h2 class="text-3xl font-black text-white tracking-tight">User Management</h2>
+<p class="text-slate-300">Oversee access permissions and monitor user activity.</p>
+</div>
+<button class="bg-charcoal text-white hover:bg-slate-900 px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 shadow-lg transition-all border border-white/10">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                    Add User
+                </button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- User List Table -->
+<div class="lg:col-span-3">
+<div class="glass-card rounded-xl overflow-hidden shadow-2xl">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-charcoal text-slate-300 text-xs font-bold uppercase tracking-wider">
+<th class="px-6 py-4">#</th>
+<th class="px-6 py-4">Name</th>
+<th class="px-6 py-4">Email</th>
+<th class="px-6 py-4 text-center">Assigned Devices</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Last Active</th>
+<th class="px-6 py-4">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 text-slate-400 font-mono text-sm">01</td>
+<td class="px-6 py-4 text-white font-bold">John Doe</td>
+<td class="px-6 py-4 text-slate-400">john.doe@hvnc.io</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold">1 Device</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+<span class="text-sm">Active</span>
+</div>
+</td>
+<td class="px-6 py-4 text-slate-400 text-sm">2 mins ago</td>
+<td class="px-6 py-4">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity font-bold text-sm">Manage</button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 text-slate-400 font-mono text-sm">02</td>
+<td class="px-6 py-4 text-white font-bold">Jane Smith</td>
+<td class="px-6 py-4 text-slate-400">jane.s@hvnc.io</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-white/10 text-slate-300 px-3 py-1 rounded-full text-xs font-bold">0 Devices</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-slate-500"></div>
+<span class="text-sm">Inactive</span>
+</div>
+</td>
+<td class="px-6 py-4 text-slate-400 text-sm">1 hour ago</td>
+<td class="px-6 py-4">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity font-bold text-sm">Manage</button>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4 text-slate-400 font-mono text-sm">03</td>
+<td class="px-6 py-4 text-white font-bold">Robert Brown</td>
+<td class="px-6 py-4 text-slate-400">r.brown@hvnc.io</td>
+<td class="px-6 py-4 text-center">
+<span class="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs font-bold">3 Devices</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+<span class="text-sm">Active</span>
+</div>
+</td>
+<td class="px-6 py-4 text-slate-400 text-sm">2 days ago</td>
+<td class="px-6 py-4">
+<button class="text-primary opacity-0 group-hover:opacity-100 transition-opacity font-bold text-sm">Manage</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Selected User Profile Detail: John Doe -->
+<div class="lg:col-span-1 space-y-6">
+<div class="glass-card rounded-xl p-6 shadow-xl relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<h3 class="text-xl font-black text-white mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_circle</span>
+                            User Profile Detail
+                        </h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 mb-6">
+<div class="h-16 w-16 rounded-full border-2 border-primary p-1">
+<img class="rounded-full w-full h-full bg-slate-800" data-alt="John Doe profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRXo3llnHU_HcfiaWvLanSPH_AUVAPj4ZbYB2JUrOg74lbJJyshvoP4FZb5kX2AU4_-1cYHru3TvKp0ytgh2ozyFN6LkuWzpawNpF81EsP4ht6mrQkdY8Zt3M-SWt2QOhMXaVKrk6cVhYTr6J3cA6kc_ZKKizxefGhwKRX7jivkXz8MTvhTS4hS9TJoeuFAcyw8ejm1TEhTW-gishtKNPCBUZ94Wsx8YT76WEDk886ESKF3zhES-oF_BByKCyS3M0w48eni6kZ-d5J"/>
+</div>
+<div>
+<p class="text-xl font-bold text-white leading-none">John Doe</p>
+<p class="text-primary text-sm font-semibold">Senior Systems Admin</p>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-white/5 p-3 rounded-lg">
+<p class="text-slate-400 text-xs uppercase font-bold tracking-widest">Email</p>
+<p class="text-slate-100 font-medium">john.doe@hvnc.io</p>
+</div>
+<div class="bg-white/5 p-3 rounded-lg">
+<p class="text-slate-400 text-xs uppercase font-bold tracking-widest">Phone</p>
+<p class="text-slate-100 font-medium">+1 (555) 0123-4567</p>
+</div>
+<div class="bg-white/5 p-3 rounded-lg">
+<p class="text-slate-400 text-xs uppercase font-bold tracking-widest">Date Added</p>
+<p class="text-slate-100 font-medium">Jan 15, 2023</p>
+</div>
+<div class="bg-white/5 p-3 rounded-lg">
+<p class="text-slate-400 text-xs uppercase font-bold tracking-widest">Status</p>
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                        Active
+                                    </span>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-6 shadow-xl">
+<h3 class="text-xl font-black text-white mb-6">Usage Statistics</h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-charcoal p-4 rounded-xl border border-white/5">
+<p class="text-slate-400 text-xs font-bold uppercase mb-1">Total Hours</p>
+<p class="text-2xl font-black text-primary leading-none">127h</p>
+</div>
+<div class="bg-charcoal p-4 rounded-xl border border-white/5">
+<p class="text-slate-400 text-xs font-bold uppercase mb-1">This Week</p>
+<p class="text-2xl font-black text-primary leading-none">24h</p>
+</div>
+<div class="bg-charcoal p-4 rounded-xl border border-white/5">
+<p class="text-slate-400 text-xs font-bold uppercase mb-1">Today</p>
+<p class="text-2xl font-black text-primary leading-none">5h 15m</p>
+</div>
+<div class="bg-charcoal p-4 rounded-xl border border-white/5">
+<p class="text-slate-400 text-xs font-bold uppercase mb-1">Avg Daily</p>
+<p class="text-2xl font-black text-primary leading-none">4.2h</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Assigned Devices Section -->
+<div class="lg:col-span-2">
+<div class="glass-card rounded-xl p-6 shadow-xl h-full flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-xl font-black text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+                                Assigned Devices
+                            </h3>
+<button class="bg-primary text-charcoal px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+                                Assign New Device
+                            </button>
+</div>
+<div class="flex-1">
+<div class="bg-charcoal/50 rounded-lg overflow-hidden border border-white/10">
+<table class="w-full text-left">
+<thead>
+<tr class="text-slate-400 text-xs font-bold uppercase border-b border-white/10">
+<th class="px-4 py-3">Device Name</th>
+<th class="px-4 py-3">Shift</th>
+<th class="px-4 py-3">Last Used</th>
+<th class="px-4 py-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="group">
+<td class="px-4 py-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">desktop_windows</span>
+<span class="text-white font-semibold">WORK-PC-01</span>
+</div>
+</td>
+<td class="px-4 py-4 text-slate-300 text-sm">9AM - 5PM</td>
+<td class="px-4 py-4 text-slate-400 text-sm">Today, 10:24 AM</td>
+<td class="px-4 py-4 text-right space-x-3">
+<button class="text-slate-400 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest flex inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">list_alt</span>
+                                                    View Logs
+                                                </button>
+<button class="text-red-400 hover:text-red-300 transition-colors text-xs font-bold uppercase tracking-widest flex inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">link_off</span>
+                                                    Unassign
+                                                </button>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="p-8 text-center bg-white/5 border-t border-white/5">
+<p class="text-slate-500 text-sm">End of assigned devices list</p>
+</div>
+</div>
+</div>
+<!-- Device Performance Quick Chart (Conceptual) -->
+<div class="mt-8">
+<h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Device Usage Timeline (Last 24h)</h4>
+<div class="h-16 w-full bg-charcoal rounded-lg flex items-end gap-1 px-4 py-2 border border-white/5">
+<div class="w-full h-3 bg-white/10 rounded-full overflow-hidden flex">
+<div class="h-full bg-primary w-[40%]" title="Active"></div>
+<div class="h-full bg-slate-700 w-[10%]" title="Idle"></div>
+<div class="h-full bg-primary w-[20%]" title="Active"></div>
+<div class="h-full bg-slate-700 w-[30%]" title="Offline"></div>
+</div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-slate-500 font-bold">
+<span>12:00 AM</span>
+<span>06:00 AM</span>
+<span>12:00 PM</span>
+<span>06:00 PM</span>
+<span>11:59 PM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="mt-auto py-8 glass-card border-t border-white/10">
+<div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined text-lg">verified_user</span>
+<span class="text-sm">Secure HVNC Environment — v4.2.1-stable</span>
+</div>
+<div class="flex items-center gap-6">
+<a class="text-xs font-bold text-slate-400 hover:text-primary uppercase tracking-widest" href="#">Support</a>
+<a class="text-xs font-bold text-slate-400 hover:text-primary uppercase tracking-widest" href="#">Security Policy</a>
+<a class="text-xs font-bold text-slate-400 hover:text-primary uppercase tracking-widest" href="#">API Docs</a>
+</div>
+<p class="text-slate-500 text-xs">© 2024 HVNC Technologies Inc.</p>
+</div>
+</footer>
+</div>
+</body></html>

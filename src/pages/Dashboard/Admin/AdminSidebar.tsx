@@ -11,6 +11,7 @@ import {
   BellOutlined,
   MessageOutlined,
   FileTextOutlined,
+  DesktopOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
@@ -114,6 +115,13 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       label: "Employees Mgt",
       icon: <UserOutlined />,
       path: "/employees",
+    },
+
+    {
+      key: "hvnc",
+      label: "HVNC",
+      icon: <DesktopOutlined />,
+      path: "/hvnc",
     },
 
     {

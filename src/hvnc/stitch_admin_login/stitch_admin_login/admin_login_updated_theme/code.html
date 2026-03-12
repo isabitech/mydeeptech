@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HVNC Admin Portal - Secure Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f48a1f",
+                        "accent": "#2B2B2B",
+                        "dark-grey": "#333333",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["'Space Grotesk'", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }</script>
+</head>
+<body class="font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col" style="background: linear-gradient(135deg, #333333, #F6921E); min-height: 100vh;">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-white/10 px-6 py-4 bg-black/30 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="text-primary flex items-center justify-center"><span class="material-symbols-outlined text-3xl" style="color: #F6921E;">shield_person</span></div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">HVNC Admin Portal</h2>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">Section A1 Active</span>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center justify-center p-6 relative">
+<div class="w-full max-w-md">
+<div class="text-center mb-8">
+<h1 class="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Admin Login</h1>
+<p class="text-slate-200">Enter your credentials to access the portal</p>
+</div>
+<div class="relative bg-[#2B2B2B] border border-white/10 rounded-2xl p-8 shadow-2xl">
+<form action="#" class="space-y-6">
+<div class="space-y-2">
+<label class="text-sm font-semibold text-slate-300 ml-1">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#F6921E] text-lg">mail</span>
+<input class="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none transition-all text-white placeholder-slate-500" placeholder="admin@hvnc.com" required="" type="email"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-semibold text-slate-300 ml-1">Password</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#F6921E] text-lg">lock</span>
+<input class="w-full pl-10 pr-4 py-3 bg-[#1A1A1A] border border-white/10 rounded-xl focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none transition-all text-white placeholder-slate-500" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between px-1">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-white/10 bg-[#1A1A1A] text-[#F6921E] focus:ring-[#F6921E] transition-all" type="checkbox"/>
+<span class="text-sm text-slate-400 group-hover:text-slate-200">Remember me</span>
+</label>
+<a class="text-sm text-[#F6921E] hover:underline font-medium" href="#">Forgot password?</a>
+</div>
+<div class="space-y-3 pt-2">
+<label class="text-sm font-semibold text-slate-300 block text-center">Two-Factor Authentication</label>
+<div class="flex justify-between gap-2">
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+<input class="w-12 h-12 text-center text-xl font-bold bg-[#1A1A1A] border border-white/10 rounded-lg focus:ring-2 focus:ring-[#F6921E] focus:border-transparent outline-none text-white" maxlength="1" type="text"/>
+</div>
+</div>
+<button class="w-full py-4 bg-[#333333] hover:bg-[#1A1A1A] text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-[0.98] mt-4 tracking-wide border border-white/10" type="submit">
+                            SIGN IN
+                        </button>
+</form>
+</div>
+<div class="mt-8 text-center text-slate-300 text-xs">
+<p>By signing in, you agree to the Terms of Service and Privacy Policy.</p>
+<p class="mt-2 font-mono uppercase">Node ID: {{DATA:TEXT:TEXT_2}} | Zone A1</p>
+</div>
+</div>
+</main>
+<footer class="bg-black/30 border-t border-white/10 px-6 py-3 backdrop-blur-sm">
+<div class="flex items-center justify-between max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">All systems operational</span>
+</div>
+<div class="flex gap-4 text-xs text-slate-500 dark:text-slate-500 font-medium">
+<span>API v2.4.0</span>
+<span class="hidden sm:block">Uptime: 99.99%</span>
+<span class="hidden sm:block">Region: US-EAST-1</span>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

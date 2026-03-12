@@ -15,6 +15,7 @@ import {
   PlayCircleOutlined,
   UnorderedListOutlined as AssessmentListOutlined,
   BellOutlined,
+  DesktopOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState, useEffect } from "react";
@@ -57,6 +58,7 @@ const Sidebar = () => {
     // { key: "tasks", label: "Tasks", icon: <UnorderedListOutlined />, path: "/dashboard/tasks" },
     { key: "payment", label: "Payment", icon: <WalletOutlined />, path: "/dashboard/payment" },
     { key: "support", label: "Support Center", icon: <CustomerServiceOutlined />, path: "/dashboard/support" },
+    { key: "hvnc", label: "HVNC", icon: <DesktopOutlined />, path: "/dashboard/hvnc" },
     { key: "profile", label: "Profile", icon: <UserOutlined />, path: "/dashboard/profile" },
     { key: "settings", label: "Settings", icon: <SettingOutlined />, path: "/dashboard/settings" },
   ];

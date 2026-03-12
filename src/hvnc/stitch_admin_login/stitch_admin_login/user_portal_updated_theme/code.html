@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connected Desktop - User Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F6921E",
+                        "secondary": "#2B2B2B",
+                        "accent": "#F6921E",
+                        "panel-dark": "#333333",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["'Space Grotesk'", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display" style="font-family: 'Space Grotesk', sans-serif;">
+<div class="relative flex h-screen w-full flex-col overflow-hidden bg-gradient-to-br from-[#f48a1f] to-[#d97706]">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between border-b border-white/10 bg-[#2B2B2B] px-6 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl">desktop_windows</span>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Connected Desktop</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Sessions</a>
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Applications</a>
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<div class="relative hidden sm:block w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full rounded-lg border-none bg-slate-200 dark:bg-slate-800 py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/50" placeholder="Search sessions..." type="text"/>
+</div>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary/20 hover:text-primary transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="h-10 w-10 rounded-full border-2 border-primary bg-slate-300 dark:bg-slate-700 overflow-hidden">
+<img alt="Profile" class="h-full w-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQNNq0Kw86Rc_EV4-ZqHVUFWwMZAzVuiigC2ii5novQycct_UnBdzuwOomxgXL1Jk6iX1JoMzlEZ87or7ZuU3PIqV0pKsYBG6NXFZdIcFKzBxBYoxE7zNn2L0nuZqFppHes9s1gac_mkL-0b68EvNtGiw-lO-sp9bM2kW4WsN0Tk85p0loyykdbYaWHVHTVK598l0Z_DnUKDD_903QdWCwWC4bVAOnJ_UqiAW3I98oAYoBevA-xtMKU2Uh1_wNw1Wp06qeAacqHnK2"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-white/5 bg-[#2B2B2B] flex flex-col justify-between p-4 hidden lg:flex">
+<div class="flex flex-col gap-6">
+<div>
+<h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 px-2">Active Session</h3>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#F6921E] text-white">
+<span class="material-symbols-outlined">open_in_new</span>
+<div class="flex flex-col">
+<span class="text-sm font-bold">Gmail - Hidden</span>
+<span class="text-[10px] opacity-70 uppercase tracking-tighter">Running on Chrome</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2 px-2">Quick Access</h3>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Main Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">language</span>
+<span class="text-sm font-medium">Edge Browser</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">folder</span>
+<span class="text-sm font-medium">File Explorer</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="text-sm font-medium">Workspace Docs</span>
+</a>
+</div>
+<div class="pt-4 border-t border-primary/10">
+<div class="bg-[#F6921E]/10 border border-[#F6921E]/20 rounded-xl p-4">
+<div class="flex items-center justify-between mb-2">
+<span class="flex items-center gap-1 text-emerald-500 text-[10px] font-bold uppercase">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+</span>
+                                Hubstaff Running
+                            </span>
+</div>
+<div class="text-2xl font-bold text-emerald-500 tabular-nums">02:15:48</div>
+<p class="text-[10px] text-slate-500 mt-1 uppercase font-semibold">Today's total: 6h 30m</p>
+</div>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 rounded-lg bg-[#333333] py-3 px-4 text-white text-sm font-bold shadow-lg shadow-black/25 hover:bg-[#444444] transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Session
+            </button>
+</aside>
+<!-- Main Workspace Area -->
+<main class="flex-1 flex flex-col bg-slate-100 dark:bg-slate-900 overflow-hidden">
+<!-- Browser Controls Bar -->
+<div class="flex items-center gap-4 px-4 py-2 bg-[#2B2B2B] border-b border-white/10">
+<div class="flex gap-1">
+<button class="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<button class="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<div class="flex-1 flex items-center bg-white/10 rounded-full px-4 py-1.5 group focus-within:ring-2 focus-within:ring-[#F6921E]/40">
+<span class="material-symbols-outlined text-sm text-emerald-500 mr-2">lock</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-full text-slate-600 dark:text-slate-300 font-medium" type="text" value="https://mail.google.com/mail/u/0/#inbox"/>
+<span class="material-symbols-outlined text-sm text-slate-400 cursor-pointer hover:text-slate-200">star</span>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#333333] text-white text-xs font-bold hover:bg-[#444444]">
+<span class="material-symbols-outlined text-sm">share</span>
+                        Share
+                    </button>
+<button class="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Virtual Desktop Content -->
+<div class="flex-1 relative bg-[#f1f3f4] overflow-hidden flex flex-col">
+<!-- Gmail Mockup Area -->
+<div class="flex-1 flex flex-col dark:text-slate-900">
+<!-- Gmail Header -->
+<div class="h-12 bg-white flex items-center px-4 justify-between border-b border-slate-200">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-500">menu</span>
+<div class="flex items-center gap-1.5">
+<div class="w-6 h-6 bg-red-500 rounded-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xs">mail</span>
+</div>
+<span class="text-lg font-medium text-slate-600">Gmail</span>
+</div>
+</div>
+<div class="max-w-xl flex-1 px-8">
+<div class="bg-slate-100 rounded-lg flex items-center px-3 py-1.5">
+<span class="material-symbols-outlined text-slate-500 mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full" placeholder="Search mail" type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-500">settings</span>
+<span class="material-symbols-outlined text-slate-500">apps</span>
+</div>
+</div>
+<div class="flex flex-1">
+<!-- Gmail Sidebar -->
+<div class="w-60 bg-white border-r border-slate-200 p-2 flex flex-col gap-1">
+<button class="bg-blue-100 text-blue-800 rounded-2xl py-4 px-6 mb-4 flex items-center gap-3 font-semibold shadow-sm">
+<span class="material-symbols-outlined">edit</span>
+                                Compose
+                            </button>
+<div class="flex items-center justify-between px-3 py-1.5 bg-red-100 text-red-800 rounded-r-full font-bold text-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sm">inbox</span>
+<span>Inbox</span>
+</div>
+<span class="text-xs">1,204</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-1.5 text-slate-600 text-sm">
+<span class="material-symbols-outlined text-sm">star</span>
+<span>Starred</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-1.5 text-slate-600 text-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Snoozed</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-1.5 text-slate-600 text-sm">
+<span class="material-symbols-outlined text-sm">send</span>
+<span>Sent</span>
+</div>
+</div>
+<!-- Gmail List -->
+<div class="flex-1 bg-white overflow-y-auto">
+<div class="p-4 space-y-3">
+<!-- Email Items -->
+<div class="flex items-center gap-4 border-b border-slate-100 pb-2 hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-slate-300 text-sm">check_box_outline_blank</span>
+<span class="material-symbols-outlined text-slate-300 text-sm">star</span>
+<span class="w-48 font-bold text-sm truncate">Google Security</span>
+<span class="flex-1 text-sm"><span class="font-bold">Security alert</span> - New login detected from Connected Desktop Chrome session.</span>
+<span class="text-xs text-slate-500 font-medium">14:32</span>
+</div>
+<div class="flex items-center gap-4 border-b border-slate-100 pb-2 hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-slate-300 text-sm">check_box_outline_blank</span>
+<span class="material-symbols-outlined text-slate-300 text-sm">star</span>
+<span class="w-48 font-bold text-sm truncate">Hubstaff Support</span>
+<span class="flex-1 text-sm"><span class="font-bold">Weekly Digest</span> - Your productivity report for last week is ready for review...</span>
+<span class="text-xs text-slate-500 font-medium">12:05</span>
+</div>
+<div class="flex items-center gap-4 border-b border-slate-100 pb-2 hover:shadow-md transition-shadow cursor-pointer">
+<span class="material-symbols-outlined text-slate-300 text-sm">check_box_outline_blank</span>
+<span class="material-symbols-outlined text-yellow-500 text-sm">star</span>
+<span class="w-48 font-bold text-sm truncate">Project Manager</span>
+<span class="flex-1 text-sm"><span class="font-bold">Task #4521</span> - Hey, can you check the latest designs on the Connected Desktop project?</span>
+<span class="text-xs text-slate-500 font-medium">Yesterday</span>
+</div>
+<!-- Empty state or filler -->
+<div class="flex flex-col items-center justify-center py-20 opacity-10 select-none">
+<span class="material-symbols-outlined text-9xl">inventory_2</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Session Overlay Labels -->
+<div class="absolute top-4 right-4 flex flex-col items-end gap-2 pointer-events-none">
+<div class="bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-white/20">
+                        Encrypted Connection
+                    </div>
+<div class="bg-primary/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-primary/40">
+                        Chrome Session #001
+                    </div>
+</div>
+</div>
+<!-- Bottom Control Panel / Taskbar Style -->
+<footer class="h-16 bg-[#2B2B2B] border-t border-white/10 flex items-center px-4 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-white/5 p-2 rounded-lg flex items-center gap-3 border border-white/10">
+<div class="h-2 w-2 rounded-full bg-[#F6921E]"></div>
+<span class="text-xs font-bold text-slate-600 dark:text-slate-300">HUBSTAFF</span>
+<div class="h-4 w-[1px] bg-slate-400/30"></div>
+<span class="text-sm font-bold tabular-nums">02:15:48</span>
+<button class="bg-[#F6921E] text-white p-1 rounded hover:bg-[#F6921E]/80">
+<span class="material-symbols-outlined text-xs">pause</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-primary/10 mx-2"></div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Latency</span>
+<div class="flex items-end gap-0.5 h-3">
+<div class="h-2 w-2 rounded-full bg-[#F6921E]"></div>
+<div class="h-2 w-2 rounded-full bg-[#F6921E]"></div>
+<div class="h-2 w-2 rounded-full bg-[#F6921E]"></div>
+<div class="h-2 w-2 rounded-full bg-[#F6921E]"></div>
+</div>
+<span class="text-[10px] font-bold text-[#F6921E] uppercase">24ms</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5">
+<div class="p-2 rounded-lg bg-[#F6921E]/20 border border-[#F6921E]/40 text-[#F6921E]">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<div class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined">table_view</span>
+</div>
+<div class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<p class="text-[10px] font-bold text-slate-500 uppercase leading-none mb-1">Session Duration</p>
+<p class="text-xs font-bold text-slate-700 dark:text-slate-300">01:45:12</p>
+</div>
+<button class="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-lg text-xs font-bold transition-all border border-red-500/20">
+<span class="material-symbols-outlined text-sm">power_settings_new</span>
+                        Terminate Session
+                    </button>
+</div>
+</footer>
+</main>
+</div>
+</div>
+</body></html>

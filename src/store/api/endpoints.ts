@@ -211,5 +211,55 @@ export const endpoints = {
   payStack: {
     verifyAccountDetails: "/payments/verify-account-number",
     listAllNGNBanks: "/payments/get-banks-by-country",
-  }
+  },
+
+  // Admin HVNC endpoints
+  adminHVNC: {
+    // Dashboard
+    getStats: "/hvnc/admin/stats",
+    getLiveDevices: "/hvnc/admin/devices/live",
+    getActivity: "/hvnc/admin/activity",
+
+    // Device Management
+    getAllDevices: "/hvnc/admin/devices",
+    getDeviceById: "/hvnc/admin/devices",       // + /:deviceId
+    createDevice: "/hvnc/admin/devices",
+    updateDevice: "/hvnc/admin/devices",         // + /:deviceId
+    deleteDevice: "/hvnc/admin/devices",         // + /:deviceId
+    generateAccessCode: "/hvnc/admin/devices",   // + /:deviceId/access-code/generate
+    hubstaffStart: "/hvnc/admin/devices",        // + /:deviceId/hubstaff/start
+    hubstaffPause: "/hvnc/admin/devices",        // + /:deviceId/hubstaff/pause
+
+    // Shift / Schedule Management
+    getAllShifts: "/hvnc/admin/shifts",
+    getShiftById: "/hvnc/admin/shifts",          // + /:shiftId
+    createShift: "/hvnc/admin/shifts",
+    updateShift: "/hvnc/admin/shifts",           // + /:shiftId
+    deleteShift: "/hvnc/admin/shifts",           // + /:shiftId
+    getCalendar: "/hvnc/admin/shifts/calendar",
+    getShiftUsers: "/hvnc/admin/shifts/users",
+    getShiftDevices: "/hvnc/admin/shifts/devices",
+
+    // User Management
+    getAllUsers: "/hvnc/admin/users",
+    getUserById: "/hvnc/admin/users",            // + /:userId
+    createUser: "/hvnc/admin/users",
+    updateUser: "/hvnc/admin/users",             // + /:userId
+    deleteUser: "/hvnc/admin/users",             // + /:userId
+    resetUserPassword: "/hvnc/admin/users",      // + /:userId/reset-password
+    unlockUser: "/hvnc/admin/users",             // + /:userId/unlock
+    assignDevice: "/hvnc/admin/users",           // + /:userId/devices
+    unassignDevice: "/hvnc/admin/users",         // + /:userId/devices/:deviceId
+    getUserLogs: "/hvnc/admin/users",            // + /:userId/logs
+  },
+
+  // User HVNC endpoints
+  userHVNC: {
+    validateCode: "/hvnc/session/validate",
+    cancelSession: "/hvnc/session/cancel",
+    getSession: "/hvnc/session",                 // + /:sessionId
+    hubstaffPause: "/hvnc/session",              // + /:sessionId/hubstaff/pause
+    hubstaffResume: "/hvnc/session",             // + /:sessionId/hubstaff/resume
+    terminateSession: "/hvnc/session",           // + /:sessionId/terminate
+  },
 };

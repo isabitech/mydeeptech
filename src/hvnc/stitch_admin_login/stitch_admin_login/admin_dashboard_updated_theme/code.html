@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F6921E",
+                        "secondary": "#333333",
+                        "card-bg": "#2B2B2B",
+                        "background-dark": "#333333",
+                    },
+                    fontFamily: {
+                        "display": ["'Space Grotesk'", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>HVNC Admin Dashboard</title>
+</head>
+<body class="font-display text-slate-900 dark:text-slate-100 min-h-screen" style="background: linear-gradient(135deg, #333333, #F6921E); min-height: 100vh;">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 border-r border-white/10 bg-[#2B2B2B] flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary p-2 rounded-lg"><span class="material-symbols-outlined text-white">shield_with_heart</span></div>
+<h1 class="text-xl font-bold tracking-tight">HVNC Control</h1>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-secondary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">devices</span>
+<span class="font-medium text-sm">Devices</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">sync_alt</span>
+<span class="font-medium text-sm">Sessions</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">timer</span>
+<span class="font-medium text-sm">Timers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-medium text-sm">Logs</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">person</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold">Admin User</span>
+<span class="text-[10px] text-slate-500">v2.4.0 Stable</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Header -->
+<header class="h-16 border-b border-white/10 bg-[#2B2B2B]/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full bg-[#333333] border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none text-white" placeholder="Search devices, sessions, or logs..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</button>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:border-slate-800 mx-2"></div>
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-400" data-alt="User profile avatar gradient circle"></div>
+</div>
+</header>
+<div class="p-8 space-y-8">
+<!-- Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Devices</span>
+<div class="flex items-center justify-between">
+<span class="text-3xl font-bold">12</span>
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">devices</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Online</span>
+<div class="flex items-center justify-between">
+<span class="text-3xl font-bold">8</span>
+<span class="material-symbols-outlined text-emerald-500 bg-emerald-500/10 p-2 rounded-lg">bolt</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Active Sessions</span>
+<div class="flex items-center justify-between">
+<span class="text-3xl font-bold">5</span>
+<span class="material-symbols-outlined text-amber-500 bg-amber-500/10 p-2 rounded-lg">monitoring</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-1">
+<span class="text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">Timers</span>
+<div class="flex items-center justify-between">
+<span class="text-3xl font-bold">3</span>
+<span class="material-symbols-outlined text-purple-500 bg-purple-500/10 p-2 rounded-lg">alarm</span>
+</div>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Device Grid -->
+<div class="col-span-12 lg:col-span-9 space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold">Live Devices</h2>
+<button class="text-sm text-primary font-semibold hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+<!-- WORK-PC-01 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-01</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Admin</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    04:20:11
+                                </div>
+</div>
+<!-- WORK-PC-02 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-02</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Guest</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    01:15:22
+                                </div>
+</div>
+<!-- WORK-PC-03 -->
+<div class="p-5 rounded-xl border border-white/5 bg-[#2B2B2B] opacity-60 grayscale transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-slate-500/10 rounded-lg">
+<span class="material-symbols-outlined text-slate-400">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-slate-500/10 text-slate-400 font-bold uppercase">Offline</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-03</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last seen 2h ago</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    --:--:--
+                                </div>
+</div>
+<!-- WORK-PC-04 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-04</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Dev</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    12:05:44
+                                </div>
+</div>
+<!-- WORK-PC-05 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-05</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Ops</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    00:45:10
+                                </div>
+</div>
+<!-- WORK-PC-06 -->
+<div class="p-5 rounded-xl border border-white/5 bg-[#2B2B2B] opacity-60 grayscale transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-slate-500/10 rounded-lg">
+<span class="material-symbols-outlined text-slate-400">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-slate-500/10 text-slate-400 font-bold uppercase">Offline</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-06</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Last seen 5m ago</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    --:--:--
+                                </div>
+</div>
+<!-- WORK-PC-07 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-07</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Support</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    08:30:00
+                                </div>
+</div>
+<!-- WORK-PC-08 -->
+<div class="relative overflow-hidden p-5 rounded-xl border border-white/5 bg-[#2B2B2B] shadow-lg group hover:border-primary/50 transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-emerald-500/20 rounded-lg">
+<span class="material-symbols-outlined text-emerald-500">desktop_windows</span>
+</div>
+<span class="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold uppercase">Online</span>
+</div>
+<h3 class="font-bold text-sm">WORK-PC-08</h3>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">User: Security</p>
+<div class="mt-4 flex items-center gap-2 text-xs font-mono text-slate-400">
+<span class="material-symbols-outlined text-sm">timer</span>
+                                    02:10:05
+                                </div>
+</div>
+</div>
+</div>
+<!-- Activity Feed -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold">Recent Activity</h2>
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</div>
+<div class="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+<div class="p-4 space-y-6">
+<div class="flex gap-4">
+<div class="w-10 h-10 shrink-0 rounded-full bg-emerald-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-emerald-500 text-xl">login</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs"><span class="font-bold">WORK-PC-01</span> logged in</p>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-tight">2 minutes ago</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 shrink-0 rounded-full bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">sync</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs"><span class="font-bold">WORK-PC-04</span> started session</p>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-tight">15 minutes ago</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 shrink-0 rounded-full bg-amber-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-amber-500 text-xl">warning</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs"><span class="font-bold">SYSTEM</span> connection spike</p>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-tight">34 minutes ago</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 shrink-0 rounded-full bg-purple-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-purple-500 text-xl">alarm_on</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs"><span class="font-bold">TIMER #03</span> completed</p>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-tight">1 hour ago</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 shrink-0 rounded-full bg-red-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-red-500 text-xl">logout</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-xs"><span class="font-bold">WORK-PC-06</span> disconnected</p>
+<span class="text-[10px] text-slate-500 uppercase font-medium tracking-tight">2 hours ago</span>
+</div>
+</div>
+</div>
+<button class="w-full py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 uppercase hover:text-primary transition-colors">
+                                View Full Activity Log
+                            </button>
+</div>
+</div>
+</div>
+<!-- Section B1: Advanced Analytics Placeholder -->
+<div class="bg-[#2B2B2B] p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center min-h-[300px] gap-4 shadow-xl">
+<div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-primary text-4xl">analytics</span>
+</div>
+<h3 class="text-xl font-bold">Network Performance Overview</h3>
+<p class="text-slate-500 dark:text-slate-400 text-center max-w-md">Detailed traffic analysis and session latency reports are being calculated. Real-time data visualization will appear here in the next update.</p>
+<div class="flex gap-3 mt-4">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<div class="w-2 h-2 rounded-full bg-primary/60 animate-pulse delay-75"></div>
+<div class="w-2 h-2 rounded-full bg-primary/30 animate-pulse delay-150"></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

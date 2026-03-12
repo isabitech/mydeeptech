@@ -57,6 +57,8 @@ import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
 import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 import UserNotifications from "./pages/Dashboard/User/user-notifications/UserNotifications";
+import UserHVNC from "./pages/Dashboard/User/hvnc/UserHVNC";
+import AdminHVNC from "./pages/Dashboard/Admin/hvncmgt/AdminHVNC";
 
 const AppRoutes = () => {
   return (
@@ -110,6 +112,7 @@ const AppRoutes = () => {
           <Route path="qa-review" element={<QAReviewDashboard />} />
           <Route path="assessments" element={<AssessmentList />} />
           <Route path="assessment-history" element={<AssessmentHistory />} />
+          <Route path="hvnc" element={<UserHVNC />} />
         </Route>
 
         {/* Admin auth */}
@@ -136,6 +139,7 @@ const AppRoutes = () => {
           <Route path="settings" element={<SettingsMgt />} />
           <Route path="invoice-page/*" element={<InvoiceRoutes />} />
           <Route path="partner-invoices/*" element={<InvoiceRoutes />} />
+          <Route path="hvnc" element={<AdminHVNC />} />
         </Route>
 
         {/* Redirect unmatched routes */}

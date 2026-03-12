@@ -1,0 +1,47 @@
+<div style="background: linear-gradient(135deg, #333333, #F6921E); color: #FFFFFF; font-family: 'Inter', sans-serif; padding: 40px; min-height: 100vh;">
+  <div style="max-width: 800px; margin: 0 auto; background: #2B2B2B; padding: 40px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);">
+    <h1 style="color: #F6921E; border-bottom: 2px solid #F6921E; padding-bottom: 10px; margin-bottom: 30px;">TECHNICAL SPECIFICATION: HVNC PLATFORM</h1>
+    
+    <section style="margin-bottom: 40px;">
+      <h2 style="color: #F6921E;">1. PROJECT OVERVIEW</h2>
+      <p>A high-performance remote access platform allowing administrators to manage devices and shifts, and authorized users to access remote Chrome browser sessions via a web-based portal.</p>
+    </section>
+
+    <section style="margin-bottom: 40px;">
+      <h2 style="color: #F6921E;">2. DESIGN SYSTEM (CHARCOAL & ORANGE)</h2>
+      <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 10px;"><strong>Primary Background:</strong> <code>linear-gradient(135deg, #333333, #F6921E)</code></li>
+        <li style="margin-bottom: 10px;"><strong>Surface/Card:</strong> <code>#2B2B2B</code></li>
+        <li style="margin-bottom: 10px;"><strong>Primary Actions:</strong> <code>#333333</code> base, <code>#F6921E</code> accents</li>
+      </ul>
+    </section>
+
+    <section style="margin-bottom: 40px;">
+      <h2 style="color: #F6921E;">3. CORE MODULES</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="background: #333333; padding: 20px; border-radius: 8px;">
+          <h3 style="color: #F6921E; margin-top: 0;">Admin Portal</h3>
+          <p style="font-size: 0.9em;">Dashboard, Device Management, User Assignment, and Shift Scheduling.</p>
+        </div>
+        <div style="background: #333333; padding: 20px; border-radius: 8px;">
+          <h3 style="color: #F6921E; margin-top: 0;">User Portal</h3>
+          <p style="font-size: 0.9em;">Access Code Entry, Connection Sequence, and Hidden Chrome Session.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom: 40px;">
+      <h2 style="color: #F6921E;">4. BACKEND REQUIREMENTS</h2>
+      <ul style="line-height: 1.6;">
+        <li><strong>Auth Service:</strong> JWT + 2FA TOTP.</li>
+        <li><strong>Device Service:</strong> WebSocket heartbeats for real-time status.</li>
+        <li><strong>Session Service:</strong> Secure one-time-use access code logic.</li>
+        <li><strong>Streaming:</strong> E2EE remote desktop protocol for Chrome sessions.</li>
+      </ul>
+    </section>
+
+    <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #444;">
+      <p style="color: #F6921E; font-weight: bold;">FOR FULL DOCUMENTATION, SEE ATTACHED MARKDOWN FILE.</p>
+    </div>
+  </div>
+</div>
