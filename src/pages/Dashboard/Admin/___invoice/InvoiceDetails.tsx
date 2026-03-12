@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
-import { useInvoiceStates, Invoice } from "../../../../store/useInvoiceStore";
+import { Invoice } from "../../../../store/useInvoiceStore";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
 import { formatMoney } from "../../../../utils/moneyFormat";
 import { Button, Typography, Card, Space, Descriptions, Divider, Tag, Modal } from "antd";

@@ -156,6 +156,7 @@ const useDeleteDomainSubCategory = () => {
 };
 
 const useAssignDomainsToUser = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (domainIds: string[]) => {
       const response = await axiosInstance.post(
@@ -164,16 +165,23 @@ const useAssignDomainsToUser = () => {
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserDomains] });
+    },
   });
 };
 
 const useRemoveDomainFromUser = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (assignmentId: string) => {
       const response = await axiosInstance.post(
         `/new-domain/user/${assignmentId}/remove`
       );
       return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserDomains] });
     },
   });
 };

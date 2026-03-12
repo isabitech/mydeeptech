@@ -28,6 +28,7 @@ const QUERY = {
     getDomainSubCategories: "getDomainSubCategories",
     getDomains: "getDomains",
     getDomainsWithCategorization: "getDomainsWithCategorization",
+    getUserDomains: "getUserDomains",
     getAllInvoices: "getAllInvoices",
 
     getExchangeRateByCountry: "getExchangeRateByCountry",

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button, Table, Dropdown, MenuProps } from "antd";
 import { MoreOutlined, FileTextOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
+import { Invoice } from "../../../../store/useInvoiceStore";
 import { formatMoney } from "../../../../utils/moneyFormat";
 import { App } from "antd";
 import partnerInvoiceQueryService from "../../../../services/partner-invoice-service/invoice-query";
@@ -14,9 +14,8 @@ import SendInvoice from "./SendInvoice";
 
 const InvoicePage = () => {
   const { message, modal } = App.useApp();
-  const { data: invoices = [], isLoading: loading, error } = partnerInvoiceQueryService.useFetchPartnerInvoices();
-  const { mutateAsync: deleteInvoiceActionAsync } = partnerInvoiceMutationService.useDeletePartnerInvoice();
-  const { setError } = useInvoiceActions();
+  const { data: invoices = [], isLoading, error } = partnerInvoiceQueryService.useFetchPartnerInvoices();
+  const { mutate: deleteInvoice } = partnerInvoiceMutationService.useDeletePartnerInvoice();
 
   // Modal States
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -26,10 +25,9 @@ const InvoicePage = () => {
 
   useEffect(() => {
     if (error) {
-      message.error((error as any).message || "An error occurred");
-      setError(null);
+      message.error((error as any).message || (error as Error).message || "An error occurred");
     }
-  }, [error, message, setError]);
+  }, [error, message]);
 
   const columns: ColumnsType<Invoice> = [
     {
@@ -83,6 +81,10 @@ const InvoicePage = () => {
             onClick: () => setEditInvoiceId(invoice._id || null),
           },
           {
+            key: "separator",
+            type: "divider"
+          },
+          {
             key: "delete",
             className: "group",
             label: <span className="text-red-500 group-hover:!text-white">Delete</span>,
@@ -94,15 +96,16 @@ const InvoicePage = () => {
                 okText: 'Yes',
                 okType: 'danger',
                 cancelText: 'No',
-                onOk: async () => {
+                onOk: () => {
                   if (invoice._id) {
-                    try {
-                      await deleteInvoiceActionAsync(invoice._id);
-                      message.success("Invoice deleted successfully");
-                    } catch (err: any) {
-                      const errorMessage = err.response?.data?.message || err.message || "Failed to delete invoice";
-                      message.error(errorMessage);
-                    }
+                    deleteInvoice(invoice._id, {
+                      onSuccess: () => {
+                        message.success("Invoice deleted successfully");
+                      },
+                      onError: (err: any) => {
+                        message.error(err.message || "Failed to delete invoice");
+                      }
+                    });
                   }
                 }
               });
@@ -218,7 +221,7 @@ const InvoicePage = () => {
             columns={columns}
             dataSource={invoices}
             rowKey="_id"
-            loading={loading}
+            loading={isLoading}
             pagination={{ pageSize: 10, position: ["bottomCenter"] }}
           />
         </div>

@@ -1,18 +1,20 @@
-import { useEffect } from 'react';
-import { Spin, Alert, Button, Card } from 'antd';
-import { ReloadOutlined, TeamOutlined } from '@ant-design/icons';
-import { motion } from 'framer-motion';
-import { useDTUserDashboard } from '../../../hooks/User/useDTUserDashboard';
-import FinancialSummaryCards from '../../../components/Dashboard/User/FinancialSummaryCards';
-import ApplicationStatisticsCharts from '../../../components/Dashboard/User/ApplicationStatisticsCharts';
-import AvailableOpportunitiesComponent from '../../../components/Dashboard/User/AvailableOpportunitiesComponent';
-import RecentActivityTimeline from '../../../components/Dashboard/User/RecentActivityTimeline';
-import SlackNotification from './_components/slack-notification';
+import { useEffect } from "react";
+import { Spin, Alert, Button, Card } from "antd";
+import { ReloadOutlined, TeamOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
+import { useDTUserDashboard } from "../../../hooks/User/useDTUserDashboard";
+
+import FinancialSummaryCards from "../../../components/Dashboard/User/FinancialSummaryCards";
+import ApplicationStatisticsCharts from "../../../components/Dashboard/User/ApplicationStatisticsCharts";
+import AvailableOpportunitiesComponent from "../../../components/Dashboard/User/AvailableOpportunitiesComponent";
+import RecentActivityTimeline from "../../../components/Dashboard/User/RecentActivityTimeline";
+
+import NotificationCarousel from "./_components/notification-carousel";
 
 const Overview = () => {
-  const { data, loading, error, getDashboardData, refreshDashboard } = useDTUserDashboard();
+  const { data, loading, error, getDashboardData, refreshDashboard } =
+    useDTUserDashboard();
 
-  // Fetch dashboard data on component mount
   useEffect(() => {
     getDashboardData();
   }, [getDashboardData]);
@@ -58,8 +60,8 @@ const Overview = () => {
             type="error"
             showIcon
             action={
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 icon={<ReloadOutlined />}
                 onClick={refreshDashboard}
                 type="primary"
@@ -77,8 +79,6 @@ const Overview = () => {
   if (!data) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
-        {/* <Header title="Your Dashboard" />
-        <hr /> */}
         <div className="flex justify-center items-center h-64">
           <Alert
             message="No Data Available"
@@ -86,8 +86,8 @@ const Overview = () => {
             type="info"
             showIcon
             action={
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 icon={<ReloadOutlined />}
                 onClick={refreshDashboard}
                 type="primary"
@@ -103,13 +103,13 @@ const Overview = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="h-full grid gap-5 lg:gap-10 font-[gilroy-regular]"
       initial="hidden"
       animate="visible"
       variants={pageVariants}
     >
-      {/* Slack Community Invite Section */}
+      {/* Notification Carousel Section */}
       <motion.div variants={sectionVariants}>
         <Card className="bg-gradient-to-r from-purple-500 to-blue-600 border-0 rounded-xl overflow-hidden">
           <div className="relative">
@@ -120,8 +120,10 @@ const Overview = () => {
               </div>
             </div>
 
-         <SlackNotification />
-            
+            <div className="w-full overflow-hidden">
+              <NotificationCarousel />
+            </div>
+
             {/* Additional Info */}
             <div className="mt-4 pt-4 border-t border-white/20">
               <div className="flex flex-wrap items-center gap-6 text-purple-100 text-xs">
@@ -129,10 +131,12 @@ const Overview = () => {
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span>Active Community</span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                   <span>Real-time Support</span>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
                   <span>Project Updates</span>
@@ -145,45 +149,46 @@ const Overview = () => {
 
       {/* Content */}
       <div className="flex flex-col gap-3 lg:gap-6 px-2 max-w-full flex-1">
-        {/* Financial Summary */}
         <motion.div variants={sectionVariants}>
-          <FinancialSummaryCards 
+          <FinancialSummaryCards
             financialSummary={data?.financialSummary}
             performanceMetrics={data?.performanceMetrics}
           />
         </motion.div>
 
-        {/* Statistics and Analytics */}
         <motion.div variants={sectionVariants}>
-          <ApplicationStatisticsCharts 
+          <ApplicationStatisticsCharts
             applicationStatistics={data?.applicationStatistics}
             resultSubmissions={data?.resultSubmissions}
           />
         </motion.div>
 
-        {/* Available Opportunities */}
         <motion.div variants={sectionVariants}>
-          <AvailableOpportunitiesComponent 
+          <AvailableOpportunitiesComponent
             opportunities={data?.availableOpportunities}
           />
         </motion.div>
 
-        {/* Recent Activity Timeline */}
         <motion.div variants={sectionVariants}>
-          <RecentActivityTimeline 
+          <RecentActivityTimeline
             recentActivity={data?.recentActivity}
           />
         </motion.div>
 
-        {/* Dashboard Info Footer */}
-        <motion.div 
+        <motion.div
           variants={sectionVariants}
           className="text-center text-sm text-gray-500 py-4 border-t"
         >
           <p>
-            Dashboard generated on {new Date(data?.generatedAt).toLocaleString()} • 
-            Activity timeframe: {data?.timeframe?.recentActivity} • 
-            <Button type="link" size="small" onClick={refreshDashboard} className="p-0 ml-1">
+            Dashboard generated on{" "}
+            {new Date(data?.generatedAt).toLocaleString()} • Activity timeframe:{" "}
+            {data?.timeframe?.recentActivity} •
+            <Button
+              type="link"
+              size="small"
+              onClick={refreshDashboard}
+              className="p-0 ml-1"
+            >
               <ReloadOutlined /> Refresh
             </Button>
           </p>

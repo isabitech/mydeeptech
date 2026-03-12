@@ -1,5 +1,5 @@
 import { Form, Input, InputNumber, Select, DatePicker, Button, Typography, Divider, Modal, App } from "antd";
-import { useInvoiceStates, useInvoiceActions, Invoice } from "../../../../store/useInvoiceStore";
+import { Invoice } from "../../../../store/useInvoiceStore";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import partnerInvoiceMutationService from "../../../../services/partner-invoice-service/invoice-mutation";
@@ -17,18 +17,9 @@ interface EditInvoiceProps {
 
 const EditInvoice = ({ open, invoiceId, onClose }: EditInvoiceProps) => {
   const { message } = App.useApp();
-  const { updateInvoice: _, setError } = useInvoiceActions();
-  const { mutateAsync: updateInvoice, isPending: loading } = partnerInvoiceMutationService.useUpdatePartnerInvoice();
+  const { mutate: updateInvoice, isPending: loading } = partnerInvoiceMutationService.useUpdatePartnerInvoice();
   const { data: invoices = [] } = partnerInvoiceQueryService.useFetchPartnerInvoices();
-  const { error } = useInvoiceStates();
   const [form] = Form.useForm();
-
-  useEffect(() => {
-    if (error) {
-      message.error(error);
-      setError(null);
-    }
-  }, [error, message, setError]);
 
   const initialInvoice = invoices.find(inv => inv._id === invoiceId);
 
@@ -46,20 +37,25 @@ const EditInvoice = ({ open, invoiceId, onClose }: EditInvoiceProps) => {
     return null;
   }
 
-  const onFinish = async (values: any) => {
+  const onFinish = (values: any) => {
     if (!invoiceId) return;
-    try {
-      const formattedValues = {
-        ...values,
-        due_date: values.due_date ? values.due_date.format("YYYY-MM-DD") : undefined,
-      };
-      await updateInvoice({ id: invoiceId, updatedInvoice: formattedValues });
-      message.success("Invoice updated successfully");
-      onClose();
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || "Failed to update invoice";
-      message.error(errorMessage);
-    }
+    const formattedValues = {
+      ...values,
+      due_date: values.due_date ? values.due_date.format("YYYY-MM-DD") : undefined,
+    };
+
+    updateInvoice(
+      { id: invoiceId, updatedInvoice: formattedValues },
+      {
+        onSuccess: () => {
+          message.success("Invoice updated successfully");
+          onClose();
+        },
+        onError: (err: any) => {
+          message.error(err.response?.data?.message || err.message || "Failed to update invoice");
+        }
+      }
+    );
   };
 
   return (
