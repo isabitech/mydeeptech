@@ -22,7 +22,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
-    <>Share folder link via <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">google form</a>.</>
+    <>Submit your test folder link to the <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Google form</a>.</>
   ];
 
   const skillAssessmentSteps: React.ReactNode[] = [
@@ -34,7 +34,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
-    <>Share folder link via <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">google form</a>.</>
+    <>Submit your test folder link to the <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Google form</a>.</>
   ];
 
   return (
