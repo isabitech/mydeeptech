@@ -1,0 +1,43 @@
+/* HVNC Dashboard Dark Theme Styles */
+.hvncTable :global(.ant-table) {
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+
+.hvncTable :global(.ant-table-thead > tr > th) {
+  background: #333333;
+  border-bottom: 1px solid #475569;
+  color: #F6921E;
+  font-weight: bold;
+}
+
+.hvncTable :global(.ant-table-tbody > tr > td) {
+  background: #2a2a2a;
+  border-bottom: 1px solid #374151;
+}
+
+.hvncTable :global(.ant-table-tbody > tr:hover > td) {
+  background: #374151;
+}
+
+.hvncTable :global(.ant-pagination) {
+  margin-top: 16px;
+}
+
+.hvncTable :global(.ant-pagination .ant-pagination-item) {
+  background: #333333;
+  border-color: #475569;
+}
+
+.hvncTable :global(.ant-pagination .ant-pagination-item a) {
+  color: #94a3b8;
+}
+
+.hvncTable :global(.ant-pagination .ant-pagination-item-active) {
+  background: #F6921E;
+  border-color: #F6921E;
+}
+
+.hvncTable :global(.ant-pagination .ant-pagination-item-active a) {
+  color: #333333;
+}

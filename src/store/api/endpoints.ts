@@ -238,7 +238,7 @@ export const endpoints = {
     deleteShift: "/hvnc/admin/shifts",           // + /:shiftId
     getCalendar: "/hvnc/admin/shifts/calendar",
     getShiftUsers: "/hvnc/admin/shifts/users",
-    getShiftDevices: "/hvnc/admin/shifts/devices",
+    getShiftDevices: "/hvnc/admin/devices",  // Updated to use actual devices endpoint
 
     // User Management
     getAllUsers: "/hvnc/admin/users",
@@ -255,11 +255,42 @@ export const endpoints = {
 
   // User HVNC endpoints
   userHVNC: {
-    validateCode: "/hvnc/session/validate",
-    cancelSession: "/hvnc/session/cancel",
+    // Dashboard & Profile
+    getDashboard: "/hvnc/user/dashboard",
+    getProfile: "/hvnc/user/profile",
+    updateProfile: "/hvnc/user/profile",
+    
+    // Device Management
+    getDevices: "/hvnc/user/devices",
+    getDeviceById: "/hvnc/user/devices",         // + /:deviceId
+    
+    // Session Management
+    getSessions: "/hvnc/user/sessions",
+    startSession: "/hvnc/user/sessions/start",
+    endSession: "/hvnc/user/sessions",           // + /:sessionId/end
     getSession: "/hvnc/session",                 // + /:sessionId
+    
+    // Access Codes & Session Flow
+    requestCode: "/hvnc/codes/request",
+    validateCode: "/hvnc/codes/validate",
+    cancelSession: "/hvnc/session/cancel",
+    
+    // Session Controls
     hubstaffPause: "/hvnc/session",              // + /:sessionId/hubstaff/pause
     hubstaffResume: "/hvnc/session",             // + /:sessionId/hubstaff/resume
     terminateSession: "/hvnc/session",           // + /:sessionId/terminate
+    
+    // Shift & Schedule
+    getShifts: "/hvnc/user/shifts",
+    getCurrentShift: "/hvnc/user/shifts/current",
+    getUpcomingShifts: "/hvnc/user/shifts/upcoming",
+    
+    // Activity & Time Tracking
+    getActivity: "/hvnc/user/activity",
+    getTimeTracking: "/hvnc/user/time-tracking",
+    
+    // Notifications
+    getNotifications: "/hvnc/user/notifications",
+    markNotificationRead: "/hvnc/user/notifications", // + /:id/read
   },
 };

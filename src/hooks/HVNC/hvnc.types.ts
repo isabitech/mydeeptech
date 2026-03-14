@@ -208,6 +208,17 @@ export interface HVNCValidateResponse {
   shiftTimezone?: string;
   error?: string;
   message?: string;
+  session?: {
+    session_id: string;
+    user?: { email: string; name: string; role: string };
+    expires_at?: string;
+  };
+  shift?: {
+    start_time?: string;
+    end_time?: string;
+    timezone?: string;
+    remaining_minutes?: number;
+  };
 }
 
 export interface HVNCSessionState {

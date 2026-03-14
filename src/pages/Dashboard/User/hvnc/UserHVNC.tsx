@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import UserHVNCPortal from './UserHVNCPortal';
 import UserHVNCConnecting from './UserHVNCConnecting';
 import UserHVNCSession from './UserHVNCSession';
+import UserHVNCDashboard from './UserHVNCDashboard';
 import { useHVNCSession } from '../../../../hooks/HVNC/User/useHVNCSession';
 
-type Stage = 'portal' | 'connecting' | 'session';
+type Stage = 'dashboard' | 'portal' | 'connecting' | 'session';
 
 const UserHVNC: React.FC = () => {
-  const [stage, setStage] = useState<Stage>('portal');
+  const [stage, setStage] = useState<Stage>('dashboard');
   const [accessCode, setAccessCode] = useState('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
 
   const {
     session,
     sessionToken,
+    validatedSessionId,
     validateAccessCode,
     cancelSession,
     terminateSession,
@@ -35,11 +38,22 @@ const UserHVNC: React.FC = () => {
 
   const handleDisconnect = () => {
     setAccessCode('');
+    setStage('dashboard');
+  };
+
+  const handleGoToPortal = (deviceId: string) => {
+    setSelectedDeviceId(deviceId);
     setStage('portal');
   };
 
-  const handleValidate = async (code: string) => {
-    const result = await validateAccessCode(code);
+  const handleBackToDashboard = () => {
+    setAccessCode('');
+    setSelectedDeviceId('');
+    setStage('dashboard');
+  };
+
+  const handleValidate = async (code: string, email: string, deviceId: string) => {
+    const result = await validateAccessCode(code, email, deviceId);
     if (result.success) {
       return { success: true };
     }
@@ -65,10 +79,17 @@ const UserHVNC: React.FC = () => {
   return (
     // Break out of the parent layout padding to fill the content area fully
     <div className="-m-6 min-h-full flex flex-col">
+      {stage === 'dashboard' && (
+        <UserHVNCDashboard
+          onJoinSession={handleGoToPortal}
+        />
+      )}
       {stage === 'portal' && (
         <UserHVNCPortal
+          selectedDeviceId={selectedDeviceId}
           onStartSession={handleStartSession}
           onValidate={handleValidate}
+          onBackToDashboard={handleBackToDashboard}
         />
       )}
       {stage === 'connecting' && (
@@ -88,6 +109,9 @@ const UserHVNC: React.FC = () => {
           initialSessionSecs={session?.sessionSeconds}
           onTerminate={handleTerminate}
           onPauseHubstaff={handlePauseHubstaff}
+          jwtToken={sessionToken ?? undefined}
+          deviceId={selectedDeviceId}
+          validatedSessionId={validatedSessionId ?? undefined}
         />
       )}
     </div>

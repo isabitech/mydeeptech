@@ -11,9 +11,12 @@ import {
   InfoCircleOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import { message, Modal } from 'antd';
+import { message, Modal, Select } from 'antd';
 import { useAdminHVNCDevices } from '../../../../hooks/HVNC/Admin/useAdminHVNCDevices';
+import { useGetAllDtUsers } from '../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers';
 import { HVNCDevice } from '../../../../hooks/HVNC/hvnc.types';
+
+const { Option } = Select;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -49,6 +52,10 @@ type TabKey = 'all' | 'active' | 'inactive';
 
 const AdminHVNCDevices: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [assignUserId, setAssignUserId] = useState('');
+  const [assignPcName, setAssignPcName] = useState('');
+  const [assignUserSearch, setAssignUserSearch] = useState('');
 
   const {
     loading,
@@ -57,12 +64,19 @@ const AdminHVNCDevices: React.FC = () => {
     selectedDevice,
     getAllDevices,
     getDeviceById,
+    updateDevice,
     deleteDevice,
     generateAccessCode,
     startHubstaff,
     pauseHubstaff,
     setSelectedDevice,
   } = useAdminHVNCDevices();
+
+  const {
+    getAllDTUsers,
+    loading: dtUsersLoading,
+    users: dtUsers,
+  } = useGetAllDtUsers();
 
   useEffect(() => {
     getAllDevices().then((res) => {
@@ -121,6 +135,30 @@ const AdminHVNCDevices: React.FC = () => {
       message.success('Hubstaff timer paused');
     } else {
       message.error(res.error ?? 'Failed to pause timer');
+    }
+  };
+
+  const handleOpenAssign = () => {
+    if (!selectedDevice) return;
+    setAssignPcName(selectedDevice.pcName);
+    setAssignUserId('');
+    setAssignUserSearch('');
+    getAllDTUsers({ status: 'approved', limit: 1000 });
+    setAssignModalOpen(true);
+  };
+
+  const handleAssignSubmit = async () => {
+    if (!selectedDevice || !assignUserId) {
+      message.warning('Please select a user to assign.');
+      return;
+    }
+    const payload = { assignedUserId: assignUserId, pcName: assignPcName || selectedDevice.pcName };
+    const res = await updateDevice(selectedDevice.id, payload);
+    if (res.success) {
+      message.success('User assigned successfully');
+      setAssignModalOpen(false);
+    } else {
+      message.error(res.error ?? 'Failed to assign user');
     }
   };
 
@@ -282,7 +320,11 @@ const AdminHVNCDevices: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-white text-lg font-bold">Device Details</h3>
               <div className="flex gap-2">
-                <button className="p-2 rounded-lg bg-slate-700 text-slate-400 hover:text-[#F6921E] transition-colors">
+                <button
+                  onClick={handleOpenAssign}
+                  className="p-2 rounded-lg bg-slate-700 text-slate-400 hover:text-[#F6921E] transition-colors"
+                  title="Assign User"
+                >
                   <EditOutlined />
                 </button>
                 <button
@@ -419,6 +461,82 @@ const AdminHVNCDevices: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── Assign User Modal ──────────────────────────────────────── */}
+      <Modal
+        open={assignModalOpen}
+        onCancel={() => setAssignModalOpen(false)}
+        onOk={handleAssignSubmit}
+        okText="Assign"
+        confirmLoading={loading}
+        title={
+          <span className="text-white font-bold">
+            Assign User — <span className="text-[#F6921E]">{selectedDevice?.pcName}</span>
+          </span>
+        }
+        styles={{
+          content: { backgroundColor: '#2B2B2B', border: '1px solid #3d3d3d' },
+          header: { backgroundColor: '#2B2B2B', borderBottom: '1px solid #3d3d3d' },
+          footer: { backgroundColor: '#2B2B2B', borderTop: '1px solid #3d3d3d' },
+          mask: { backdropFilter: 'blur(4px)' },
+        }}
+        okButtonProps={{
+          style: { backgroundColor: '#F6921E', borderColor: '#F6921E', color: '#333333', fontWeight: 700 },
+        }}
+        cancelButtonProps={{
+          style: { backgroundColor: '#333333', borderColor: '#555', color: '#ccc' },
+        }}
+      >
+        <div className="flex flex-col gap-5 py-4">
+          {/* User Select */}
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">Select User</label>
+            <Select
+              value={assignUserId || undefined}
+              onChange={(val) => setAssignUserId(val)}
+              onSearch={(val) => setAssignUserSearch(val)}
+              placeholder="Search and select a user..."
+              showSearch
+              allowClear
+              loading={dtUsersLoading}
+              filterOption={false}
+              style={{ width: '100%' }}
+              className="[&_.ant-select-selector]:!bg-[#333333] [&_.ant-select-selector]:!border-slate-600 [&_.ant-select-selector]:!text-white [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-arrow]:!text-slate-400 [&_.ant-select-selection-search-input]:!text-white [&.ant-select-focused_.ant-select-selector]:!border-[#F6921E]"
+              notFoundContent={dtUsersLoading ? 'Loading...' : 'No users found'}
+              dropdownStyle={{ backgroundColor: '#333333', border: '1px solid #475569' }}
+            >
+              {dtUsers
+                .filter((u) =>
+                  u.fullName.toLowerCase().includes(assignUserSearch.toLowerCase()) ||
+                  u.email.toLowerCase().includes(assignUserSearch.toLowerCase())
+                )
+                .map((u) => (
+                  <Option key={u._id} value={u._id} title={`${u.fullName} (${u.email})`}>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-white">{u.fullName}</span>
+                      <span className="text-xs text-slate-400">{u.email}</span>
+                    </div>
+                  </Option>
+                ))}
+            </Select>
+          </div>
+
+          {/* PC Name (optional rename) */}
+          <div>
+            <label className="block text-xs font-bold uppercase text-slate-400 mb-2">
+              PC Name <span className="normal-case text-slate-600">(optional rename)</span>
+            </label>
+            <input
+              type="text"
+              value={assignPcName}
+              onChange={(e) => setAssignPcName(e.target.value)}
+              placeholder={selectedDevice?.pcName}
+              className="w-full bg-[#333333] border border-slate-600 rounded-lg text-sm text-white
+                placeholder:text-slate-600 focus:border-[#F6921E] py-2 px-3 outline-none"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

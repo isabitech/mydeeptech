@@ -13,19 +13,24 @@ export const useHVNCSession = () => {
   const [error, setError] = useState<string | null>(null);
   const [session, setSession] = useState<HVNCSessionState | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [validatedSessionId, setValidatedSessionId] = useState<string | null>(null);
 
   /**
-   * Step 1 — Validate the 8-character access code entered in UserHVNCPortal.
+   * Step 1 — Validate the 6-character access code entered in UserHVNCPortal.
    * On success returns a short-lived sessionToken used for session init calls.
    */
   const validateAccessCode = useCallback(
-    async (accessCode: string): Promise<HVNCOperationResult<HVNCValidateResponse>> => {
+    async (accessCode: string, email: string, deviceId: string): Promise<HVNCOperationResult<HVNCValidateResponse>> => {
       setLoading(true);
       setError(null);
       try {
         const data = await apiPost<HVNCValidateResponse>(
           endpoints.userHVNC.validateCode,
-          { accessCode }
+          { 
+            code: accessCode,
+            email,
+            device_id: deviceId
+          }
         );
 
         if (data.valid === false) {
@@ -35,6 +40,7 @@ export const useHVNCSession = () => {
         }
 
         if (data.sessionToken) setSessionToken(data.sessionToken);
+        if (data.session?.session_id) setValidatedSessionId(data.session.session_id);
         return { success: true, data };
       } catch (err: any) {
         const msg = getErrorMessage(err);
@@ -176,6 +182,7 @@ export const useHVNCSession = () => {
     error,
     session,
     sessionToken,
+    validatedSessionId,
     // Actions
     validateAccessCode,
     cancelSession,

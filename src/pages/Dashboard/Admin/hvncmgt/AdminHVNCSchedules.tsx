@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
-import { message } from 'antd';
+import { message, Select } from 'antd';
 import { useAdminHVNCSchedules } from '../../../../hooks/HVNC/Admin/useAdminHVNCSchedules';
+import { useAdminHVNCDevices } from '../../../../hooks/HVNC/Admin/useAdminHVNCDevices';
+import { useGetAllDtUsers } from '../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers';
+
+const { Option } = Select;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,9 +72,6 @@ const weekDays: DayColumn[] = [
   },
 ];
 
-// Static fallbacks — replaced by API data when available
-const FALLBACK_USERS = ['John Doe', 'Sarah Miller', 'Emma Wilson', 'Mike Ross', 'David Smith', 'Alex Chen'];
-const FALLBACK_DEVICES = ['PC-ALPHA-01', 'PC-BETA-04', 'PC-GAMMA-02', 'PC-DELTA-03', 'PC-EPSILON-05'];
 const timezones = [
   '(GMT-05:00) Eastern Time',
   '(GMT-08:00) Pacific Time',
@@ -108,31 +109,59 @@ const AdminHVNCSchedules: React.FC = () => {
   const [recurringDays, setRecurringDays] = useState<boolean[]>(DEFAULT_DAYS);
   const [formUser, setFormUser] = useState('');
   const [formDevice, setFormDevice] = useState('');
+  const [formStartDate, setFormStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [formEndDate, setFormEndDate] = useState('');
   const [formStart, setFormStart] = useState('09:00');
   const [formEnd, setFormEnd] = useState('17:00');
   const [formTimezone, setFormTimezone] = useState(timezones[0]);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [deviceSearchTerm, setDeviceSearchTerm] = useState('');
 
   const {
     loading,
-    shiftUsers,
-    shiftDevices,
     createShift,
-    loadFormOptions,
   } = useAdminHVNCSchedules();
 
-  // Derive display lists — use API data if available, else static fallback
-  const userOptions = shiftUsers.length > 0
-    ? shiftUsers.map((u) => u.name)
-    : FALLBACK_USERS;
+  const {
+    getAllDevices,
+    loading: devicesLoading,
+    devices,
+  } = useAdminHVNCDevices();
 
-  const deviceOptions = shiftDevices.length > 0
-    ? shiftDevices.map((d) => d.name)
-    : FALLBACK_DEVICES;
+  const {
+    getAllDTUsers,
+    loading: dtUsersLoading,
+    users: dtUsers,
+    resetState: resetDTUsersState
+  } = useGetAllDtUsers();
+
+  // Filter DTUsers based on search term
+  const filteredDTUsers = dtUsers.filter(user => 
+    user.fullName.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(userSearchTerm.toLowerCase())
+  );
+
+  // Filter devices based on search term
+  const filteredDevices = devices.filter(device =>
+    device.pcName.toLowerCase().includes(deviceSearchTerm.toLowerCase())
+  );
 
   useEffect(() => {
-    loadFormOptions();
+    getAllDevices();
+    loadDTUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadDTUsers = async () => {
+    try {
+      await getAllDTUsers({ 
+        status: 'approved', 
+        limit: 1000 // Fetch up to 1000 users instead of default 10
+      });
+    } catch (error) {
+      console.error('Failed to load DTUsers:', error);
+    }
+  };
 
   const toggleDay = (idx: number) => {
     setRecurringDays((prev) => prev.map((v, i) => (i === idx ? !v : v)));
@@ -145,17 +174,22 @@ const AdminHVNCSchedules: React.FC = () => {
       return;
     }
 
-    // Find IDs if API data available, else pass name as ID (backend handles lookup)
-    const userObj = shiftUsers.find((u) => u.name === formUser);
-    const deviceObj = shiftDevices.find((d) => d.name === formDevice);
+    // Find IDs if API data available, else pass name/email as ID (backend handles lookup)
+    const userObj = dtUsers.find((u) => u.fullName === formUser || u.email === formUser || u._id === formUser);
+    const deviceObj = devices.find((d) => d.pcName === formDevice);
+
+    // Use the user ID or fallback to the form value
+    const userId = userObj?._id || userObj?.email || formUser;
 
     const daysOfWeek = recurringDays
       .map((active, idx) => (active ? idx + 1 : null))
       .filter((d): d is number => d !== null);
 
     const res = await createShift({
-      userId: userObj?.id ?? formUser,
-      deviceId: deviceObj?.id ?? formDevice,
+      userId: userId,
+      deviceId: deviceObj ? String(deviceObj.id) : formDevice,
+      startDate: new Date(formStartDate).toISOString(),
+      ...(formEndDate && { endDate: new Date(formEndDate).toISOString() }),
       startTime: formStart,
       endTime: formEnd,
       timezone: formTimezone,
@@ -164,7 +198,8 @@ const AdminHVNCSchedules: React.FC = () => {
     });
 
     if (res.success) {
-      message.success(`Shift scheduled for ${formUser} on ${formDevice}`);
+      const userName = userObj?.fullName || formUser;
+      message.success(`Shift scheduled for ${userName} on ${formDevice}`);
       handleClear();
     } else {
       message.error(res.error ?? 'Failed to schedule shift');
@@ -174,9 +209,13 @@ const AdminHVNCSchedules: React.FC = () => {
   const handleClear = () => {
     setFormUser('');
     setFormDevice('');
+    setFormStartDate(new Date().toISOString().split('T')[0]);
+    setFormEndDate('');
     setFormStart('09:00');
     setFormEnd('17:00');
     setRecurringDays(DEFAULT_DAYS);
+    setUserSearchTerm('');
+    setDeviceSearchTerm('');
   };
 
   return (
@@ -288,33 +327,108 @@ const AdminHVNCSchedules: React.FC = () => {
             {/* Column 1 — User + Device */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Select User</label>
-                <select
+                <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Select DTUser</label>
+                <Select
                   value={formUser}
-                  onChange={(e) => setFormUser(e.target.value)}
-                  className="w-full bg-[#333333] border border-slate-700 rounded-lg text-sm text-white
-                    focus:ring-[#F6921E] focus:border-[#F6921E] py-2.5 px-3 outline-none"
+                  onChange={(value) => setFormUser(value)}
+                  onSearch={(value) => {
+                    setUserSearchTerm(value);
+                  }}
+                  className="w-full [&_.ant-select-selector]:!bg-[#333333] [&_.ant-select-selector]:!border-slate-700 [&_.ant-select-selector]:!text-white [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-arrow]:!text-slate-400 [&_.ant-select-selection-search-input]:!text-white [&.ant-select-focused_.ant-select-selector]:!border-[#F6921E] [&.ant-select-focused_.ant-select-selector]:!ring-1 [&.ant-select-focused_.ant-select-selector]:!ring-[#F6921E]/50"
+                  placeholder="Search and select a DTUser..."
+                  showSearch
+                  allowClear
+                  loading={dtUsersLoading}
+                  filterOption={false}
+                  notFoundContent={dtUsersLoading ? 'Loading users...' : 'No users found'}
+                  dropdownStyle={{
+                    backgroundColor: '#333333',
+                    border: '1px solid #475569',
+                  }}
+                  dropdownClassName="[&_.ant-select-item]:!bg-[#333333] [&_.ant-select-item]:!text-white [&_.ant-select-item-option-selected]:!bg-[#F6921E] [&_.ant-select-item-option-selected]:!text-[#333333] [&_.ant-select-item:hover]:!bg-slate-700"
+                  style={{
+                    width: '100%',
+                  }}
                 >
-                  <option value="">Select a user...</option>
-                  {userOptions.map((u) => <option key={u} value={u}>{u}</option>)}
-                </select>
+                  {filteredDTUsers.map((user) => (
+                    <Option 
+                      key={user._id} 
+                      value={user._id}
+                      title={`${user.fullName} (${user.email})`}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{user.fullName}</span>
+                        <span className="text-xs text-slate-400">{user.email}</span>
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Assign Device</label>
-                <select
+                <Select
                   value={formDevice}
-                  onChange={(e) => setFormDevice(e.target.value)}
-                  className="w-full bg-[#333333] border border-slate-700 rounded-lg text-sm text-white
-                    focus:ring-[#F6921E] focus:border-[#F6921E] py-2.5 px-3 outline-none"
+                  onChange={(value) => setFormDevice(value)}
+                  onSearch={(value) => {
+                    setDeviceSearchTerm(value);
+                  }}
+                  className="w-full [&_.ant-select-selector]:!bg-[#333333] [&_.ant-select-selector]:!border-slate-700 [&_.ant-select-selector]:!text-white [&_.ant-select-selection-placeholder]:!text-slate-500 [&_.ant-select-arrow]:!text-slate-400 [&_.ant-select-selection-search-input]:!text-white [&.ant-select-focused_.ant-select-selector]:!border-[#F6921E] [&.ant-select-focused_.ant-select-selector]:!ring-1 [&.ant-select-focused_.ant-select-selector]:!ring-[#F6921E]/50"
+                  placeholder="Search and select a device..."
+                  showSearch
+                  allowClear
+                  loading={devicesLoading}
+                  filterOption={false}
+                  notFoundContent={devicesLoading ? 'Loading devices...' : 'No devices found'}
+                  dropdownStyle={{
+                    backgroundColor: '#333333',
+                    border: '1px solid #475569',
+                  }}
+                  dropdownClassName="[&_.ant-select-item]:!bg-[#333333] [&_.ant-select-item]:!text-white [&_.ant-select-item-option-selected]:!bg-[#F6921E] [&_.ant-select-item-option-selected]:!text-[#333333] [&_.ant-select-item:hover]:!bg-slate-700"
+                  style={{
+                    width: '100%',
+                  }}
                 >
-                  <option value="">Select a device...</option>
-                  {deviceOptions.map((d) => <option key={d} value={d}>{d}</option>)}
-                </select>
+                  {filteredDevices.map((device) => (
+                    <Option
+                      key={device.id}
+                      value={device.pcName}
+                      title={device.pcName}
+                    >
+                      <div className="flex items-center">
+                        <span className="font-medium">{device.pcName}</span>
+                      </div>
+                    </Option>
+                  ))}
+                </Select>
               </div>
             </div>
 
-            {/* Column 2 — Times + Timezone */}
+            {/* Column 2 — Dates + Times + Timezone */}
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={formStartDate}
+                    onChange={(e) => setFormStartDate(e.target.value)}
+                    required
+                    className="w-full bg-[#333333] border border-slate-700 rounded-lg text-sm text-white
+                      focus:ring-[#F6921E] focus:border-[#F6921E] py-2 px-3 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-500 mb-2">End Date <span className="normal-case text-slate-600">(optional)</span></label>
+                  <input
+                    type="date"
+                    value={formEndDate}
+                    onChange={(e) => setFormEndDate(e.target.value)}
+                    min={formStartDate}
+                    className="w-full bg-[#333333] border border-slate-700 rounded-lg text-sm text-white
+                      focus:ring-[#F6921E] focus:border-[#F6921E] py-2 px-3 outline-none"
+                  />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-500 mb-2">Start Time</label>

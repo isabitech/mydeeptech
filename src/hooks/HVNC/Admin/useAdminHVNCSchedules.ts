@@ -165,7 +165,8 @@ export const useAdminHVNCSchedules = () => {
     setError(null);
     try {
       const data = await apiGet<{ success?: boolean; devices?: HVNCShiftDevice[]; data?: { devices: HVNCShiftDevice[] } }>(
-        endpoints.adminHVNC.getShiftDevices
+        endpoints.adminHVNC.getShiftDevices,
+        { params: { status: 'Active' } }  // Add status parameter for active devices
       );
       const list = data.devices ?? data.data?.devices ?? [];
       setShiftDevices(list);
