@@ -22,9 +22,29 @@ const useFetchPartnerInvoices = () => {
         },
     });
 };
+const useFetchPaginatedPartnerInvoices = (params: { page: number; limit: number; search?: string }) => {
+        return useQuery({
+            queryKey: [REACT_QUERY_KEYS.QUERY.getPartnerInvoices, params],
+            queryFn: async () => {
+                const response = await axiosInstance.get(endpoints.partnerInvoice.pagination, { params });
+                if (response.data.success || response.data.data) {
+                    return response.data.data as {
+                        invoices: Invoice[];
+                        pagination: {
+                            page: number;
+                            limit: number;
+                            totalCount: number;
+                        };
+                    };
+                }
+                throw new Error(response.data.message || "Failed to fetch invoices");
+            },
+        });
+    };
 
-const partnerInvoiceQueryService = {
-    useFetchPartnerInvoices,
-};
+    const partnerInvoiceQueryService = {
+        useFetchPartnerInvoices,
+        useFetchPaginatedPartnerInvoices,
+    };
 
-export default partnerInvoiceQueryService;
+    export default partnerInvoiceQueryService;
