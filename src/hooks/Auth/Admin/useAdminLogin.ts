@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { endpoints } from "../../../store/api/endpoints";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { storeUserInfoToStorage, storeTokenToStorage } from "../../../helpers";
 import { useUserInfoActions } from "../../../store/useAuthStore";
+import axiosInstance from "../../../service/axiosApi";
+import ErrorMessage from "../../../lib/error-message";
 
 interface AdminLoginPayload {
   email: string;
@@ -47,27 +49,34 @@ interface AdminLoginResult {
 
 export const useAdminLogin = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    return localStorage.getItem('authError') || null;
+  });
+
+  const location = useLocation();
   const navigate = useNavigate();
 
   const { setUserInfo } = useUserInfoActions();
 
+  const from = location.state?.from?.pathname;
+
+  useEffect(() => {
+    const authError = localStorage.getItem('authError');
+    if (authError) {
+      setError(authError);
+    }
+  }, []);
+
   const login = async (payload: AdminLoginPayload): Promise<AdminLoginResult> => {
     setLoading(true);
-    setError(null);
+    
+    // Clear backup error from localStorage when starting new login attempt
+    localStorage.removeItem('authError');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoints.adminAuth.login}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      const data: AdminLoginResponse = await response.json();
+    
+      const response = await axiosInstance.post<AdminLoginResponse>(`${import.meta.env.VITE_API_URL}${endpoints.adminAuth.login}`, payload);
+      const data = response.data;
 
       if (data.success && data.admin) {
         // Check if admin has verified email and set password
@@ -104,13 +113,17 @@ export const useAdminLogin = () => {
         setUserInfo(adminInfo);
         await storeTokenToStorage(data.token);
 
+        // Clear backup error on successful login
+        localStorage.removeItem('authError');
+        setError(null);
+
         notification.success({
           message: "Login successful!",
           description: "Welcome to the admin dashboard."
         });
 
         // Navigate to admin dashboard
-        navigate("/admin/overview");
+        navigate(from ?? "/admin/overview");
 
         return { success: true, data };
       } else {
@@ -119,7 +132,7 @@ export const useAdminLogin = () => {
         return { success: false, error: errorMessage };
       }
     } catch (err: any) {
-      const errorMessage = err.message || "An error occurred during login. Please try again.";
+      const errorMessage = ErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -131,6 +144,7 @@ export const useAdminLogin = () => {
     setLoading(false);
     setError(null);
   }, []);
+
 
   return {
     login,

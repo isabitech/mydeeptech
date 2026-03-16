@@ -29,10 +29,10 @@ export const storeUserInfoToStorage = async (user: any) => {
 
 // --- RETRIEVE USER INFO ---
 export const retrieveUserInfoFromStorage = async () => {
-  if (typeof window === "undefined") return { userDetails: null };
+  if (typeof window === "undefined") return null;
 
   const stored = sessionStorage.getItem(USER_INFORMATION);
-  if (!stored) return { userDetails: null };
+  if (!stored) return null;
 
   try {
     const { data, iv } = JSON.parse(stored); // ✅ this is now valid JSON
@@ -40,7 +40,7 @@ export const retrieveUserInfoFromStorage = async () => {
     return JSON.parse(decrypted); // ✅ restore user object
   } catch (error) {
     console.error("Error retrieving user info:", error);
-    return { userDetails: null };
+    return null;
   }
 };
 

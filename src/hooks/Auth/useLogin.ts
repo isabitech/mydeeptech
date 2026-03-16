@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { endpoints } from "../../store/api/endpoints";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { notification } from "antd";
 import { useUserContext } from "../../UserContext";
@@ -49,7 +49,10 @@ export const useLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUserInfo } = useUserContext();
+
+  const from = location.state?.from?.pathname;
 
   const login = async (payload: LoginPayload): Promise<LoginResult> => {
     setLoading(true);
@@ -57,8 +60,6 @@ export const useLogin = () => {
 
     try {
       const data: LoginResponse = await apiPost(endpoints.authDT.loginDTUser, payload);
-
-      console.log(data);
 
       if (data.success && data.user) {
         // Check if user has verified email and set password
@@ -107,13 +108,10 @@ export const useLogin = () => {
         // Navigate based on user status or role
         // You can customize this navigation logic based on your needs
         if (data.user.annotatorStatus || data.user.microTaskerStatus) {
-            notification.open({
-                type: "success",
-                message: "Login successful! "
-            });
-          navigate("/dashboard/overview");
+          notification.open({type: "success", message: "Login successful!"});
+          navigate(from ?? "/dashboard/overview");
         } else {
-          navigate("/admin/overview"); // Default navigation
+          navigate(from ?? "/admin/overview"); // Default navigation
         }
 
         return { success: true, data };
