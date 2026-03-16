@@ -109,7 +109,7 @@ export const endpoints = {
     update: "/partner-invoice",
     delete: "/partner-invoice",
     send: "/partner-invoice/send",
-    pagination: "/partner-invoices/pagination",
+    pagination: "/partner-invoice",
   },
 
   // User invoice endpoints

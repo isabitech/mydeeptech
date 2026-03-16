@@ -14,7 +14,15 @@ import SendInvoice from "./SendInvoice";
 
 const InvoicePage = () => {
   const { message, modal } = App.useApp();
-  const { data: invoices = [], isLoading, error } = partnerInvoiceQueryService.useFetchPartnerInvoices();
+  
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  
+  const { data, isLoading, isFetching, error } = partnerInvoiceQueryService.useFetchPaginatedPartnerInvoices({ page, limit });
+  const invoices = data?.invoices || [];
+  const pagination = data?.pagination || { page: 1, limit: 10, totalCount: 0 };
+  
   const { mutate: deleteInvoice } = partnerInvoiceMutationService.useDeletePartnerInvoice();
 
   // Modal States
@@ -179,12 +187,12 @@ const InvoicePage = () => {
           {/* Card 1: Total Invoices */}
           <div className="bg-gray-50 border rounded-lg p-5">
             <div className="text-gray-500 text-sm mb-2">Total Invoices</div>
-            <div className="text-2xl font-bold text-gray-900">{invoices.length}</div>
+            <div className="text-2xl font-bold text-gray-900">{pagination.totalCount || invoices.length}</div>
           </div>
 
           {/* Card 2: Total Amount per Currency */}
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm font-medium mb-4">Total Amount by Currency</div>
+            <div className="text-gray-500 text-sm font-medium mb-4">Total Amount by Currency (Page)</div>
             <div className="space-y-2">
               {Object.entries(totalsByCurrency).map(([currency, data]) => (
                 <div key={currency} className="flex justify-between items-center">
@@ -200,7 +208,7 @@ const InvoicePage = () => {
 
           {/* Card 3: Invoice Count per Currency */}
           <div className="bg-gray-50 border rounded-lg p-5">
-            <div className="text-gray-500 text-sm font-medium mb-4">Invoice Count by Currency</div>
+            <div className="text-gray-500 text-sm font-medium mb-4">Invoice Count by Currency (Page)</div>
             <div className="space-y-2">
               {Object.entries(totalsByCurrency).map(([currency, data]) => (
                 <div key={currency} className="flex justify-between items-center">
@@ -221,8 +229,14 @@ const InvoicePage = () => {
             columns={columns}
             dataSource={invoices}
             rowKey="_id"
-            loading={isLoading}
-            pagination={{ pageSize: 10, position: ["bottomCenter"] }}
+            loading={isLoading || isFetching}
+            pagination={{ 
+                current: page,
+                pageSize: limit,
+                total: pagination.totalCount,
+                position: ["bottomCenter"],
+                onChange: (newPage) => setPage(newPage)
+            }}
           />
         </div>
       </div>

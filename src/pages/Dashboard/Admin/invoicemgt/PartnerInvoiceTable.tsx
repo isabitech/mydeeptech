@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Space, Card, Typography, Tag, message } from "antd";
+import { Table, Input, Button, Space, Card, Typography, Tag, App } from "antd";
 import { SearchOutlined, LeftOutlined, RightOutlined, ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -9,15 +9,18 @@ import { Invoice } from "../../../../store/useInvoiceStore";
 const { Title, Text } = Typography;
 
 const PartnerInvoiceTable: React.FC = () => {
+    const { message: antMessage } = App.useApp();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState("");
     const limit = 10;
 
-    const { data, isLoading, isError, refetch } = partnerInvoiceQueryService.useFetchPaginatedPartnerInvoices({
+    const { data, isLoading: isInitialLoading, isFetching, isError, error, refetch } = partnerInvoiceQueryService.useFetchPaginatedPartnerInvoices({
         page,
         limit,
         search,
     });
+
+    const isDataLoading = isInitialLoading || isFetching;
 
     const handleSearch = (value: string) => {
         setSearch(value);
@@ -29,31 +32,37 @@ const PartnerInvoiceTable: React.FC = () => {
             title: "Name",
             dataIndex: "name",
             key: "name",
-            render: (text) => <Text strong>{text || "N/A"}</Text>,
+            render: (text) => <Text strong>{String(text || "N/A")}</Text>,
         },
         {
             title: "Email",
             dataIndex: "email",
             key: "email",
+            render: (email) => String(email || "N/A"),
         },
         {
             title: "Amount",
             dataIndex: "amount",
             key: "amount",
-            render: (amount, record) => (
-                <Text>
-                    {new Intl.NumberFormat("en-US", {
+            render: (amount, record) => {
+                const currency = record?.currency || "USD";
+                let formattedAmount = `${currency} ${amount || 0}`;
+                try {
+                    formattedAmount = new Intl.NumberFormat("en-US", {
                         style: "currency",
-                        currency: record.currency || "USD",
-                    }).format(amount)}
-                </Text>
-            ),
+                        currency: currency.length === 3 ? currency : "USD",
+                    }).format(Number(amount) || 0);
+                } catch (e) {
+                    console.error("Currency formatting error:", e);
+                }
+                return <Text>{formattedAmount}</Text>;
+            },
         },
         {
             title: "Currency",
             dataIndex: "currency",
             key: "currency",
-            render: (currency) => <Tag color="blue">{currency}</Tag>,
+            render: (currency) => <Tag color="blue">{String(currency || "USD")}</Tag>,
         },
         {
             title: "Due Date",
@@ -63,8 +72,16 @@ const PartnerInvoiceTable: React.FC = () => {
         },
     ];
 
-    const invoices = data?.invoices || [];
+    const invoices = Array.isArray(data?.invoices) ? data.invoices : [];
     const pagination = data?.pagination || { page: 1, limit: 10, totalCount: 0 };
+
+    useEffect(() => {
+        if (isError) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to fetch partner invoices";
+            antMessage.error(errorMessage);
+            console.error("Pagination Query Error:", error);
+        }
+    }, [isError, error, antMessage]);
 
     return (
         <Card className="shadow-sm rounded-xl">
@@ -86,6 +103,7 @@ const PartnerInvoiceTable: React.FC = () => {
                         icon={<ReloadOutlined />} 
                         onClick={() => refetch()}
                         className="flex items-center"
+                        loading={isDataLoading}
                     >
                         Refresh
                     </Button>
@@ -95,8 +113,8 @@ const PartnerInvoiceTable: React.FC = () => {
             <Table
                 columns={columns}
                 dataSource={invoices}
-                rowKey="_id"
-                loading={isLoading}
+                rowKey={(record) => record?._id || `${record?.email || 'no-email'}-${record?.amount || 0}-${Math.random()}`}
+                loading={isDataLoading}
                 pagination={false}
                 className="premium-table"
                 scroll={{ x: 800 }}
@@ -104,13 +122,13 @@ const PartnerInvoiceTable: React.FC = () => {
 
             <div className="mt-6 flex justify-between items-center bg-gray-50 p-4 rounded-lg">
                 <Text type="secondary">
-                    Showing {(page - 1) * limit + 1} - {Math.min(page * limit, pagination.totalCount)} of {pagination.totalCount} results
+                    Showing {pagination.totalCount > 0 ? (page - 1) * limit + 1 : 0} - {Math.min(page * limit, pagination.totalCount)} of {pagination.totalCount} results
                 </Text>
 
                 <Space>
                     <Button
                         icon={<LeftOutlined />}
-                        disabled={page === 1 || isLoading}
+                        disabled={page === 1 || isDataLoading}
                         onClick={() => setPage(prev => prev - 1)}
                     >
                         Previous
@@ -118,7 +136,7 @@ const PartnerInvoiceTable: React.FC = () => {
                     <Button
                         iconPosition="end"
                         icon={<RightOutlined />}
-                        disabled={page * limit >= pagination.totalCount || isLoading}
+                        disabled={page * limit >= pagination.totalCount || isDataLoading}
                         onClick={() => setPage(prev => prev + 1)}
                     >
                         Next
@@ -127,8 +145,15 @@ const PartnerInvoiceTable: React.FC = () => {
             </div>
 
             {isError && (
-                <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg border border-red-100">
-                    Failed to load partner invoices. Please try again later.
+                <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg border border-red-100 flex items-center justify-between">
+                    <div>
+                        <Text type="danger" strong>Failed to load partner invoices.</Text>
+                        <br />
+                        <Text type="secondary">
+                            {error instanceof Error ? error.message : "The server encountered an issue."}
+                        </Text>
+                    </div>
+                    <Button size="small" type="default" ghost onClick={() => refetch()}>Try Again</Button>
                 </div>
             )}
         </Card>
