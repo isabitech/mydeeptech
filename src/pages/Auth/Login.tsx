@@ -12,12 +12,15 @@ const Login = () => {
     email: "",
     password: "",
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
-
-  const { login, loading, error } = useLogin();
+  const authError = localStorage.getItem('authError') ?? null;
+  const { login, loading, error: hookError, } = useLogin();
+  const error = authError || hookError; // Prioritize authError from localStorage if it exists
 
   const validateForm = () => {
+  
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
@@ -41,7 +44,7 @@ const Login = () => {
 
     const result = await login(formData);
   if (result.success && result.token) {
-    // 🔥 SAVE THE TOKEN HERE
+    // SAVE THE TOKEN HERE
     localStorage.setItem("admin_token", result.token);
 
   } else {

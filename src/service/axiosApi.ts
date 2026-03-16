@@ -16,14 +16,25 @@ const axiosInstance = axios.create({
   timeout: 30000, // 30 second timeout
 });
 
-function logoutUser() {
+function logoutUser(errorMessage?: string) {
   localStorage.removeItem("token");
   sessionStorage.clear();
 
+  // Store error message in localStorage if provided
+  if (errorMessage) {
+    localStorage.setItem('authError', errorMessage);
+  }
+
   // optional: clear axios header
   delete axiosInstance.defaults.headers.common.Authorization;
-  window.location.href = "/login";
+
+  // Redirect to appropriate login page without error in URL
+  const isAdmin = window.location.pathname === "/auth/admin-login";
+  const baseUrl = isAdmin ? "/auth/admin-login" : "/login";
+  
+  window.location.href = baseUrl;
 }
+
 
 // Request interceptor to add token
 axiosInstance.interceptors.request.use(
@@ -39,8 +50,9 @@ axiosInstance.interceptors.request.use(
     return config;
   },
   (error: AxiosError) => {
+    // console.error("Request error:", error);
     if (error.response?.status === 401) {
-      logoutUser();
+      logoutUser("Your session has expired. Please login again.");
     }
     return Promise.reject(error);
   },
@@ -53,9 +65,18 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
+    // Store error message for logout if it's a 401
+    let authErrorMessage = "Your session has expired. Please login again.";
 
     if (error.response?.status === 401) {
-      logoutUser();
+      // Extract error message if available
+      const errorData = error.response?.data as any;
+      if (errorData?.message) {
+        authErrorMessage = errorData.message;
+      } else if (errorData?.error) {
+        authErrorMessage = typeof errorData.error === "string" ? errorData.error : errorData.error.message;
+      }
+      logoutUser(authErrorMessage);
     }
 
     // Enhanced error handling
@@ -129,8 +150,7 @@ axiosInstance.interceptors.response.use(
       }
     } else if (error.request) {
       // Network error
-      errorResponse.message =
-        "Network error. Please check your internet connection";
+      errorResponse.message = "Network error. Please check your internet connection";
       errorResponse.status = 0;
     } else {
       // Other errors
