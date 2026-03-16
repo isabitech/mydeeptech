@@ -1,6 +1,6 @@
 import React from 'react';
-import { Modal, Typography, List, Divider } from 'antd';
-import { BookOutlined, SolutionOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { Modal, Typography, List, Divider, Button } from 'antd';
+import { BookOutlined, SolutionOutlined, InfoCircleOutlined, ExportOutlined } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -10,6 +10,8 @@ interface AssessmentsModalProps {
 }
 
 const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) => {
+  const googleFormLink = "https://forms.gle/QSfUC1AxwNZ9oQFc8";
+
   const britishCouncilSteps: React.ReactNode[] = [
     <>Download and install <a href="https://flonnect.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
     "Enable screen + Camera recording.",
@@ -20,7 +22,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
-    "Share folder link via google form."
+    <>Submit your test folder link to the <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Google form</a>.</>
   ];
 
   const skillAssessmentSteps: React.ReactNode[] = [
@@ -32,7 +34,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
-    "Share folder link via google form."
+    <>Submit your test folder link to the <a href={googleFormLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Google form</a>.</>
   ];
 
   return (
@@ -84,10 +86,12 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
           />
         </section>
 
+
+
         <div className="mt-8 p-4 bg-purple-50 rounded-lg flex items-start gap-3">
           <InfoCircleOutlined className="text-purple-500 mt-1" />
           <p className="text-xs text-purple-700 leading-relaxed m-0">
-            Please follow all steps carefully to ensure your assessment is properly recorded and recorded. 
+            Please follow all steps carefully to ensure your assessment is properly recorded and recorded.
             If you encounter any issues, please reach out to the support team on Slack.
           </p>
         </div>
