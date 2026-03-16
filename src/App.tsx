@@ -57,6 +57,8 @@ import VideoTest from "./components/VideoTest";
 import { Toaster } from 'sonner';
 import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 import UserNotifications from "./pages/Dashboard/User/user-notifications/UserNotifications";
+import ProtectUserLayout from "./components/layouts/ProtectUserLayout";
+import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
 
 const AppRoutes = () => {
   return (
@@ -94,22 +96,24 @@ const AppRoutes = () => {
         <Route path="/route" element={<PageRoute />} />
 
         {/* Protected Dashboard Routes */}
-        <Route path="/dashboard" element={<Dashboard />}>
-          {/* User Dashboard */}
-          <Route path="overview" index element={<Welcome />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="jobs" element={<Jobs />} />
-          <Route path="tasks" element={<Tasks />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="support" element={<SupportCenter />} />
-          <Route path="assessment" element={<Assessment />} />
-          <Route path="notifications" element={<UserNotifications />} />
-          <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
-          <Route path="qa-review" element={<QAReviewDashboard />} />
-          <Route path="assessments" element={<AssessmentList />} />
-          <Route path="assessment-history" element={<AssessmentHistory />} />
+        <Route element={<ProtectUserLayout />}>
+          <Route path="/dashboard" element={<Dashboard />}>
+            {/* User Dashboard */}
+            <Route path="overview" index element={<Welcome />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="jobs" element={<Jobs />} />
+            <Route path="tasks" element={<Tasks />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="support" element={<SupportCenter />} />
+            <Route path="assessment" element={<Assessment />} />
+            <Route path="notifications" element={<UserNotifications />} />
+            <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
+            <Route path="qa-review" element={<QAReviewDashboard />} />
+            <Route path="assessments" element={<AssessmentList />} />
+            <Route path="assessment-history" element={<AssessmentHistory />} />
+          </Route>
         </Route>
 
         {/* Admin auth */}
@@ -118,24 +122,26 @@ const AppRoutes = () => {
         <Route path="/auth/admin-login" element={<AdminLogin />} />
 
         {/* Admin Dashboard */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="overview" index element={<AdminOverview />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="annotators" element={<Annotators />} />
-          <Route path="assessments" element={<AssessmentManagementList />} />
-          <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
-          <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
-          <Route path="projects" element={<ProjectManagement />} />
-          <Route path="applications" element={<ApplicationManagement />} />
-          <Route path="jobs" element={<JobManagement />} />
-          <Route path="tasks" element={<TaskManagement />} />
-          <Route path="invoices" element={<InvoiceManagement />} />
-          <Route path="payments" element={<PaymentManagement />} />
-          <Route path="notifications" element={<NotificationManagement />} />
-          <Route path="chat" element={<ChatManagement />} />
-          <Route path="settings" element={<SettingsMgt />} />
-          <Route path="invoice-page/*" element={<InvoiceRoutes />} />
-          <Route path="partner-invoices/*" element={<InvoiceRoutes />} />
+        <Route element={<ProtectAdminLayout />}> 
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="overview" index element={<AdminOverview />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="annotators" element={<Annotators />} />
+            <Route path="assessments" element={<AssessmentManagementList />} />
+            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
+            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
+            <Route path="projects" element={<ProjectManagement />} />
+            <Route path="applications" element={<ApplicationManagement />} />
+            <Route path="jobs" element={<JobManagement />} />
+            <Route path="tasks" element={<TaskManagement />} />
+            <Route path="invoices" element={<InvoiceManagement />} />
+            <Route path="payments" element={<PaymentManagement />} />
+            <Route path="notifications" element={<NotificationManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
+            <Route path="settings" element={<SettingsMgt />} />
+            <Route path="invoice-page/*" element={<InvoiceRoutes />} />
+            <Route path="partner-invoices/*" element={<InvoiceRoutes />} />
+          </Route>
         </Route>
 
         {/* Redirect unmatched routes */}

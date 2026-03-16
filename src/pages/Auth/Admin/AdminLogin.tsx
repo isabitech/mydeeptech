@@ -21,6 +21,8 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const from = location.state?.from?.pathname;
+
   useEffect(() => {
     // Reset state when component mounts
     resetState();
@@ -99,8 +101,8 @@ const AdminLogin: React.FC = () => {
 
     // Navigation is handled in the useAdminLogin hook
     if (result.success) {
-      navigate("/admin/overview", { replace: true });
       console.log("Admin login successful, navigating to dashboard");
+      navigate(from ?? "/admin/overview", { replace: true });
     }
   };
 

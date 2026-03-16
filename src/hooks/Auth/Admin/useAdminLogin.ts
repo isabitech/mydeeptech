@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { endpoints } from "../../../store/api/endpoints";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { storeUserInfoToStorage, storeTokenToStorage } from "../../../helpers";
 import { useUserInfoActions } from "../../../store/useAuthStore";
@@ -48,9 +48,12 @@ interface AdminLoginResult {
 export const useAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const { setUserInfo } = useUserInfoActions();
+
+  const from = location.state?.from?.pathname;
 
   const login = async (payload: AdminLoginPayload): Promise<AdminLoginResult> => {
     setLoading(true);
@@ -110,7 +113,7 @@ export const useAdminLogin = () => {
         });
 
         // Navigate to admin dashboard
-        navigate("/admin/overview");
+        navigate(from ?? "/admin/overview");
 
         return { success: true, data };
       } else {

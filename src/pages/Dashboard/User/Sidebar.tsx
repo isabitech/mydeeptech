@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { Navigate, NavLink, useNavigate } from "react-router-dom";
 import {
   HomeOutlined,
   UserOutlined,
@@ -112,8 +112,6 @@ const Sidebar = () => {
 
   // Check if a menu item should be locked based on user status
   const isMenuItemLocked = (itemKey: string) => {
-
-    console.log({itemKey, userInfo, loading});
     
     if (loading || !userInfo) {
       return false; // Don't lock anything while loading
@@ -171,6 +169,7 @@ const Sidebar = () => {
   const filteredMenuItems = getFilteredMenuItems();
 
   const handleLogOutModal = () => setOpenModal(!openModal);
+
 
   return (
     <div className="bg-white font-[gilroy-regular]">
