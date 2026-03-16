@@ -44,7 +44,6 @@ const Login = () => {
     // 🔥 SAVE THE TOKEN HERE
     localStorage.setItem("admin_token", result.token);
 
-    console.log("Token saved successfully!");
   } else {
     // Error is already handled by the hook
     console.error("Login failed:", result.error);
