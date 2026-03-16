@@ -16,12 +16,15 @@ const AdminLogin: React.FC = () => {
 
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const authError = localStorage.getItem('authError') ?? null;
 
-  const { login, loading, error, resetState } = useAdminLogin();
+  const { login, loading, error: hookError, resetState } = useAdminLogin();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const error = authError || hookError; // Prioritize authError from localStorage if it exists
   const from = location.state?.from?.pathname;
+
 
   useEffect(() => {
     // Reset state when component mounts
@@ -101,7 +104,6 @@ const AdminLogin: React.FC = () => {
 
     // Navigation is handled in the useAdminLogin hook
     if (result.success) {
-      console.log("Admin login successful, navigating to dashboard");
       navigate(from ?? "/admin/overview", { replace: true });
     }
   };
@@ -168,11 +170,14 @@ const AdminLogin: React.FC = () => {
             >
               <Alert
                 message="Login Failed"
-                description={error}
+                description={authError ?? error}
                 type="error"
                 showIcon
                 closable
-                onClose={resetState}
+                onClose={() => {
+                  resetState();
+                  localStorage.removeItem("authError");
+                }}
               />
             </motion.div>
           )}
@@ -238,12 +243,7 @@ const AdminLogin: React.FC = () => {
               <button
                 type="button"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                onClick={() => {
-                  // You can implement forgot password functionality here
-                  console.log(
-                    "Forgot password functionality to be implemented"
-                  );
-                }}
+                onClick={() => {}}
               >
                 Forgot password?
               </button>
