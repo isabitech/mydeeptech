@@ -42,9 +42,9 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
       setSubject(`Invoice for ${foundInvoice.name}`);
       const symbol = currencySymbols[foundInvoice.currency] || "";
       setEmailMessage(
-        `Hello ${foundInvoice.name},\n\nPlease find the details for your invoice.\nAmount: ${symbol}${foundInvoice.amount}\nDue Date: ${new Date(
-          foundInvoice.due_date
-        ).toLocaleDateString()}\n\nRegards,\nTeam`
+        `Hello ${foundInvoice.name},\n\nPlease find the details for your invoice.\nAmount: ${symbol}${foundInvoice.amount}\nDue Date: ${
+          foundInvoice.due_date ? new Date(foundInvoice.due_date).toLocaleDateString() : "N/A"
+        }\n\nRegards,\nTeam`
       );
     }
   }, [invoiceId, invoices]);
@@ -116,7 +116,7 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
                     Due Date
                   </Text>
                   <div className="font-semibold">
-                    {new Date(invoice.due_date).toLocaleDateString()}
+                    {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "N/A"}
                   </div>
                 </div>
               </div>

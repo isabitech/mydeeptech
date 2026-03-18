@@ -34,6 +34,11 @@ const ProtectAdminLayout: React.FC = () => {
      return <Navigate to="/auth/admin-login" state={{ from: location }} replace={true} />;
   }
 
+  // RBAC: Check if role is active
+  if (userInfo?.role_permission && userInfo.role_permission.isActive === false) {
+    return <Navigate to="/auth/admin-login" state={{ from: location }} replace={true} />;
+  }
+
   return <Outlet />
 }
 

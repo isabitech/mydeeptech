@@ -109,7 +109,7 @@ export const endpoints = {
     update: "/partner-invoice",
     delete: "/partner-invoice",
     send: "/partner-invoice/send",
-    pagination: "/partner-invoice",
+    pagination: "/partner-invoice/pagination",
   },
 
   // User invoice endpoints
@@ -212,5 +212,39 @@ export const endpoints = {
   payStack: {
     verifyAccountDetails: "/payments/verify-account-number",
     listAllNGNBanks: "/payments/get-banks-by-country",
+  },
+  rbac: {
+    permissions: {
+      all: "/roles-permission/permission/all",
+      search: "/roles-permission/permission/all/name",
+      byId: "/roles-permission/permission",
+      create: "/roles-permission/permission/create",
+      update: "/roles-permission/permission/update",
+      delete: "/roles-permission/permission/delete",
+    },
+    roles: {
+      all: "/roles-permission/role/all",
+      byId: "/roles-permission/role",
+      create: "/roles-permission/role/create",
+      update: "/roles-permission/role",
+      addPermissions: "/roles-permission/role/:id",
+      removePermission: "/roles-permission/role/:id/permissions/remove",
+      delete: "/roles-permission/role",
+    },
+    users: {
+      all: "/admin/users/all",
+      updateRole: "/admin/users/:userId/role",
+      assignRolePermission: "/admin/users/:userId/role-permission", // Integration point for future
+    },
+    adminResources: {
+      all: "/resources",
+      create: "/resources",
+      byId: "/resources", // /:id
+      update: "/resources", // /:id
+      delete: "/resources", // /:id
+      togglePublish: "/resources/:id/toggle-publish",
+      allowed: "/resources/me/allowed",
+      search: "/resources/search",
+    }
   }
 };
