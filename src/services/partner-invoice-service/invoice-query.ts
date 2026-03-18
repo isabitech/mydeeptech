@@ -24,6 +24,7 @@ const useFetchPartnerInvoices = () => {
         },
     });
 };
+
 const useFetchPaginatedPartnerInvoices = (params: { page: number; limit: number; search?: string }) => {
     return useQuery({
         queryKey: [REACT_QUERY_KEYS.QUERY.getPartnerInvoices, params],

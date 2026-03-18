@@ -23,7 +23,7 @@ const InvoicePage = () => {
   const invoices = data?.invoices || [];
   const pagination = data?.pagination || { page: 1, limit: 10, totalCount: 0 };
   
-  const { mutate: deleteInvoice } = partnerInvoiceMutationService.useDeletePartnerInvoice();
+  const { mutate: deleteInvoice,  } = partnerInvoiceMutationService.useDeletePartnerInvoice();
 
   // Modal States
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);

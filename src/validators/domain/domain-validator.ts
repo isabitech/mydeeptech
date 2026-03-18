@@ -50,13 +50,13 @@ const DomainEntitySchema = z.object({
   domain_sub_category: z.string().optional().nullable(),
   ...Timestamps,
   ...MongoMeta
-}).strip()
+})
 
 const DomainCategoryRefSchema = z.object({
   _id: z.string(),
   name: z.string(),
   slug: z.string(),
-}).strip();
+});
 
 // Pagination metadata schema - must be defined before usage
 const PaginationSchema = z.object({
@@ -79,10 +79,10 @@ const DomainChildSchema = z.object({
     _id: z.string(),
     name: z.string(),
     slug: z.string(),
-  }).strip().optional().nullable(),
+  }).optional().nullable(),
   ...MongoMeta,
   ...Timestamps,
-}).strip();
+});
 
 const CreateDomainSchemaResponse = z.object({
   success: z.boolean(),
@@ -97,7 +97,7 @@ const GetDomainsResponseSchema = z.object({
     domain: z.array(DomainChildSchema),
     pagination: PaginationSchema.optional()
   }),
-}).strip();
+});
 
 /* ──────────────────────────────
  * Reference & entity schemas
@@ -130,7 +130,7 @@ const CreateDomainCategoryResponseSchema = z.object({
 //       categories: z.array(DomainCategorySchema),
 //       pagination: PaginationSchema.optional()
 //     }),
-//   }).strip();
+//   });
 
 const GetDomainCategoriesResponseSchema = z.object({
   success: z.boolean(),
