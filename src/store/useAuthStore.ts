@@ -3,6 +3,22 @@ import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 
+interface RBACPermission {
+  _id: string;
+  name: string;
+  description: string;
+  resource: string;
+  action: string;
+}
+
+interface RBACRole {
+  _id: string;
+  name: string;
+  description: string;
+  permissions: RBACPermission[];
+  isActive: boolean;
+}
+
 interface UserInfo {
   id: string;
   fullName: string;
@@ -19,10 +35,10 @@ interface UserInfo {
   createdAt?: string;
   updatedAt?: string;
   role?: string;
+  role_permission?: RBACRole;
 }
 
 type UserRoleType = "admin" | "user";
-
 
 type UserInfoStates = {
   userInfo: UserInfo | null;

@@ -11,6 +11,7 @@ import {
   BellOutlined,
   MessageOutlined,
   FileTextOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
@@ -18,6 +19,7 @@ import PageModal from "../../../components/Modal/PageModal";
 import { Button, Drawer } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
 import { useUserInfoActions } from "../../../store/useAuthStore";
+import { useRBAC } from "../../../utils/rbac-utils";
 
 
 const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; handleLogOutModal: () => void }) => {
@@ -29,102 +31,107 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       key: "overview",
       label: "Overview",
       icon: <HomeOutlined />,
+      resource: "overview",
       path: "/overview",
     },
     {
       key: "annotators",
       label: "Annotators",
       icon: <UserOutlined />,
+      resource: "annotators",
       path: "/annotators",
     },
     {
       key: "assessments",
       label: "Assessments",
       icon: <BookOutlined />,
+      resource: "assessments",
       path: "/assessments",
     },
     {
       key: "projects",
       label: "Projects",
       icon: <CodeSandboxOutlined />,
+      resource: "projects",
       path: "/projects",
     },
     {
       key: "applications",
       label: "Applications",
       icon: <InboxOutlined />,
+      resource: "applications",
       path: "/applications",
     },
-
-    // {
-    //   key: "jobs",
-    //   label: "Jobs",
-    //   icon: <InboxOutlined />,
-    //   path: "/jobs",
-    // },
-    // {
-    //   key: "tasks",
-    //   label: "Tasks",
-    //   icon: <UnorderedListOutlined />,
-    //   path: "/tasks",
-    // },
     {
       key: "payment",
       label: "Payment",
       icon: <WalletOutlined />,
+      resource: "payment",
       path: "/payments",
     },
-
     {
       key: "invoice",
       label: "Invoice",
       icon: <WalletOutlined />,
+      resource: "invoice",
       path: "/invoices",
     },
     {
       key: "partner-invoice",
       label: "Partners Invoice",
       icon: <FileTextOutlined />,
+      resource: "invoice",
       path: "/partner-invoices",
     },
-
     {
       key: "notifications",
       label: "Notifications",
       icon: <BellOutlined />,
+      resource: "notifications",
       path: "/notifications",
     },
-
     {
       key: "chat",
       label: "Support Chat",
       icon: <MessageOutlined />,
+      resource: "support_chat",
       path: "/chat",
     },
-
     {
       key: "users",
       label: "User Roles",
       icon: <UserOutlined />,
+      resource: "user_roles",
       path: "/users",
     },
-
     {
       key: "employees",
       label: "Employees Mgt",
       icon: <UserOutlined />,
+      resource: "employees",
       path: "/employees",
     },
 
     {
+      key: "rbac",
+      label: "Roles & Permissions",
+      icon: <SafetyOutlined />,
+      resource: "roles",
+      path: "/rbac",
+    },
+    {
       key: "settings",
       label: "Settings",
       icon: <SettingOutlined />,
+      resource: "settings",
       path: "/settings",
     },
-    // { key: "logout", label: "Logout", icon: <LogoutOutlined />, path: "" }, // Example logout redirection
   ];
 
+  const { hasPermission } = useRBAC();
+  const filteredMenuItems = menuItems.filter(item =>
+    !item.resource || hasPermission(item.resource, "view")
+  );
 
   return (
     //    {/* Logo */}
@@ -140,7 +147,7 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       {/* Navigation Links */}
       <div className="flex flex-col justify-between h-full mt-4">
         <ul className="space-y-2 ">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <li key={item.key}>
               <NavLink
                 to={`/admin${item.path}`}

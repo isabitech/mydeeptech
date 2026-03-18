@@ -59,6 +59,7 @@ import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 import UserNotifications from "./pages/Dashboard/User/user-notifications/UserNotifications";
 import ProtectUserLayout from "./components/layouts/ProtectUserLayout";
 import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
+import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
 
 const AppRoutes = () => {
   return (
@@ -138,6 +139,7 @@ const AppRoutes = () => {
             <Route path="payments" element={<PaymentManagement />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="chat" element={<ChatManagement />} />
+            <Route path="rbac" element={<RBACPage />} />
             <Route path="settings" element={<SettingsMgt />} />
             <Route path="invoice-page/*" element={<InvoiceRoutes />} />
             <Route path="partner-invoices/*" element={<InvoiceRoutes />} />

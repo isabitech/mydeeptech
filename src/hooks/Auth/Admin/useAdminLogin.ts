@@ -39,6 +39,7 @@ export interface Admin {
   createdAt: string
   isAdmin: boolean
   role: string
+  role_permission?: any // Using any here to match login response, but store is typed
 }
 
 interface AdminLoginResult {
@@ -107,6 +108,7 @@ export const useAdminLogin = () => {
           phone: data.admin.phone,
           isEmailVerified: data.admin.isEmailVerified,
           hasSetPassword: data.admin.hasSetPassword,
+          role_permission: data.admin.role_permission,
         };
 
         await storeUserInfoToStorage(adminInfo);
