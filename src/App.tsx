@@ -62,6 +62,7 @@ import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
 import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
 import { PageGuard } from "./components";
 import ApplicationsPage from "./pages/admin/ApplicationsPage";
+import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessements";
 
 const AppRoutes = () => {
   return (
@@ -142,11 +143,19 @@ const AppRoutes = () => {
                 <Annotators />
               </PageGuard>
             } />
-            <Route path="assessments" element={
-              <PageGuard resource="assessments">
-                <AssessmentManagementList />
-              </PageGuard>
+            <Route path="assessments">
+              <Route index element={
+                <PageGuard resource="assessments">
+                  <AssessmentManagementList />
+                </PageGuard>
             } />
+              <Route path="review-assessments" element={
+                <PageGuard resource="assessments">
+                  <UserAssessments />
+                </PageGuard>
+            } />
+            </Route>
+            
             <Route path="assessments/multimedia" element={
               <PageGuard resource="assessments">
                 <AdminReelAssessmentManager />

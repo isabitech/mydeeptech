@@ -13,6 +13,15 @@ const NotificationCarousel = () => {
 
   const totalSlides = 2;
 
+  const onCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const onReopenModal = () => {
+    setIsModalOpen(true);
+  };
+
+
   const next = useCallback(() => {
     setDirection(1);
     setActiveSlide((prev) => (prev + 1) % totalSlides);
@@ -175,7 +184,8 @@ const NotificationCarousel = () => {
 
       <AssessmentsModal
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCloseModal={onCloseModal}
+        onReopenModal={onReopenModal}
       />
     </motion.div>
   );

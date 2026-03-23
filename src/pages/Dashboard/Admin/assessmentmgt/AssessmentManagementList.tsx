@@ -24,7 +24,7 @@ import {
   FileTextOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { multimediaAssessmentApi } from '../../../../service/axiosApi';
 import AssessmentSubmissions from './AssessmentSubmissions';
 
@@ -304,6 +304,11 @@ const AssessmentManagementList = () => {
               <Option value="english_proficiency">English Proficiency</Option>
               <Option value="general">General Skills</Option>
             </Select>
+          </Col>
+          <Col xs={12} sm={4}>
+            <Link to="/admin/assessments/review-assessments">
+              <Button type="primary"> Review Assessments</Button>
+            </Link>
           </Col>
         </Row>
       </Card>

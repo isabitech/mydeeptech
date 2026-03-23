@@ -35,7 +35,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   qaStatus: string;
-
+  isAssessmentSubmitted: boolean;
 }
 
 interface LoginResult {
