@@ -3,7 +3,7 @@ import { Modal, Typography, List, Divider } from 'antd';
 import { BookOutlined, SolutionOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import AssessmentSubmissionModal from './assessment-submission-modal';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface AssessmentsModalProps {
   open: boolean;
