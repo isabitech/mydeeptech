@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Typography, message, DatePicker, TimePicker, Checkbox, Radio, Row, Col } from 'antd';
 import { LinkOutlined, UserOutlined, MailOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useUserInfoStates } from '../../../../store/useAuthStore';
@@ -24,6 +24,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
   const [form] = Form.useForm();
   const { userInfo } = useUserInfoStates();
   const { submitAssessmentReview, loading } = useSubmitAssessment();
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && userInfo) {
@@ -37,15 +38,14 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
   const handleSubmit = async (values: any) => {
     try {
-      // Map form values to the exact JSON structure required by the API
       const payload: SubmitAssessmentReviewPayload = {
         fullName: values.fullName,
         emailAddress: values.emailAddress,
         dateOfSubmission: values.dateOfSubmission?.format('YYYY-MM-DD'),
-        timeOfSubmission: values.timeOfSubmission?.format('hh:mm A'), // strictly formatted as HH:MM AM/PM
+        timeOfSubmission: values.timeOfSubmission?.format('hh:mm A'),
         submissionStatus: {
-          englishTestUploaded: true, // Must be true per rule
-          problemSolvingTestUploaded: true // Must be true per rule
+          englishTestUploaded: true,
+          problemSolvingTestUploaded: true
         },
         englishTestScore: values.englishTestScore,
         problemSolvingScore: values.problemSolvingScore,
@@ -72,6 +72,16 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
     }
   };
 
+  const getSectionClass = (sectionId: string) => {
+    return `mb-8 p-6 bg-white border-y border-r border-gray-200 rounded-lg shadow-sm transition-all duration-200 border-l-[6px] outline-none ${
+      activeSection === sectionId ? 'border-l-[#4c1d95] shadow-md' : 'border-l-transparent'
+    }`;
+  };
+
+  const fontStyle = {
+    fontFamily: "'Google Sans', 'Roboto', Arial, sans-serif"
+  };
+
   return (
     <Modal
       open={open}
@@ -81,13 +91,24 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
       centered
       closable={!loading}
       maskClosable={!loading}
-      className="google-form-modal"
       title={null}
+      styles={{
+        mask: {
+          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        },
+        content: {
+          padding: 0,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          backgroundColor: '#f0ebf8',
+        },
+      }}
     >
-      <div className="h-3 bg-purple-600 rounded-t-lg mb-6" />
+      <div className="h-3 bg-[#673ab7] rounded-top-lg mb-6" />
 
       <div className="px-6 pb-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
-        <Title level={2} className="text-[#202124] font-google-sans mb-2">
+        <Title level={2} style={{ ...fontStyle, color: '#202124' }} className="mt-2 mb-2 font-bold">
           Assessment Submission Form
         </Title>
         <Paragraph className="text-sm text-gray-500 mb-8 border-b pb-4">
@@ -108,7 +129,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           }}
         >
           {/* Identity Section */}
-          <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div 
+            className={getSectionClass('identity')}
+            onFocus={() => setActiveSection('identity')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
@@ -148,7 +174,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Timing Section */}
-          <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div 
+            className={getSectionClass('timing')}
+            onFocus={() => setActiveSection('timing')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
@@ -181,8 +212,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Confirmation Checklist */}
-          {/* Note: Per validation rules, both MUST be true. We enforce this by disabling the checkbox and pre-selecting them. */}
-          <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div 
+            className={getSectionClass('confirmation')}
+            onFocus={() => setActiveSection('confirmation')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Form.Item
               label={<span className="font-semibold text-gray-700">Status Confirmation <span className="text-red-500">*</span></span>}
               name="confirmStatus"
@@ -198,14 +233,14 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
               ]}
             >
               <Checkbox.Group className="w-full flex flex-col gap-4">
-                <div className="flex items-start gap-2 p-3 bg-purple-50/30 rounded-md border border-purple-50">
+                <div className="flex items-start gap-2 p-3 bg-purple-100/20 rounded-md border border-purple-100">
                   <Checkbox value="english">
                     <span className="text-xs leading-5 text-gray-600">
                       English Test Screenshot and Screen Recording has been uploaded to the shared folder and set as viewable by anyone with the link.
                     </span>
                   </Checkbox>
                 </div>
-                <div className="flex items-start gap-2 p-3 bg-blue-50/30 rounded-md border border-blue-50">
+                <div className="flex items-start gap-2 p-3 bg-blue-100/20 rounded-md border border-blue-100">
                   <Checkbox value="skill">
                     <span className="text-xs leading-5 text-gray-600">
                       Problem Solving Test Screenshot and Screen Recording has been uploaded to the shared folder and set as viewable by anyone with the link.
@@ -217,7 +252,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Scores Section */}
-          <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div 
+            className={getSectionClass('scores')}
+            onFocus={() => setActiveSection('scores')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item
@@ -247,9 +287,15 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Link Section */}
-          <div className="form-section mb-8 p-6 bg-purple-50/40 border border-purple-100 rounded-lg">
+          <div 
+            className={getSectionClass('link')}
+            onFocus={() => setActiveSection('link')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+            style={{ backgroundColor: '#fdfbff' }}
+          >
             <Form.Item
-              label={<span className="font-bold text-purple-900">Google Drive Link to Recordings <span className="text-red-500">*</span></span>}
+              label={<span className="font-bold text-[#4c1d95]">Google Drive Link to Recordings <span className="text-red-500">*</span></span>}
               name="googleDriveLink"
               rules={[
                 { required: true, message: 'Required' },
@@ -261,15 +307,20 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
               <Input
                 prefix={<LinkOutlined className="text-purple-600" />}
                 placeholder="https://drive.google.com/..."
-                className="h-12 border-purple-200 focus:border-purple-600 rounded-md"
+                className="h-12 border-purple-200 focus:border-[#4c1d95] rounded-md"
               />
             </Form.Item>
           </div>
 
-          {/* Issues Section - Radio */}
-          <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          {/* Issues Section */}
+          <div 
+            className={getSectionClass('issues')}
+            onFocus={() => setActiveSection('issues')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Form.Item
-              label={<span className="font-semibold text-gray-700">Did you encounter any technical issues or require extensions while completing the tests?</span>}
+              label={<span className="font-semibold text-gray-700 mt-2">Did you encounter any technical issues while completing the tests?</span>}
               name="encounteredIssues"
             >
               <Radio.Group>
@@ -277,33 +328,37 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                 <Radio value="No">No, the process was smooth.</Radio>
               </Radio.Group>
             </Form.Item>
+
+            <Form.Item
+              noStyle
+              shouldUpdate={(prevValues, currentValues) => prevValues.encounteredIssues !== currentValues.encounteredIssues}
+            >
+              {({ getFieldValue }) => 
+                getFieldValue('encounteredIssues') === 'Yes' ? (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <Form.Item
+                      label={<span className="text-sm font-semibold text-gray-700">Please describe them briefly: <span className="text-red-500">*</span></span>}
+                      name="issueDescription"
+                      rules={[
+                        { required: true, message: 'Please describe the issues you encountered' },
+                        { max: 1000, message: 'Maximum 1000 characters' }
+                      ]}
+                    >
+                      <TextArea rows={3} placeholder="Describe your experience here..." className="rounded-md border-gray-300" />
+                    </Form.Item>
+                  </div>
+                ) : null
+              }
+            </Form.Item>
           </div>
 
-          {/* Issues Section - Description */}
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) => prevValues.encounteredIssues !== currentValues.encounteredIssues}
-          >
-            {({ getFieldValue }) => 
-              getFieldValue('encounteredIssues') === 'Yes' ? (
-                <div className="form-section mb-8 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
-                  <Form.Item
-                    label={<span className="text-sm font-semibold text-gray-700 mt-2">If you encountered issues, please describe them briefly: <span className="text-red-500">*</span></span>}
-                    name="issueDescription"
-                    rules={[
-                      { required: true, message: 'Please describe the issues you encountered' },
-                      { max: 1000, message: 'Maximum 1000 characters' }
-                    ]}
-                  >
-                    <TextArea rows={3} placeholder="Describe your experience here..." className="rounded-md border-gray-300" />
-                  </Form.Item>
-                </div>
-              ) : null
-            }
-          </Form.Item>
-
           {/* Quality Section */}
-          <div className="form-section mb-10 p-6 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div 
+            className={getSectionClass('quality')}
+            onFocus={() => setActiveSection('quality')}
+            onBlur={() => setActiveSection(null)}
+            tabIndex={-1}
+          >
             <Form.Item
               label={
                 <div className="flex flex-col">
@@ -325,10 +380,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
             </Form.Item>
           </div>
 
+          {/* Sticky Footer */}
           <div className="sticky bottom-0 bg-white/80 backdrop-blur-md pt-4 pb-2 flex justify-end gap-4 border-t border-gray-100 italic">
             <Button
               onClick={onCancel}
               disabled={loading}
+              className="rounded-md px-6"
             >
               Cancel
             </Button>
@@ -336,6 +393,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
               type="primary"
               htmlType="submit"
               loading={loading}
+              className="bg-[#673ab7] hover:bg-[#5e35b1] border-none rounded-md px-8 h-10"
             >
               Submit Assessment
             </Button>
@@ -343,39 +401,23 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
         </Form>
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .google-form-modal .ant-modal-content {
-          padding: 0;
-          border-radius: 12px;
-          overflow: hidden;
-          background: #f0ebf8; /* Pale purple background like Google Forms */
-        }
-        .form-section {
-          background-color: white !important;
-          border-left: 6px solid transparent;
-          transition: border-left-color 0.2s;
-        }
-        .form-section:focus-within {
-          border-left-color: #4c1d95;
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #c7b0e1;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #4c1d95;
-        }
-        .font-google-sans {
-          font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
-        }
-      `}} />
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c7b0e1;
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4c1d95;
+          }
+        `}
+      </style>
     </Modal>
   );
 };
