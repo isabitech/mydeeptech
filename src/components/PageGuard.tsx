@@ -1,19 +1,18 @@
 import React, { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Spin } from "antd";
 import { useAdminSession } from "../queries/auth.query";
 import { usePermission } from "../hooks/usePermission";
 import { ACTIONS } from "../utils/permissions";
-
 interface PageGuardProps {
   resource: string;
   children: ReactNode;
 }
 
-/**
- * Page-level guard for React Router.
- */
+
 export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: isSessionLoading } = useAdminSession();
   const { can, isLoading: isPermissionLoading } = usePermission(resource);
 
@@ -28,26 +27,38 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth/admin-login" replace />;
+    return (
+      <Navigate
+        to="/auth/admin-login"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    );
   }
 
-  // Permission check: Need either MANAGE, VIEW, or VIEW_OWN
-  const hasAccess = can(ACTIONS.MANAGE) || can(ACTIONS.VIEW) || can(ACTIONS.VIEW_OWN);
+  const hasAccess =
+    can(ACTIONS.MANAGE) ||
+    can(ACTIONS.VIEW) ||
+    can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
-    return <Navigate to="/unauthorized" replace />;
+    navigate(-1);
+    return null;
   }
 
-  // Detect if user ONLY has 'view_own'
-  const isViewOwnOnly = can(ACTIONS.VIEW_OWN) && !can(ACTIONS.VIEW) && !can(ACTIONS.MANAGE);
+  const isViewOwnOnly =
+    can(ACTIONS.VIEW_OWN) &&
+    !can(ACTIONS.VIEW) &&
+    !can(ACTIONS.MANAGE);
 
-  // Inject viewOwn context to children
   return (
     <>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          // Type safe injection of viewOwn prop
-          return React.cloneElement(child as React.ReactElement<any>, { viewOwn: isViewOwnOnly });
+          return React.cloneElement(
+            child as React.ReactElement<{ viewOwn?: boolean }>,
+            { viewOwn: isViewOwnOnly }
+          );
         }
         return child;
       })}
