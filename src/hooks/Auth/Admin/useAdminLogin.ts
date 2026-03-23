@@ -13,94 +13,62 @@ interface AdminLoginPayload {
   password: string;
 }
 
-
-
-export interface AdminLoginResponse {
-  success: boolean
-  message: string
-  _usrinfo: Usrinfo
-  token: string
-  admin: Admin
-}
-
-export interface Usrinfo {
-  data: string
-}
-
-export interface Admin {
-  id: string
-  fullName: string
-  email: string
-  phone: string
-  domains: string[]
-  isEmailVerified: boolean
-  hasSetPassword: boolean
-  annotatorStatus: string
-  microTaskerStatus: string
-  createdAt: string
-  isAdmin: boolean
-  role: string
-  role_permission?: any // Using any here to match login response, but store is typed
-}
-
 interface AdminLoginResult {
   success: boolean;
-  data?: AdminLoginResponse;
+  data?: any;
   error?: string;
 }
 
 export const useAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(() => {
-    return localStorage.getItem('authError') || null;
+    return localStorage.getItem("authError") || null;
   });
 
   const location = useLocation();
   const navigate = useNavigate();
-
   const { setUserInfo } = useUserInfoActions();
 
-  const from = location.state?.from?.pathname;
+  // 🔥 Handle both string + object safely
+  const from =
+    typeof location.state?.from === "string"
+      ? location.state.from
+      : location.state?.from?.pathname;
 
   useEffect(() => {
-    const authError = localStorage.getItem('authError');
-    if (authError) {
-      setError(authError);
-    }
+    const authError = localStorage.getItem("authError");
+    if (authError) setError(authError);
   }, []);
 
   const login = async (payload: AdminLoginPayload): Promise<AdminLoginResult> => {
     setLoading(true);
-    
-    // Clear backup error from localStorage when starting new login attempt
-    localStorage.removeItem('authError');
+    localStorage.removeItem("authError");
 
     try {
-    
-      const response = await axiosInstance.post<AdminLoginResponse>(`${import.meta.env.VITE_API_URL}${endpoints.adminAuth.login}`, payload);
+      const response = await axiosInstance.post(
+        `${import.meta.env.VITE_API_URL}${endpoints.adminAuth.login}`,
+        payload
+      );
+
       const data = response.data;
 
       if (data.success && data.admin) {
-        // Check if admin has verified email and set password
+        // validations
         if (!data.admin.isEmailVerified) {
-          notification.open({
-            type: "warning",
-            message: "Please verify your email before logging in. Check your inbox for verification link."
+          notification.warning({
+            message: "Verify your email before logging in",
           });
-          setError("Please verify your email before logging in.");
-          return { success: false, error: "Email not verified" };
+          return { success: false };
         }
 
         if (!data.admin.hasSetPassword) {
-          notification.open({
-            type: "warning",
-            message: "Please complete your account setup by setting a password."
+          notification.warning({
+            message: "Complete account setup first",
           });
-          setError("Please complete your account setup by setting a password.");
-          return { success: false, error: "Password not set" };
+          return { success: false };
         }
 
-        // Store admin info and token
+        // store user
         const adminInfo = {
           id: data.admin.id,
           fullName: data.admin.fullName,
@@ -111,38 +79,33 @@ export const useAdminLogin = () => {
           hasSetPassword: data.admin.hasSetPassword,
           role_permission: data.admin.role_permission,
         };
-
-        await storeUserInfoToStorage(adminInfo);
-        setUserInfo(adminInfo);
         await storeTokenToStorage(data.token);
+        setUserInfo(adminInfo);
 
-        // Required by Senior Dev RBAC System: persist to localStorage for permission queries
         localStorage.setItem("adminInfo", JSON.stringify(data.admin));
         localStorage.setItem("adminToken", data.token);
 
-        // Clear backup error on successful login
-        localStorage.removeItem('authError');
-        setError(null);
-
         notification.success({
-          message: "Login successful!",
-          description: "Welcome to the admin dashboard."
+          message: "Login successful",
         });
 
-        // Navigate to admin dashboard using smart redirect logic
-        const target = getDefaultRedirectPath(data.admin?.role_permission?.permissions, data.admin?.role_permission?.name);
+        // 🎯 Smart redirect
+        const target = getDefaultRedirectPath(
+          data.admin?.role_permission?.permissions,
+          data.admin?.role_permission?.name
+        );
+
         navigate(from ?? target, { replace: true });
 
         return { success: true, data };
-      } else {
-        const errorMessage = data.message || "Admin login failed";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
       }
+
+      setError(data.message);
+      return { success: false };
     } catch (err: any) {
       const errorMessage = ErrorMessage(err);
       setError(errorMessage);
-      return { success: false, error: errorMessage };
+      return { success: false };
     } finally {
       setLoading(false);
     }
@@ -153,11 +116,5 @@ export const useAdminLogin = () => {
     setError(null);
   }, []);
 
-
-  return {
-    login,
-    loading,
-    error,
-    resetState,
-  };
+  return { login, loading, error, resetState };
 };

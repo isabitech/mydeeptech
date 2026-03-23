@@ -7,7 +7,7 @@ import { useAdminLogin } from "../../../hooks/Auth/Admin/useAdminLogin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
 
 const AdminLogin: React.FC = () => {
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,7 +23,10 @@ const AdminLogin: React.FC = () => {
   const location = useLocation();
 
   const error = authError || hookError; // Prioritize authError from localStorage if it exists
-  const from = location.state?.from?.pathname;
+  const from =
+    typeof location.state?.from === "string"
+      ? location.state.from
+      : location.state?.from?.pathname;
 
 
   useEffect(() => {
@@ -243,7 +246,7 @@ const AdminLogin: React.FC = () => {
               <button
                 type="button"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                onClick={() => {}}
+                onClick={() => { }}
               >
                 Forgot password?
               </button>

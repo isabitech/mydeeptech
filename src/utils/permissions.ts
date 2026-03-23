@@ -86,9 +86,7 @@ export const hasAllPermissions = (
   return actions.every((action) => hasPermission(permissions, resource, action));
 };
 
-/**
- * Determine the first accessible page for an admin user based on their permissions.
- */
+
 export const getDefaultRedirectPath = (permissions: Permission[] = [], roleName: string | null | undefined): string => {
   if (isSuperAdmin(roleName)) return "/admin/overview";
 
@@ -104,11 +102,11 @@ export const getDefaultRedirectPath = (permissions: Permission[] = [], roleName:
   ];
 
   for (const item of priorities) {
-    const hasAccess = 
-      hasPermission(permissions, item.resource, ACTIONS.VIEW) || 
+    const hasAccess =
+      hasPermission(permissions, item.resource, ACTIONS.VIEW) ||
       hasPermission(permissions, item.resource, ACTIONS.MANAGE) ||
       hasPermission(permissions, item.resource, ACTIONS.VIEW_OWN);
-    
+
     if (hasAccess) return item.path;
   }
 
