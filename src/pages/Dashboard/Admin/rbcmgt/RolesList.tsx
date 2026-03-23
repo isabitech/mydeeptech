@@ -22,7 +22,7 @@ const RolesList: React.FC = () => {
   const { data: rolesResponse, isLoading: isRolesLoading } = useQuery(
     roleListQueryOptions()
   );
-  
+
   const { mutate: createRole, isPending: isCreatePending } = useRoleCreate();
   const { mutate: updateRole, isPending: isUpdatePending } = useRoleUpdate();
   const { mutate: deleteRole, isPending: isDeletePending } = useRoleDelete();
@@ -77,18 +77,13 @@ const RolesList: React.FC = () => {
     }
   };
 
-  /**
-   * Opens the deletion confirmation modal.
-   * @param role - The role to be deleted.
-   */
+
   const showDeleteConfirm = (role: Role) => {
     setDeletingRole(role);
     setIsDeleteModalOpen(true);
   };
 
-  /**
-   * Executes the deletion of the selected role.
-   */
+
   const handleDeleteExecute = () => {
     if (deletingRole) {
       deleteRole(deletingRole._id, {
@@ -136,19 +131,19 @@ const RolesList: React.FC = () => {
       align: "right" as const,
       render: (_: unknown, record: Role) => (
         <Space>
-          <Button 
-            type="link" 
-            size="small" 
+          <Button
+            type="link"
+            size="small"
             icon={<EditOutlined />}
             className="!text-[#1565C0]"
             onClick={() => handleEdit(record)}
           >
             Edit
           </Button>
-          <Button 
-            type="link" 
-            size="small" 
-            danger 
+          <Button
+            type="link"
+            size="small"
+            danger
             icon={<DeleteOutlined />}
             onClick={() => showDeleteConfirm(record)}
           >
@@ -166,9 +161,9 @@ const RolesList: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
           onClick={handleAdd}
           ghost
         >
@@ -176,10 +171,10 @@ const RolesList: React.FC = () => {
         </Button>
       </div>
 
-      <Table<Role> 
-        dataSource={roles} 
-        columns={columns} 
-        rowKey="_id" 
+      <Table<Role>
+        dataSource={roles}
+        columns={columns}
+        rowKey="_id"
         pagination={false}
         className="custom-table"
       />
@@ -216,9 +211,9 @@ const RolesList: React.FC = () => {
           <Form.Item className="mb-0 flex justify-end">
             <Space>
               <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={isCreatePending || isUpdatePending}
                 className="!bg-[#1565C0]"
               >
@@ -243,10 +238,10 @@ const RolesList: React.FC = () => {
           <Button key="cancel" onClick={() => setIsDeleteModalOpen(false)}>
             No, Keep it
           </Button>,
-          <Button 
-            key="delete" 
-            type="primary" 
-            danger 
+          <Button
+            key="delete"
+            type="primary"
+            danger
             loading={isDeletePending}
             onClick={handleDeleteExecute}
           >
@@ -255,7 +250,7 @@ const RolesList: React.FC = () => {
         ]}
       >
         <p>
-          Are you sure you want to delete the role <span className="font-bold">"{deletingRole?.name}"</span>? 
+          Are you sure you want to delete the role <span className="font-bold">"{deletingRole?.name}"</span>?
           This action cannot be undone and may affect users assigned to this role.
         </p>
       </Modal>

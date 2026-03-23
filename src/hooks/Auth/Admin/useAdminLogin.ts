@@ -5,6 +5,7 @@ import { notification } from "antd";
 import { storeUserInfoToStorage, storeTokenToStorage } from "../../../helpers";
 import { useUserInfoActions } from "../../../store/useAuthStore";
 import axiosInstance from "../../../service/axiosApi";
+import { getDefaultRedirectPath } from "../../../utils/permissions";
 import ErrorMessage from "../../../lib/error-message";
 
 interface AdminLoginPayload {
@@ -115,6 +116,10 @@ export const useAdminLogin = () => {
         setUserInfo(adminInfo);
         await storeTokenToStorage(data.token);
 
+        // Required by Senior Dev RBAC System: persist to localStorage for permission queries
+        localStorage.setItem("adminInfo", JSON.stringify(data.admin));
+        localStorage.setItem("adminToken", data.token);
+
         // Clear backup error on successful login
         localStorage.removeItem('authError');
         setError(null);
@@ -124,8 +129,9 @@ export const useAdminLogin = () => {
           description: "Welcome to the admin dashboard."
         });
 
-        // Navigate to admin dashboard
-        navigate(from ?? "/admin/overview");
+        // Navigate to admin dashboard using smart redirect logic
+        const target = getDefaultRedirectPath(data.admin?.role_permission?.permissions, data.admin?.role_permission?.name);
+        navigate(from ?? target, { replace: true });
 
         return { success: true, data };
       } else {

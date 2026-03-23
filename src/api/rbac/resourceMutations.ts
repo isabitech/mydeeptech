@@ -12,7 +12,7 @@ export const useResourceCreate = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (rawPayload: unknown) => {
-      const rawResponse = await axiosInstance.post(endpoints.rbac.adminResources.create, rawPayload);
+      const rawResponse = await axiosInstance.post(endpoints.rbac.resources.base, rawPayload);
       return apiResponseSchema.parse(rawResponse.data);
     },
     onSuccess: (validatedResponse) => {
@@ -36,7 +36,7 @@ export const useResourceUpdate = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, rawPayload }: { id: string; rawPayload: unknown }) => {
-      const url = `${endpoints.rbac.adminResources.update}/${id}`;
+      const url = endpoints.rbac.resources.byId.replace(":id", id);
       const rawResponse = await axiosInstance.put(url, rawPayload);
       return apiResponseSchema.parse(rawResponse.data);
     },
@@ -62,7 +62,7 @@ export const useResourceDelete = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const url = `${endpoints.rbac.adminResources.delete}/${id}`;
+      const url = endpoints.rbac.resources.byId.replace(":id", id);
       const rawResponse = await axiosInstance.delete(url);
       return apiResponseSchema.parse(rawResponse.data);
     },
@@ -87,7 +87,7 @@ export const useResourceTogglePublish = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const url = endpoints.rbac.adminResources.togglePublish.replace(":id", id);
+      const url = endpoints.rbac.resources.togglePublish.replace(":id", id);
       const rawResponse = await axiosInstance.patch(url);
       return apiResponseSchema.parse(rawResponse.data);
     },
@@ -105,3 +105,4 @@ export const useResourceTogglePublish = () => {
     },
   });
 };
+

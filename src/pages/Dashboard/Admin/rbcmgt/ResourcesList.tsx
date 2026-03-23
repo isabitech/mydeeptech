@@ -5,8 +5,6 @@ import {
   SearchOutlined, 
   EditOutlined, 
   DeleteOutlined, 
-  EyeOutlined, 
-  EyeInvisibleOutlined,
   MoreOutlined
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -20,14 +18,13 @@ const { Text, Title } = Typography;
 
 const ResourcesList: React.FC = () => {
   const [searchText, setSearchText] = useState("");
-  const [isPublishedFilter, setIsPublishedFilter] = useState<boolean | undefined>(undefined);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [editingResource, setEditingResource] = useState<ResourceModule | null>(null);
   const [resourceToDelete, setResourceToDelete] = useState<ResourceModule | null>(null);
 
   const { data: resourcesResponse, isLoading } = useQuery(
-    resourceListQueryOptions({ q: searchText, isPublished: isPublishedFilter })
+    resourceListQueryOptions({ q: searchText })
   );
   
   const { mutate: deleteResource, isPending: isDeletePending } = useResourceDelete();
@@ -177,28 +174,6 @@ const ResourcesList: React.FC = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <Button.Group>
-            <Button 
-              type={isPublishedFilter === undefined ? "primary" : "default"}
-              onClick={() => setIsPublishedFilter(undefined)}
-            >
-              All
-            </Button>
-            <Button 
-              type={isPublishedFilter === true ? "primary" : "default"}
-              onClick={() => setIsPublishedFilter(true)}
-              icon={<EyeOutlined />}
-            >
-              Published
-            </Button>
-            <Button 
-              type={isPublishedFilter === false ? "primary" : "default"}
-              onClick={() => setIsPublishedFilter(false)}
-              icon={<EyeInvisibleOutlined />}
-            >
-              Drafts
-            </Button>
-          </Button.Group>
         </Space>
         
         <Text type="secondary" className="text-sm">
@@ -211,7 +186,7 @@ const ResourcesList: React.FC = () => {
         dataSource={resources}
         rowKey="_id"
         loading={isLoading}
-        pagination={{ pageSize: 10 }}
+        pagination={{ pageSize: 10, position: ["bottomCenter"] }}
         className="rbac-resource-table"
         scroll={{ x: 1000 }}
       />

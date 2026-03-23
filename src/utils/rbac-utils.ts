@@ -21,7 +21,7 @@ export const useRBAC = () => {
         if (!isActive) return false;
         if (roleName === "super_admin" || userInfo?.role === "admin") return true;
 
-        return permissions.some(p => 
+        return permissions.some(p =>
             p.resource === resource && (p.action === action || p.action === "manage")
         );
     };
@@ -59,12 +59,12 @@ export const useRBAC = () => {
 export const canAccessRoute = (userInfo: any, resource: string, action: string = "view"): boolean => {
     const rolePermission = userInfo?.role_permission;
     if (rolePermission && !rolePermission.isActive) return false;
-    
+
     const roleName = rolePermission?.name || userInfo?.role || "";
     if (roleName === "super_admin" || userInfo?.role === "admin") return true;
 
     const permissions = rolePermission?.permissions || [];
-    return permissions.some((p: any) => 
+    return permissions.some((p: any) =>
         p.resource === resource && (p.action === action || p.action === "manage")
     );
 };

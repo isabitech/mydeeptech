@@ -1,10 +1,13 @@
-import { useState, useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { endpoints } from "../../../store/api/endpoints";
 import { apiPost, getErrorMessage } from "../../../service/apiUtils";
 
 export interface SubmitAssessmentForm {
-  screenshots: File[];
-  testType: 'e2f'; // Only e2f test now
+  screenshots?: File[];
+  folderLink?: string;
+  testType: string;
+  [key: string]: any;
 }
 
 export interface SubmitAssessmentResponse {
@@ -13,8 +16,24 @@ export interface SubmitAssessmentResponse {
   data?: {
     submissionId: string;
     submittedAt: string;
-    status: string;
   };
+}
+
+export interface SubmitAssessmentReviewPayload {
+  fullName: string;
+  emailAddress: string;
+  dateOfSubmission: string;
+  timeOfSubmission: string;
+  submissionStatus: {
+    englishTestUploaded: boolean;
+    problemSolvingTestUploaded: boolean;
+  };
+  englishTestScore: string;
+  problemSolvingScore: string;
+  googleDriveLink: string;
+  encounteredIssues?: "Yes, I encountered issues." | "No, the process was smooth.";
+  issueDescription?: string;
+  instructionClarityRating?: number;
 }
 
 export interface HookOperationResult {
@@ -24,36 +43,40 @@ export interface HookOperationResult {
 }
 
 export const useSubmitAssessment = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const submitAssessmentResults = useCallback(async (
-    screenshots: File[]
-  ): Promise<HookOperationResult> => {
-    setLoading(true);
-    setError(null);
+  const submitResultsMutation = useMutation({
+    mutationFn: async (payload: SubmitAssessmentForm): Promise<any> => {
+      const { screenshots = [], ...rest } = payload;
 
-    try {
-      // Validate file sizes (max 1MB each)
-      const maxSize = 1024 * 1024; // 1MB in bytes
-      const oversizedFiles = screenshots.filter(file => file.size > maxSize);
-      
-      if (oversizedFiles.length > 0) {
-        const errorMessage = `File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 1MB per file.`;
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+      // Validate file sizes (max 1MB each) if screenshots are provided
+      if (screenshots.length > 0) {
+        const maxSize = 1024 * 1024; // 1MB in bytes
+        const oversizedFiles = screenshots.filter(file => file.size > maxSize);
+        
+        if (oversizedFiles.length > 0) {
+          throw new Error(`File(s) too large: ${oversizedFiles.map(f => f.name).join(', ')}. Maximum size is 1MB per file.`);
+        }
       }
 
-      // Create FormData to send files
+      // Create FormData to send files and data
       const formData = new FormData();
       
       // Add each screenshot to FormData
-      screenshots.forEach((file, index) => {
+      screenshots.forEach((file) => {
         formData.append('screenshots', file);
       });
       
-      // Add test type
-      formData.append('testType', 'e2f');
+      // Add all other fields to FormData
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, value.toString());
+          }
+        }
+      });
 
       const data: SubmitAssessmentResponse = await apiPost(
         endpoints.authDT.submitResult, 
@@ -65,31 +88,79 @@ export const useSubmitAssessment = () => {
         }
       );
 
-      if (data.success) {
-        return { success: true, data: data.data };
-      } else {
-        const errorMessage = data.message || "Failed to submit assessment results";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
+      if (!data.success) {
+        throw new Error(data.message || "Failed to submit assessment results");
       }
+
+      return data.data;
+    },
+    onSuccess: () => {
+      // Potentially invalidate queries here if needed
+      // queryClient.invalidateQueries({ queryKey: [...] });
+    }
+  });
+
+  const submitReviewMutation = useMutation({
+    mutationFn: async (payload: SubmitAssessmentReviewPayload): Promise<any> => {
+      const data: any = await apiPost(
+        endpoints.assessments.assessmentReview,
+        payload
+      );
+
+      // Check for success in various formats the backend might use
+      if (data.success || data.statusCode === 201 || data.statusCode === 200) {
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to submit assessment review");
+      }
+    }
+  });
+
+  const submitAssessmentResults = useCallback(async (
+    payload: SubmitAssessmentForm
+  ): Promise<HookOperationResult> => {
+    try {
+      const data = await submitResultsMutation.mutateAsync(payload);
+      return { success: true, data };
     } catch (err: any) {
       const errorMessage = getErrorMessage(err);
-      setError(errorMessage);
       return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  }, [submitResultsMutation]);
+
+  const submitAssessmentReview = useCallback(async (
+    payload: SubmitAssessmentReviewPayload
+  ): Promise<HookOperationResult> => {
+    try {
+      const data = await submitReviewMutation.mutateAsync(payload);
+      return { success: true, data };
+    } catch (err: any) {
+      const errorMessage = getErrorMessage(err);
+      return { success: false, error: errorMessage };
+    }
+  }, [submitReviewMutation]);
 
   const resetState = useCallback(() => {
-    setLoading(false);
-    setError(null);
-  }, []);
+    submitResultsMutation.reset();
+    submitReviewMutation.reset();
+  }, [submitResultsMutation, submitReviewMutation]);
+
+  const loading = submitResultsMutation.isPending || submitReviewMutation.isPending;
+  
+  const error = useMemo(() => {
+    const resError = submitResultsMutation.error ? getErrorMessage(submitResultsMutation.error) : null;
+    const revError = submitReviewMutation.error ? getErrorMessage(submitReviewMutation.error) : null;
+    return resError || revError;
+  }, [submitResultsMutation.error, submitReviewMutation.error]);
 
   return {
     submitAssessmentResults,
+    submitAssessmentReview,
     loading,
     error,
     resetState,
+    // Expose mutations for advanced usage
+    resultsMutation: submitResultsMutation,
+    reviewMutation: submitReviewMutation,
   };
 };

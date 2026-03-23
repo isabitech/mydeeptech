@@ -41,7 +41,10 @@ const Submit = ({ onSubmissionSuccess }: SubmitProps) => {
       // Extract actual File objects from fileList
       const files = fileList.map(item => item.originFileObj || item.file).filter(Boolean);
       
-      const result = await submitAssessmentResults(files);
+      const result = await submitAssessmentResults({
+        screenshots: files,
+        testType: 'e2f'
+      });
       
       if (result.success) {
         message.success("E2F test results submitted successfully! You will receive further instructions via email.");

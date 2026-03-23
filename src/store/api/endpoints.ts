@@ -163,6 +163,7 @@ export const endpoints = {
     session: "/api/assessments/session",
     submit: "/api/assessments/submit",
     progress: "/api/assessments/progress",
+    assessmentReview: "/assessment-reviews",
   },
 
   // Enhanced Chat support endpoints following the documentation
@@ -226,25 +227,23 @@ export const endpoints = {
       all: "/roles-permission/role/all",
       byId: "/roles-permission/role",
       create: "/roles-permission/role/create",
-      update: "/roles-permission/role",
+      update: "/roles-permission/role/update",
       addPermissions: "/roles-permission/role/:id",
       removePermission: "/roles-permission/role/:id/permissions/remove",
       delete: "/roles-permission/role",
+      assignUser: "/roles-permission/role/:roleId/assign-user/:userId",
     },
     users: {
-      all: "/admin/users/all",
+      all: "/admin/admin-users",
       updateRole: "/admin/users/:userId/role",
-      assignRolePermission: "/admin/users/:userId/role-permission", // Integration point for future
+      assignRolePermission: "/admin/users/:userId/role-permission",
     },
-    adminResources: {
-      all: "/resources",
-      create: "/resources",
-      byId: "/resources", // /:id
-      update: "/resources", // /:id
-      delete: "/resources", // /:id
-      togglePublish: "/resources/:id/toggle-publish",
-      allowed: "/resources/me/allowed",
+    resources: {
+      base: "/resources",
+      meAllowed: "/resources/me/allowed",
       search: "/resources/search",
+      byId: "/resources/:id",
+      togglePublish: "/resources/:id/toggle-publish",
     }
   }
 };

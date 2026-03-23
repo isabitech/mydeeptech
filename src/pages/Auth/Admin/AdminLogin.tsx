@@ -102,9 +102,9 @@ const AdminLogin: React.FC = () => {
       password: formData.password,
     });
 
-    // Navigation is handled in the useAdminLogin hook
+    // Navigation is now handled internally in the useAdminLogin hook using smart redirect logic
     if (result.success) {
-      navigate(from ?? "/admin/overview", { replace: true });
+      // result.success is enough for the hook to trigger navigation
     }
   };
 

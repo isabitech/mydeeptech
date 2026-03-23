@@ -80,7 +80,7 @@ const RolePermissionMatrix: React.FC = () => {
   const hardcodedResources = [
     "overview", "annotators", "assessments", "projects", "applications",
     "payment", "invoice", "notifications", "support_chat", "user_roles",
-    "employees", "settings", "roles", "permissions"
+    "employees", "settings", "roles", "permissions", "roles & permissions"
   ] as const;
 
   const dataResources = Array.from(new Set(allPermissions.map((p) => p.resource)));
