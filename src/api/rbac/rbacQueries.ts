@@ -1,11 +1,15 @@
 import { queryOptions } from "@tanstack/react-query";
 import axiosInstance from "../../service/axiosApi";
 import { endpoints } from "../../store/api/endpoints";
-import { 
-  permissionSchema, 
-  roleSchema, 
-  rbacUserSchema, 
-  paginatedResponseSchema 
+import {
+  permissionSchema,
+  roleSchema,
+  rbacUserSchema,
+  paginatedResponseSchema,
+  apiResponseSchema,
+  Role,
+  RbacUser,
+  Permission
 } from "./rbacSchema";
 import { z } from "zod";
 
@@ -25,25 +29,40 @@ export const rbacQueryKey = {
  */
 export const fetchPermissionList = async (params: { page?: number; limit?: number } = {}) => {
   const rawResponse = await axiosInstance.get(endpoints.rbac.permissions.all, { params });
-  const validatedResponse = paginatedResponseSchema.parse(rawResponse.data);
-  
+
+  const parseResult = paginatedResponseSchema.safeParse(rawResponse.data);
+  if (!parseResult.success) {
+    console.error("RBAC: Permission list root parsing failed", parseResult.error, rawResponse.data);
+    return { success: false, data: [] };
+  }
+
+  const validatedResponse = parseResult.data;
   let rawItems: unknown[] = [];
-  if (Array.isArray(validatedResponse.data)) {
-    rawItems = validatedResponse.data;
-  } else {
-    rawItems = validatedResponse.data.permissions || validatedResponse.data.data || [];
+  const dataRef = validatedResponse.data;
+
+  if (Array.isArray(dataRef)) {
+    rawItems = dataRef;
+  } else if (dataRef && typeof dataRef === 'object') {
+    rawItems = (dataRef as any).permissions || (dataRef as any).data || [];
   }
 
   return {
     ...validatedResponse,
-    data: rawItems.map((item) => permissionSchema.parse(item)),
+    data: rawItems.map((item) => {
+      const parsed = permissionSchema.safeParse(item);
+      if (!parsed.success) {
+        console.error("RBAC: Failed to parse permission item:", item, parsed.error);
+        return null;
+      }
+      return parsed.data;
+    }).filter((item): item is Permission => item !== null),
   };
 };
 
 /**
  * Query options for fetching the permission list.
  */
-export const permissionListQueryOptions = (params: { page?: number; limit?: number } = {}) => 
+export const permissionListQueryOptions = (params: { page?: number; limit?: number } = {}) =>
   queryOptions({
     queryKey: [...rbacQueryKey.permissions, params],
     queryFn: () => fetchPermissionList(params),
@@ -56,28 +75,43 @@ export const permissionListQueryOptions = (params: { page?: number; limit?: numb
  * @returns Validated search results.
  */
 export const fetchPermissionSearch = async (name: string, params: { page?: number; limit?: number } = {}) => {
-  const rawResponse = await axiosInstance.get(endpoints.rbac.permissions.search, { 
-    params: { ...params, name } 
+  const rawResponse = await axiosInstance.get(endpoints.rbac.permissions.search, {
+    params: { q: name, ...params }
   });
-  const validatedResponse = paginatedResponseSchema.parse(rawResponse.data);
 
+  const parseResult = paginatedResponseSchema.safeParse(rawResponse.data);
+  if (!parseResult.success) {
+    console.error("RBAC: Permission search root parsing failed", parseResult.error, rawResponse.data);
+    return { success: false, data: [] };
+  }
+
+  const validatedResponse = parseResult.data;
   let rawItems: unknown[] = [];
-  if (Array.isArray(validatedResponse.data)) {
-    rawItems = validatedResponse.data;
-  } else {
-    rawItems = validatedResponse.data.permissions || validatedResponse.data.data || [];
+  const dataRef = validatedResponse.data;
+
+  if (Array.isArray(dataRef)) {
+    rawItems = dataRef;
+  } else if (dataRef && typeof dataRef === 'object') {
+    rawItems = (dataRef as any).permissions || (dataRef as any).data || [];
   }
 
   return {
     ...validatedResponse,
-    data: rawItems.map((item) => permissionSchema.parse(item)),
+    data: rawItems.map((item) => {
+      const parsed = permissionSchema.safeParse(item);
+      if (!parsed.success) {
+        console.error("RBAC: Failed to parse permission item during search:", item, parsed.error);
+        return null;
+      }
+      return parsed.data;
+    }).filter((item): item is Permission => item !== null),
   };
 };
 
 /**
  * Query options for searching permissions.
  */
-export const permissionSearchQueryOptions = (name: string, params: { page?: number; limit?: number } = {}) => 
+export const permissionSearchQueryOptions = (name: string, params: { page?: number; limit?: number } = {}) =>
   queryOptions({
     queryKey: [...rbacQueryKey.permissions, "search", name, params],
     queryFn: () => fetchPermissionSearch(name, params),
@@ -91,81 +125,111 @@ export const permissionSearchQueryOptions = (name: string, params: { page?: numb
  */
 export const fetchRoleList = async (params: { page?: number; limit?: number } = {}) => {
   const rawResponse = await axiosInstance.get(endpoints.rbac.roles.all, { params });
-  const validatedResponse = paginatedResponseSchema.parse(rawResponse.data);
 
+  const parseResult = paginatedResponseSchema.safeParse(rawResponse.data);
+  if (!parseResult.success) {
+    console.error("RBAC: Role list root parsing failed", parseResult.error, rawResponse.data);
+    return { success: false, data: [] };
+  }
+
+  const validatedResponse = parseResult.data;
   let rawItems: unknown[] = [];
-  if (Array.isArray(validatedResponse.data)) {
-    rawItems = validatedResponse.data;
-  } else {
-    rawItems = validatedResponse.data.roles || validatedResponse.data.data || [];
+  const dataRef = validatedResponse.data;
+
+  if (Array.isArray(dataRef)) {
+    rawItems = dataRef;
+  } else if (dataRef && typeof dataRef === 'object') {
+    rawItems = (dataRef as any).roles || (dataRef as any).data || [];
   }
 
   return {
     ...validatedResponse,
-    data: rawItems.map((item) => roleSchema.parse(item)),
+    data: rawItems.map((item) => {
+      const parsed = roleSchema.safeParse(item);
+      if (!parsed.success) {
+        console.error("RBAC: Failed to parse role item:", item, parsed.error);
+        return null;
+      }
+      return parsed.data;
+    }).filter((item): item is Role => item !== null),
   };
 };
 
 /**
  * Query options for fetching the role list.
  */
-export const roleListQueryOptions = (params: { page?: number; limit?: number } = {}) => 
+export const roleListQueryOptions = (params: { page?: number; limit?: number } = {}) =>
   queryOptions({
     queryKey: [...rbacQueryKey.roles, params],
     queryFn: () => fetchRoleList(params),
   });
 
-/**
- * Fetches a single role by ID.
- * @param roleId - The ID of the role to fetch.
- * @returns Validated role object.
- */
+
 export const fetchRoleById = async (roleId: string) => {
   const rawResponse = await axiosInstance.get(`${endpoints.rbac.roles.byId}/${roleId}`);
-  // Assuming single item responses might be wrapped in a success/data shape
-  const validatedResponse = z.object({
-    success: z.boolean(),
-    data: roleSchema,
-  }).parse(rawResponse.data);
-  return validatedResponse.data;
+
+  const apiParseResult = apiResponseSchema.safeParse(rawResponse.data);
+  if (!apiParseResult.success) {
+    console.error("RBAC: Role by ID API parsing failed", apiParseResult.error, rawResponse.data);
+    throw new Error("Failed to parse API response");
+  }
+
+  const validatedResponse = apiParseResult.data;
+  const roleParseResult = roleSchema.safeParse(validatedResponse.data);
+
+  if (!roleParseResult.success) {
+    console.error("RBAC: Role by ID role object parsing failed", roleParseResult.error, validatedResponse.data);
+    throw new Error("Failed to parse role object");
+  }
+
+  return roleParseResult.data;
 };
 
-/**
- * Query options for fetching a single role.
- */
-export const roleByIdQueryOptions = (roleId: string | null) => 
+
+export const roleByIdQueryOptions = (roleId: string | null) =>
   queryOptions({
     queryKey: [...rbacQueryKey.roles, "detail", roleId],
     queryFn: () => fetchRoleById(roleId!),
     enabled: !!roleId,
   });
 
-/**
- * Fetches the list of users with their RBAC information.
- * @param params - Pagination and search parameters.
- * @returns Validated list of users.
- */
+
 export const fetchUserList = async (params: { page?: number; limit?: number; search?: string } = {}) => {
   const rawResponse = await axiosInstance.get(endpoints.rbac.users.all, { params });
-  const validatedResponse = paginatedResponseSchema.parse(rawResponse.data);
 
+  const parseResult = paginatedResponseSchema.safeParse(rawResponse.data);
+  if (!parseResult.success) {
+    console.error("RBAC: User list root parsing failed", parseResult.error, rawResponse.data);
+    return { success: false, data: [] };
+  }
+
+  const validatedResponse = parseResult.data;
   let rawItems: unknown[] = [];
-  if (Array.isArray(validatedResponse.data)) {
-    rawItems = validatedResponse.data;
-  } else {
-    rawItems = validatedResponse.data.users || validatedResponse.data.data || [];
+  const dataRef = validatedResponse.data;
+
+  if (Array.isArray(dataRef)) {
+    rawItems = dataRef;
+  } else if (dataRef && typeof dataRef === 'object') {
+    rawItems = (dataRef as any).adminUsers || (dataRef as any).users || (dataRef as any).data || (dataRef as any).admins || [];
   }
 
   return {
     ...validatedResponse,
-    data: rawItems.map((item) => rbacUserSchema.parse(item)),
+    data: rawItems.map((item) => {
+      const parsed = rbacUserSchema.safeParse(item);
+      if (!parsed.success) {
+        console.error("RBAC: Failed to parse user item:", item, parsed.error);
+        return null;
+      }
+      return parsed.data;
+    }).filter((item): item is RbacUser => item !== null),
   };
 };
 
 /**
  * Query options for fetching the user list for RBAC.
  */
-export const userListQueryOptions = (params: { page?: number; limit?: number; search?: string } = {}) => 
+export const userListQueryOptions = (params: { page?: number; limit?: number; search?: string } = {}) =>
   queryOptions({
     queryKey: [...rbacQueryKey.users, params],
     queryFn: () => fetchUserList(params),

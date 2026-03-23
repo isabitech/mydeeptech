@@ -206,9 +206,12 @@ export const useRolePermissionRemove = () => {
 export const useUserRoleUpdate = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      const url = endpoints.rbac.users.updateRole.replace(":userId", userId);
-      const rawResponse = await axiosInstance.put(url, { role });
+    mutationFn: async ({ userId, roleId }: { userId: string; roleId: string }) => {
+      const url = endpoints.rbac.roles.assignUser
+        .replace(":roleId", roleId)
+        .replace(":userId", userId);
+      // Backend expects role assignment via path, payload can be empty or omitted
+      const rawResponse = await axiosInstance.post(url, {});
       return apiResponseSchema.parse(rawResponse.data);
     },
     onSuccess: (validatedResponse) => {

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Table, Input, Select, Avatar, Space, Button } from "antd";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
-import { 
-  userListQueryOptions, 
-  roleListQueryOptions 
+import {
+  userListQueryOptions,
+  roleListQueryOptions
 } from "../../../../api/rbac/rbacQueries";
 import { useUserRoleUpdate } from "../../../../api/rbac/rbacMutations";
 import { RbacUser, Role } from "../../../../api/rbac/rbacSchema";
@@ -12,10 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 
 const { Option } = Select;
 
-/**
- * Component for assigning roles to users.
- * Allows searching users and updating their assigned roles with strict validation.
- */
+
 const UserRoleAssignment: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, string>>({});
@@ -47,7 +44,7 @@ const UserRoleAssignment: React.FC = () => {
     const newRole = pendingRoleChanges[userId];
     if (!newRole) return;
 
-    updateUserRole({ userId, role: newRole }, {
+    updateUserRole({ userId, roleId: newRole }, {
       onSuccess: () => {
         setPendingRoleChanges(prev => {
           const next = { ...prev };
@@ -64,8 +61,8 @@ const UserRoleAssignment: React.FC = () => {
       key: "user",
       render: (_: unknown, record: RbacUser) => (
         <Space>
-          <Avatar 
-            icon={<UserOutlined />} 
+          <Avatar
+            icon={<UserOutlined />}
             className="!bg-[#E3F2FD] !text-[#1565C0]"
           />
           <div>
@@ -86,16 +83,18 @@ const UserRoleAssignment: React.FC = () => {
       key: "assignedRoles",
       width: 300,
       render: (_: unknown, record: RbacUser) => {
-        const currentRole = typeof record.role === "string" ? record.role : record.role?.name;
+
+        const currentRoleValue = record.role_permission;
+
         return (
-          <Select 
-            value={pendingRoleChanges[record._id] || currentRole}
+          <Select
+            value={pendingRoleChanges[record._id] || currentRoleValue}
             style={{ width: '100%' }}
             onChange={(value) => handleRoleChange(record._id, value)}
             className="rbac-select"
           >
             {roles.map((role: Role) => (
-              <Option key={role.name} value={role.name}>{role.name}</Option>
+              <Option key={role._id} value={role._id}>{role.name}</Option>
             ))}
             {/* Fallback legacy roles */}
             {["admin", "user", "annotator", "moderator", "qa_reviewer"].map(role => (
@@ -110,8 +109,8 @@ const UserRoleAssignment: React.FC = () => {
       key: "actions",
       align: "right" as const,
       render: (_: unknown, record: RbacUser) => (
-        <Button 
-          type="link" 
+        <Button
+          type="link"
           onClick={() => handleAssignmentSave(record._id)}
           disabled={!pendingRoleChanges[record._id] || isUpdatePending}
           className="!font-semibold"
@@ -125,8 +124,8 @@ const UserRoleAssignment: React.FC = () => {
   return (
     <Space direction="vertical" className="w-full" size="middle">
       <div className="flex justify-end mb-2">
-        <Input 
-          placeholder="Search users..." 
+        <Input
+          placeholder="Search users..."
           prefix={<SearchOutlined className="text-gray-400" />}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-xs rounded-lg"
@@ -136,11 +135,11 @@ const UserRoleAssignment: React.FC = () => {
       {isUsersLoading ? (
         <div className="py-10 text-center"><Loader /></div>
       ) : (
-        <Table<RbacUser> 
-          dataSource={users} 
-          columns={columns} 
+        <Table<RbacUser>
+          dataSource={users}
+          columns={columns}
           rowKey="_id"
-          pagination={{ pageSize: 5 }}
+          pagination={{ pageSize: 5, position: ["bottomCenter"] }}
         />
       )}
     </Space>

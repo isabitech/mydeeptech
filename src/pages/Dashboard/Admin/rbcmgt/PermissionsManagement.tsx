@@ -164,7 +164,7 @@ const PermissionsManagement: React.FC = () => {
           dataSource={permissions} 
           columns={columns} 
           rowKey="_id" 
-          pagination={{ pageSize: 5 }} 
+          pagination={{ pageSize: 5, position: ["bottomCenter"] }}
         />
       )}
 
