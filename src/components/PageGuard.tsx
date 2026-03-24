@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Spin } from "antd";
 import { useAdminSession } from "../queries/auth.query";
 import { usePermission } from "../hooks/usePermission";
@@ -14,7 +14,6 @@ interface PageGuardProps {
  */
 export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated, isLoading: isSessionLoading } = useAdminSession();
   const { can, isLoading: isPermissionLoading } = usePermission(resource);
 
