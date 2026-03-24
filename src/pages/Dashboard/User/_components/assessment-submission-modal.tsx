@@ -2,42 +2,53 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Typography, message, DatePicker, TimePicker, Checkbox, Radio, Row, Col } from 'antd';
 import { LinkOutlined, UserOutlined, MailOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useUserInfoStates } from '../../../../store/useAuthStore';
-import { useSubmitAssessment, SubmitAssessmentReviewPayload } from '../../../../hooks/Auth/User/useSubmitAssessment';
+import { SubmitAssessmentReviewPayload } from '../../../../hooks/Auth/User/useSubmitAssessment';
 import dayjs from 'dayjs';
+import assessmentMutationService from '../../../../services/assessement-service/assessment-mutation';
+import ErrorMessage from '../../../../lib/error-message';
+import { AssessmentType } from './assessments-modal';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 
 interface AssessmentSubmissionModalProps {
   open: boolean;
-  onCancel: () => void;
-  assessmentType: 'British Council English Test' | 'Problem Solving/Skill Assessment' | '';
+  onCloseModal: () => void;
+  assessmentType: AssessmentType;
+  onBackToInstructions?: () => void; // Callback to return to main assessments modal
   onSuccess?: () => void;
 }
 
 const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
   open,
-  onCancel,
+  onCloseModal,
   assessmentType,
-  onSuccess
+  onBackToInstructions,
 }) => {
   const [form] = Form.useForm();
   const { userInfo } = useUserInfoStates();
-  const { submitAssessmentReview, loading } = useSubmitAssessment();
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open && userInfo) {
-      form.setFieldsValue({
-        fullName: userInfo.fullName,
-        emailAddress: userInfo.email,
-        dateOfSubmission: dayjs(),
-      });
+  const { submitReviewMutation, isSubmitReviewLoading } = assessmentMutationService.useSubmitReviewMutation();
+
+  const handleCancel = () => {
+    if (isSubmitReviewLoading) {
+      message.warning("Please wait for the submission to complete before closing.");
+      return;
     }
-  }, [open, userInfo, form]);
+    form.resetFields();
+    
+    // If onBackToInstructions is provided, go back to main assessments modal
+    // Otherwise, just close this modal
+    if (onBackToInstructions) {
+      onBackToInstructions();
+    } else {
+      onCloseModal();
+    }
+  };
 
   const handleSubmit = async (values: any) => {
-    try {
+
       const payload: SubmitAssessmentReviewPayload = {
         fullName: values.fullName,
         emailAddress: values.emailAddress,
@@ -57,58 +68,50 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
         instructionClarityRating: values.instructionClarityRating
       };
 
-      const result = await submitAssessmentReview(payload);
+      submitReviewMutation.mutate(payload, {
+          onSuccess: () => {
+            message.success(`Your submission for ${assessmentType} has been received!`);
+            form.resetFields();
+            onCloseModal();
+          },
+          onError: (error) => {
+            message.error(ErrorMessage(error));
+          }
+        })
+  };
 
-      if (result.success) {
-        message.success(`Your submission for ${assessmentType} has been received!`);
-        form.resetFields();
-        onSuccess?.();
-        onCancel();
-      } else {
-        message.error(result.error || "Failed to submit assessment");
-      }
-    } catch (error) {
-      message.error("An unexpected error occurred during submission");
+
+  useEffect(() => {
+    if (open && userInfo) {
+      form.setFieldsValue({
+        fullName: userInfo.fullName,
+        emailAddress: userInfo.email,
+        dateOfSubmission: dayjs(),
+      });
     }
-  };
-
-  const getSectionClass = (sectionId: string) => {
-    return `mb-8 p-6 bg-white border-y border-r border-gray-200 rounded-lg shadow-sm transition-all duration-200 border-l-[6px] outline-none ${
-      activeSection === sectionId ? 'border-l-[#4c1d95] shadow-md' : 'border-l-transparent'
-    }`;
-  };
-
-  const fontStyle = {
-    fontFamily: "'Google Sans', 'Roboto', Arial, sans-serif"
-  };
+  }, [open, userInfo, form]);
 
   return (
     <Modal
       open={open}
-      onCancel={onCancel}
+      onCancel={onCloseModal}
       footer={null}
       width={750}
       centered
-      closable={!loading}
-      maskClosable={!loading}
+      closable={!isSubmitReviewLoading}
+      maskClosable={!isSubmitReviewLoading}
       title={null}
       styles={{
-        mask: {
-          backdropFilter: 'blur(4px)',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        },
         content: {
           padding: 0,
           borderRadius: '12px',
           overflow: 'hidden',
-          backgroundColor: '#f0ebf8',
         },
       }}
     >
       <div className="h-3 bg-[#673ab7] rounded-top-lg mb-6" />
-
-      <div className="px-6 pb-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
-        <Title level={2} style={{ ...fontStyle, color: '#202124' }} className="mt-2 mb-2 font-bold">
+      <div className="px-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <Title level={2} className="mt-2 mb-2 font-bold">
           Assessment Submission Form
         </Title>
         <Paragraph className="text-sm text-gray-500 mb-8 border-b pb-4">
@@ -130,7 +133,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
         >
           {/* Identity Section */}
           <div 
-            className={getSectionClass('identity')}
             onFocus={() => setActiveSection('identity')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -148,7 +150,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                 >
                   <Input
                     prefix={<UserOutlined className="text-gray-400" />}
-                    className="rounded-md h-11 border-gray-300"
+                    className="rounded-md border-gray-300"
                     placeholder="Your Name"
                   />
                 </Form.Item>
@@ -165,7 +167,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                 >
                   <Input
                     prefix={<MailOutlined className="text-gray-400" />}
-                    className="rounded-md h-11 border-gray-300"
+                    className="rounded-md border-gray-300"
                     placeholder="example@mydeeptech.ng"
                   />
                 </Form.Item>
@@ -175,7 +177,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Timing Section */}
           <div 
-            className={getSectionClass('timing')}
+         
             onFocus={() => setActiveSection('timing')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -188,7 +190,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                   rules={[{ required: true, message: 'Select the date' }]}
                 >
                   <DatePicker
-                    className="w-full h-11 rounded-md"
+                    className="w-full rounded-md"
                     format="YYYY-MM-DD"
                     suffixIcon={<CalendarOutlined />}
                   />
@@ -201,7 +203,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                   rules={[{ required: true, message: 'Select the time' }]}
                 >
                   <TimePicker
-                    className="w-full h-11 rounded-md"
+                    className="w-full rounded-md"
                     format="hh:mm A"
                     use12Hours
                     suffixIcon={<ClockCircleOutlined />}
@@ -213,7 +215,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Confirmation Checklist */}
           <div 
-            className={getSectionClass('confirmation')}
             onFocus={() => setActiveSection('confirmation')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -253,7 +254,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Scores Section */}
           <div 
-            className={getSectionClass('scores')}
             onFocus={() => setActiveSection('scores')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -268,7 +268,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                     { max: 20, message: 'Max 20 characters' }
                   ]}
                 >
-                  <Input placeholder="e.g. 18" className="h-11 rounded-md" />
+                  <Input placeholder="e.g. 18" className="rounded-md" />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -280,7 +280,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
                     { max: 20, message: 'Max 20 characters' }
                   ]}
                 >
-                  <Input placeholder="e.g. 15" className="h-11 rounded-md" />
+                  <Input placeholder="e.g. 15" className="rounded-md" />
                 </Form.Item>
               </Col>
             </Row>
@@ -288,14 +288,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Link Section */}
           <div 
-            className={getSectionClass('link')}
             onFocus={() => setActiveSection('link')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
-            style={{ backgroundColor: '#fdfbff' }}
           >
             <Form.Item
-              label={<span className="font-bold text-[#4c1d95]">Google Drive Link to Recordings <span className="text-red-500">*</span></span>}
+              label={<span className="font-semibold">Google Drive Link to Recordings <span className="text-red-500">*</span></span>}
               name="googleDriveLink"
               rules={[
                 { required: true, message: 'Required' },
@@ -307,14 +305,13 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
               <Input
                 prefix={<LinkOutlined className="text-purple-600" />}
                 placeholder="https://drive.google.com/..."
-                className="h-12 border-purple-200 focus:border-[#4c1d95] rounded-md"
+                className="border-purple-200 focus:border-[#4c1d95] rounded-md"
               />
             </Form.Item>
           </div>
 
           {/* Issues Section */}
           <div 
-            className={getSectionClass('issues')}
             onFocus={() => setActiveSection('issues')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -354,7 +351,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Quality Section */}
           <div 
-            className={getSectionClass('quality')}
             onFocus={() => setActiveSection('quality')}
             onBlur={() => setActiveSection(null)}
             tabIndex={-1}
@@ -381,10 +377,10 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Sticky Footer */}
-          <div className="sticky bottom-0 bg-white/80 backdrop-blur-md pt-4 pb-2 flex justify-end gap-4 border-t border-gray-100 italic">
+          <div className="sticky bottom-0 bg-white py-4 flex justify-end gap-4 border-t border-gray-200 italic">
             <Button
-              onClick={onCancel}
-              disabled={loading}
+              onClick={handleCancel}
+              disabled={isSubmitReviewLoading}
               className="rounded-md px-6"
             >
               Cancel
@@ -392,7 +388,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
             <Button
               type="primary"
               htmlType="submit"
-              loading={loading}
+              loading={isSubmitReviewLoading}
               className="bg-[#673ab7] hover:bg-[#5e35b1] border-none rounded-md px-8 h-10"
             >
               Submit Assessment
@@ -400,24 +396,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
         </Form>
       </div>
-
-      <style>
-        {`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #c7b0e1;
-            border-radius: 10px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #4c1d95;
-          }
-        `}
-      </style>
     </Modal>
   );
 };

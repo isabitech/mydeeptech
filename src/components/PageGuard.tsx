@@ -9,6 +9,9 @@ interface PageGuardProps {
   children: ReactNode;
 }
 
+/**
+ * Page-level guard for React Router.
+ */
 
 export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const location = useLocation();
@@ -37,9 +40,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   }
 
   const hasAccess =
-    can(ACTIONS.MANAGE) ||
-    can(ACTIONS.VIEW) ||
-    can(ACTIONS.VIEW_OWN);
+    can(ACTIONS.MANAGE) || can(ACTIONS.VIEW) || can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
     navigate(-1);
@@ -47,9 +48,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   }
 
   const isViewOwnOnly =
-    can(ACTIONS.VIEW_OWN) &&
-    !can(ACTIONS.VIEW) &&
-    !can(ACTIONS.MANAGE);
+    can(ACTIONS.VIEW_OWN) && !can(ACTIONS.VIEW) && !can(ACTIONS.MANAGE);
 
   return (
     <>
@@ -57,7 +56,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
         if (React.isValidElement(child)) {
           return React.cloneElement(
             child as React.ReactElement<{ viewOwn?: boolean }>,
-            { viewOwn: isViewOwnOnly }
+            { viewOwn: isViewOwnOnly },
           );
         }
         return child;

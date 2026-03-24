@@ -3,29 +3,40 @@ import { Modal, Typography, List, Divider } from 'antd';
 import { BookOutlined, SolutionOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import AssessmentSubmissionModal from './assessment-submission-modal';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface AssessmentsModalProps {
   open: boolean;
-  onCancel: () => void;
+  onCloseModal: () => void;
+  onReopenModal?: () => void; // Callback to reopen this modal after submission modal closes
 }
 
-const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) => {
-  const [submissionOpen, setSubmissionOpen] = useState(false);
-  const [currentType, setCurrentType] = useState<'British Council English Test' | 'Problem Solving/Skill Assessment' | ''>('');
+export type AssessmentType = 'British Council English Test' | 'Problem Solving/Skill Assessment' | '';
 
-  const handleOpenSubmission = (type: 'British Council English Test' | 'Problem Solving/Skill Assessment') => {
+const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal, onReopenModal }) => {
+  const [submissionOpen, setSubmissionOpen] = useState(false);
+  const [currentType, setCurrentType] = useState<AssessmentType | ''>('');
+
+  const handleOpenSubmission = (type: AssessmentType) => {
     setCurrentType(type);
     setSubmissionOpen(true);
-    onCancel(); // Automatically close the instructions modal
+    onCloseModal(); // Automatically close the instructions modal
+  };
+
+  const handleBackToInstructions = () => {
+    setSubmissionOpen(false);
+    // If parent provides a way to reopen this modal, use it
+    if (onReopenModal) {
+      setTimeout(() => onReopenModal(), 100);
+    }
   };
 
   const britishCouncilSteps: React.ReactNode[] = [
-    <>Download and install <a href="https://flonnect.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
+    <>Download and install <a href="https://flonnect.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
     "Enable screen + Camera recording.",
     "Enable mic + system audio.",
     "Start recording.",
-    <>Go to the British Council English score Website [<a href="https://www.englishscore.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://www.englishscore.com/</a>] to access the test.</>,
+    <>Go to the British Council English score Website: <a href="https://www.englishscore.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://www.englishscore.com</a> to access the test.</>,
     "Take the core skills test, speaking test and writing test.",
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
@@ -34,11 +45,11 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
   ];
 
   const skillAssessmentSteps: React.ReactNode[] = [
-    <>Download and install <a href="https://flonnect.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
+    <>Download and install <a href="https://flonnect.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">Flonnect</a> on Chrome on your PC.</>,
     "Enable screen + Camera recording.",
     "Enable mic + system audio.",
     "Start recording.",
-    <>Go to <a href="https://aptitude-test.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://aptitude-test.com/</a> to access the test.</>,
+    <>Go to <a href="https://aptitude-test.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://aptitude-test.com</a> to access the test.</>,
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
@@ -54,7 +65,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
           </Title>
         }
         open={open}
-        onCancel={onCancel}
+        onCancel={onCloseModal}
         footer={null}
         width={700}
         centered
@@ -98,7 +109,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
           <div className="mt-8 p-4 bg-purple-50 rounded-lg flex items-start gap-3">
             <InfoCircleOutlined className="text-purple-500 mt-1" />
             <p className="text-xs text-purple-700 leading-relaxed m-0">
-              Please follow all steps carefully to ensure your assessment is properly recorded and recorded.
+              Please follow all steps carefully to ensure your assessment is properly recorded and submitted.
               If you encounter any issues, please reach out to the support team on Slack.
             </p>
           </div>
@@ -107,8 +118,9 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCancel }) =
 
       <AssessmentSubmissionModal
         open={submissionOpen}
-        onCancel={() => setSubmissionOpen(false)}
+        onCloseModal={() => setSubmissionOpen(false)}
         assessmentType={currentType}
+        onBackToInstructions={handleBackToInstructions}
       />
     </>
   );

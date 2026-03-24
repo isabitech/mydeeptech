@@ -62,6 +62,7 @@ import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
 import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
 import { PageGuard } from "./components";
 import ApplicationsPage from "./pages/admin/ApplicationsPage";
+import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessements";
 
 const AppRoutes = () => {
   return (
@@ -101,8 +102,10 @@ const AppRoutes = () => {
         {/* Protected Dashboard Routes */}
         <Route element={<ProtectUserLayout />}>
           <Route path="/dashboard" element={<Dashboard />}>
+            {/* Default route */}
+            <Route index element={<Navigate to="overview" replace />} />
             {/* User Dashboard */}
-            <Route path="overview" index element={<Welcome />} />
+            <Route path="overview" element={<Welcome />} />
             <Route path="projects" element={<Projects />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="tasks" element={<Tasks />} />
@@ -142,11 +145,18 @@ const AppRoutes = () => {
                 <Annotators />
               </PageGuard>
             } />
-            <Route path="assessments" element={
-              <PageGuard resource="assessments">
-                <AssessmentManagementList />
-              </PageGuard>
+            <Route path="assessments">
+              <Route index element={
+                <PageGuard resource="assessments">
+                  <AssessmentManagementList />
+                </PageGuard>
             } />
+              <Route path="review-assessments" element={
+                <PageGuard resource="assessments">
+                  <UserAssessments />
+                </PageGuard>
+            } />
+            </Route>
             <Route path="assessments/multimedia" element={
               <PageGuard resource="assessments">
                 <AdminReelAssessmentManager />

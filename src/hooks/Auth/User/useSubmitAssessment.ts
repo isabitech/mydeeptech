@@ -101,18 +101,10 @@ export const useSubmitAssessment = () => {
   });
 
   const submitReviewMutation = useMutation({
+    mutationKey: ["submitAssessmentReview"],
     mutationFn: async (payload: SubmitAssessmentReviewPayload): Promise<any> => {
-      const data: any = await apiPost(
-        endpoints.assessments.assessmentReview,
-        payload
-      );
-
-      // Check for success in various formats the backend might use
-      if (data.success || data.statusCode === 201 || data.statusCode === 200) {
-        return data.data;
-      } else {
-        throw new Error(data.message || "Failed to submit assessment review");
-      }
+      const data: any = await apiPost(endpoints.assessments.assessmentReview, payload);
+      return data.data;
     }
   });
 

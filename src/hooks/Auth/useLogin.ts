@@ -35,7 +35,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   qaStatus: string;
-
+  isAssessmentSubmitted: boolean;
 }
 
 interface LoginResult {
@@ -97,6 +97,7 @@ export const useLogin = () => {
           microTaskerStatus: data.user.microTaskerStatus,
           resultLink: data.user.resultLink,
           qaStatus: data.user.qaStatus,
+          isAssessmentSubmitted: data.user.isAssessmentSubmitted,
         };
 
         setUserInfo(userInfo);
