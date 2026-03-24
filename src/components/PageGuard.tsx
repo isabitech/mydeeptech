@@ -9,6 +9,9 @@ interface PageGuardProps {
   children: ReactNode;
 }
 
+/**
+ * Page-level guard for React Router.
+ */
 export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,8 +44,9 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
     can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
-    navigate(-1);
-    return null;
+    // navigate(-1);
+    // return null;
+    return <Navigate to="/admin/overview" replace />;
   }
 
   const isViewOwnOnly =
