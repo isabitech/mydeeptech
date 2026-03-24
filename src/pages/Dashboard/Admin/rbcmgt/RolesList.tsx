@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Tag, Space, Button, Modal, Form, Input, message } from "antd";
+import { Table, Tag, Space, Button, Modal, Form, Input } from "antd";
 import { EditOutlined, DeleteOutlined, PlusOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { roleListQueryOptions } from "../../../../api/rbac/rbacQueries";
@@ -155,7 +155,7 @@ const RolesList: React.FC = () => {
   ];
 
   if (isRolesLoading) {
-    return <div className="py-10 text-center"><Loader /></div>;
+    return <div className="py-10 text-center w-full flex items-center justify-center"><Loader /></div>;
   }
 
   return (

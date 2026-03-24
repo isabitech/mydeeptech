@@ -158,7 +158,7 @@ const PermissionsManagement: React.FC = () => {
       </div>
 
       {isPermissionsLoading ? (
-        <Loader />
+        <div className="py-10 text-center w-full flex items-center justify-center"><Loader /></div>
       ) : (
         <Table<Permission> 
           dataSource={permissions} 
