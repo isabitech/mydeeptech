@@ -293,7 +293,7 @@ const Assessment: React.FC = () => {
               >
                 <Card
                   className="h-full border-0 shadow-md hover:shadow-xl transition-all duration-300"
-                  bodyStyle={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+                  styles={{ body: { height: '100%', display: 'flex', flexDirection: 'column' } }}
                 >
                   {/* Assessment Header */}
                   <div className="mb-4">

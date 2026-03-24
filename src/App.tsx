@@ -63,6 +63,7 @@ import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
 import { PageGuard } from "./components";
 import ApplicationsPage from "./pages/admin/ApplicationsPage";
 import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessements";
+import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 
 const AppRoutes = () => {
   return (
@@ -232,6 +233,8 @@ const AppRoutes = () => {
                 <InvoiceRoutes />
               </PageGuard>
             } />
+
+             <Route path="employees/*" element={<EmployeeMgt /> } />
           </Route>
         </Route>
 

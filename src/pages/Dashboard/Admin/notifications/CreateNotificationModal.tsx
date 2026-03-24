@@ -159,7 +159,7 @@ useEffect(() => {
       onCancel={handleCancel}
       width={700}
       style={{ top: 20 }}
-      bodyStyle={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+      styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' } }}
       footer={[
         <Button key="cancel" onClick={handleCancel}>
           Cancel

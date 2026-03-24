@@ -478,7 +478,7 @@ const FloatingChat: React.FC<FloatingChatProps> = ({ token }) => {
           >
             <Card
               className="w-96 shadow-2xl border-0 overflow-hidden"
-              bodyStyle={{ padding: 0 }}
+              styles={{ body: { padding: 0 } }}
               style={{
                 borderRadius: '16px',
                 maxHeight: isMinimized ? '60px' : '500px',

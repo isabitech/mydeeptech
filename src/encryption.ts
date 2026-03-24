@@ -25,17 +25,22 @@ export class Encryption {
     const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
     return {
       data: this.arrayBufferToBase64(encrypted),
-      iv: this.arrayBufferToBase64(iv),
+      iv: this.arrayBufferToBase64(iv as any),
     };
   }
 
   static async decrypt(base64Data: string, base64Iv: string): Promise<string> {
-    const key = await this.getKey();
-    const encrypted = this.base64ToArrayBuffer(base64Data);
-    const iv = new Uint8Array(this.base64ToArrayBuffer(base64Iv));
+    try {
+      const key = await this.getKey();
+      const encrypted = this.base64ToArrayBuffer(base64Data);
+      const iv = new Uint8Array(this.base64ToArrayBuffer(base64Iv));
 
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
-    return this.decoder.decode(decrypted);
+      const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
+      return this.decoder.decode(decrypted);
+    } catch (error: any) {
+      console.error('Decryption failed:', error.message);
+      throw new Error(`Decryption failed: ${error.message}`);
+    }
   }
 
   // --- Helpers ---

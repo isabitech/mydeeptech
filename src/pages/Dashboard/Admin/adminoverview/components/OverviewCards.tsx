@@ -138,7 +138,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
           >
             <Card
               className="h-32 overflow-x-auto cursor-pointer hover:shadow-lg transition-shadow duration-300"
-              bodyStyle={{ padding: '12px' }}
+              styles={{ body: { padding: '12px' } }}
             >
               <div className="flex flex-col gap-5 h-24">
                 <div className="flex items-center gap-2 w-full flex-1">

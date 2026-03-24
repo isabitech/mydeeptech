@@ -37,9 +37,15 @@ const AdminHeader: React.FC = () => {
     const loadUser = async () => {
       try {
         const user = await retrieveUserInfoFromStorage();
-        setUserInfo(user);
+        if (user) {
+          setUserInfo(user);
+        }
       } catch (error) {
-        clearUserInfo();
+        console.error('Error loading user info in AdminHeader:', error);
+        // Only clear user info if we don't have existing user info in store
+        if (!userInfo) {
+          clearUserInfo();
+        }
       } finally {
         setIsLoading(false);
       }
@@ -48,20 +54,20 @@ const AdminHeader: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    // Clear session storage
-    sessionStorage.removeItem('ACCESS_TOKEN');
-    sessionStorage.removeItem('userInfo');
-
-    // Clear local storage as well (in case any auth data is stored there)
+    // Clear session storage completely
+    sessionStorage.clear();
+    
+    // Clear any potential legacy localStorage auth data
     localStorage.removeItem('ACCESS_TOKEN');
     localStorage.removeItem('userInfo');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminInfo');
 
-    // Clear all storage to ensure complete logout
-    sessionStorage.clear();
+    // Clear Zustand store
     clearUserInfo();
+    
     // Navigate to login
     navigate('/auth/admin-login', { replace: true });
-
   };
 
   // Show loading state while checking authentication

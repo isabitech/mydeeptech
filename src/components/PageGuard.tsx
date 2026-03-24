@@ -22,7 +22,10 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   if (isLoading) {
     return (
       <div className="flex h-[80vh] w-full items-center justify-center">
-        <Spin size="large" tip={`Accessing ${resource}...`} />
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="mt-3 text-gray-600">Accessing {resource}...</p>
+        </div>
       </div>
     );
   }
@@ -37,10 +40,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
     );
   }
 
-  const hasAccess =
-    can(ACTIONS.MANAGE) ||
-    can(ACTIONS.VIEW) ||
-    can(ACTIONS.VIEW_OWN);
+  const hasAccess = can(ACTIONS.MANAGE) || can(ACTIONS.VIEW) || can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
     // navigate(-1);
@@ -48,10 +48,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
     return <Navigate to="/admin/overview" replace />;
   }
 
-  const isViewOwnOnly =
-    can(ACTIONS.VIEW_OWN) &&
-    !can(ACTIONS.VIEW) &&
-    !can(ACTIONS.MANAGE);
+  const isViewOwnOnly = can(ACTIONS.VIEW_OWN) && !can(ACTIONS.VIEW) && !can(ACTIONS.MANAGE);
 
   return (
     <>

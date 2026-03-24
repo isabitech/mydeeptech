@@ -427,9 +427,11 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         footer={null}
         centered
         width={getWidth()}
-        bodyStyle={{
-          maxHeight: '85vh',
-          overflowY: 'auto',
+        styles={{
+          body: {
+            maxHeight: '85vh',
+            overflowY: 'auto',
+          }
         }}
       >
         {data ? (

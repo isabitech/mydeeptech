@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useAdminLogin } from "../../../hooks/Auth/Admin/useAdminLogin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
+import { useUserInfoActions } from "../../../store/useAuthStore";
 
 const AdminLogin: React.FC = () => {
 
@@ -21,6 +22,7 @@ const AdminLogin: React.FC = () => {
   const { login, loading, error: hookError, resetState } = useAdminLogin();
   const navigate = useNavigate();
   const location = useLocation();
+  const { setUserInfo } = useUserInfoActions();
 
   const error = authError || hookError; // Prioritize authError from localStorage if it exists
   const from =

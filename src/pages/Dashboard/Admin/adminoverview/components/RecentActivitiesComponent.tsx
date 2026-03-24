@@ -128,13 +128,12 @@ const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
         transition={{ delay: 0.3, duration: 0.6 }}
       >
         <Card title="Recent Projects" className="h-96 overflow-y-auto">
-          <Timeline>
-            {recentData.recentProjects?.slice(0, 4).map((project, index) => (
-              <Timeline.Item
-                key={index}
-                dot={<ProjectOutlined className="text-blue-500" />}
-                color="blue"
-              >
+          <Timeline 
+            items={recentData.recentProjects?.slice(0, 4).map((project, index) => ({
+              key: index,
+              dot: <ProjectOutlined className="text-blue-500" />,
+              color: "blue",
+              children: (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -153,9 +152,9 @@ const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
                     {formatDate(project.createdAt)}
                   </div>
                 </motion.div>
-              </Timeline.Item>
-            ))}
-          </Timeline>
+              )
+            })) || []}
+          />
         </Card>
       </motion.div>
 

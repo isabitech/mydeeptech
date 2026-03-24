@@ -21,6 +21,7 @@ import assessmentQueryService from "../../../../services/assessement-service/ass
 import { GetSubmissionsResponseSchema, SubmitReviewSchema } from "../../../../validators/assessment-reviews/assessment-reviews-schema";
 import assessmentMutationService from "../../../../services/assessement-service/assessment-mutation";
 import ErrorMessage from "../../../../lib/error-message";
+import { useUserInfoActions } from "../../../../store/useAuthStore";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -62,7 +63,8 @@ const UserAssessments = () => {
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [reviewForm] = Form.useForm();
-
+  const { setIsAssessmentSubmitted } = useUserInfoActions();
+ 
   const { assessmentReviews, isAssessmentReviewsLoading } = assessmentQueryService.useAssessmentReviews();
   const { updateReviewMutation, isUpdateReviewLoading } = assessmentMutationService.useUpdateReview();
 
@@ -104,6 +106,7 @@ const UserAssessments = () => {
       onSuccess: () => {
         setIsReviewModalVisible(false);
         reviewForm.resetFields();
+        setIsAssessmentSubmitted();
         message.success("Review submitted successfully");
       },
       onError: (error) => {

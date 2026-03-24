@@ -22,7 +22,7 @@ export const storeUserInfoToStorage = async (user: any) => {
     const encrypted = await Encryption.encrypt(JSON.stringify(user));
     // Save as string
     sessionStorage.setItem(USER_INFORMATION, JSON.stringify(encrypted));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error storing user info:", error);
   }
 };
@@ -35,11 +35,19 @@ export const retrieveUserInfoFromStorage = async () => {
   if (!stored) return null;
 
   try {
-    const { data, iv } = JSON.parse(stored); // ✅ this is now valid JSON
+    const { data, iv } = JSON.parse(stored);
     const decrypted = await Encryption.decrypt(data, iv);
-    return JSON.parse(decrypted); // ✅ restore user object
-  } catch (error) {
+    return JSON.parse(decrypted);
+  } catch (error: any) {
     console.error("Error retrieving user info:", error);
+    
+    // If decryption fails, clear the invalid stored data
+    if (error.message?.includes('Decryption failed')) {
+      console.warn("Clearing corrupted encrypted data");
+      sessionStorage.removeItem(USER_INFORMATION);
+      sessionStorage.removeItem(ACCESS_TOKEN_KEYWORD);
+    }
+    
     return null;
   }
 };
@@ -49,7 +57,7 @@ export const storeTokenToStorage = async (token: string) => {
   try {
     const encrypted = await Encryption.encrypt(token);
     sessionStorage.setItem(ACCESS_TOKEN_KEYWORD, JSON.stringify(encrypted));
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error storing token:", error);
   }
 };
@@ -64,8 +72,15 @@ export const retrieveTokenFromStorage = async () => {
   try {
     const { data, iv } = JSON.parse(stored);
     return await Encryption.decrypt(data, iv);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error retrieving token:", error);
+    
+    // If decryption fails, clear the invalid stored data
+    if (error.message?.includes('Decryption failed')) {
+      console.warn("Clearing corrupted token data");
+      sessionStorage.removeItem(ACCESS_TOKEN_KEYWORD);
+    }
+    
     return null;
   }
 };
