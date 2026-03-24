@@ -164,6 +164,8 @@ export const endpoints = {
     submit: "/api/assessments/submit",
     progress: "/api/assessments/progress",
     assessmentReview: "/assessment-reviews",
+    assessmentReviews: "/assessment-reviews",
+    updateReviewAssessment: "/assessment-reviews",
   },
 
   // Enhanced Chat support endpoints following the documentation

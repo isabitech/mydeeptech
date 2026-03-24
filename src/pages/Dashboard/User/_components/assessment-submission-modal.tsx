@@ -28,12 +28,11 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
   const [form] = Form.useForm();
   const { userInfo } = useUserInfoStates();
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const submitReviewMutation = assessmentMutationService.submitReviewMutation();
-  const isSubmitReviewMutationLoading = submitReviewMutation.isSubmitReviewMutationLoading;
 
+  const { submitReviewMutation, isSubmitReviewLoading } = assessmentMutationService.useSubmitReviewMutation();
 
   const handleCancel = () => {
-    if (isSubmitReviewMutationLoading) {
+    if (isSubmitReviewLoading) {
       message.warning("Please wait for the submission to complete before closing.");
       return;
     }
@@ -99,8 +98,8 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
       footer={null}
       width={750}
       centered
-      closable={!isSubmitReviewMutationLoading}
-      maskClosable={!isSubmitReviewMutationLoading}
+      closable={!isSubmitReviewLoading}
+      maskClosable={!isSubmitReviewLoading}
       title={null}
       styles={{
         content: {
@@ -381,7 +380,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           <div className="sticky bottom-0 bg-white py-4 flex justify-end gap-4 border-t border-gray-200 italic">
             <Button
               onClick={handleCancel}
-              disabled={isSubmitReviewMutationLoading}
+              disabled={isSubmitReviewLoading}
               className="rounded-md px-6"
             >
               Cancel
@@ -389,7 +388,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
             <Button
               type="primary"
               htmlType="submit"
-              loading={isSubmitReviewMutationLoading}
+              loading={isSubmitReviewLoading}
               className="bg-[#673ab7] hover:bg-[#5e35b1] border-none rounded-md px-8 h-10"
             >
               Submit Assessment

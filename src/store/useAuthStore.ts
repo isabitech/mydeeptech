@@ -36,6 +36,7 @@ interface UserInfo {
   updatedAt?: string;
   role?: string;
   role_permission?: RBACRole;
+  isAssessmentSubmitted?: boolean;
 }
 
 type UserRoleType = "admin" | "user";

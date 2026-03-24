@@ -97,6 +97,7 @@ export const useLogin = () => {
           microTaskerStatus: data.user.microTaskerStatus,
           resultLink: data.user.resultLink,
           qaStatus: data.user.qaStatus,
+          isAssessmentSubmitted: data.user.isAssessmentSubmitted,
         };
 
         setUserInfo(userInfo);

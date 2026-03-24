@@ -102,8 +102,10 @@ const AppRoutes = () => {
         {/* Protected Dashboard Routes */}
         <Route element={<ProtectUserLayout />}>
           <Route path="/dashboard" element={<Dashboard />}>
+            {/* Default route */}
+            <Route index element={<Navigate to="overview" replace />} />
             {/* User Dashboard */}
-            <Route path="overview" index element={<Welcome />} />
+            <Route path="overview" element={<Welcome />} />
             <Route path="projects" element={<Projects />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="tasks" element={<Tasks />} />
@@ -155,7 +157,6 @@ const AppRoutes = () => {
                 </PageGuard>
             } />
             </Route>
-            
             <Route path="assessments/multimedia" element={
               <PageGuard resource="assessments">
                 <AdminReelAssessmentManager />

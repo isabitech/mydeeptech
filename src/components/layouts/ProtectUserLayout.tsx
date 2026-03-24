@@ -24,7 +24,6 @@ const ProtectDashboardLayout: React.FC = () => {
       loadUserInfo();
     }, []);
 
-
   if(loading) {
     return <div className="absolute top-0 left-0 z-[200] h-screen w-screen bg-gradient-to-br from-primary via-primary to-background-accent flex items-center justify-center p-4">
         <Loader className='text-white animate-spin'  />

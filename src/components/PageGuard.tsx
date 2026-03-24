@@ -13,6 +13,8 @@ interface PageGuardProps {
 /**
  * Page-level guard for React Router.
  */
+
+
 export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const { isAuthenticated, isLoading: isSessionLoading } = useAdminSession();
   const { can, isLoading: isPermissionLoading } = usePermission(resource);
@@ -35,7 +37,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const hasAccess = can(ACTIONS.MANAGE) || can(ACTIONS.VIEW) || can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/admin/overview" replace />;
   }
 
   // Detect if user ONLY has 'view_own'

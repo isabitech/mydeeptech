@@ -39,7 +39,6 @@ const AdminHeader: React.FC = () => {
         const user = await retrieveUserInfoFromStorage();
         setUserInfo(user);
       } catch (error) {
-        console.error('Failed to load user info:', error);
         clearUserInfo();
       } finally {
         setIsLoading(false);
