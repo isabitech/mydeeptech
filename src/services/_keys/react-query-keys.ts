@@ -20,6 +20,10 @@ const MUTATION = {
     updatePartnerInvoice: "updatePartnerInvoice",
     deletePartnerInvoice: "deletePartnerInvoice",
     sendPartnerInvoice: "sendPartnerInvoice",
+
+    // Authentication Mutations
+    userSignin: "userSignin",
+    userSignup: "userSignup",
 } as const;
 
 const QUERY = {
