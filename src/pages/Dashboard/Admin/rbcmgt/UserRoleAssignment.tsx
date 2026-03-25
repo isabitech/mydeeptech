@@ -133,13 +133,14 @@ const UserRoleAssignment: React.FC = () => {
       </div>
 
       {isUsersLoading ? (
-        <div className="py-10 text-center"><Loader /></div>
+        <div className="py-10 text-center w-full flex items-center justify-center"><Loader /></div>
       ) : (
         <Table<RbacUser>
           dataSource={users}
           columns={columns}
           rowKey="_id"
           pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+          scroll={{ x: 'max-content' }}
         />
       )}
     </Space>

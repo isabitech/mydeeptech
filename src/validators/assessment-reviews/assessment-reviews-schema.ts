@@ -28,7 +28,7 @@ const AssessmentReviewSchema = z.object({
   submissionStatus: SubmissionStatusSchema,
   englishTestScore: z.string(), // kept as string since API returns "82"
   problemSolvingScore: z.string(),
-  googleDriveLink: z.string().url(),
+  googleDriveLink: z.url(),
   encounteredIssues: z.string(),
   issueDescription: z.string().nullable(),
   instructionClarityRating: z.number(),

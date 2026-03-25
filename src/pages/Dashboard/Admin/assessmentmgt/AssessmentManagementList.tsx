@@ -331,7 +331,7 @@ const AssessmentManagementList = () => {
                 <Card
                   className="border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => handleViewAssessment(assessment)}
-                  bodyStyle={{ padding: '24px' }}
+                  styles={{ body: { padding: '24px' } }}
                 >
                   {/* Assessment Header */}
                   <div className="mb-4">

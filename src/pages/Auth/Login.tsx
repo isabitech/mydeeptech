@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
-import { useLogin } from "../../hooks/Auth/useLogin";
+import authMutationService from "../../services/authentication/auth-mutation";
+import { notification } from "antd";
+import ErrorMessage from "../../lib/error-message";
 
 const Login = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
+  const from = location.state?.from?.pathname;
 
   const [formData, setFormData] = useState({
     email: "",
@@ -15,12 +19,11 @@ const Login = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
-  const authError = localStorage.getItem('authError') ?? null;
-  const { login, loading, error: hookError, } = useLogin();
-  const error = authError || hookError; // Prioritize authError from localStorage if it exists
+
+  const { signinMutation, isSigninError, isSigninLoading, signinError } = authMutationService.useUserSignin();
+  const error = isSigninError ? ErrorMessage(signinError) : "";
 
   const validateForm = () => {
-  
     const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
@@ -42,15 +45,46 @@ const Login = () => {
 
     if (!validateForm()) return;
 
-    const result = await login(formData);
-  if (result.success && result.token) {
-    // SAVE THE TOKEN HERE
-    localStorage.setItem("admin_token", result.token);
+    signinMutation.mutate(formData, {
+      onSuccess: (data) => {
 
-  } else {
-    // Error is already handled by the hook
-    console.error("Login failed:", result.error);
-  }
+        if (!data.user.isEmailVerified) {
+          notification.open({
+            type: "warning",
+            message: "Please verify your email before logging in. Check your inbox for verification link.",
+          });
+
+          notification.error({
+            message: "Please verify your email before logging in. Check your inbox for verification link.",
+          });
+  
+          return navigate("/login", { state: { email: formData.email }, replace: true });
+      }
+
+      if (!data.user.hasSetPassword) {
+        notification.open({
+          type: "warning",
+          message: "Please complete your account setup by setting a password.",
+        });
+        return navigate("/login", { state: { email: formData.email }, replace: true });
+      }
+
+        notification.open({ type: "success", message: "Login successful!" });
+
+        if (data.user.annotatorStatus || data.user.microTaskerStatus) {
+          navigate(from ?? "/dashboard/overview");
+        } else {
+          navigate(from ?? "/admin/overview");
+        }
+
+      },
+      onError: (err: any) => {
+      const errorMessage = ErrorMessage(err);
+      console.error("Login failed:", errorMessage);
+      notification.error({  message: errorMessage });
+    },
+    });
+
   };
 
   const handleInputChange = (field: "email" | "password", value: string) => {
@@ -241,13 +275,13 @@ const Login = () => {
 
               {/* Submit Button */}
               <motion.button
-                whileHover={{ scale: loading ? 1 : 1.02 }}
-                whileTap={{ scale: loading ? 1 : 0.98 }}
+                whileHover={{ scale: isSigninLoading ? 1 : 1.02 }}
+                whileTap={{ scale: isSigninLoading ? 1 : 0.98 }}
                 type="submit"
-                disabled={loading}
+                disabled={isSigninLoading}
                 className="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 px-4 rounded-lg font-medium hover:from-primary-hover hover:to-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
               >
-                {loading ? (
+                {isSigninLoading ? (
                   <span className="flex items-center">
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Signing In...

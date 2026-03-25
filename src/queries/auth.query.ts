@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { parseAdmin, Admin, Permission } from "../schemas/permission.schema";
+import { useUserInfoStates } from "../store/useAuthStore";
 
 export interface AdminSession {
   admin: Admin | null;
@@ -12,23 +13,24 @@ export interface AdminSession {
 }
 
 /**
- * High-performance hook to fetch the current admin session from local storage.
+ * High-performance hook to fetch the current admin session from Zustand store.
  * Uses TanStack Query for optimal caching and reactive updates.
  */
 export const useAdminSession = (): AdminSession => {
+  const { userInfo } = useUserInfoStates();
+  
   const query = useQuery({
-    queryKey: ["adminSession"],
+    queryKey: ["adminSession", userInfo?.id],
     queryFn: () => {
       try {
-        const rawJson = localStorage.getItem("adminInfo");
-        if (!rawJson) return null;
+        if (!userInfo) return null;
         
-        const rawData = JSON.parse(rawJson);
-        const { data } = parseAdmin(rawData);
+        // Parse the admin data using the same schema
+        const { data } = parseAdmin(userInfo);
         
         return data;
       } catch (err) {
-        console.warn("RBAC: FATAL session read error", err);
+        console.warn("RBAC: Session parsing error", err);
         return null;
       }
     },
@@ -36,8 +38,8 @@ export const useAdminSession = (): AdminSession => {
   });
 
   const admin = query.data || null;
-  const isAuthenticated = !!admin;
-  const token = localStorage.getItem("adminToken");
+  const isAuthenticated = !!admin && !!userInfo;
+  const token = null; // Token is now handled separately in encrypted storage
   const role = admin?.role || null;
   const roleName = admin?.role_permission?.name || null;
   

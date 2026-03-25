@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { endpoints } from "../../../store/api/endpoints";
 import { useLocation, useNavigate } from "react-router-dom";
 import { notification } from "antd";
-import { storeUserInfoToStorage, storeTokenToStorage } from "../../../helpers";
+import { storeTokenToStorage, storeUserInfoToStorage } from "../../../helpers";
 import { useUserInfoActions } from "../../../store/useAuthStore";
 import axiosInstance from "../../../service/axiosApi";
 import { getDefaultRedirectPath } from "../../../utils/permissions";
@@ -68,7 +68,7 @@ export const useAdminLogin = () => {
           return { success: false };
         }
 
-        // store user
+        // Store user information
         const adminInfo = {
           id: data.admin.id,
           fullName: data.admin.fullName,
@@ -79,17 +79,20 @@ export const useAdminLogin = () => {
           hasSetPassword: data.admin.hasSetPassword,
           role_permission: data.admin.role_permission,
         };
+
+        setUserInfo(adminInfo);
+
+        // Store in encrypted sessionStorage only - more secure for admin auth
+        await storeUserInfoToStorage(adminInfo);
         await storeTokenToStorage(data.token);
         setUserInfo(adminInfo);
 
-        localStorage.setItem("adminInfo", JSON.stringify(data.admin));
-        localStorage.setItem("adminToken", data.token);
-
         notification.success({
           message: "Login successful",
+          key: "admin-login-success",
         });
 
-        // 🎯 Smart redirect
+        // Smart redirect based on permissions
         const target = getDefaultRedirectPath(
           data.admin?.role_permission?.permissions,
           data.admin?.role_permission?.name

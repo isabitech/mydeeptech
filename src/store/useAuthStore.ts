@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { retrieveUserInfoFromStorage, storeUserInfoToStorage } from "../helpers";
 
 
 interface RBACPermission {
@@ -31,6 +32,7 @@ interface UserInfo {
   hasSetPassword?: boolean;
   annotatorStatus?: string;
   microTaskerStatus?: string;
+  qaStatus?: string;
   resultLink?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -39,21 +41,29 @@ interface UserInfo {
   isAssessmentSubmitted?: boolean;
 }
 
+
 type UserRoleType = "admin" | "user";
 
+export type UserInfoData = 
+| (UserInfo & { role: "user"; })
+| (UserInfo & { role: "admin"; role_permission: RBACRole })
+
+
+
 type UserInfoStates = {
-  userInfo: UserInfo | null;
+  userInfo: UserInfoData | null;
   userRoleType: UserRoleType | null;
 };
 
 
 
 type UserInfoActions = {
-  setUserInfo: (userInfo: UserInfo | null) => void;
+  setUserInfo: (userInfo: UserInfoData | null) => void;
+  setIsAssessmentSubmitted: () => Promise<void>;
   clearUserInfo: () => void;
 };
 
-type UserInfoStore = UserInfoStates & UserInfoActions;
+ type UserInfoStore = UserInfoStates & UserInfoActions;
 
 const initialStates: UserInfoStates = {
   userInfo: null,
@@ -66,6 +76,24 @@ const useUserInfoStore = create<UserInfoStore>()(
       ...initialStates,
       // --- Actions ---
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
+
+        setIsAssessmentSubmitted: async () => {
+  
+          const userInfo = await retrieveUserInfoFromStorage();
+
+          if (userInfo && userInfo.role === "user") {
+            userInfo.isAssessmentSubmitted = true;
+          }
+    
+          await storeUserInfoToStorage(userInfo);
+    
+           set((state) => ({
+            ...state,
+            userInfo: state.userInfo?.role === "user"
+              ? { ...state.userInfo, isAssessmentSubmitted: true }
+              : state.userInfo,
+          }));
+        },
       clearUserInfo: () => set({ userInfo: null }),
     }),
     {
@@ -84,6 +112,7 @@ const useUserInfoActions = () => {
 return  useUserInfoStore(
     useShallow((state) => ({
         setUserInfo: state.setUserInfo,
+        setIsAssessmentSubmitted: state.setIsAssessmentSubmitted,
         clearUserInfo: state.clearUserInfo,
     }))
 )}

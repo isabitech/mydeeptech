@@ -107,7 +107,7 @@ const SupportCenter: React.FC = () => {
           <Col xs={24} md={8}>
             <Card 
               className="text-center hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-dashed border-[#F6921E]"
-              bodyStyle={{ padding: '24px' }}
+              styles={{ body: { padding: '24px' } }}
             >
               <MessageOutlined className="text-4xl text-[#F6921E] mb-3" />
               <Title level={4} className="!text-[#333333] font-['gilroy-semibold']">

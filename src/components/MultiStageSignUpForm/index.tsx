@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
-import { useSignUpApi } from "../../hooks/Auth/useSignUp";
 import { useLocation } from "react-router-dom";
+import authMutationService from "../../services/authentication/auth-mutation";
+import { signUpSchema } from "../../validators/authentication/user-signup-schema";
+import ErrorMessage from "../../lib/error-message";
+import { notification } from "antd";
 
 type FormState = {
   fullName: string;
@@ -58,7 +61,7 @@ interface MultiStageSignUpFormProps {
   className?: string;
 }
 
-export default function MultiStageSignUpForm({ onSuccess, className = "" }: MultiStageSignUpFormProps) {
+export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, className = "" }: MultiStageSignUpFormProps) {
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
@@ -71,10 +74,11 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
     socialsFollowed: [],
     consent: "",
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
-
-  const { signUp, loading, error } = useSignUpApi();
+  const { signupMutation, isSignupLoading, isSignupError, signupError } = authMutationService.useUserSignup();
+  const error = isSignupError ? ErrorMessage(signupError) : "";
 
   const stages = [
     { id: 1, title: "Personal Info", icon: User },
@@ -128,30 +132,31 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
 
   const handleSubmit = async () => {
     if (!validateStage(3)) return;
-
-    try {
-      const payload = {
+    
+      // Use schema.parse() to validate and transform the data
+      const payload = signUpSchema.parse({
         fullName: form.fullName,
         phone: form.phone,
         email: form.email,
         domains: form.domains,
         socialsFollowed: form.socialsFollowed,
         consent: form.consent
-      };
+      });
 
-      const result = await signUp(payload);
-
-      if (result.error) {
-        setErrors({ submit: result.error });
-        return;
-      }
-
-      setSubmitted(true);
-      onSuccess?.(form);
-
-    } catch (err: any) {
-      setErrors({ submit: err.message });
-    }
+      signupMutation.mutate(payload, {
+        onSuccess: () => {
+          setSubmitted(true);
+          onHandleSuccess?.(form);
+        },
+        onError: (err) => {
+          console.error("Signup error:", err);
+          notification.error({
+            message: "Signup Failed",
+            description: ErrorMessage(err),
+            key: "signup-error",
+          });
+        }
+      });
   };
 
   const resetForm = () => {
@@ -462,7 +467,7 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
           whileHover={{ scale: currentStage > 1 ? 1.05 : 1 }}
           whileTap={{ scale: currentStage > 1 ? 0.95 : 1 }}
           onClick={handlePrevious}
-          disabled={currentStage === 1 || loading}
+          disabled={currentStage === 1 || isSignupLoading}
           className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 ${currentStage === 1
               ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
               : 'bg-gray-700 text-white hover:bg-gray-600'
@@ -487,10 +492,10 @@ export default function MultiStageSignUpForm({ onSuccess, className = "" }: Mult
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={isSignupLoading}
             className="flex items-center gap-2 bg-green-600 text-white md:px-8 md:py-3 px-3 py-3 rounded-lg shadow hover:bg-green-700 transition-colors disabled:opacity-50"
           >
-            {loading ? (
+            {isSignupLoading ? (
               <>
                 <motion.div
                   animate={{ rotate: 360 }}

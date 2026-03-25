@@ -20,6 +20,10 @@ const MUTATION = {
     updatePartnerInvoice: "updatePartnerInvoice",
     deletePartnerInvoice: "deletePartnerInvoice",
     sendPartnerInvoice: "sendPartnerInvoice",
+
+    // Authentication Mutations
+    userSignin: "userSignin",
+    userSignup: "userSignup",
 } as const;
 
 const QUERY = {
@@ -36,6 +40,8 @@ const QUERY = {
 
     assessmentReviews: "assessmentReviews",
     updateAssessmentReview: "updateAssessmentReview",
+
+    userProfile: "userProfile",
 } as const;
 
 const REACT_QUERY_KEYS = {

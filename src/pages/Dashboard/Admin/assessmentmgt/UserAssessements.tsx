@@ -51,10 +51,6 @@ interface Assessment {
   __v: number;
 }
 
-interface ReviewFormData {
-  rating: number;
-  description: string;
-}
 
 const UserAssessments = () => {
   const [searchText, setSearchText] = useState("");
@@ -62,7 +58,7 @@ const UserAssessments = () => {
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [reviewForm] = Form.useForm();
-
+ 
   const { assessmentReviews, isAssessmentReviewsLoading } = assessmentQueryService.useAssessmentReviews();
   const { updateReviewMutation, isUpdateReviewLoading } = assessmentMutationService.useUpdateReview();
 

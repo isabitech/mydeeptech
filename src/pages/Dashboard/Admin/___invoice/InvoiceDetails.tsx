@@ -97,7 +97,7 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
       <div className="mt-4">
         {/* Invoice Body for PDF */}
         <div ref={invoiceRef}>
-          <Card className="shadow-sm overflow-hidden" bodyStyle={{ padding: 0 }}>
+          <Card className="shadow-sm overflow-hidden" styles={{ body: { padding: 0 } }}>
             {/* Top Banner */}
             <div className="h-2 bg-primary" />
 

@@ -16,6 +16,7 @@ import {
   Empty,
   Avatar,
   Badge,
+  Spin,
 } from "antd";
 import {
   ReloadOutlined,
@@ -200,127 +201,129 @@ const UserNotifications: React.FC = () => {
 
       {/* Notifications List */}
       <Card>
-        {notifications && notifications.length > 0 ? (
-          <List
-            itemLayout="vertical"
-            size="large"
-            pagination={{
-              current: pagination?.currentPage || 1,
-              pageSize: filters.limit || 20,
-              total: pagination?.totalNotifications || 0,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              position: "bottom",
-              align: "center",
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} notifications`,
-              onChange: (page, limit) => {
-                setFilters({ ...filters, page, limit });
-              },
-            }}
-            dataSource={notifications}
-            renderItem={(notification: any) => (
-              <List.Item
-                key={notification._id}
-                className={`${
-                  !notification.isRead ? "bg-blue-50" : "bg-white"
-                } hover:bg-gray-50 cursor-pointer transition-all rounded-lg p-4 mb-2`}
-                onClick={() => handleViewNotification(notification)}
-                actions={[
-                  <Space key="actions">
-                    {!notification.isRead && (
-                      <Tooltip title="Mark as Read">
+        <Spin spinning={loading} tip="Loading notifications...">
+          {notifications && notifications.length > 0 ? (
+            <List
+              itemLayout="vertical"
+              size="large"
+              pagination={{
+                current: pagination?.currentPage || 1,
+                pageSize: filters.limit || 20,
+                total: pagination?.totalNotifications || 0,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                position: "bottom",
+                align: "center",
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} of ${total} notifications`,
+                onChange: (page, limit) => {
+                  setFilters({ ...filters, page, limit });
+                },
+              }}
+              dataSource={notifications}
+              renderItem={(notification: any) => (
+                <List.Item
+                  key={notification._id}
+                  className={`${
+                    !notification.isRead ? "bg-blue-50" : "bg-white"
+                  } hover:bg-gray-50 cursor-pointer transition-all rounded-lg p-4 mb-2`}
+                  onClick={() => handleViewNotification(notification)}
+                  actions={[
+                    <Space key="actions">
+                      {!notification.isRead && (
+                        <Tooltip title="Mark as Read">
+                          <Button
+                            icon={<CheckOutlined />}
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsRead(notification._id);
+                            }}
+                          />
+                        </Tooltip>
+                      )}
+                      {/* <Tooltip title="View">
                         <Button
-                          icon={<CheckOutlined />}
+                          icon={<EyeOutlined />}
                           size="small"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleMarkAsRead(notification._id);
+                            handleViewNotification(notification);
                           }}
                         />
-                      </Tooltip>
-                    )}
-                    {/* <Tooltip title="View">
-                      <Button
-                        icon={<EyeOutlined />}
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewNotification(notification);
-                        }}
-                      />
-                    </Tooltip> */}
-                  </Space>,
-                ]}
-              >
-                <List.Item.Meta
-                  avatar={
-                    <Badge dot={!notification.isRead}>
-                      <Avatar
-                        style={{
-                          backgroundColor: getTypeColor(notification.type),
-                          color: "white",
-                        }}
-                        icon={getNotificationIcon(notification.type)}
-                      />
-                    </Badge>
-                  }
-                  title={
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Text strong={!notification.isRead}>
-                        {notification.title}
-                      </Text>
-                      <Tag color={getTypeColor(notification.type)}>
-                        {notification.type.replace("_", " ").toUpperCase()}
-                      </Tag>
-                      <Tag color={getPriorityColor(notification.priority)}>
-                        {notification.priority.toUpperCase()}
-                      </Tag>
-                    </div>
-                  }
-                  description={
-                    <div>
-                      <Text
-                        type="secondary"
-                        className={!notification.isRead ? "font-medium" : ""}
-                      >
-                        {notification.message.length > 100
-                          ? `${notification.message.substring(0, 100)}...`
-                          : notification.message}
-                      </Text>
-                      <div className="mt-2">
-                        <Text type="secondary" style={{ fontSize: "12px" }}>
-                          {dayjs(notification.createdAt).fromNow()}
+                      </Tooltip> */}
+                    </Space>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    avatar={
+                      <Badge dot={!notification.isRead}>
+                        <Avatar
+                          style={{
+                            backgroundColor: getTypeColor(notification.type),
+                            color: "white",
+                          }}
+                          icon={getNotificationIcon(notification.type)}
+                        />
+                      </Badge>
+                    }
+                    title={
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Text strong={!notification.isRead}>
+                          {notification.title}
                         </Text>
-                        {notification.isRead && notification.readAt && (
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: "12px", marginLeft: "10px" }}
-                          >
-                            • Read {dayjs(notification.readAt).fromNow()}
-                          </Text>
-                        )}
+                        <Tag color={getTypeColor(notification.type)}>
+                          {notification.type.replace("_", " ").toUpperCase()}
+                        </Tag>
+                        <Tag color={getPriorityColor(notification.priority)}>
+                          {notification.priority.toUpperCase()}
+                        </Tag>
                       </div>
-                    </div>
-                  }
-                />
-              </List.Item>
-            )}
-          />
-        ) : (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No notifications found"
-          >
-            <Button
-              type="primary"
-              icon={<ReloadOutlined />}
-              onClick={() => refreshNotifications(filters)}
+                    }
+                    description={
+                      <div>
+                        <Text
+                          type="secondary"
+                          className={!notification.isRead ? "font-medium" : ""}
+                        >
+                          {notification.message.length > 100
+                            ? `${notification.message.substring(0, 100)}...`
+                            : notification.message}
+                        </Text>
+                        <div className="mt-2">
+                          <Text type="secondary" style={{ fontSize: "12px" }}>
+                            {dayjs(notification.createdAt).fromNow()}
+                          </Text>
+                          {notification.isRead && notification.readAt && (
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: "12px", marginLeft: "10px" }}
+                            >
+                              • Read {dayjs(notification.readAt).fromNow()}
+                            </Text>
+                          )}
+                        </div>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          ) : (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description="No notifications found"
             >
-              Refresh
-            </Button>
-          </Empty>
-        )}
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                onClick={() => refreshNotifications(filters)}
+              >
+                Refresh
+              </Button>
+            </Empty>
+          )}
+        </Spin>
       </Card>
 
       {/* View Notification Modal */}
