@@ -188,7 +188,7 @@ const ResourcesList: React.FC = () => {
         loading={isLoading}
         pagination={{ pageSize: 10, position: ["bottomCenter"] }}
         className="rbac-resource-table"
-        scroll={{ x: 1000 }}
+        scroll={{ x: 'max-content' }}
       />
 
       <ResourceForm

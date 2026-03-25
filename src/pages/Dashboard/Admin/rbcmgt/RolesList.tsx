@@ -177,6 +177,7 @@ const RolesList: React.FC = () => {
         rowKey="_id"
         pagination={false}
         className="custom-table"
+        scroll={{ x: "max-content" }}
       />
 
       {/* Add/Edit Modal */}
