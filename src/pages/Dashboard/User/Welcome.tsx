@@ -1,29 +1,15 @@
 import { Button } from "antd";
-import { useEffect, useState } from "react";
-import { retrieveUserInfoFromStorage } from "../../../helpers";
-import { UserInfoProps } from "./Header";
 import { Link, useSearchParams } from "react-router-dom";
 import Overview from "./Overview";
+import { useUserInfoStates } from "../../../store/useAuthStore";
+
 
 const Welcome = () => {
-  const [userInfo, setUserInfo] = useState<UserInfoProps | null>(null);
-
   const [searchParams] = useSearchParams();
-
+  const { userInfo } = useUserInfoStates();
   const resultSubmitted = searchParams.get("resultSubmitted=true");
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = await retrieveUserInfoFromStorage();
-      setUserInfo(user);
-    };
-    loadUser();
-  }, []);
-
-  if (
-    userInfo?.annotatorStatus === "pending" &&
-    userInfo?.microTaskerStatus === "pending"
-  ) {
+  if (userInfo?.annotatorStatus === "pending" && userInfo?.microTaskerStatus === "pending") {
     return (
       <div className=" font-[gilroy-regular]">
         <div className="font-[gilroy-regular] h-[70svh] flex justify-center items-center flex-col gap-4">
@@ -40,7 +26,7 @@ const Welcome = () => {
                 className="!font-[gilroy-regular] !bg-secondary !border-none  !text-[#FFFFFF]  !flex !h-10 !items-center !justify-center !rounded-xl hover:!bg-[#393735] hover:!text-secondary"
               // onClick={openDashboard}
               >
-                Take Assesment
+                Take Assessment
               </Button>
             </Link>
           </div>
@@ -48,11 +34,7 @@ const Welcome = () => {
       </div>
     );
   }
-  if (
-    (userInfo?.annotatorStatus === "submitted" &&
-      userInfo?.microTaskerStatus === "pending") ||
-    resultSubmitted
-  ) {
+  if ((userInfo?.annotatorStatus === "submitted" && userInfo?.microTaskerStatus === "pending") || resultSubmitted) {
     return (
       <div className="flex-1 font-[gilroy-regular]">
         <div className="font-[gilroy-regular] h-[70svh] flex justify-center items-center flex-col gap-4">

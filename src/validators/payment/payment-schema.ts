@@ -25,14 +25,16 @@ const BulkTransferPayloadSchema = z.object({
   exchangeRate: z.number().optional(),
 });
 
-type BulkTransferPayloadSchema = z.infer<typeof BulkTransferPayloadSchema>;
-
-export const PayloadOptionsSchema = z.object({
+const PayloadOptionsSchema = z.object({
   initiatedBy: z.string().optional(),
   currency: z.string().optional(),
   source: z.string().optional(),
 });
 
+type BulkTransferPayloadSchema = z.infer<typeof BulkTransferPayloadSchema>;
+type PayloadOptionsSchema = z.infer<typeof PayloadOptionsSchema>;
+
 export {
     BulkTransferPayloadSchema,
+    PayloadOptionsSchema,
 }

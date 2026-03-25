@@ -1,5 +1,5 @@
 import Sidebar from "./Sidebar";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { retrieveTokenFromStorage, retrieveUserInfoFromStorage } from "../../../helpers";
 import { useState, useEffect } from "react";
 import UserHeader from "./UserHeader";
@@ -13,6 +13,7 @@ const DashboardLayout = () => {
     const { loading } = useLogin();
     const { setUserInfo,  } = useUserInfoActions();
     const { userInfo,  } = useUserInfoStates();
+    const location = useLocation();
   
   useEffect(() => {
     const getToken = async () => {
@@ -40,7 +41,9 @@ const DashboardLayout = () => {
   }
 
     // If user hasn't submitted assessment, only allow access to overview and assessment pages
-    if (!userInfo?.isAssessmentSubmitted  && location.pathname !== '/dashboard/overview') {
+    if (!userInfo?.isAssessmentSubmitted && 
+        location.pathname !== '/dashboard/overview' && 
+        location.pathname !== '/dashboard/assessment') {
       notification.warning({
         key: 'assessment-required',
         message: "Assessment Required",
