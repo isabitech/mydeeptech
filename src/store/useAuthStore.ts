@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { retrieveUserInfoFromStorage, storeUserInfoToStorage } from "../helpers";
 
 
 interface RBACPermission {
@@ -50,7 +51,7 @@ type UserInfoStates = {
 
 type UserInfoActions = {
   setUserInfo: (userInfo: UserInfo | null) => void;
-  setIsAssessmentSubmitted: () => void;
+  setIsAssessmentSubmitted: () => Promise<void>;
   clearUserInfo: () => void;
 
 };
@@ -68,9 +69,23 @@ const useUserInfoStore = create<UserInfoStore>()(
       ...initialStates,
       // --- Actions ---
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
-    setIsAssessmentSubmitted: () => set((state) => ({
-        ...(state.userInfo && { userInfo: { ...state.userInfo, isAssessmentSubmitted: true } }),
-      })),
+
+        setIsAssessmentSubmitted: async () => {
+  
+          const userInfo = await retrieveUserInfoFromStorage();
+
+          if (userInfo) {
+            userInfo.isAssessmentSubmitted = true;
+            await storeUserInfoToStorage(userInfo);
+          }
+
+           set((state) => ({
+            ...state,
+            userInfo: state.userInfo
+              ? { ...state.userInfo, isAssessmentSubmitted: true }
+              : state.userInfo,
+          }));
+        },
       clearUserInfo: () => set({ userInfo: null }),
     }),
     {

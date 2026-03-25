@@ -8,11 +8,15 @@ import axiosInstance from "../../service/axiosApi";
 
 
   const useSubmitReviewMutation = () => {
+    const queryClient = useQueryClient();
     const mutation = useMutation({
     mutationKey: ["submitAssessmentReview"],
     mutationFn: async (payload: SubmitAssessmentReviewPayload): Promise<any> => {
       const data: any = await apiPost(endpoints.assessments.assessmentReview, payload);
       return data.data;
+  },
+    onSettled: () => {
+      queryClient.invalidateQueries({queryKey: [REACT_QUERY_KEYS.QUERY.userProfile]});
     }
   });
 

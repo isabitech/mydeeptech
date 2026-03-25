@@ -4,6 +4,7 @@ import AssessmentIntroduction from "./AssessmentIntroduction";
 import AssessmentExam from "./AssessmentExam";
 import AssessmentResults from "./AssessmentResults";
 import { Modal } from "antd";
+import authService from "../../services/authentication/auth-query";
 
 type AssessmentStep = "introduction" | "exam" | "results" | "completed";
 
@@ -12,9 +13,9 @@ const Assessment: React.FC = () => {
   const location = useLocation();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const assessmentType = searchParams.get('type') || 'english_proficiency';
+  const { userProfileRefetch } = authService.useProfile();
   
-  const [currentStep, setCurrentStep] =
-    useState<AssessmentStep>("introduction");
+  const [currentStep, setCurrentStep] = useState<AssessmentStep>("introduction");
   const [assessmentScore, setAssessmentScore] = useState<number>(0);
   const [assessmentStatus, setAssessmentStatus] = useState<string>("");
   const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
@@ -42,10 +43,12 @@ const Assessment: React.FC = () => {
     setAssessmentScore(score);
     setAssessmentStatus(status);
     setCurrentStep("results");
+    userProfileRefetch(); // Refetch user profile to get latest info after submission
   };
 
   const handleReturnToDashboard = () => {
     // Show success modal instead of directly navigating
+    userProfileRefetch(); // Refetch user profile to get latest info after submission
     setCurrentStep("completed");
     setShowSuccessModal(true);
     setCountdown(5);
@@ -54,9 +57,7 @@ const Assessment: React.FC = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case "introduction":
-        return (
-          <AssessmentIntroduction onStartAssessment={handleStartAssessment} />
-        );
+        return (<AssessmentIntroduction onStartAssessment={handleStartAssessment} />);
 
       case "exam":
         return <AssessmentExam onSubmitSuccess={handleSubmitSuccess} />;

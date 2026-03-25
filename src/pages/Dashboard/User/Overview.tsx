@@ -8,12 +8,11 @@ import FinancialSummaryCards from "../../../components/Dashboard/User/FinancialS
 import ApplicationStatisticsCharts from "../../../components/Dashboard/User/ApplicationStatisticsCharts";
 import AvailableOpportunitiesComponent from "../../../components/Dashboard/User/AvailableOpportunitiesComponent";
 import RecentActivityTimeline from "../../../components/Dashboard/User/RecentActivityTimeline";
-
 import NotificationCarousel from "./_components/notification-carousel";
 
 const Overview = () => {
-  const { data, loading, error, getDashboardData, refreshDashboard } =
-    useDTUserDashboard();
+
+  const { data, loading, error, getDashboardData, refreshDashboard } = useDTUserDashboard();
 
   useEffect(() => {
     getDashboardData();

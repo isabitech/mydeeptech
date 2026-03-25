@@ -12,6 +12,7 @@ export const endpoints = {
     verifyEmail: "/auth/verifyDTusermail",
     setUpPassword: "/auth/setupPassword",
     loginDTUser: "/auth/dtUserLogin",
+    me: "/auth/me",
     resetPassword: "/auth/dtUserResetPassword",
     forgotPassword: "/auth/dtuser-forgot-password",
     resetPasswordWithToken: "/auth/dtuser-reset-password",

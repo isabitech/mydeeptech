@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Form, Input, Button, Typography, message, DatePicker, TimePicker, Checkbox, Radio, Row, Col } from 'antd';
 import { LinkOutlined, UserOutlined, MailOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useUserInfoStates } from '../../../../store/useAuthStore';
-import { SubmitAssessmentReviewPayload } from '../../../../hooks/Auth/User/useSubmitAssessment';
+import { useUserInfoActions, useUserInfoStates } from '../../../../store/useAuthStore';
 import dayjs from 'dayjs';
 import assessmentMutationService from '../../../../services/assessement-service/assessment-mutation';
 import ErrorMessage from '../../../../lib/error-message';
 import { AssessmentType } from './assessments-modal';
+import authService from '../../../../services/authentication/auth-query';
+import { formSubmitPayload } from './formSubmitPayload';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -25,11 +26,12 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
   assessmentType,
   onBackToInstructions,
 }) => {
+
   const [form] = Form.useForm();
   const { userInfo } = useUserInfoStates();
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
+  const { setIsAssessmentSubmitted } = useUserInfoActions();
   const { submitReviewMutation, isSubmitReviewLoading } = assessmentMutationService.useSubmitReviewMutation();
+  const { userProfileRefetch } = authService.useProfile(); // Refetch user profile to get latest info after submission
 
   const handleCancel = () => {
     if (isSubmitReviewLoading) {
@@ -49,28 +51,13 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
   const handleSubmit = async (values: any) => {
 
-      const payload: SubmitAssessmentReviewPayload = {
-        fullName: values.fullName,
-        emailAddress: values.emailAddress,
-        dateOfSubmission: values.dateOfSubmission?.format('YYYY-MM-DD'),
-        timeOfSubmission: values.timeOfSubmission?.format('hh:mm A'),
-        submissionStatus: {
-          englishTestUploaded: true,
-          problemSolvingTestUploaded: true
-        },
-        englishTestScore: values.englishTestScore,
-        problemSolvingScore: values.problemSolvingScore,
-        googleDriveLink: values.googleDriveLink,
-        encounteredIssues: values.encounteredIssues === 'Yes' 
-          ? "Yes, I encountered issues." 
-          : "No, the process was smooth.",
-        issueDescription: values.encounteredIssues === 'Yes' ? values.issueDescription : "",
-        instructionClarityRating: values.instructionClarityRating
-      };
+      const payload = formSubmitPayload(values);
 
       submitReviewMutation.mutate(payload, {
-          onSuccess: () => {
-            message.success(`Your submission for ${assessmentType} has been received!`);
+          onSuccess: async () => {
+            await setIsAssessmentSubmitted(); // Manually update local state to mark assessment as submitted
+            await userProfileRefetch(); // Refetch user profile to get latest info after submission
+            message.success(`Your submission for ${assessmentType} was successful!`);
             form.resetFields();
             onCloseModal();
           },
@@ -132,9 +119,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           }}
         >
           {/* Identity Section */}
-          <div 
-            onFocus={() => setActiveSection('identity')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Row gutter={24}>
@@ -177,9 +162,6 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 
           {/* Timing Section */}
           <div 
-         
-            onFocus={() => setActiveSection('timing')}
-            onBlur={() => setActiveSection(null)}
             tabIndex={-1}
           >
             <Row gutter={24}>
@@ -214,9 +196,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Confirmation Checklist */}
-          <div 
-            onFocus={() => setActiveSection('confirmation')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Form.Item
@@ -253,9 +233,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Scores Section */}
-          <div 
-            onFocus={() => setActiveSection('scores')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Row gutter={24}>
@@ -287,9 +265,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Link Section */}
-          <div 
-            onFocus={() => setActiveSection('link')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Form.Item
@@ -311,9 +287,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Issues Section */}
-          <div 
-            onFocus={() => setActiveSection('issues')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Form.Item
@@ -350,9 +324,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
           </div>
 
           {/* Quality Section */}
-          <div 
-            onFocus={() => setActiveSection('quality')}
-            onBlur={() => setActiveSection(null)}
+          <div
             tabIndex={-1}
           >
             <Form.Item
