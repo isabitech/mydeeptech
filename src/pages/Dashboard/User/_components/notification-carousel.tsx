@@ -14,7 +14,8 @@ const NotificationCarousel = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const { userInfo } = useUserInfoStates();
   const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false;
-  const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
+  const openModal = false;
+  // const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
 
   // const totalSlides = 2;
   const totalSlides = 1;
