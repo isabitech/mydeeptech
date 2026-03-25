@@ -24,7 +24,7 @@ import {
   FileTextOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { multimediaAssessmentApi } from '../../../../service/axiosApi';
 import AssessmentSubmissions from './AssessmentSubmissions';
 
@@ -305,6 +305,11 @@ const AssessmentManagementList = () => {
               <Option value="general">General Skills</Option>
             </Select>
           </Col>
+          <Col xs={12} sm={4}>
+            <Link to="/admin/assessments/review-assessments">
+              <Button type="primary"> Review Assessments</Button>
+            </Link>
+          </Col>
         </Row>
       </Card>
 
@@ -326,7 +331,7 @@ const AssessmentManagementList = () => {
                 <Card
                   className="border-0 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => handleViewAssessment(assessment)}
-                  bodyStyle={{ padding: '24px' }}
+                  styles={{ body: { padding: '24px' } }}
                 >
                   {/* Assessment Header */}
                   <div className="mb-4">

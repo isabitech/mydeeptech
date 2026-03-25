@@ -112,7 +112,7 @@ const Sidebar = () => {
 
   // Check if a menu item should be locked based on user status
   const isMenuItemLocked = (itemKey: string) => {
-    
+
     if (loading || !userInfo) {
       return false; // Don't lock anything while loading
     }

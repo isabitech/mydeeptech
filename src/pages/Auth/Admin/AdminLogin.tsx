@@ -7,7 +7,7 @@ import { useAdminLogin } from "../../../hooks/Auth/Admin/useAdminLogin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
 
 const AdminLogin: React.FC = () => {
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,7 +23,10 @@ const AdminLogin: React.FC = () => {
   const location = useLocation();
 
   const error = authError || hookError; // Prioritize authError from localStorage if it exists
-  const from = location.state?.from?.pathname;
+  const from =
+    typeof location.state?.from === "string"
+      ? location.state.from
+      : location.state?.from?.pathname;
 
 
   useEffect(() => {
@@ -102,9 +105,9 @@ const AdminLogin: React.FC = () => {
       password: formData.password,
     });
 
-    // Navigation is handled in the useAdminLogin hook
+    // Navigation is now handled internally in the useAdminLogin hook using smart redirect logic
     if (result.success) {
-      navigate(from ?? "/admin/overview", { replace: true });
+      // result.success is enough for the hook to trigger navigation
     }
   };
 
@@ -243,7 +246,7 @@ const AdminLogin: React.FC = () => {
               <button
                 type="button"
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                onClick={() => {}}
+                onClick={() => { }}
               >
                 Forgot password?
               </button>

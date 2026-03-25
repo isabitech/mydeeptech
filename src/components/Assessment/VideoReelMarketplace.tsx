@@ -274,7 +274,7 @@ const VideoReelMarketplace: React.FC<VideoReelMarketplaceProps> = ({
                           </div>
                         </div>
                       }
-                      bodyStyle={{ padding: '12px' }}
+                      styles={{ body: { padding: '12px' } }}
                     >
                       <div className="space-y-2">
                         <Text 

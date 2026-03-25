@@ -59,6 +59,11 @@ import InvoiceRoutes from "./pages/Dashboard/Admin/___invoice/InvoiceRoutes";
 import UserNotifications from "./pages/Dashboard/User/user-notifications/UserNotifications";
 import ProtectUserLayout from "./components/layouts/ProtectUserLayout";
 import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
+import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
+import { PageGuard } from "./components";
+import ApplicationsPage from "./pages/admin/ApplicationsPage";
+import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessements";
+import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 
 const AppRoutes = () => {
   return (
@@ -98,8 +103,10 @@ const AppRoutes = () => {
         {/* Protected Dashboard Routes */}
         <Route element={<ProtectUserLayout />}>
           <Route path="/dashboard" element={<Dashboard />}>
+            {/* Default route */}
+            <Route index element={<Navigate to="overview" replace />} />
             {/* User Dashboard */}
-            <Route path="overview" index element={<Welcome />} />
+            <Route path="overview" element={<Welcome />} />
             <Route path="projects" element={<Projects />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="tasks" element={<Tasks />} />
@@ -122,25 +129,112 @@ const AppRoutes = () => {
         <Route path="/auth/admin-login" element={<AdminLogin />} />
 
         {/* Admin Dashboard */}
-        <Route element={<ProtectAdminLayout />}> 
+        <Route element={<ProtectAdminLayout />}>
           <Route path="/admin" element={<AdminLayout />}>
-            <Route path="overview" index element={<AdminOverview />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="annotators" element={<Annotators />} />
-            <Route path="assessments" element={<AssessmentManagementList />} />
-            <Route path="assessments/multimedia" element={<AdminReelAssessmentManager />} />
-            <Route path="assessments/qa-review" element={<QAReviewDashboard />} />
-            <Route path="projects" element={<ProjectManagement />} />
-            <Route path="applications" element={<ApplicationManagement />} />
-            <Route path="jobs" element={<JobManagement />} />
-            <Route path="tasks" element={<TaskManagement />} />
-            <Route path="invoices" element={<InvoiceManagement />} />
-            <Route path="payments" element={<PaymentManagement />} />
-            <Route path="notifications" element={<NotificationManagement />} />
-            <Route path="chat" element={<ChatManagement />} />
-            <Route path="settings" element={<SettingsMgt />} />
-            <Route path="invoice-page/*" element={<InvoiceRoutes />} />
-            <Route path="partner-invoices/*" element={<InvoiceRoutes />} />
+            <Route path="overview" index element={
+              <PageGuard resource="overview">
+                <AdminOverview />
+              </PageGuard>
+            } />
+            <Route path="users" element={
+              <PageGuard resource="users">
+                <UserManagement />
+              </PageGuard>
+            } />
+            <Route path="annotators" element={
+              <PageGuard resource="annotators">
+                <Annotators />
+              </PageGuard>
+            } />
+            <Route path="assessments">
+              <Route index element={
+                <PageGuard resource="assessments">
+                  <AssessmentManagementList />
+                </PageGuard>
+            } />
+              <Route path="review-assessments" element={
+                <PageGuard resource="assessments">
+                  <UserAssessments />
+                </PageGuard>
+            } />
+            </Route>
+            <Route path="assessments/multimedia" element={
+              <PageGuard resource="assessments">
+                <AdminReelAssessmentManager />
+              </PageGuard>
+            } />
+            <Route path="assessments/qa-review" element={
+              <PageGuard resource="assessments">
+                <QAReviewDashboard />
+              </PageGuard>
+            } />
+            <Route path="projects" element={
+              <PageGuard resource="projects">
+                <ProjectManagement />
+              </PageGuard>
+            } />
+            <Route path="applications" element={
+              <PageGuard resource="applications">
+                <ApplicationManagement />
+              </PageGuard>
+            } />
+            <Route path="applications-demo" element={
+              <PageGuard resource="applications">
+                <ApplicationsPage />
+              </PageGuard>
+            } />
+            <Route path="jobs" element={
+              <PageGuard resource="jobs">
+                <JobManagement />
+              </PageGuard>
+            } />
+            <Route path="tasks" element={
+              <PageGuard resource="tasks">
+                <TaskManagement />
+              </PageGuard>
+            } />
+            <Route path="invoices" element={
+              <PageGuard resource="invoice">
+                <InvoiceManagement />
+              </PageGuard>
+            } />
+            <Route path="payments" element={
+              <PageGuard resource="payments">
+                <PaymentManagement />
+              </PageGuard>
+            } />
+            <Route path="notifications" element={
+              <PageGuard resource="notifications">
+                <NotificationManagement />
+              </PageGuard>
+            } />
+            <Route path="chat" element={
+              <PageGuard resource="chat">
+                <ChatManagement />
+              </PageGuard>
+            } />
+            <Route path="rbac" element={
+              <PageGuard resource="rbac">
+                <RBACPage />
+              </PageGuard>
+            } />
+            <Route path="settings" element={
+              <PageGuard resource="settings">
+                <SettingsMgt />
+              </PageGuard>
+            } />
+            <Route path="invoice-page/*" element={
+              <PageGuard resource="invoice">
+                <InvoiceRoutes />
+              </PageGuard>
+            } />
+            <Route path="partner-invoices/*" element={
+              <PageGuard resource="invoice">
+                <InvoiceRoutes />
+              </PageGuard>
+            } />
+
+             <Route path="employees/*" element={<EmployeeMgt /> } />
           </Route>
         </Route>
 

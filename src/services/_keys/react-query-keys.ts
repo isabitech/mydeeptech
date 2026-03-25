@@ -33,6 +33,9 @@ const QUERY = {
 
     getExchangeRateByCountry: "getExchangeRateByCountry",
     getPartnerInvoices: "getPartnerInvoices",
+
+    assessmentReviews: "assessmentReviews",
+    updateAssessmentReview: "updateAssessmentReview",
 } as const;
 
 const REACT_QUERY_KEYS = {

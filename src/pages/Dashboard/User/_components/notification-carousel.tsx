@@ -4,14 +4,30 @@ import { LeftOutlined, RightOutlined, BookOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import SlackNotification from "./slack-notification";
 import AssessmentsModal from "./assessments-modal";
+import { useUserInfoStates } from "../../../../store/useAuthStore";
 
 const NotificationCarousel = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalDismissed, setIsModalDismissed] = useState(false);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const { userInfo } = useUserInfoStates();
+  const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false;
+  const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
 
   const totalSlides = 2;
+
+  const onCloseModal = () => {
+    setIsModalOpen(false);
+    setIsModalDismissed(true);
+  };
+
+  const onReopenModal = () => {
+    setIsModalOpen(true);
+    setIsModalDismissed(false);
+  };
+
 
   const next = useCallback(() => {
     setDirection(1);
@@ -174,8 +190,9 @@ const NotificationCarousel = () => {
       </div>
 
       <AssessmentsModal
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        open={openModal}
+        onCloseModal={onCloseModal}
+        onReopenModal={onReopenModal}
       />
     </motion.div>
   );

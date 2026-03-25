@@ -109,7 +109,7 @@ export const endpoints = {
     update: "/partner-invoice",
     delete: "/partner-invoice",
     send: "/partner-invoice/send",
-    pagination: "/partner-invoice",
+    pagination: "/partner-invoice/pagination",
   },
 
   // User invoice endpoints
@@ -163,6 +163,9 @@ export const endpoints = {
     session: "/api/assessments/session",
     submit: "/api/assessments/submit",
     progress: "/api/assessments/progress",
+    assessmentReview: "/assessment-reviews",
+    assessmentReviews: "/assessment-reviews",
+    updateReviewAssessment: "/assessment-reviews",
   },
 
   // Enhanced Chat support endpoints following the documentation
@@ -212,5 +215,37 @@ export const endpoints = {
   payStack: {
     verifyAccountDetails: "/payments/verify-account-number",
     listAllNGNBanks: "/payments/get-banks-by-country",
+  },
+  rbac: {
+    permissions: {
+      all: "/roles-permission/permission/all",
+      search: "/roles-permission/permission/all/name",
+      byId: "/roles-permission/permission",
+      create: "/roles-permission/permission/create",
+      update: "/roles-permission/permission/update",
+      delete: "/roles-permission/permission/delete",
+    },
+    roles: {
+      all: "/roles-permission/role/all",
+      byId: "/roles-permission/role",
+      create: "/roles-permission/role/create",
+      update: "/roles-permission/role/update",
+      addPermissions: "/roles-permission/role/:id",
+      removePermission: "/roles-permission/role/:id/permissions/remove",
+      delete: "/roles-permission/role",
+      assignUser: "/roles-permission/role/:roleId/assign-user/:userId",
+    },
+    users: {
+      all: "/admin/admin-users",
+      updateRole: "/admin/users/:userId/role",
+      assignRolePermission: "/admin/users/:userId/role-permission",
+    },
+    resources: {
+      base: "/resources",
+      meAllowed: "/resources/me/allowed",
+      search: "/resources/search",
+      byId: "/resources/:id",
+      togglePublish: "/resources/:id/toggle-publish",
+    }
   }
 };

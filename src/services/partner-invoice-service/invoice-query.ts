@@ -1,115 +1,77 @@
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../../service/axiosApi";
 import { endpoints } from "../../store/api/endpoints";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
-import { Invoice } from "../../store/useInvoiceStore";
+import { PaginatedInvoiceResponseSchema, InvoiceSchema } from "./invoice-schema";
 
-const useFetchPartnerInvoices = () => {
-    return useQuery({
+/**
+ * Reusable query options for Invoices
+ */
+export const invoiceQueries = {
+    all: () => queryOptions({
         queryKey: [REACT_QUERY_KEYS.QUERY.getPartnerInvoices],
         queryFn: async () => {
             const response = await axiosInstance.get(endpoints.partnerInvoice.getAll);
-            if (response.data.success) {
-                // Return original structure but ensure field mapping for UI
-                const rawData = Array.isArray(response.data.data) ? response.data.data : [];
-                return rawData.map((inv: any) => ({
-                    ...inv,
-                    amount: inv.invoiceAmount !== undefined ? inv.invoiceAmount : (inv.amount || 0),
-                    due_date: inv.dueDate || inv.due_date || inv.invoiceDate || null,
-                })).sort((a: any, b: any) =>
-                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-                ) as Invoice[];
+            const body = PaginatedInvoiceResponseSchema.parse(response.data);
+            
+            let rawInvoices: any[] = [];
+            if (Array.isArray(body.data)) {
+                rawInvoices = body.data;
+            } else {
+                rawInvoices = body.data.invoices || body.data.data || [];
             }
-            throw new Error(response.data.message || "Failed to fetch invoices");
+            
+            return rawInvoices
+                .map(inv => InvoiceSchema.parse(inv))
+                .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         },
-    });
-};
-const useFetchPaginatedPartnerInvoices = (params: { page: number; limit: number; search?: string }) => {
-    return useQuery({
+    }),
+    
+    paginated: (params: { page: number; limit: number; search?: string }) => queryOptions({
         queryKey: [REACT_QUERY_KEYS.QUERY.getPartnerInvoices, params],
         queryFn: async () => {
-            // Try the standard pagination first, but prepare to be loose with the endpoint
-            const endpoint = endpoints.partnerInvoice.pagination;
-            // +1 Look-ahead: Request one extra item to see if a next page exists
-            const fetchParams = { ...params, limit: params.limit + 1 };
-            const response = await axiosInstance.get(endpoint, { params: fetchParams });
-            const body = response.data;
-            
-            if (body && body.success === false) {
-                throw new Error(body.message || "Failed to fetch invoices");
-            }
+            const response = await axiosInstance.get(endpoints.partnerInvoice.pagination, { params });
+            const body = PaginatedInvoiceResponseSchema.parse(response.data);
 
-            // Super-flexible extraction: look for data, then body itself, then any array
-            let data = body?.data !== undefined ? body.data : body;
-            
             let rawInvoices: any[] = [];
             let totalCount = 0;
             let currentPage = params.page;
+            let summary = null;
 
-            // 1. If it's a flat array
-            if (Array.isArray(data)) {
-                rawInvoices = data;
-                totalCount = data.length;
-            } 
-            // 2. If it's the standard paginated object
-            else if (data && typeof data === 'object') {
-                rawInvoices = data.invoices || data.data || [];
-                // If we still don't have an array, look for any array property
-                if (!Array.isArray(rawInvoices)) {
-                    const foundArray = Object.values(data).find(v => Array.isArray(v));
-                    rawInvoices = Array.isArray(foundArray) ? foundArray : [];
-                }
-                
-                const pag = data.pagination || body.pagination || {};
-                totalCount = pag.totalCount || pag.total || pag.totalInvoices || 0;
-                currentPage = pag.page || pag.currentPage || params.page;
+            if (Array.isArray(body.data)) {
+                rawInvoices = body.data;
+                totalCount = body.data.length;
+            } else {
+                rawInvoices = body.data.invoices || body.data.data || [];
+                const pag = body.data.pagination || { totalCount: 0, page: params.page };
+                totalCount = pag.totalCount;
+                currentPage = pag.page;
+                summary = body.data.summary;
             }
 
-            // BLIND FORWARD / LOOK-AHEAD LOGIC: 
-            // If backend provides a real totalCount, use it.
-            // Otherwise, use our look-ahead results to definitively set totalCount.
-            const hasMore = rawInvoices.length > params.limit;
-            
-            if (!totalCount || totalCount <= params.limit) {
-                if (hasMore) {
-                    // There is at least a next page
-                    totalCount = params.page * params.limit + 1;
-                } else {
-                    // No more items
-                    totalCount = (params.page - 1) * params.limit + rawInvoices.length;
-                }
-            }
-
-            let invoices = rawInvoices
-                .filter(Boolean)
-                .map((inv: any) => ({
-                    ...inv,
-                    // Robust field name variations
-                    amount: inv.invoiceAmount !== undefined ? inv.invoiceAmount : (inv.amount !== undefined ? inv.amount : 0),
-                    due_date: inv.dueDate || inv.due_date || inv.invoiceDate || null,
-                }));
-
-            // Always trim the look-ahead item for display
-            if (invoices.length > params.limit) {
-                invoices = invoices.slice(0, params.limit);
-            }
+            const invoices = rawInvoices.map(inv => InvoiceSchema.parse(inv));
 
             return {
-                invoices: invoices as Invoice[],
+                invoices,
                 pagination: {
                     page: Number(currentPage) || params.page,
                     limit: params.limit,
                     totalCount: Number(totalCount) || 0,
                 },
-                summary: data?.summary || body?.summary || null
+                summary
             };
         },
-    });
+    })
 };
 
-    const partnerInvoiceQueryService = {
-        useFetchPartnerInvoices,
-        useFetchPaginatedPartnerInvoices,
-    };
+const useFetchPartnerInvoices = () => useQuery(invoiceQueries.all());
 
-    export default partnerInvoiceQueryService;
+const useFetchPaginatedPartnerInvoices = (params: { page: number; limit: number; search?: string }) => 
+    useQuery(invoiceQueries.paginated(params));
+
+const partnerInvoiceQueryService = {
+    useFetchPartnerInvoices,
+    useFetchPaginatedPartnerInvoices,
+};
+
+export default partnerInvoiceQueryService;

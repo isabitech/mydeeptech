@@ -97,7 +97,7 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
       <div className="mt-4">
         {/* Invoice Body for PDF */}
         <div ref={invoiceRef}>
-          <Card className="shadow-sm overflow-hidden" bodyStyle={{ padding: 0 }}>
+          <Card className="shadow-sm overflow-hidden" styles={{ body: { padding: 0 } }}>
             {/* Top Banner */}
             <div className="h-2 bg-primary" />
 
@@ -141,10 +141,10 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
                 labelStyle={{ width: '200px', backgroundColor: '#fafafa' }}
               >
                 <Descriptions.Item label={<Space><ClockCircleOutlined /> Duration</Space>}>
-                  <Tag color="gold">{invoice.duration}</Tag>
+                  <Tag color="gold">{invoice.duration || "N/A"}</Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label={<Space><CalendarOutlined /> Due Date</Space>}>
-                  <Text strong>{new Date(invoice.due_date).toLocaleDateString()}</Text>
+                  <Text strong>{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "N/A"}</Text>
                 </Descriptions.Item>
               </Descriptions>
 

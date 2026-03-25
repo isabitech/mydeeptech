@@ -1,135 +1,87 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-  HomeOutlined,
-  UserOutlined,
-  SettingOutlined,
-  CodeSandboxOutlined,
-  InboxOutlined,
   LogoutOutlined,
-  WalletOutlined,
-  BookOutlined,
-  BellOutlined,
-  MessageOutlined,
-  FileTextOutlined,
+  DownOutlined,
+  RightOutlined
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
-import { Button, Drawer } from "antd";
+import { Button, Drawer, Skeleton } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
 import { useUserInfoActions } from "../../../store/useAuthStore";
-
+import { useSidebarResources } from "../../../hooks/useSidebarResources";
+import { getIconElement } from "../User/SidebarIcon";
+import { ResourceNode } from "../../../api/rbac/rbacSchema";
 
 const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; handleLogOutModal: () => void }) => {
   const { handleCloseSidebar } = useSidebarContext();
+  const { resources, loading, error } = useSidebarResources();
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setExpandedItems((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
-  const menuItems = [
-    {
-      key: "overview",
-      label: "Overview",
-      icon: <HomeOutlined />,
-      path: "/overview",
-    },
-    {
-      key: "annotators",
-      label: "Annotators",
-      icon: <UserOutlined />,
-      path: "/annotators",
-    },
-    {
-      key: "assessments",
-      label: "Assessments",
-      icon: <BookOutlined />,
-      path: "/assessments",
-    },
-    {
-      key: "projects",
-      label: "Projects",
-      icon: <CodeSandboxOutlined />,
-      path: "/projects",
-    },
-    {
-      key: "applications",
-      label: "Applications",
-      icon: <InboxOutlined />,
-      path: "/applications",
-    },
+  const renderNavNode = (node: ResourceNode, depth = 0) => {
+    const hasChildren = node.children && node.children.length > 0;
+    const isExpanded = !!expandedItems[node._id];
 
-    // {
-    //   key: "jobs",
-    //   label: "Jobs",
-    //   icon: <InboxOutlined />,
-    //   path: "/jobs",
-    // },
-    // {
-    //   key: "tasks",
-    //   label: "Tasks",
-    //   icon: <UnorderedListOutlined />,
-    //   path: "/tasks",
-    // },
-    {
-      key: "payment",
-      label: "Payment",
-      icon: <WalletOutlined />,
-      path: "/payments",
-    },
+    // Padding based on depth to indent subclasses
+    const paddingLeft = depth > 0 ? `${depth * 1.5 + 1}rem` : '1rem';
 
-    {
-      key: "invoice",
-      label: "Invoice",
-      icon: <WalletOutlined />,
-      path: "/invoices",
-    },
-    {
-      key: "partner-invoice",
-      label: "Partners Invoice",
-      icon: <FileTextOutlined />,
-      path: "/partner-invoices",
-    },
+    if (hasChildren) {
+      return (
+        <li key={node._id} className="w-full">
+          <button
+            onClick={(e) => toggleExpand(node._id, e)}
+            className="w-full flex items-center justify-between py-3 pr-4 text-sm font-medium hover:bg-gray-800 transition-colors"
+            style={{ paddingLeft }}
+          >
+            <div className="flex items-center gap-3">
+              {getIconElement(node.icon)}
+              <span>{node.title}</span>
+            </div>
+            {isExpanded ? <DownOutlined className="text-[10px]" /> : <RightOutlined className="text-[10px]" />}
+          </button>
+          
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
+          >
+            <ul className="flex flex-col w-full bg-black/20">
+              {node.children!.map(child => renderNavNode(child, depth + 1))}
+            </ul>
+          </div>
+        </li>
+      );
+    }
 
-    {
-      key: "notifications",
-      label: "Notifications",
-      icon: <BellOutlined />,
-      path: "/notifications",
-    },
-
-    {
-      key: "chat",
-      label: "Support Chat",
-      icon: <MessageOutlined />,
-      path: "/chat",
-    },
-
-    {
-      key: "users",
-      label: "User Roles",
-      icon: <UserOutlined />,
-      path: "/users",
-    },
-
-    {
-      key: "employees",
-      label: "Employees Mgt",
-      icon: <UserOutlined />,
-      path: "/employees",
-    },
-
-    {
-      key: "settings",
-      label: "Settings",
-      icon: <SettingOutlined />,
-      path: "/settings",
-    },
-    // { key: "logout", label: "Logout", icon: <LogoutOutlined />, path: "" }, // Example logout redirection
-  ];
-
+    return (
+      <li key={node._id} className="w-full">
+        <NavLink
+          to={`/admin${node.link}`}
+          onClick={handleCloseSidebar}
+          className={({ isActive }) =>
+            `flex items-center gap-3 py-3 pr-4 text-sm font-medium transition-colors ${
+              isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
+            }`
+          }
+          style={{ paddingLeft }}
+        >
+          {getIconElement(node.icon)}
+          <span>{node.title}</span>
+        </NavLink>
+      </li>
+    );
+  };
 
   return (
-    //    {/* Logo */}
     <div className="flex flex-col">
-      <div className="p-4 text-center  flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
+      <div className="p-4 text-center flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
         <div className="h-[80px]">
           <img className="h-full w-full rounded-md pointer-events-none" src={Logo} alt="" />
         </div>
@@ -137,32 +89,40 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
           Admin Dashboard
         </span>
       </div>
+
       {/* Navigation Links */}
       <div className="flex flex-col justify-between h-full mt-4">
-        <ul className="space-y-2 ">
-          {menuItems.map((item) => (
-            <li key={item.key}>
-              <NavLink
-                to={`/admin${item.path}`}
-                onClick={handleCloseSidebar}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 text-sm font-medium ${isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
-                  }`
-                }
-              >
-                {item.icon}
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
+        <ul className="space-y-1 w-full flex flex-col">
+          {loading ? (
+            <div className="px-4 py-2 space-y-4">
+               {[...Array(6)].map((_, i) => (
+                  <Skeleton.Button key={i} active size="small" block shape="round" style={{ height: '32px' }}/>
+               ))}
+            </div>
+          ) : error ? (
+            <div className="px-4 py-4 text-sm text-red-400 text-center">
+               {error}
+            </div>
+          ) : resources.length === 0 ? (
+            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+               No menus available
+            </div>
+          ) : (
+            resources.map((item) => renderNavNode(item))
+          )}
         </ul>
-        <button
-          onClick={handleLogOutModal}
-          className=" flex items-center gap-2 pl-4 mb-2 cursor-pointer hover:bg-gray-800 py-3"
-        >
-          <LogoutOutlined className="scale-90" /> Logout
-        </button>
+
+        {/* Global actions at bottom */}
+        <div className="mt-8 pt-4 border-t border-gray-800 w-full mb-4 px-2">
+          <button
+            onClick={handleLogOutModal}
+            className="w-full flex items-center gap-3 px-3 py-3 text-sm font-medium text-red-500 hover:bg-black/20 rounded-md transition-colors"
+          >
+            <LogoutOutlined className="scale-90" /> Logout
+          </button>
+        </div>
       </div>
+
       {/* Footer */}
       <div className="p-4 border-t border-gray-700 text-xs opacity-50 text-center">
         © {new Date().getFullYear()} My Deep Tech

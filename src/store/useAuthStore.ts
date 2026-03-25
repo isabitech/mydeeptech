@@ -3,6 +3,22 @@ import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 
+interface RBACPermission {
+  _id: string;
+  name: string;
+  description: string;
+  resource: string;
+  action: string;
+}
+
+interface RBACRole {
+  _id: string;
+  name: string;
+  description: string;
+  permissions: RBACPermission[];
+  isActive: boolean;
+}
+
 interface UserInfo {
   id: string;
   fullName: string;
@@ -19,10 +35,11 @@ interface UserInfo {
   createdAt?: string;
   updatedAt?: string;
   role?: string;
+  role_permission?: RBACRole;
+  isAssessmentSubmitted?: boolean;
 }
 
 type UserRoleType = "admin" | "user";
-
 
 type UserInfoStates = {
   userInfo: UserInfo | null;
@@ -33,7 +50,9 @@ type UserInfoStates = {
 
 type UserInfoActions = {
   setUserInfo: (userInfo: UserInfo | null) => void;
+  setIsAssessmentSubmitted: () => void;
   clearUserInfo: () => void;
+
 };
 
 type UserInfoStore = UserInfoStates & UserInfoActions;
@@ -49,6 +68,9 @@ const useUserInfoStore = create<UserInfoStore>()(
       ...initialStates,
       // --- Actions ---
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
+    setIsAssessmentSubmitted: () => set((state) => ({
+        ...(state.userInfo && { userInfo: { ...state.userInfo, isAssessmentSubmitted: true } }),
+      })),
       clearUserInfo: () => set({ userInfo: null }),
     }),
     {
@@ -67,6 +89,7 @@ const useUserInfoActions = () => {
 return  useUserInfoStore(
     useShallow((state) => ({
         setUserInfo: state.setUserInfo,
+        setIsAssessmentSubmitted: state.setIsAssessmentSubmitted,
         clearUserInfo: state.clearUserInfo,
     }))
 )}
