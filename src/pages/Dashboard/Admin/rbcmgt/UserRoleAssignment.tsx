@@ -140,6 +140,7 @@ const UserRoleAssignment: React.FC = () => {
           columns={columns}
           rowKey="_id"
           pagination={{ pageSize: 5, position: ["bottomCenter"] }}
+          scroll={{ x: 'max-content' }}
         />
       )}
     </Space>
