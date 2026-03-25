@@ -14,9 +14,11 @@ const NotificationCarousel = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const { userInfo } = useUserInfoStates();
   const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false;
-  const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
+  // const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
+  const openModal = false;
 
-  const totalSlides = 2;
+  // const totalSlides = 2;
+  const totalSlides = 1;
 
   const onCloseModal = () => {
     setIsModalOpen(false);
@@ -126,7 +128,7 @@ const NotificationCarousel = () => {
             className="w-full"
           >
             {/* SLIDE 1 */}
-            {activeSlide === 0 && (
+            {/* {activeSlide === 0 && (
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -168,10 +170,10 @@ const NotificationCarousel = () => {
                   </Button>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* SLIDE 2 */}
-            {activeSlide === 1 && <SlackNotification />}
+            {activeSlide === 0 && <SlackNotification />}
           </motion.div>
         </AnimatePresence>
       </div>
