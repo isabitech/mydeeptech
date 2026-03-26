@@ -30,6 +30,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { PDFViewerModal, usePDFViewer } from "../../../../components/PDFViewer";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 
 import Header from "../../User/Header";
 import moment from "moment";
