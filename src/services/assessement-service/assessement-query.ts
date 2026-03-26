@@ -10,7 +10,6 @@ const useAssessmentReviews = (search?: string) => {
         queryFn: async () => {
             const params = search ? { search } : {};
             const response = await axiosInstance.get<GetSubmissionsResponseSchema>(endpoints.assessments.assessmentReviews, { params });
-            console.log(response.data);
             const result = GetSubmissionsResponseSchema.safeParse(response.data);
             if (!result.success) {
                 const errorMessage = result.error.issues[0]?.message || "Failed to parse assessment reviews response";
