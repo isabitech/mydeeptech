@@ -1,11 +1,10 @@
 import { Form, Spin, message } from "antd";
 import { useState } from "react";
 import assessmentQueryService from "../../../../services/assessement-service/assessement-query";
-import { GetSubmissionsResponseSchema } from "../../../../validators/assessment-reviews/assessment-reviews-schema";
+import { SubmitReviewSchema } from "../../../../validators/assessment-reviews/assessment-reviews-schema";
 import assessmentMutationService from "../../../../services/assessement-service/assessment-mutation";
 import useDebounce from "../../../../hooks/useDebounce";
 
-import { grading } from "./_components/grading-data";
 import {
   AssessmentPageHeader,
   AssessmentSearch,
@@ -79,28 +78,27 @@ const UserAssessments = () => {
     if (!selectedAssessment) return;
     if(isUpdateReviewLoading) return;
 
-    // Find the complete grading object based on selected grade string
-    const selectedGrade = grading.find(g => g.grade === values.reviewRating);
+    // Transform to match schema expectations
+       const payload = {
+        assessmentId: selectedAssessment._id,
+        reviewRating: values.reviewRating,
+        englishTestScore: values.englishScore ? parseInt(values.englishScore) : 0,
+        problemSolvingScore: values.problemSolvingScore ? parseInt(values.problemSolvingScore) : 0,
+        ...(values.reviewerComment && { reviewerComment: values.reviewerComment })
+    };
 
-    if (!selectedGrade) {
-      message.error("Invalid grade selected");
+    const result = SubmitReviewSchema.safeParse(payload);
+
+    if(!result.success) {
+      const errorMessages = result.error.issues[0]?.message || "Validation failed. Please check your input.";
+      console.error("Validation error:", result.error);
+      message.error(errorMessages);
       return;
     }
 
-    // Transform to match schema expectations
-    const payload = {
-      assessmentId: selectedAssessment._id,
-      reviewerComment: values.reviewerComment || "",
-      reviewStatus: "Reviewed",
-      reviewRating: {
-        grade: selectedGrade.grade,
-        level: selectedGrade.level
-      },
-      englishTestScore: values.englishScore ? parseInt(values.englishScore) : 0,
-      problemSolvingScore: values.problemSolvingScore ? parseInt(values.problemSolvingScore) : 0
-    };
+    // console.log("Submitting review with payload:", payload);
 
-    updateReviewMutation.mutate(payload, {
+    updateReviewMutation.mutate(result.data, {
       onSuccess: () => {
         setIsReviewModalVisible(false);
         reviewForm.resetFields();

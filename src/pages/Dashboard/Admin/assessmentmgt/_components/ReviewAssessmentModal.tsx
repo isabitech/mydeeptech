@@ -14,7 +14,6 @@ import { getAverageScore, getScoreColor } from './assessment-utils';
 import { grading } from './grading-data';
 
 const { TextArea } = Input;
-const { Option } = Select;
 
 interface ReviewAssessmentModalProps {
   visible: boolean;
@@ -72,8 +71,8 @@ const ReviewAssessmentModal = ({
     if (currentEnglish > 0) return currentEnglish;
     if (currentProblemSolving > 0) return currentProblemSolving;
     
-    // If no scores provided, fall back to original assessment average
-    return getAverageScore(assessment);
+    // If no scores provided, return 0 instead of original assessment average
+    return 0;
   };
 
   if (!assessment) return null;
@@ -202,14 +201,12 @@ const ReviewAssessmentModal = ({
             <Select 
               placeholder="Select a grade"
               showSearch
-              optionFilterProp="children"
-            >
-              {grading.map((item) => (
-                <Option key={item.grade} value={item.grade}>
-                  {item.grade} - {item.level} ({item.range})
-                </Option>
-              ))}
-            </Select>
+              optionFilterProp="label"
+              options={grading.map((item) => ({
+                value: item.grade,
+                label: `${item.grade} - ${item.level} (${item.range})`
+              }))}
+            />
           </Form.Item>
           
           {/* Review Comment */}

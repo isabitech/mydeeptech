@@ -73,17 +73,24 @@ const GetSubmissionsResponseSchema = z.object({
 });
 
  const SubmitReviewSchema = z.object({
-    assessmentId: z.string().min(1, "Assessment ID is required"),
-    reviewerComment: z
-      .string()
-      .max(1000, "Comment too long"),
-    reviewStatus: z.string().min(1, "Review status is required"),
-    reviewRating: z.object({
-      grade: z.string().min(1, "Grade is required"),
-      level: z.string().min(1, "Level is required"),
-    }),
-    englishTestScore: z.number().min(0, "English test score must be at least 0"),
-    problemSolvingScore: z.number().min(0, "Problem solving score must be at least 0"),
+  assessmentId: z.string().min(1, "Assessment ID is required"),
+
+  reviewRating: z
+    .string()
+    .min(1, "Review rating is required"),
+
+  englishTestScore: z.coerce
+    .number()
+    .min(0, "English score must be >= 0"),
+
+  problemSolvingScore: z.coerce
+    .number()
+    .min(0, "Problem solving score must be >= 0"),
+
+  reviewerComment: z
+    .string()
+    .max(1000, "Comment too long")
+    .optional(),
 });
 
 type GetSubmissionsResponseSchema = z.infer<typeof GetSubmissionsResponseSchema>;
@@ -93,3 +100,4 @@ export {
     GetSubmissionsResponseSchema,
     SubmitReviewSchema,
 }
+

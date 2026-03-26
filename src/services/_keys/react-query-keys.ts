@@ -21,6 +21,9 @@ const MUTATION = {
     deletePartnerInvoice: "deletePartnerInvoice",
     sendPartnerInvoice: "sendPartnerInvoice",
 
+    submitAssessmentReview: "submitAssessmentReview",
+    updateAssessmentReview: "updateAssessmentReview",
+
     // Authentication Mutations
     userSignin: "userSignin",
     userSignup: "userSignup",
@@ -39,7 +42,7 @@ const QUERY = {
     getPartnerInvoices: "getPartnerInvoices",
 
     assessmentReviews: "assessmentReviews",
-    updateAssessmentReview: "updateAssessmentReview",
+   
 
     userProfile: "userProfile",
 
