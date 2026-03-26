@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   Button,
@@ -27,37 +27,26 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useUserNotifications } from "../../../../hooks/Auth/User/useUserNotifications";
 import { Notification } from "../../../../types/notification.types";
+import notificationQueryService from "../../../../services/notification-service/notification-query";
+import notificationMutationService from "../../../../services/notification-service/notification-mutation";
+import ErrorMessage from "../../../../lib/error-message";
 
 dayjs.extend(relativeTime);
 
 const { Title, Text } = Typography;
 
 const UserNotifications: React.FC = () => {
-  const {
-    loading,
-    notifications,
-    pagination,
-    summary,
-    getUserNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    refreshNotifications,
-  } = useUserNotifications();
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewingNotification, setViewingNotification] = useState<Notification | null>(null);
   const [filters, setFilters] = useState({ page: 1, limit: 20 });
 
-  useEffect(() => {
-    loadNotifications();
-  }, [filters]);
-
-  const loadNotifications = async () => {
-    await getUserNotifications(filters);
-  };
+  const { notifications, isNotificationsLoading, pagination, summary, refreshNotifications } = notificationQueryService.useUserNotificationQuery(filters);
+  const { markAsRead, isMarkAsReadLoading  } = notificationMutationService.useMarkAsReadMutation(filters);
+  const { deleteNotification, isDeleteNotificationLoading } = notificationMutationService.useDeleteNotificationMutation(filters);
+  const { markAllAsRead, isMarkAllAsReadLoading } = notificationMutationService.useMarkAllAsReadMutation(filters);
+  const isLoading = (isNotificationsLoading || isMarkAsReadLoading || isDeleteNotificationLoading || isMarkAllAsReadLoading);
 
   const handleViewNotification = (notification: Notification) => {
     setViewingNotification(notification);
@@ -68,33 +57,57 @@ const UserNotifications: React.FC = () => {
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
-    const result = await markAsRead(notificationId);
-    if (result.success) {
-      message.success("Notification marked as read");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to mark notification as read");
+    if (isLoading) return;
+    if(!notificationId) {
+      message.error("Invalid notification ID");
+      return;
     }
+
+    markAsRead.mutate(notificationId, {
+        onSuccess: () => {
+          message.success("Notification marked as read");
+        },
+        onError: (error) => {
+          const errorMessage = ErrorMessage(error) || "Failed to mark notification as read";
+          console.error("Error marking notification as read:", error);
+          message.error(errorMessage);
+        }
+    });
   };
 
   const handleMarkAllAsRead = async () => {
-    const result = await markAllAsRead();
-    if (result.success) {
-      message.success("All notifications marked as read");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to mark all notifications as read");
-    }
+
+    if (isLoading) return;
+      markAllAsRead.mutate(undefined, {
+        onSuccess: () => {
+          message.success("All notifications marked as read");
+          refreshNotifications();
+        },
+        onError: (error) => { 
+           const errorMessage = ErrorMessage(error) || "Failed to mark all notifications as read";
+          console.error("Error marking notifications as read:", error);
+          message.error(errorMessage);
+        }
+      });
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
-    const result = await deleteNotification(notificationId);
-    if (result.success) {
-      message.success("Notification deleted successfully");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to delete notification");
+    if (isLoading) return;
+    if(!notificationId) {
+      message.error("Invalid notification ID");
+      return;
     }
+     deleteNotification.mutate(notificationId, {
+        onSuccess: () => {
+          message.success("Notification deleted successfully");
+          refreshNotifications();
+        },
+        onError: (error) => {
+          const errorMessage = ErrorMessage(error) || "Failed to delete notification";
+          console.error("Error deleting notification:", error);
+          message.error(errorMessage);
+        }
+    });
   };
 
   const getTypeColor = (type: string): string => {
@@ -147,8 +160,9 @@ const UserNotifications: React.FC = () => {
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => refreshNotifications(filters)}
-            loading={loading}
+            onClick={refreshNotifications}
+            loading={isNotificationsLoading}
+            disabled={isLoading}
           >
             Refresh
           </Button>
@@ -157,7 +171,8 @@ const UserNotifications: React.FC = () => {
               type="primary"
               icon={<CheckOutlined />}
               onClick={handleMarkAllAsRead}
-              loading={loading}
+              loading={isNotificationsLoading}
+              disabled={isLoading}
             >
               Mark All as Read ({summary?.unreadCount || 0})
             </Button>
@@ -201,7 +216,7 @@ const UserNotifications: React.FC = () => {
 
       {/* Notifications List */}
       <Card>
-        <Spin spinning={loading} tip="Loading notifications...">
+        <Spin spinning={isNotificationsLoading} tip="Loading notifications...">
           {notifications && notifications.length > 0 ? (
             <List
               itemLayout="vertical"
@@ -317,7 +332,7 @@ const UserNotifications: React.FC = () => {
               <Button
                 type="primary"
                 icon={<ReloadOutlined />}
-                onClick={() => refreshNotifications(filters)}
+                onClick={refreshNotifications}
               >
                 Refresh
               </Button>
