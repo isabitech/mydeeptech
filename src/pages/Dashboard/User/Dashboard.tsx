@@ -1,11 +1,3 @@
 import DashboardLayout from "./DashboardLayout";
-
-const Dashboard = () => {
-  return (
-    <div>
-      <DashboardLayout />
-    </div>
-  );
-};
-
+const Dashboard = () => <DashboardLayout />
 export default Dashboard;

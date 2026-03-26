@@ -42,6 +42,8 @@ const QUERY = {
     updateAssessmentReview: "updateAssessmentReview",
 
     userProfile: "userProfile",
+
+    userDashboardData: "userDashboardData",
 } as const;
 
 const REACT_QUERY_KEYS = {

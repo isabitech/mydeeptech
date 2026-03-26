@@ -2,12 +2,12 @@ import React from 'react';
 import { Card, Row, Col } from 'antd';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { motion } from 'framer-motion';
-import { ApplicationStatistics, ResultSubmissions } from '../../../types/dtuser-dashboard.types';
 import CountUp from 'react-countup';
+import { ApplicationStatisticsSchema, ResultSubmissionsSchema } from '../../../validators/dashboard/user-dashboard-schema';
 
 interface ApplicationStatisticsChartsProps {
-  applicationStatistics: ApplicationStatistics;
-  resultSubmissions: ResultSubmissions;
+  applicationStatistics: ApplicationStatisticsSchema;
+  resultSubmissions: ResultSubmissionsSchema;
 }
 
 const ApplicationStatisticsCharts: React.FC<ApplicationStatisticsChartsProps> = ({ 

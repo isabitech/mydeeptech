@@ -11,10 +11,10 @@ import {
   CalendarOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { RecentActivity } from '../../../types/dtuser-dashboard.types';
+import { RecentActivitySchema } from '../../../validators/dashboard/user-dashboard-schema';
 
 interface RecentActivityTimelineProps {
-  recentActivity: RecentActivity;
+  recentActivity: RecentActivitySchema;
 }
 
 const RecentActivityTimeline: React.FC<RecentActivityTimelineProps> = ({ 
