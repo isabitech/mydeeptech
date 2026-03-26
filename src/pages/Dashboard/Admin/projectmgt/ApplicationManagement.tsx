@@ -29,16 +29,7 @@ import {
   FilePdfOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import { Viewer } from "@react-pdf-viewer/core";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
-import { GlobalWorkerOptions } from "pdfjs-dist";
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import "@react-pdf-viewer/default-layout/lib/styles/index.css";
-import * as pdfjsLib from "pdfjs-dist/build/pdf";
-import { Worker } from '@react-pdf-viewer/core';
-
-// Configure PDF.js worker for @react-pdf-viewer
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.0.279/pdf.worker.min.js`;
+import { PDFViewerModal, usePDFViewer } from "../../../../components/PDFViewer";
 
 import Header from "../../User/Header";
 import moment from "moment";
@@ -75,8 +66,7 @@ const ApplicationManagement: React.FC = () => {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
-  const [isPdfModalVisible, setIsPdfModalVisible] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string>("");
+  const { isVisible: isPdfModalVisible, fileUrl: pdfUrl, openPDFViewer, closePDFViewer } = usePDFViewer();
   const [pdfViewerApplication, setPdfViewerApplication] =
     useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -161,14 +151,12 @@ const ApplicationManagement: React.FC = () => {
   };
 
   const viewResume = (resumeUrl: string, application?: Application) => {
-    setPdfUrl(resumeUrl);
     setPdfViewerApplication(application || null);
-    setIsPdfModalVisible(true);
+    openPDFViewer(resumeUrl);
   };
 
   const closePdfModal = () => {
-    setIsPdfModalVisible(false);
-    setPdfUrl("");
+    closePDFViewer();
     setPdfViewerApplication(null);
   };
 
@@ -782,12 +770,12 @@ const ApplicationManagement: React.FC = () => {
       </Modal>
 
       {/* PDF Viewer Modal */}
-      <Modal
+      <PDFViewerModal
+        visible={isPdfModalVisible}
+        fileUrl={pdfUrl}
         title="Resume Preview"
-        open={isPdfModalVisible}
-        onCancel={closePdfModal}
-        width={900}
-        footer={[
+        onClose={closePdfModal}
+        footerButtons={[
           pdfViewerApplication?.status === "pending" && (
             <div
               key="pdf-actions"
@@ -822,29 +810,8 @@ const ApplicationManagement: React.FC = () => {
               </Button>
             </div>
           ),
-          <Button key="close" onClick={closePdfModal}>
-            Close
-          </Button>,
         ].filter(Boolean)}
-        styles={{
-          body: {
-            height: "70vh",
-            overflow: "hidden",
-            padding: "8px",
-          },
-        }}
-      >
-        {pdfUrl && (
-          <div style={{ height: "100%" }}>
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-              <Viewer
-                fileUrl={pdfUrl}
-                plugins={[defaultLayoutPluginInstance]}
-              />
-            </Worker>
-          </div>
-        )}
-      </Modal>
+      />
     </div>
   );
 };

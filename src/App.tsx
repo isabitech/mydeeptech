@@ -62,7 +62,7 @@ import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
 import RBACPage from "./pages/Dashboard/Admin/rbcmgt/RBACPage";
 import { PageGuard } from "./components";
 import ApplicationsPage from "./pages/admin/ApplicationsPage";
-import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessements";
+import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessments";
 import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 
 const AppRoutes = () => {
