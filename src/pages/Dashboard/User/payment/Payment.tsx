@@ -81,13 +81,13 @@ const Payment = () => {
   };
   useEffect(() => {
     if (dashboardData) {
-      console.log("Dashboard Data Structure:", dashboardData);
-      console.log("Dashboard Data Keys:", Object.keys(dashboardData));
+      // console.log("Dashboard Data Structure:", dashboardData);
+      // console.log("Dashboard Data Keys:", Object.keys(dashboardData));
       if (dashboardData.statistics) {
-        console.log("Statistics:", dashboardData.statistics);
+        // console.log("Statistics:", dashboardData.statistics);
       }
       if (dashboardData.summary) {
-        console.log("Summary:", dashboardData.summary);
+        // console.log("Summary:", dashboardData.summary);
       }
     }
   }, [dashboardData]);

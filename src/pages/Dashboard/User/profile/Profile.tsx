@@ -31,6 +31,8 @@ import { useUploadFile } from "../../../../hooks/useUploadFile";
 import domainQueryService from "../../../../services/domain-service/domain-query";
 import domainMutation from "../../../../services/domain-service/domain-mutation";
 import { Bank, useListAllNGNBanks } from "../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
+import { useUserInfoActions, useUserInfoStates } from "../../../../store/useAuthStore";
+import authService from "../../../../services/authentication/auth-query";
 
 type Domain = {
   _id: string;
@@ -47,8 +49,13 @@ const Profile = () => {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
   const [form] = Form.useForm();
 
-  const { userInfo, setUserInfo } = useUserContext();
+  // const { userInfo, setUserInfo } = useUserContext();
+
   const { getProfile, loading, error, profile } = useGetProfile();
+  const { userInfo  } = useUserInfoStates();
+  const { setUserInfo  } = useUserInfoActions();
+  const { userProfile } = authService.useProfile();
+  
   const {
     updateProfile,
     loading: updateLoading,
@@ -120,12 +127,6 @@ const Profile = () => {
 
   const assignedDomains = Array.from(assignedDomainsMap.values());
 
-  useEffect(() => {
-    console.log("Domains data from backend:", domainsData);
-    console.log("Domains error:", domainsError);
-    console.log("User domains data:", userDomainsData);
-  }, [domainsData, domainsError, userDomainsData]);
-
   // Watch form values at the top level to avoid conditional hooks
   const paymentCurrency = Form.useWatch("paymentCurrency", form);
   const paymentMethod = Form.useWatch("paymentMethod", form);
@@ -183,9 +184,6 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const result = await getProfile(userId);
-
-        console.log("Profile fetch result:", result.data);
-
         if (result.success) {
           form.setFieldsValue({
             fullName: result.data?.personalInfo?.fullName,
@@ -280,15 +278,6 @@ const Profile = () => {
   // Reset verification status when account number or bank changes (only for NGN currency)
   useEffect(() => {
     if (paymentCurrency !== "NGN") return;
-
-    console.log("🔄 Account details changed, resetting verification status", {
-      accountNumber,
-      bankCode,
-      isEditing,
-      bankCodeValue: form.getFieldValue("bankCode"),
-      bank_slug: form.getFieldValue("bank_slug"),
-    });
-
     if (isEditing && (accountNumber || bankCode)) {
       setHasVerifiedAccount(false);
       form.setFieldsValue({ accountName: "" });
@@ -307,11 +296,6 @@ const Profile = () => {
           description: "Please select your bank",
         });
       }
-
-      console.log("🔍 Manually triggering account verification for:", {
-        accountNumber,
-        bankCode,
-      });
 
       // Invalidate and refetch the verification query
       await queryClient.invalidateQueries({
