@@ -17,6 +17,14 @@ const SubmissionStatusSchema = z.object({
   problemSolvingTestUploaded: z.boolean(),
 });
 
+// Reviewer schema for populated reviewer data
+const ReviewerSchema = z.object({
+  _id: z.string(),
+  fullName: z.string(),
+  email: z.string().email(),
+  role: z.string(),
+});
+
 const ReviewRatingSchema = z.union([
   z.number(),
   z.object({
@@ -49,7 +57,7 @@ const AssessmentReviewSchema = z.object({
   reviewerComment: z.string().nullable(),
   reviewStatus: z.enum(["Pending", "Reviewed", "Rejected"]).or(z.string()),
   reviewRating: ReviewRatingSchema.nullable(),
-  reviewerId: z.string().nullable(),
+  reviewerId: z.union([z.string(), ReviewerSchema]).nullable(),
   ...Timestamps,
   ...MongoMeta,
 });

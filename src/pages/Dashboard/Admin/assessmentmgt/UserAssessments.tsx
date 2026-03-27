@@ -84,7 +84,7 @@ const UserAssessments = () => {
         reviewRating: values.reviewRating,
         englishTestScore: values.englishScore ? parseInt(values.englishScore) : 0,
         problemSolvingScore: values.problemSolvingScore ? parseInt(values.problemSolvingScore) : 0,
-        ...(values.reviewerComment && { reviewerComment: values.reviewerComment })
+        reviewerComment: values.reviewerComment ?? "",
     };
 
     const result = SubmitReviewSchema.safeParse(payload);
@@ -95,9 +95,7 @@ const UserAssessments = () => {
       message.error(errorMessages);
       return;
     }
-
-    // console.log("Submitting review with payload:", payload);
-
+  
     updateReviewMutation.mutate(result.data, {
       onSuccess: () => {
         setIsReviewModalVisible(false);

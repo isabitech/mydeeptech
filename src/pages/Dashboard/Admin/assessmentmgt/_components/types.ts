@@ -22,7 +22,12 @@ export interface Assessment {
     score: number;
     level: string;
   } | null;
-  reviewerId: string | null;
+  reviewerId: string | {
+    _id: string;
+    fullName: string;
+    email: string;
+    role: string;
+  } | null;
   resume_url?: string;
   createdAt: string;
   updatedAt: string;

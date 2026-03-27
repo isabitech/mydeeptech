@@ -40,7 +40,7 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
       <div className="space-y-6">
         {/* Candidate Information */}
         <Card size="small" title="Candidate Information">
-          <Descriptions column={2} size="small">
+          <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2 }} size="small">
             <Descriptions.Item label="Name">{assessment.fullName}</Descriptions.Item>
             <Descriptions.Item label="Email">{assessment.emailAddress}</Descriptions.Item>
             <Descriptions.Item label="User ID">{assessment.userId}</Descriptions.Item>
@@ -50,7 +50,7 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
 
         {/* Assessment Overview */}
         <Card size="small" title="Assessment Overview">
-          <Descriptions column={2} size="small">
+          <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2 }} size="small">
             <Descriptions.Item label="Status">
               <Tag color={getStatusColor(assessment.reviewStatus)}>
                 {assessment.reviewStatus.toUpperCase()}
@@ -129,7 +129,7 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
         {/* Review Information (if exists) */}
         {assessment.reviewRating && (
           <Card size="small" title="Review Information">
-            <Descriptions column={1} size="small">
+            <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2 }} size="small">
               <Descriptions.Item label="Rating">
                 {assessment.reviewRating && (
                   <Tag color="blue" className="text-base px-3">
@@ -143,8 +143,21 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
                 </Descriptions.Item>
               )}
               <Descriptions.Item label="Reviewer ID">
-                {assessment.reviewerId}
+                {(typeof assessment.reviewerId === 'object' && assessment.reviewerId !== null) ? assessment.reviewerId._id : assessment.reviewerId}
               </Descriptions.Item>
+              {(typeof assessment.reviewerId === 'object' && assessment.reviewerId !== null) && (
+                <>
+                  <Descriptions.Item label="Reviewer Name">
+                    {assessment.reviewerId.fullName}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reviewer Email">
+                    {assessment.reviewerId.email}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Reviewer Role">
+                    <Tag color="blue">{assessment.reviewerId.role.toUpperCase()}</Tag>
+                  </Descriptions.Item>
+                </>
+              )}
             </Descriptions>
           </Card>
         )}
