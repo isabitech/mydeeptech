@@ -137,11 +137,9 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
                   </Tag>
                 )}
               </Descriptions.Item>
-              {assessment.reviewerComment && (
-                <Descriptions.Item label="Review Comments" span={2}>
-                  {assessment.reviewerComment}
+               <Descriptions.Item label="Review Comments" span={2}>
+                  {assessment.reviewerComment || "N/A"}
                 </Descriptions.Item>
-              )}
               <Descriptions.Item label="Reviewer ID" span={1}>
                 {(typeof assessment.reviewerId === 'object' && assessment.reviewerId !== null) ? assessment.reviewerId._id : assessment.reviewerId}
               </Descriptions.Item>
