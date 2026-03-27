@@ -75,7 +75,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal,
           <section className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <BookOutlined className="text-purple-600 text-xl" />
-              <Title level={5} className="!mb-0">Steps for British Council English test</Title>
+              <Title level={5} className="!mb-0">Steps for EF SET English test</Title>
             </div>
             <List
               size="small"
@@ -93,7 +93,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal,
           <section>
             <div className="flex items-center gap-2 mb-3">
               <SolutionOutlined className="text-purple-600 text-xl" />
-              <Title level={5} className="!mb-0">Steps for Problem solving/ Skill Assessment</Title>
+              <Title level={5} className="!mb-0">Steps for Problem Solving/Skill Assessment</Title>
             </div>
             <List
               size="small"
