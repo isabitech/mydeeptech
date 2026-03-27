@@ -1,0 +1,54 @@
+/**
+ * Formats form values into API payload structure
+ * @param values - The form values from form.getFieldsValue()
+ * @returns Formatted payload object for API submission
+ */
+export const formatPayloadForAPI = (values: any) => {
+  if (!values) return {};
+
+  return {
+    personalInfo: {
+      country: values.country,
+      timeZone: values.timeZone,
+      availableHoursPerWeek: values.availableHoursPerWeek
+        ? Number(values.availableHoursPerWeek)
+        : undefined,
+      preferredCommunicationChannel: values.preferredCommunicationChannel,
+    },
+    paymentInfo: {
+      accountName: values.accountName,
+      accountNumber: values.accountNumber,
+      bankName: values.bankName,
+      bankCode: values.bankCode,
+      bank_slug: values.bank_slug,
+      paymentMethod: values.paymentMethod,
+      paymentCurrency: values.paymentCurrency,
+    },
+    professionalBackground: {
+      educationField: values.educationField,
+      yearsOfExperience: values.yearsOfExperience
+        ? Number(values.yearsOfExperience)
+        : undefined,
+    },
+    annotationSkills: values.annotationSkills || [],
+    toolExperience: values.toolExperience || [],
+    languageProficiency: {
+      primaryLanguage: values.primaryLanguage,
+      englishFluencyLevel: values.englishFluencyLevel,
+    },
+    attachments: {
+      resumeUrl: values.resumeUrl,
+      idDocumentUrl: values.idDocumentUrl,
+    },
+    systemInfo: {
+      deviceType: values.deviceType || "",
+      operatingSystem: values.operatingSystem || "",
+      internetSpeedMbps: values.internetSpeedMbps
+        ? Number(values.internetSpeedMbps)
+        : 0,
+      powerBackup: Boolean(values.powerBackup),
+      hasWebcam: Boolean(values.hasWebcam),
+      hasMicrophone: Boolean(values.hasMicrophone),
+    },
+  };
+};

@@ -45,6 +45,7 @@ const QUERY = {
    
 
     userProfile: "userProfile",
+    getUserProfile: "getUserProfile",
 
     userDashboardData: "userDashboardData",
 } as const;

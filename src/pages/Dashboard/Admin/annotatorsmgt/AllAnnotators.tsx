@@ -5,6 +5,7 @@ import { DTUser, useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotator
 import { useApproveUser } from "../../../../hooks/Auth/Admin/Annotators/useApproveUser";
 import { useQAManagement } from "../../../../hooks/Auth/Admin/Annotators/useQAManagement";
 import PageModal from "../../../../components/Modal/PageModal";
+import ErrorMessage from "../../../../lib/error-message";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -132,7 +133,7 @@ const AllAnnotators = () => {
     if (!selectedAnnotator) return;
 
     try {
-      const status = 'approve';
+      const status = 'approved';
       const result = await approveUser({
         userId: selectedAnnotator._id,
         status
@@ -152,7 +153,7 @@ const AllAnnotators = () => {
         fetchUsers(); // Refresh the data
       } else {
         // Use API error message if available, otherwise use custom message
-        const errorMessage = result.error || result.message || 'Failed to approve user';
+        const errorMessage = ErrorMessage(result?.error) || 'Failed to approve user';
         notification.open({
           type: 'error',
           message: 'Approval Failed',
@@ -162,7 +163,7 @@ const AllAnnotators = () => {
       }
     } catch (error: any) {
       // Handle unexpected errors
-      const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while approving user';
+      const errorMessage = ErrorMessage(error) || 'An unexpected error occurred while approving user';
       notification.open({
         type: 'error',
         message: 'Unexpected Error',
@@ -176,7 +177,7 @@ const AllAnnotators = () => {
     if (!selectedAnnotator) return;
 
     try {
-      const status = 'reject';
+      const status = 'rejected';
       const result = await approveUser({
         userId: selectedAnnotator._id,
         status

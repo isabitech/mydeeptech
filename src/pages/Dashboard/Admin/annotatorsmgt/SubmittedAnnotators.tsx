@@ -89,7 +89,7 @@ const SubmittedAnnotators = () => {
   const handleApprove = async (type: 'annotator' | 'microtasker') => {
     if (!selectedAnnotator) return;
 
-    const status = 'approve';
+    const status = 'approved';
     const result = await approveUser({ 
       userId: selectedAnnotator._id, 
       status 
@@ -108,7 +108,7 @@ const SubmittedAnnotators = () => {
   const handleReject = async (type: 'annotator' | 'microtasker') => {
     if (!selectedAnnotator) return;
 
-    const status = 'reject';
+    const status = 'rejected';
     const result = await approveUser({ 
       userId: selectedAnnotator._id, 
       status 

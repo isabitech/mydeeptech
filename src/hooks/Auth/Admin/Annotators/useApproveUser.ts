@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUpdateUserStatus } from "./useUpdateUserStatus";
+import ErrorMessage from "../../../../lib/error-message";
 
 interface ApproveUserPayload {
   userId: string;
@@ -38,12 +39,12 @@ export const useApproveUser = () => {
           message: `User status updated to ${status}` 
         };
       } else {
-        const errorMessage = result.error || "Failed to update user status";
+        const errorMessage = ErrorMessage(result.error) || "Failed to update user status";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (err: any) {
-      const errorMessage = err.message || "An error occurred while updating user status";
+      const errorMessage = ErrorMessage(err) || "An error occurred while updating user status";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
