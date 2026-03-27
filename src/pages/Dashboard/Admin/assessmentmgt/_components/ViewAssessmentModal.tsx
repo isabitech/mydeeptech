@@ -130,7 +130,7 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
         {assessment.reviewRating && (
           <Card size="small" title="Review Information">
             <Descriptions column={{ xs: 1, sm: 1, md: 2, lg: 2, xl: 2 }} size="small">
-              <Descriptions.Item label="Rating">
+              <Descriptions.Item label="Rating" span={2}>
                 {assessment.reviewRating && (
                   <Tag color="blue" className="text-base px-3">
                     {formatRatingDisplay(assessment.reviewRating)}
@@ -138,22 +138,22 @@ const ViewAssessmentModal = ({ visible, onCancel, assessment }: ViewAssessmentMo
                 )}
               </Descriptions.Item>
               {assessment.reviewerComment && (
-                <Descriptions.Item label="Review Comments">
+                <Descriptions.Item label="Review Comments" span={2}>
                   {assessment.reviewerComment}
                 </Descriptions.Item>
               )}
-              <Descriptions.Item label="Reviewer ID">
+              <Descriptions.Item label="Reviewer ID" span={1}>
                 {(typeof assessment.reviewerId === 'object' && assessment.reviewerId !== null) ? assessment.reviewerId._id : assessment.reviewerId}
               </Descriptions.Item>
               {(typeof assessment.reviewerId === 'object' && assessment.reviewerId !== null) && (
                 <>
-                  <Descriptions.Item label="Reviewer Name">
+                  <Descriptions.Item label="Reviewer Name" span={1}>
                     {assessment.reviewerId.fullName}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Reviewer Email">
+                  <Descriptions.Item label="Reviewer Email" span={1}>
                     {assessment.reviewerId.email}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Reviewer Role">
+                  <Descriptions.Item label="Reviewer Role" span={1}>
                     <Tag color="blue">{assessment.reviewerId.role.toUpperCase()}</Tag>
                   </Descriptions.Item>
                 </>
