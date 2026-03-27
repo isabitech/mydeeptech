@@ -138,7 +138,7 @@ const Profile = () => {
                   <ProfessionalBackgroundForm isEditing={profileActions.isEditing} />
                 </Card>
 
-                <Card title="System Information" className="mb-6">
+                <Card title="Device Information" className="mb-6">
                   <SystemInfoForm isEditing={profileActions.isEditing} />
                 </Card>
 
