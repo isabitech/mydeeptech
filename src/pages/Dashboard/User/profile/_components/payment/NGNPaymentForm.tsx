@@ -30,8 +30,9 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
   onVerificationRefetch,
 }) => {
   return (
-    <>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
       <Form.Item
+      className="col-span-1"
         label={
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -203,7 +204,7 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
           ]}
         />
       </Form.Item>
-    </>
+    </div>
   );
 };
 

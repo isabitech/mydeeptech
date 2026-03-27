@@ -63,89 +63,89 @@ const PaymentInfoForm: React.FC<PaymentInfoFormProps> = ({
       } 
       className="mb-6"
     >
-      <Form.Item label="Payment Currency" name="paymentCurrency">
-        <Select
-          disabled={!isEditing}
-          className="!font-[gilroy-regular]"
-          placeholder="Select payment currency first"
-          onChange={handleCurrencyChange}
-          options={[
-            { value: "NGN", label: "NGN - Nigerian Naira" },
-            { value: "USD", label: "USD - US Dollar" },
-            { value: "EUR", label: "EUR - Euro" },
-            { value: "GBP", label: "GBP - British Pound" },
-            { value: "CAD", label: "CAD - Canadian Dollar" },
-            { value: "AUD", label: "AUD - Australian Dollar" },
-            { value: "ZAR", label: "ZAR - South African Rand" },
-            { value: "KES", label: "KES - Kenyan Shilling" },
-            { value: "GHS", label: "GHS - Ghanaian Cedi" },
-            { value: "EGP", label: "EGP - Egyptian Pound" },
-          ]}
-        />
-      </Form.Item>
-
-      {paymentCurrency && (
-        <>
-          {paymentCurrency === "NGN" && (
-            <NGNPaymentForm
-              form={form}
-              isEditing={isEditing}
-              accountNumber={accountNumber}
-              bankCode={bankCode}
-              isVerifying={isVerifying}
-              verificationSuccess={verificationSuccess}
-              verificationError={verificationError}
-              hasVerifiedAccount={hasVerifiedAccount}
-              allNGNBanks={allNGNBanks}
-              onManualVerification={onManualVerification}
-              onVerificationRefetch={onVerificationRefetch}
+          <Form.Item label="Payment Currency" name="paymentCurrency" className="col-span-1">
+            <Select
+              disabled={!isEditing}
+              className="!font-[gilroy-regular]"
+              placeholder="Select payment currency first"
+              onChange={handleCurrencyChange}
+              options={[
+                { value: "NGN", label: "NGN - Nigerian Naira" },
+                { value: "USD", label: "USD - US Dollar" },
+                { value: "EUR", label: "EUR - Euro" },
+                { value: "GBP", label: "GBP - British Pound" },
+                { value: "CAD", label: "CAD - Canadian Dollar" },
+                { value: "AUD", label: "AUD - Australian Dollar" },
+                { value: "ZAR", label: "ZAR - South African Rand" },
+                { value: "KES", label: "KES - Kenyan Shilling" },
+                { value: "GHS", label: "GHS - Ghanaian Cedi" },
+                { value: "EGP", label: "EGP - Egyptian Pound" },
+              ]}
             />
-          )}
+          </Form.Item>
 
-          {paymentCurrency === "USD" && (
-            <USDPaymentForm
-              form={form}
-              isEditing={isEditing}
-              paymentMethod={paymentMethod}
-            />
-          )}
+          {paymentCurrency && (
+            <>
+              {paymentCurrency === "NGN" && (
+                <NGNPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                  accountNumber={accountNumber}
+                  bankCode={bankCode}
+                  isVerifying={isVerifying}
+                  verificationSuccess={verificationSuccess}
+                  verificationError={verificationError}
+                  hasVerifiedAccount={hasVerifiedAccount}
+                  allNGNBanks={allNGNBanks}
+                  onManualVerification={onManualVerification}
+                  onVerificationRefetch={onVerificationRefetch}
+                />
+              )}
 
-          {paymentCurrency === "EUR" && (
-            <EURPaymentForm
-              form={form}
-              isEditing={isEditing}
-            />
-          )}
+              {paymentCurrency === "USD" && (
+                <USDPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                  paymentMethod={paymentMethod}
+                />
+              )}
 
-          {paymentCurrency === "GBP" && (
-            <GBPPaymentForm
-              form={form}
-              isEditing={isEditing}
-            />
-          )}
+              {paymentCurrency === "EUR" && (
+                <EURPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                />
+              )}
 
-          {paymentCurrency === "ZAR" && (
-            <ZARPaymentForm
-              form={form}
-              isEditing={isEditing}
-            />
-          )}
+              {paymentCurrency === "GBP" && (
+                <GBPPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                />
+              )}
 
-          {paymentCurrency === "KES" && (
-            <KESPaymentForm
-              form={form}
-              isEditing={isEditing}
-            />
-          )}
+              {paymentCurrency === "ZAR" && (
+                <ZARPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                />
+              )}
 
-          {!["NGN", "USD", "EUR", "GBP", "ZAR", "KES"].includes(paymentCurrency) && (
-            <OtherCurrencyPaymentForm
-              form={form}
-              isEditing={isEditing}
-            />
+              {paymentCurrency === "KES" && (
+                <KESPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                />
+              )}
+
+              {!["NGN", "USD", "EUR", "GBP", "ZAR", "KES"].includes(paymentCurrency) && (
+                <OtherCurrencyPaymentForm
+                  form={form}
+                  isEditing={isEditing}
+                />
+              )}
+            </>
           )}
-        </>
-      )}
     </Card>
   );
 };

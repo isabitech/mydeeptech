@@ -8,8 +8,8 @@ interface SystemInfoFormProps {
 const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
   return (
     <>
-      <Row gutter={16}>
-        <Col span={12}>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Device Type"
             name="deviceType"
@@ -28,7 +28,7 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
           </Form.Item>
         </Col>
         
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Operating System"
             name="operatingSystem"
@@ -50,7 +50,7 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
       </Row>
 
       <Row gutter={16}>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Internet Speed (Mbps)"
             name="internetSpeedMbps"
@@ -66,7 +66,7 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
           </Form.Item>
         </Col>
         
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Power Backup"
             name="powerBackup"
@@ -83,7 +83,7 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
       </Row>
 
       <Row gutter={16}>
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Webcam Available"
             name="hasWebcam"
@@ -98,7 +98,7 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
           </Form.Item>
         </Col>
         
-        <Col span={12}>
+        <Col xs={24} lg={12}>
           <Form.Item
             label="Microphone Available"
             name="hasMicrophone"

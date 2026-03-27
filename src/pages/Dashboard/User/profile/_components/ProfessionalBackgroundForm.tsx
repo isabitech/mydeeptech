@@ -10,7 +10,7 @@ const ProfessionalBackgroundForm: React.FC<ProfessionalBackgroundFormProps> = ({
 }) => {
   return (
     <>
-      <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Form.Item label="Education Field" name="educationField">
           <Input
             disabled={!isEditing}
