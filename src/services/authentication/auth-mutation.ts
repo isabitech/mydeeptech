@@ -4,20 +4,19 @@ import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import { persistUserInfo } from "./_helper";
-import { signUpSchema } from "../../validators/authentication/user-signup-schema";
+import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
 
 
 const useUserSignup = () => {
     const mutation  = useMutation({
         mutationKey: [REACT_QUERY_KEYS.MUTATION.userSignup],
-        mutationFn: async (payload: signUpSchema) => {
+        mutationFn: async (payload: SignUpSchema) => {
             const response = await axiosInstance.post(endpoints.authDT.createDTUser, payload);
             return response.data;
         },
     });
 
     return {
-        mutation,
         signupMutation: mutation,
         isSignupLoading: mutation.isPending,
         isSignupError: mutation.isError,
@@ -33,10 +32,12 @@ const useUserSignin = () => {
         mutationKey: [REACT_QUERY_KEYS.MUTATION.userSignin],
         mutationFn: async (payload: { email: string; password: string }) => {
             const response = await axiosInstance.post(endpoints.authDT.loginDTUser, payload);
-            const userInfo = await persistUserInfo(response.data);
-            if (userInfo) setUserInfo(userInfo);
             return response.data;
         },
+        onSuccess: async (data) => {
+            const userInfo = await persistUserInfo(data);
+            if (userInfo) setUserInfo(userInfo);
+        }
     });
 
     return {

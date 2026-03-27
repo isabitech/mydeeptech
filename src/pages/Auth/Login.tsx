@@ -49,7 +49,17 @@ const Login = () => {
     signinMutation.mutate(formData, {
       onSuccess: (data) => {
 
-        if (!data.user.isEmailVerified) {
+        const userData = data?.user;
+
+        if(!userData) {
+          notification.open({
+            type: "error",
+            message: "Invalid credentials.",
+          });
+          return navigate("/login", { replace: true });
+        }
+
+        if (!userData.isEmailVerified) {
           notification.open({
             type: "warning",
             message: "Please verify your email before logging in. Check your inbox for verification link.",
@@ -62,17 +72,26 @@ const Login = () => {
           return navigate("/login", { state: { email: formData.email }, replace: true });
       }
 
-      if (!data.user.hasSetPassword) {
+      if (!userData.hasSetPassword) {
         notification.open({
           type: "warning",
           message: "Please complete your account setup by setting a password.",
         });
         return navigate("/login", { state: { email: formData.email }, replace: true });
       }
+  
+      if(userData?.role !== "user") {
+          notification.open({
+              type: "error",
+              message: "Invalid credentials.",
+              key: "invalid_credentials",
+          });
+        return navigate("/login", { replace: true });
+      }
 
         notification.open({ type: "success", message: "Login successful!" });
 
-        if (data.user.annotatorStatus || data.user.microTaskerStatus) {
+        if (userData.annotatorStatus || userData.microTaskerStatus) {
           navigate(from ?? "/dashboard/overview");
         } else {
           navigate(from ?? "/admin/overview");

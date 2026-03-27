@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import authMutationService from "../../services/authentication/auth-mutation";
-import { signUpSchema } from "../../validators/authentication/user-signup-schema";
+import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
 import ErrorMessage from "../../lib/error-message";
 import { notification } from "antd";
 
@@ -134,7 +134,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
     if (!validateStage(3)) return;
     
       // Use schema.parse() to validate and transform the data
-      const payload = signUpSchema.parse({
+      const payload = SignUpSchema.parse({
         fullName: form.fullName,
         phone: form.phone,
         email: form.email,
