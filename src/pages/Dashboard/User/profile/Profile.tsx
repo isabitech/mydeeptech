@@ -18,9 +18,8 @@ import ProfessionalBackgroundForm from "./_components/ProfessionalBackgroundForm
 import SkillsExperienceForm from "./_components/SkillsExperienceForm";
 import DocumentAttachmentsForm from "./_components/DocumentAttachmentsForm";
 import SystemInfoForm from "./_components/SystemInfoForm";
-import ProfileLoading from "./_components/ProfileLoading";
-import ProfileError from "./_components/ProfileError";
-import ErrorMessage from "../../../../lib/error-message.js";
+import LoadingIndicator from "../../../../components/LoadingIndicator.js";
+import ErrorIndicatorWithRefresh from "../../../../components/ErrorIndicatorWithRefresh.js";
 
 const Profile = () => {
   const [form] = Form.useForm();
@@ -76,12 +75,11 @@ const Profile = () => {
 
 
   if (!userId || isProfileLoading) {
-    return <ProfileLoading />;
+    return <LoadingIndicator />;
   }
 
   if (isProfileError || !profile) {
-    const errorMessage = ErrorMessage(profileError?.message) || "Failed to load profile. Please try again.";
-    return <ProfileError errorMessage={errorMessage} onRetry={profileRefetch} />;
+    return <ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch} />;
   }
 
   return (

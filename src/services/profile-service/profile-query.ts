@@ -3,7 +3,7 @@ import axiosInstance from "../../service/axiosApi";
 import { endpoints } from "../../store/api/endpoints";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { ProfileResponseSchema, type Profile } from "../../validators/profile/profile-schema";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 
 const useGetProfile = (userId?: string) => {
   const query = useQuery({
@@ -19,7 +19,7 @@ const useGetProfile = (userId?: string) => {
         const validatedData = ProfileResponseSchema.parse(response.data);
         
         if (!validatedData.success) {
-          throw new Error(ErrorMessage(validatedData.message) || "Failed to fetch user profile");
+          throw new Error(errorMessage(validatedData.message) || "Failed to fetch user profile");
         }
         return validatedData.profile;
       } catch (zodError: any) {

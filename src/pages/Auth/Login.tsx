@@ -4,7 +4,7 @@ import { notification } from "antd";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import authMutationService from "../../services/authentication/auth-mutation";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 import LoginLeftHeroSection from "./_components/LoginLeftHeroSection";
 
 const Login = () => {
@@ -22,7 +22,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { signinMutation, isSigninError, isSigninLoading, signinError } = authMutationService.useUserSignin();
-  const error = isSigninError ? ErrorMessage(signinError) : "";
+  const error = isSigninError ? errorMessage(signinError) : "";
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -99,9 +99,9 @@ const Login = () => {
 
       },
       onError: (err) => {
-      const errorMessage = ErrorMessage(err);
-      console.error("Login failed:", errorMessage);
-      notification.error({  message: errorMessage });
+      const errorMsg = errorMessage(err);
+      console.error("Login failed:", errorMsg);
+      notification.error({  message: errorMsg });
     },
     });
 

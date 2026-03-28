@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { NotificationFiltersSchema, NotificationsResponseSchema } from "../../validators/notification/notification-schema";
 import axiosInstance from "../../service/axiosApi";
 import { endpoints } from "../../store/api/endpoints";
@@ -15,7 +15,7 @@ const useUserNotificationQuery = (params: NotificationFiltersSchema) => {
            const result = NotificationsResponseSchema.safeParse(response.data);
            if (!result.success) {
                 const errorMessages = result.error.issues[0]?.message || "Invalid response format";
-                console.error(errorMessages);
+                console.error("Notification parsing error:", errorMessages);
                 throw new Error(errorMessages);
            }
            return result.data;

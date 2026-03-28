@@ -10,7 +10,7 @@ const { TextArea } = Input;
 import { useDomainActions } from "../../store/useDomainStore";
 import domainMutation from "../../services/domain-service/domain-mutation";
 import { CreateDomainCategorySchema } from "../../validators/domain/domain-validator";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 
 const CreateDomainCategoryForm = () => {
     const [categoryForm] = Form.useForm();
@@ -26,7 +26,7 @@ const CreateDomainCategoryForm = () => {
                 categoryForm.resetFields();
             },
             onError: (error) => {
-                message.error(ErrorMessage(error));
+                message.error(errorMessage(error));
             }
         })
     };

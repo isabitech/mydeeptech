@@ -2,14 +2,28 @@ import axios from "axios";
 
 
 const resolveMessage = (err: any): string => {
-  return (
+  // Handle null/undefined
+  if (!err) {
+    return "An unknown error occurred.";
+  }
+
+  // Extract message from various error structures
+  const message = 
     err?.response?.data?.data?.message ||
     err?.response?.data?.message ||
-    err?.message || "An unknown error occurred."
-  );
+    err?.message ||
+    (typeof err === "string" ? err : null);
+
+  return message || "An unknown error occurred.";
 };
 
-const ErrorMessage = (error: any): string => {
+const errorMessage = (error: unknown): string => {
+  console.log("Error received in errorMessage function:", error);
+
+  // Handle null or undefined errors
+  if (error === null || error === undefined) {
+    return "An unknown error occurred.";
+  }
 
   if (axios.isAxiosError(error)) {
     return resolveMessage(error);
@@ -19,7 +33,12 @@ const ErrorMessage = (error: any): string => {
     return resolveMessage(error);
   }
 
-  return(resolveMessage(error));
+  // Handle string errors
+  if (typeof error === "string") {
+    return error || "An unknown error occurred.";
+  }
+
+  return resolveMessage(error);
 };
 
-export default ErrorMessage;
+export default errorMessage;

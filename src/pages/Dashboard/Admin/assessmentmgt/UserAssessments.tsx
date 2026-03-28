@@ -14,7 +14,7 @@ import {
   Assessment,
   extractRatingValue
 } from "./_components";
-import ErrorMessage from "../../../../lib/error-message";
+import errorMessage from "../../../../lib/error-message";
 
 const UserAssessments = () => {
   const [searchText, setSearchText] = useState("");
@@ -103,7 +103,7 @@ const UserAssessments = () => {
         message.success("Assessment reviewed successfully");
       },
       onError: (error) => {
-        message.error(ErrorMessage(error));
+        message.error(errorMessage(error));
       },
     });
   };

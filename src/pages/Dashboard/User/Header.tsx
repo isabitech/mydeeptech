@@ -1,10 +1,9 @@
 import { LogoutOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
-import { retrieveUserInfoFromStorage } from "../../../helpers";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../../../components/NotificationDropdown";
 import Dropdown from "antd/es/dropdown/dropdown";
 import { Avatar, Typography } from "antd";
+import { useUserInfoStates } from "../../../store/useAuthStore";
 
 const { Text } = Typography;
 
@@ -30,8 +29,8 @@ export type UserInfoProps = {
 };
 
 const Header: React.FC<Props> = ({ title }) => {
-  const [userInfo, setUserInfo] = useState<UserInfoProps | null>(null);
   const navigate = useNavigate();
+  const { userInfo } = useUserInfoStates();
 
   const handleLogout = () => {
     // Clear session storage
@@ -81,19 +80,6 @@ const Header: React.FC<Props> = ({ title }) => {
     }
   ];
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = await retrieveUserInfoFromStorage();
-      setUserInfo(user);
-    };
-    loadUser();
-  }, []);
-
-  const handleOpenProfile = () => {
-    if (userInfo?.annotatorStatus) {
-      navigate('/dashboard/profile');
-    }
-  }
 
   return (
     // 

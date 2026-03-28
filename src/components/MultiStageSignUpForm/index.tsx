@@ -4,7 +4,7 @@ import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check }
 import { useLocation } from "react-router-dom";
 import authMutationService from "../../services/authentication/auth-mutation";
 import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
 
 type FormState = {
@@ -78,7 +78,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const { signupMutation, isSignupLoading, isSignupError, signupError } = authMutationService.useUserSignup();
-  const error = isSignupError ? ErrorMessage(signupError) : "";
+  const error = isSignupError ? errorMessage(signupError) : "";
 
   const stages = [
     { id: 1, title: "Personal Info", icon: User },
@@ -152,7 +152,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           console.error("Signup error:", err);
           notification.error({
             message: "Signup Failed",
-            description: ErrorMessage(err),
+            description: errorMessage(err),
             key: "signup-error",
           });
         }

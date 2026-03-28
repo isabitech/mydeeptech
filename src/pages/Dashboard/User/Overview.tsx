@@ -8,7 +8,7 @@ import AvailableOpportunitiesComponent from "../../../components/Dashboard/User/
 import RecentActivityTimeline from "../../../components/Dashboard/User/RecentActivityTimeline";
 import NotificationCarousel from "./_components/notification-carousel";
 import dashboardQueryService from "../../../services/dashboard-service/dashboard-query";
-import ErrorMessage from "../../../lib/error-message";
+import errorMessage from "../../../lib/error-message";
 
 const Overview = () => {
 
@@ -19,7 +19,7 @@ const Overview = () => {
     dashboardError, 
     refreshDashboard
   } = dashboardQueryService.useDashboardQuery();
-  const error = isDashboardError ? ErrorMessage(dashboardError) : "";
+  const error = isDashboardError ? errorMessage(dashboardError) : "";
 
 
   const pageVariants = {

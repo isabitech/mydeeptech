@@ -15,7 +15,7 @@ import { useDomainActions } from "../../store/useDomainStore";
 import domainService from "../../services/domain-service/domain-mutation";
 import { CreateSubDomainCategorySchema } from "../../validators/domain/domain-validator";
 import domainQueryService from "../../services/domain-service/domain-query";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 
 const CreateSubDomainCategoryForm: React.FC = () => {
     const [subDomainForm] = Form.useForm();
@@ -35,7 +35,7 @@ const CreateSubDomainCategoryForm: React.FC = () => {
                 subDomainForm.resetFields();
             },
             onError: (error) => {
-                message.error(ErrorMessage(error));
+                message.error(errorMessage(error));
             }
         })
     };

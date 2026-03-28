@@ -25,27 +25,30 @@ const PrioritySchema = z.enum(["low", "medium", "high"]);
 
 const NotificationSchema = z.object({
   _id: z.string(),
+  userId: z.string().optional(),
+  userModel: z.string().optional(),
   title: z.string(),
   message: z.string(),
   type: NotificationTypeSchema,
   priority: PrioritySchema,
   isRead: z.boolean(),
+  actionUrl: z.string().nullable().optional(),
+  actionText: z.string().nullable().optional(),
+  data: z.object({
     actionUrl: z.string().nullable().optional(),
     actionText: z.string().nullable().optional(),
-  data: z.object({
-        actionUrl: z.string().nullable().optional(),
-        actionText: z.string().nullable().optional(),
-    })
-    .catchall(z.any())
-    .optional(),
+  })
+  .catchall(z.any())
+  .optional(),
 
   createdAt: z.string(), // optionally: .datetime()
-  readAt: z.string().optional(),
+  readAt: z.string().nullable().optional(),
 
   recipientId: z.string().optional(),
   recipientType: z.enum(["user", "all"]).optional(),
 
-  scheduleFor: z.string().optional(),
+  scheduleFor: z.string().nullable().optional(),
+  __v: z.number().optional(), // MongoDB version field
 });
 
 

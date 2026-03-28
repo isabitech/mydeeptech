@@ -24,7 +24,9 @@ const useMarkAsReadMutation = (params: NotificationFiltersSchema) => {
 
       // 3. Optimistically update the cache
       queryClient.setQueryData(queryKey, (oldData: any) => {
-        if (!oldData) return oldData;
+        if (!oldData || !oldData.notifications || !Array.isArray(oldData.notifications)) {
+          return oldData;
+        }
         return {
           ...oldData,
           notifications: oldData.notifications.map((notification: NotificationSchema) =>
@@ -88,7 +90,9 @@ const useDeleteNotificationMutation = (params: NotificationFiltersSchema) => {
 
       // 3. Optimistically update cache
       queryClient.setQueryData(queryKey, (oldData: any) => {
-        if (!oldData) return oldData;
+        if (!oldData || !oldData.notifications || !Array.isArray(oldData.notifications)) {
+          return oldData;
+        }
 
         // Capture deleted notification BEFORE filtering — needed for summary adjustment
         const deletedNotification = oldData.notifications.find(
@@ -163,7 +167,9 @@ const useMarkAllAsReadMutation = (params: NotificationFiltersSchema) => {
 
       // 3. Optimistically mark every notification as read
       queryClient.setQueryData(queryKey, (oldData: any) => {
-        if (!oldData) return oldData;
+        if (!oldData || !oldData.notifications || !Array.isArray(oldData.notifications)) {
+          return oldData;
+        }
 
         return {
           ...oldData,

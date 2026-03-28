@@ -17,6 +17,7 @@ import {
   Avatar,
   Badge,
   Spin,
+  Alert,
 } from "antd";
 import {
   ReloadOutlined,
@@ -30,7 +31,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { Notification } from "../../../../types/notification.types";
 import notificationQueryService from "../../../../services/notification-service/notification-query";
 import notificationMutationService from "../../../../services/notification-service/notification-mutation";
-import ErrorMessage from "../../../../lib/error-message";
+import errorMessage from "../../../../lib/error-message";
 
 dayjs.extend(relativeTime);
 
@@ -42,7 +43,7 @@ const UserNotifications: React.FC = () => {
   const [viewingNotification, setViewingNotification] = useState<Notification | null>(null);
   const [filters, setFilters] = useState({ page: 1, limit: 20 });
 
-  const { notifications, isNotificationsLoading, pagination, summary, refreshNotifications } = notificationQueryService.useUserNotificationQuery(filters);
+  const { notifications, isNotificationsLoading, pagination, summary, refreshNotifications, isNotificationsError, notificationsError } = notificationQueryService.useUserNotificationQuery(filters);
   const { markAsRead, isMarkAsReadLoading  } = notificationMutationService.useMarkAsReadMutation(filters);
   const { deleteNotification, isDeleteNotificationLoading } = notificationMutationService.useDeleteNotificationMutation(filters);
   const { markAllAsRead, isMarkAllAsReadLoading } = notificationMutationService.useMarkAllAsReadMutation(filters);
@@ -68,9 +69,9 @@ const UserNotifications: React.FC = () => {
           message.success("Notification marked as read");
         },
         onError: (error) => {
-          const errorMessage = ErrorMessage(error) || "Failed to mark notification as read";
+          const errorMsg = errorMessage(error) || "Failed to mark notification as read";
           console.error("Error marking notification as read:", error);
-          message.error(errorMessage);
+          message.error(errorMsg);
         }
     });
   };
@@ -84,9 +85,9 @@ const UserNotifications: React.FC = () => {
           refreshNotifications();
         },
         onError: (error) => { 
-           const errorMessage = ErrorMessage(error) || "Failed to mark all notifications as read";
+           const errorMsg = errorMessage(error) || "Failed to mark all notifications as read";
           console.error("Error marking notifications as read:", error);
-          message.error(errorMessage);
+          message.error(errorMsg);
         }
       });
   };
@@ -103,14 +104,15 @@ const UserNotifications: React.FC = () => {
           refreshNotifications();
         },
         onError: (error) => {
-          const errorMessage = ErrorMessage(error) || "Failed to delete notification";
+          const errorMsg = errorMessage(error) || "Failed to delete notification";
           console.error("Error deleting notification:", error);
-          message.error(errorMessage);
+          message.error(errorMsg);
         }
     });
   };
 
   const getTypeColor = (type: string): string => {
+    if (!type) return "default";
     const colors: Record<string, string> = {
       account_update: "blue",
       project_update: "purple",
@@ -125,6 +127,7 @@ const UserNotifications: React.FC = () => {
   };
 
   const getPriorityColor = (priority: string): string => {
+    if (!priority) return "default";
     const colors: Record<string, string> = {
       high: "red",
       medium: "orange",
@@ -134,6 +137,7 @@ const UserNotifications: React.FC = () => {
   };
 
   const getNotificationIcon = (type: string) => {
+    if (!type) return <BellOutlined />;
     const icons: Record<string, React.ReactNode> = {
       account_update: <BellOutlined />,
       project_update: <ExclamationCircleOutlined />,
@@ -217,7 +221,24 @@ const UserNotifications: React.FC = () => {
       {/* Notifications List */}
       <Card>
         <Spin spinning={isNotificationsLoading} tip="Loading notifications...">
-          {notifications && notifications.length > 0 ? (
+          {isNotificationsError ? (
+            <Alert
+              message="Error Loading Notifications"
+              description={notificationsError ? errorMessage(notificationsError) : "Failed to load notifications. Please try again."}
+              type="error"
+              showIcon
+              action={
+                <Button
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={refreshNotifications}
+                  type="primary"
+                >
+                  Retry
+                </Button>
+              }
+            />
+          ) : notifications && notifications.length > 0 ? (
             <List
               itemLayout="vertical"
               size="large"
@@ -236,7 +257,7 @@ const UserNotifications: React.FC = () => {
                 },
               }}
               dataSource={notifications}
-              renderItem={(notification: any) => (
+              renderItem={(notification: Notification) => (
                 <List.Item
                   key={notification._id}
                   className={`${
@@ -275,23 +296,23 @@ const UserNotifications: React.FC = () => {
                       <Badge dot={!notification.isRead}>
                         <Avatar
                           style={{
-                            backgroundColor: getTypeColor(notification.type),
+                            backgroundColor: getTypeColor(notification.type || ''),
                             color: "white",
                           }}
-                          icon={getNotificationIcon(notification.type)}
+                          icon={getNotificationIcon(notification.type || '')}
                         />
                       </Badge>
                     }
                     title={
                       <div className="flex items-center gap-2 flex-wrap">
                         <Text strong={!notification.isRead}>
-                          {notification.title}
+                          {notification.title || 'Untitled'}
                         </Text>
-                        <Tag color={getTypeColor(notification.type)}>
-                          {notification.type.replace("_", " ").toUpperCase()}
+                        <Tag color={getTypeColor(notification.type || '')}>
+                          {(notification.type || '').replace("_", " ").toUpperCase() || 'UNKNOWN'}
                         </Tag>
-                        <Tag color={getPriorityColor(notification.priority)}>
-                          {notification.priority.toUpperCase()}
+                        <Tag color={getPriorityColor(notification.priority || '')}>
+                          {(notification.priority || '').toUpperCase() || 'NORMAL'}
                         </Tag>
                       </div>
                     }
@@ -301,13 +322,13 @@ const UserNotifications: React.FC = () => {
                           type="secondary"
                           className={!notification.isRead ? "font-medium" : ""}
                         >
-                          {notification.message.length > 100
-                            ? `${notification.message.substring(0, 100)}...`
-                            : notification.message}
+                          {(notification.message || '').length > 100
+                            ? `${(notification.message || '').substring(0, 100)}...`
+                            : notification.message || 'No message'}
                         </Text>
                         <div className="mt-2">
                           <Text type="secondary" style={{ fontSize: "12px" }}>
-                            {dayjs(notification.createdAt).fromNow()}
+                            {notification.createdAt ? dayjs(notification.createdAt).fromNow() : 'Unknown date'}
                           </Text>
                           {notification.isRead && notification.readAt && (
                             <Text
@@ -365,19 +386,19 @@ const UserNotifications: React.FC = () => {
         {viewingNotification && (
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="Title">
-              <Text strong>{viewingNotification.title}</Text>
+              <Text strong>{viewingNotification.title || 'Untitled'}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Message">
-              <Text>{viewingNotification.message}</Text>
+              <Text>{viewingNotification.message || 'No message'}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Type">
-              <Tag color={getTypeColor(viewingNotification.type)}>
-                {viewingNotification.type.replace("_", " ").toUpperCase()}
+              <Tag color={getTypeColor(viewingNotification.type || '')}>
+                {(viewingNotification.type || '').replace("_", " ").toUpperCase() || 'UNKNOWN'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Priority">
-              <Tag color={getPriorityColor(viewingNotification.priority)}>
-                {viewingNotification.priority.toUpperCase()}
+              <Tag color={getPriorityColor(viewingNotification.priority || '')}>
+                {(viewingNotification.priority || '').toUpperCase() || 'NORMAL'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
@@ -385,36 +406,35 @@ const UserNotifications: React.FC = () => {
                 {viewingNotification.isRead ? "Read" : "Unread"}
               </Tag>
             </Descriptions.Item>
-            {viewingNotification.data?.actionUrl && (
+            {((viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string') || (viewingNotification.data?.actionUrl && typeof viewingNotification.data.actionUrl === 'string')) && (
               <Descriptions.Item label="Action URL">
                 <a
-                  href={viewingNotification.data.actionUrl}
+                  href={(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#1890ff", textDecoration: "underline" }}
                 >
-                  {viewingNotification.data.actionUrl}
+                  {(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''}
                 </a>
               </Descriptions.Item>
             )}
-            {viewingNotification.data?.actionText && (
+            {(viewingNotification.actionText || viewingNotification.data?.actionText) && (
               <Descriptions.Item label="Action Button Text">
-                <Text code>{viewingNotification.data.actionText}</Text>
+                <Text code>{viewingNotification.actionText || viewingNotification.data?.actionText}</Text>
               </Descriptions.Item>
             )}
             <Descriptions.Item label="Created">
               <Text>
-                {dayjs(viewingNotification.createdAt).format(
-                  "MMM DD, YYYY HH:mm:ss"
-                )}
+                {viewingNotification.createdAt
+                  ? dayjs(viewingNotification.createdAt).format("MMM DD, YYYY HH:mm:ss")
+                  : 'Unknown date'
+                }
               </Text>
             </Descriptions.Item>
             {viewingNotification.readAt && (
               <Descriptions.Item label="Read At">
                 <Text>
-                  {dayjs(viewingNotification.readAt).format(
-                    "MMM DD, YYYY HH:mm:ss"
-                  )}
+                  {dayjs(viewingNotification.readAt).format("MMM DD, YYYY HH:mm:ss")}
                 </Text>
               </Descriptions.Item>
             )}

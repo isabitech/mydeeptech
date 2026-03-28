@@ -29,7 +29,7 @@ import { AdminInvoice } from "../../../../types/admin-invoice-type";
 import { generatePaymentReceipt } from "../../../../utils/receiptGenerator";
 import { constructBulkTransferPayload } from "./_utils/_payment-payload.utils";
 import paymentMutationService from "../../../../services/invoice-payment-service/invoice-payment-mutation";
-import ErrorMessage from "../../../../lib/error-message";
+import errorMessage from "../../../../lib/error-message";
 import { BulkTransferPayloadSchema } from "../../../../validators/payment/payment-schema";
 
 interface UnpaidProps {
@@ -510,7 +510,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
           message.success('Bulk payment mutation successful. Invoices will be processed shortly.');
           onRefresh(); // Refresh the page after successful payment
         },
-      onError: (error) =>  message.error(ErrorMessage(error)),
+      onError: (error) =>  message.error(errorMessage(error)),
     })
 
   };
