@@ -14,7 +14,6 @@ import Jobs from "./pages/Dashboard/User/jobs/Jobs";
 import Projects from "./pages/Dashboard/User/projects/Projects";
 import Profile from "./pages/Dashboard/User/profile/Profile";
 import Settings from "./pages/Dashboard/User/settings/Settings";
-import Dashboard from "./pages/Dashboard/User/Dashboard";
 import AdminLayout from "./pages/Dashboard/Admin/AdminLayout";
 import AdminOverview from "./pages/Dashboard/Admin/adminoverview/AdminOverview";
 import UserManagement from "./pages/Dashboard/Admin/usermgt/UserManagement";
@@ -64,6 +63,7 @@ import { PageGuard } from "./components";
 import ApplicationsPage from "./pages/admin/ApplicationsPage";
 import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessments";
 import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
+import DashboardLayout from "./pages/Dashboard/User/DashboardLayout";
 
 const AppRoutes = () => {
   return (
@@ -102,7 +102,7 @@ const AppRoutes = () => {
 
         {/* Protected Dashboard Routes */}
         <Route element={<ProtectUserLayout />}>
-          <Route path="/dashboard" element={<Dashboard />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
             {/* Default route */}
             <Route index element={<Navigate to="overview" replace />} />
             {/* User Dashboard */}

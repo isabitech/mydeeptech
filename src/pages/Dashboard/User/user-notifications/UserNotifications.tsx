@@ -251,7 +251,7 @@ const UserNotifications: React.FC = () => {
                 position: "bottom",
                 align: "center",
                 showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} notifications`,
+                  `${range[0]}-${range[1]} of ${total} items`,
                 onChange: (page, limit) => {
                   setFilters({ ...filters, page, limit });
                 },

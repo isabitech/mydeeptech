@@ -61,6 +61,7 @@ type UserInfoActions = {
   setUserInfo: (userInfo: UserInfoData | null) => void;
   setIsAssessmentSubmitted: () => Promise<void>;
   clearUserInfo: () => void;
+  handleLogout: () => void;
 };
 
  type UserInfoStore = UserInfoStates & UserInfoActions;
@@ -95,6 +96,26 @@ const useUserInfoStore = create<UserInfoStore>()(
           }));
         },
       clearUserInfo: () => set({ userInfo: null }),
+      handleLogout: () => {
+        // Clear session storage
+        sessionStorage.removeItem('ACCESS_TOKEN');
+        sessionStorage.removeItem('userInfo');
+
+        // Clear local storage
+        localStorage.removeItem('ACCESS_TOKEN');
+        localStorage.removeItem('userInfo');
+        
+        // Clear all session storage to ensure complete logout
+        sessionStorage.clear();
+
+        // Clear all local storage to ensure complete logout
+        localStorage.clear();
+        
+        set({ userInfo: null });
+
+        // Navigate last, after all cleanup is done
+        window.location.replace('/login');
+      },
     }),
     {
       name: 'user-info-storage', // unique name for sessionStorage key
@@ -114,6 +135,7 @@ return  useUserInfoStore(
         setUserInfo: state.setUserInfo,
         setIsAssessmentSubmitted: state.setIsAssessmentSubmitted,
         clearUserInfo: state.clearUserInfo,
+        handleLogout: state.handleLogout,
     }))
 )}
 

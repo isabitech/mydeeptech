@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../../../components/NotificationDropdown";
 import Dropdown from "antd/es/dropdown/dropdown";
 import { Avatar, Typography } from "antd";
-import { useUserInfoStates } from "../../../store/useAuthStore";
+import { useUserInfoActions, useUserInfoStates } from "../../../store/useAuthStore";
 
 const { Text } = Typography;
 
@@ -31,25 +31,7 @@ export type UserInfoProps = {
 const Header: React.FC<Props> = ({ title }) => {
   const navigate = useNavigate();
   const { userInfo } = useUserInfoStates();
-
-  const handleLogout = () => {
-    // Clear session storage
-    sessionStorage.removeItem('ACCESS_TOKEN');
-    sessionStorage.removeItem('userInfo');
-    
-    // Clear local storage as well (in case any auth data is stored there)
-    localStorage.removeItem('ACCESS_TOKEN');
-    localStorage.removeItem('userInfo');
-    
-    // Clear all storage to ensure complete logout
-    sessionStorage.clear();
-    
-    // Navigate to login and replace current history entry
-    navigate('/login', { replace: true });
-    
-    // Optional: Force a page reload to clear any cached state
-    window.location.replace('/login');
-  };
+  const { handleLogout } = useUserInfoActions();
 
   const userMenuItems = [
     {
