@@ -37,12 +37,10 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
         />
       </Form.Item>
 
-      <Form.Item label="Annotator Status">
+      <Form.Item label="Annotator Statuses:">
         <div className="flex gap-2">
           <Tag color={profile?.isEmailVerified ? "green" : "red"}>
-            {profile?.isEmailVerified
-              ? "Email Verified"
-              : "Email Not Verified"}
+            Email: {profile?.isEmailVerified ? "Verified" : "Not Verified"}
           </Tag>
           <Tag
             color={
@@ -51,7 +49,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                 : "orange"
             }
           >
-            {profile?.annotatorStatus || "Pending"}
+            Annotator Status: {profile?.annotatorStatus === "verified" ? "Verified" : "Pending"}
           </Tag>
           <Tag
             color={
@@ -60,7 +58,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                 : "red"
             }
           >
-            {profile?.microTaskerStatus ? "approved" : "pending"}
+            Micro Tasker: {profile?.microTaskerStatus === "approved" ? "Approved" : "Pending"}
           </Tag>
         </div>
       </Form.Item>

@@ -24,7 +24,7 @@ import ErrorMessage from "../../../../lib/error-message.js";
 
 const Profile = () => {
   const [form] = Form.useForm();
-  
+
   const { userInfo } = useUserInfoStates();
   // Get userId directly from userInfo
   const userId = userInfo?.id;
@@ -33,7 +33,13 @@ const Profile = () => {
 
   // Custom hooks
   const domainHooks = useDomainManagement(profile);
-  
+
+    // File uploads hook
+  const fileUploads = useFileUploads(userId, profileRefetch, form);
+
+  // Update bank type import
+  const { allNGNBanks } = useListAllNGNBanks();
+
   // Watch form values for account verification
   const paymentCurrency = Form.useWatch("paymentCurrency", form);
   const paymentMethod = Form.useWatch("paymentMethod", form);
@@ -67,13 +73,9 @@ const Profile = () => {
     );
   };
 
-  // File uploads hook
-  const fileUploads = useFileUploads(userId, profileRefetch, form);
 
-  // Update bank type import
-  const { allNGNBanks } = useListAllNGNBanks();
 
-  if (!userInfo?.id || isProfileLoading) {
+  if (!userId || isProfileLoading) {
     return <ProfileLoading />;
   }
 
@@ -84,79 +86,75 @@ const Profile = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <div className="mt-10 w-[90%] m-auto">
-        <div className="w-full">
-          <div className="grid grid-cols-12 gap-8">
-            <div className="col-span-12">
-              <PersonalInfoCard
+      <div className="mt-10 w-[90%] m-auto grid grid-cols-12 gap-8">
+        <div className="col-span-12">
+          <PersonalInfoCard
+            profile={profile}
+            userInfo={userInfo}
+            isEditing={profileActions.isEditing}
+            updateLoading={profileActions.updateLoading}
+            assignedDomains={domainHooks.assignedDomains}
+            mergedDomains={domainHooks.mergedDomains}
+            onEditClick={profileActions.handleEditClick}
+            onSave={handleSaveWithVerification}
+            onCancel={profileActions.handleCancel}
+          />
+          <SystemInfoCard profile={profile} />
+        </div>
+
+        <div className="col-span-12">
+          <Form form={form} layout="vertical">
+            <Card title="Personal Information" className="mb-6">
+              <PersonalDetailsForm
                 profile={profile}
                 userInfo={userInfo}
                 isEditing={profileActions.isEditing}
-                updateLoading={profileActions.updateLoading}
+                hasSelectedCountry={profileActions.hasSelectedCountry}
+                onCountryChange={profileActions.handleCountryChange}
                 assignedDomains={domainHooks.assignedDomains}
                 mergedDomains={domainHooks.mergedDomains}
-                onEditClick={profileActions.handleEditClick}
-                onSave={handleSaveWithVerification}
-                onCancel={profileActions.handleCancel}
+                selectedDomains={domainHooks.selectedDomains}
+                onDomainsChange={domainHooks.handleDomainsChange}
               />
-              <SystemInfoCard profile={profile} />
-            </div>
+            </Card>
 
-            <div className="col-span-12">
-              <Form form={form} layout="vertical">
-                <Card title="Personal Information" className="mb-6">
-                  <PersonalDetailsForm
-                    profile={profile}
-                    userInfo={userInfo}
-                    isEditing={profileActions.isEditing}
-                    hasSelectedCountry={profileActions.hasSelectedCountry}
-                    onCountryChange={profileActions.handleCountryChange}
-                    assignedDomains={domainHooks.assignedDomains}
-                    mergedDomains={domainHooks.mergedDomains}
-                    selectedDomains={domainHooks.selectedDomains}
-                    onDomainsChange={domainHooks.handleDomainsChange}
-                  />
-                </Card>
+            <PaymentInfoForm
+              form={form}
+              isEditing={profileActions.isEditing}
+              paymentCurrency={paymentCurrency}
+              paymentMethod={paymentMethod}
+              accountNumber={accountNumber}
+              bankCode={bankCode}
+              isVerifying={accountVerification.isVerifying}
+              verificationSuccess={accountVerification.verificationSuccess}
+              verificationError={accountVerification.verificationError}
+              hasVerifiedAccount={accountVerification.hasVerifiedAccount}
+              allNGNBanks={allNGNBanks}
+              onManualVerification={accountVerification.handleManualVerification}
+              onVerificationRefetch={accountVerification.verificationRefetch}
+            />
 
-                <PaymentInfoForm
-                  form={form}
-                  isEditing={profileActions.isEditing}
-                  paymentCurrency={paymentCurrency}
-                  paymentMethod={paymentMethod}
-                  accountNumber={accountNumber}
-                  bankCode={bankCode}
-                  isVerifying={accountVerification.isVerifying}
-                  verificationSuccess={accountVerification.verificationSuccess}
-                  verificationError={accountVerification.verificationError}
-                  hasVerifiedAccount={accountVerification.hasVerifiedAccount}
-                  allNGNBanks={allNGNBanks}
-                  onManualVerification={accountVerification.handleManualVerification}
-                  onVerificationRefetch={accountVerification.verificationRefetch}
-                />
+            <Card title="Professional Background" className="mb-6">
+              <ProfessionalBackgroundForm isEditing={profileActions.isEditing} />
+            </Card>
 
-                <Card title="Professional Background" className="mb-6">
-                  <ProfessionalBackgroundForm isEditing={profileActions.isEditing} />
-                </Card>
+            <Card title="Device Information" className="mb-6">
+              <SystemInfoForm isEditing={profileActions.isEditing} />
+            </Card>
 
-                <Card title="Device Information" className="mb-6">
-                  <SystemInfoForm isEditing={profileActions.isEditing} />
-                </Card>
+            <SkillsExperienceForm isEditing={profileActions.isEditing} />
 
-                <SkillsExperienceForm isEditing={profileActions.isEditing} />
-
-                <Card title="Document Attachments" className="mb-6">
-                  <DocumentAttachmentsForm
-                    profile={profile}
-                    isEditing={profileActions.isEditing}
-                    uploading={fileUploads.uploading}
-                    onResumeUpload={fileUploads.handleResumeUpload}
-                    onIdDocumentUpload={fileUploads.handleIdDocumentUpload}
-                    onRemoveDocument={fileUploads.handleRemoveDocument}
-                  />
-                </Card>
-              </Form>
-            </div>
-          </div>
+            <Card title="Document Attachments" className="mb-6">
+              <DocumentAttachmentsForm
+                profile={profile}
+                isEditing={profileActions.isEditing}
+                uploading={fileUploads.uploading}
+                onResumeUpload={fileUploads.handleResumeUpload}
+                onIdDocumentUpload={fileUploads.handleIdDocumentUpload}
+                onRemoveDocument={fileUploads.handleRemoveDocument}
+              />
+            </Card>
+          </Form>
         </div>
       </div>
     </div>

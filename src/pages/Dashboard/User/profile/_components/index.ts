@@ -8,6 +8,12 @@ export { default as ProfessionalBackgroundForm } from './ProfessionalBackgroundF
 export { default as SkillsExperienceForm } from './SkillsExperienceForm';
 export { default as DocumentAttachmentsForm } from './DocumentAttachmentsForm';
 
+// SystemInfoForm related exports
+export { default as DetectionStatusAlert } from './DetectionStatusAlert';
+export { default as DetectedFieldLabel } from './DetectedFieldLabel';
+export { useDeviceDetection } from './hooks/useDeviceDetection';
+export * from './utils/deviceDetectionUtils';
+
 // Payment form exports
 export { default as NGNPaymentForm } from './payment/NGNPaymentForm';
 export { default as USDPaymentForm } from './payment/USDPaymentForm';

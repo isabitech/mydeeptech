@@ -1,6 +1,6 @@
 import React from "react";
-import { Button, Card, Tag } from "antd";
-import { Domain } from "../types.js";
+import { Button, Card } from "antd";
+import { Domain } from "../types";
 
 interface PersonalInfoCardProps {
   profile: any;
@@ -47,8 +47,12 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
                 userInfo?.fullName ||
                 "User Name"}
             </h3>
-            <p className="text-gray-600 text-sm capitalize">
-              {profile?.annotatorStatus || "Annotator"}
+            <p className={`text-sm capitalize ${
+              profile?.annotatorStatus === "rejected" ? "text-red-500" : "text-gray-600"
+            }`}>
+              {profile?.annotatorStatus === "rejected" 
+                ? "Unverified Annotator" 
+                : profile?.annotatorStatus || "Annotator"}
             </p>
           </div>
 
