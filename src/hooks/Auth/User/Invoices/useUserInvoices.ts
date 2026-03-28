@@ -1,170 +1,166 @@
 import { useState, useCallback } from "react";
 import { message } from "antd";
-import apiUtils from "../../../../service/axiosApi";
+import userInvoiceQueryService from "../../../../services/user-invoice-service/user-invoice-query";
 import {
-  Invoice,
-  InvoicesResponse,
-  InvoiceResponse,
-  InvoiceDashboardResponse,
   InvoiceFilters,
-  InvoicesSummary,
-  PaginationInfo,
   HookOperationResult,
 } from "../../../../types/invoice.types";
-import { UnpaidInvoiceResponse, UnpaidInvoice } from "./invoice-type";
-import { PaidInvoiceResponse, PaidInvoice } from "./paid-invoice-type";
+import { UnpaidInvoice } from "./invoice-type";
+import { PaidInvoice } from "./paid-invoice-type";
+import errorMessage from "../../../../lib/error-message";
 
 export const useUserInvoices = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [unpaidInvoices, setUnpaidInvoices] = useState<UnpaidInvoice[]>([]);
-  const [paidInvoices, setPaidInvoices] = useState<PaidInvoice[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [summary, setSummary] = useState<InvoicesSummary | null>(null);
-  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [filters, setFilters] = useState<InvoiceFilters | undefined>(undefined);
+  const [unpaidFilters, setUnpaidFilters] = useState<InvoiceFilters | undefined>(undefined);
+  const [paidFilters, setPaidFilters] = useState<InvoiceFilters | undefined>(undefined);
 
-  const handleApiCall = useCallback(async <T>(
-    apiCall: () => Promise<T>,
-    successMessage?: string
-  ): Promise<HookOperationResult> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await apiCall();
-      if (successMessage) {
-        message.success(successMessage);
-      }
-      return { success: true, data: response };
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "An error occurred";
-      setError(errorMessage);
-      message.error(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
+  // TanStack Query hooks
+  const userInvoicesQuery = userInvoiceQueryService.useUserInvoices(filters);
+  const unpaidInvoicesQuery = userInvoiceQueryService.useUnpaidInvoices(unpaidFilters);
+  const paidInvoicesQuery = userInvoiceQueryService.usePaidInvoices(paidFilters);
+  const dashboardQuery = userInvoiceQueryService.useUserInvoiceDashboard();
+
+  // Helper function for consistent return values
+  const createHookResult = useCallback((
+    success: boolean, 
+    data?: any, 
+    error?: string
+  ): HookOperationResult => {
+    if (error) {
+      message.error(error);
     }
+    return { success, data, error };
   }, []);
 
-  const getUserInvoices = useCallback(async (filters?: InvoiceFilters): Promise<HookOperationResult> => {
-    return handleApiCall(async () => {
-      const queryParams = new URLSearchParams();
+  const getUserInvoices = useCallback(async (filterParams?: InvoiceFilters): Promise<HookOperationResult> => {
+    try {
+      setFilters(filterParams);
       
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.paymentStatus) queryParams.append("paymentStatus", filters.paymentStatus);
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
+      // Note: TanStack Query will handle the actual API call
+      // We return success immediately since the query will update reactively
+      return createHookResult(true, null);
+    } catch (error: any) {
+      const errorMsg = errorMessage(error) ?? "An error occurred";
+      return createHookResult(false, null, errorMsg);
+    }
+  }, [createHookResult]);
 
-      const response = await apiUtils.get<InvoicesResponse>(
-        `/auth/invoices?${queryParams.toString()}`
-      );
+  const getUnpaidInvoices = useCallback(async (filterParams?: InvoiceFilters): Promise<HookOperationResult> => {
+    try {
+      setUnpaidFilters(filterParams);
+      return createHookResult(true, null);
+    } catch (error: any) {
+      const errorMsg = errorMessage(error) ?? "An error occurred";
+      return createHookResult(false, null, errorMsg);
+    }
+  }, [createHookResult]);
 
-      if (response.data.success && response.data.data) {
-        setInvoices(response.data.data.invoices);
-        setPagination(response.data.data.pagination);
-        setSummary(response.data.data.summary);
-      }
-
-      return response.data;
-    });
-  }, [handleApiCall]);
-
-  const getUnpaidInvoices = useCallback(async (filters?: InvoiceFilters): Promise<HookOperationResult> => {
-    return handleApiCall(async () => {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
-
-      const response = await apiUtils.get<UnpaidInvoiceResponse>(
-        `/auth/invoices/unpaid?${queryParams.toString()}`
-      );
-
-      if (response.data.success && response.data.data) {
-        setUnpaidInvoices(response.data.data.unpaidInvoices);
-        // Convert pagination data to match PaginationInfo structure
-        setPagination({
-          currentPage: response.data.data.pagination.currentPage,
-          totalPages: response.data.data.pagination.totalPages,
-          totalInvoices: response.data.data.pagination.totalUnpaidInvoices, // Map to expected field
-          invoicesPerPage: response.data.data.pagination.invoicesPerPage
-        });
-        // Convert summary data to match InvoicesSummary structure
-        setSummary({
-          totalAmount: response.data.data.summary.totalAmountDue,
-          paidAmount: 0, // Not available in unpaid summary
-          unpaidAmount: response.data.data.summary.totalAmountDue,
-          totalInvoices: response.data.data.summary.unpaidCount,
-          overdueAmount: response.data.data.summary.overdueAmount
-        });
-      }
-
-      return response.data;
-    });
-  }, [handleApiCall]);
-
-  const getPaidInvoices = useCallback(async (filters?: InvoiceFilters): Promise<HookOperationResult> => {
-    return handleApiCall(async () => {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
-
-      const response = await apiUtils.get<PaidInvoiceResponse>(
-        `/auth/invoices/paid?${queryParams.toString()}`
-      );
-
-      if (response.data.success && response.data.data) {
-        setPaidInvoices(response.data.data.paidInvoices);
-        // Convert pagination data to match PaginationInfo structure
-        setPagination({
-          currentPage: response.data.data.pagination.currentPage,
-          totalPages: response.data.data.pagination.totalPages,
-          totalInvoices: response.data.data.pagination.totalPaidInvoices, // Map to expected field
-          invoicesPerPage: response.data.data.pagination.invoicesPerPage
-        });
-        // Convert summary data to match InvoicesSummary structure
-        setSummary({
-          totalAmount: response.data.data.summary.totalEarnings,
-          paidAmount: response.data.data.summary.totalEarnings,
-          unpaidAmount: 0, // Not available in paid summary
-          totalInvoices: response.data.data.summary.paidCount,
-          overdueAmount: 0 // Not relevant for paid invoices
-        });
-      }
-
-      return response.data;
-    });
-  }, [handleApiCall]);
+  const getPaidInvoices = useCallback(async (filterParams?: InvoiceFilters): Promise<HookOperationResult> => {
+    try {
+      setPaidFilters(filterParams);
+      return createHookResult(true, null);
+    } catch (error: any) {
+      const errorMsg = errorMessage(error) ?? "An error occurred";
+      return createHookResult(false, null, errorMsg);
+    }
+  }, [createHookResult]);
 
   const getInvoiceDashboard = useCallback(async (): Promise<HookOperationResult> => {
-    return handleApiCall(async () => {
-      const response = await apiUtils.get<InvoiceDashboardResponse>("/auth/invoices/dashboard");
-
-      if (response.data.success && response.data.data) {
-        setDashboardData(response.data.data);
-        setSummary(response.data.data.summary);
-      }
-
-      return response.data;
-    });
-  }, [handleApiCall]);
+    try {
+      // Dashboard query runs automatically, just refetch if needed
+      await dashboardQuery.refetch();
+      return createHookResult(true, dashboardQuery.data);
+    } catch (error: any) {
+      const errorMsg = errorMessage(error) ?? "An error occurred";
+      return createHookResult(false, null, errorMsg);
+    }
+  }, [dashboardQuery, createHookResult]);
 
   const getInvoiceDetails = useCallback(async (invoiceId: string): Promise<HookOperationResult> => {
-    return handleApiCall(async () => {
-      const response = await apiUtils.get<InvoiceResponse>(`/auth/invoices/${invoiceId}`);
-      return response.data;
-    });
-  }, [handleApiCall]);
+    try {
+      // This would need to be handled differently since it's a dynamic query
+      // For now, we'll indicate that this needs the component to use the hook directly
+      return createHookResult(true, null, "Use userInvoiceQueryService.useUserInvoiceDetails(invoiceId) directly");
+    } catch (error: any) {
+      const errorMsg = errorMessage(error) ?? "An error occurred";
+      return createHookResult(false, null, errorMsg);
+    }
+  }, [createHookResult]);
 
-  const refreshInvoices = useCallback(async (filters?: InvoiceFilters): Promise<void> => {
-    await getUserInvoices(filters);
-  }, [getUserInvoices]);
+  const refreshInvoices = useCallback(async (filterParams?: InvoiceFilters): Promise<void> => {
+    await getUserInvoices(filterParams);
+    if (unpaidFilters) {
+      await getUnpaidInvoices(unpaidFilters);
+    }
+    if (paidFilters) {
+      await getPaidInvoices(paidFilters);
+    }
+    await dashboardQuery.refetch();
+    message.success("Data refreshed");
+  }, [getUserInvoices, getUnpaidInvoices, getPaidInvoices, dashboardQuery, unpaidFilters, paidFilters]);
+
+  // Process and transform data to maintain backward compatibility
+  const invoices = userInvoicesQuery.data?.data?.invoices || [];
+  const unpaidInvoices: UnpaidInvoice[] = unpaidInvoicesQuery.data?.data?.unpaidInvoices || [];
+  const paidInvoices: PaidInvoice[] = paidInvoicesQuery.data?.data?.paidInvoices || [];
+
+  // Extract pagination from active query
+  const activePagination = 
+    unpaidInvoicesQuery.data?.data?.pagination ||
+    paidInvoicesQuery.data?.data?.pagination ||
+    userInvoicesQuery.data?.data?.pagination ||
+    null;
+
+  // Transform pagination to match expected structure
+  const pagination = activePagination ? {
+    currentPage: activePagination.currentPage,
+    totalPages: activePagination.totalPages,
+    totalInvoices: (activePagination as any).totalUnpaidInvoices || (activePagination as any).totalPaidInvoices || (activePagination as any).totalInvoices || 0,
+    invoicesPerPage: activePagination.invoicesPerPage
+  } : null;
+
+  // Extract summary from dashboard or active query
+  const rawSummary = 
+    dashboardQuery.data?.data?.summary ||
+    unpaidInvoicesQuery.data?.data?.summary ||
+    paidInvoicesQuery.data?.data?.summary ||
+    userInvoicesQuery.data?.data?.summary ||
+    null;
+
+  // Get specific summaries for better type safety
+  const unpaidSummary = unpaidInvoicesQuery.data?.data?.summary;
+  const paidSummary = paidInvoicesQuery.data?.data?.summary;
+  const dashboardSummary = dashboardQuery.data?.data?.summary;
+
+  // Transform summary to match expected structure  
+  const summary = rawSummary ? {
+    totalAmount: (dashboardSummary?.totalAmount || 0) + 
+                (paidSummary?.totalEarnings || 0) + 
+                (unpaidSummary?.totalAmountDue || 0),
+    paidAmount: paidSummary?.totalEarnings || dashboardSummary?.paidAmount || 0,
+    unpaidAmount: unpaidSummary?.totalAmountDue || dashboardSummary?.unpaidAmount || 0,
+    totalInvoices: (dashboardSummary?.totalInvoices || 0) + 
+                   (paidSummary?.paidCount || 0) + 
+                   (unpaidSummary?.unpaidCount || 0),
+    overdueAmount: unpaidSummary?.overdueAmount || dashboardSummary?.overdueAmount || 0
+  } : null;
+
+  const dashboardData = dashboardQuery.data?.data || null;
+
+  // Aggregate loading states
+  const loading = 
+    userInvoicesQuery.isLoading ||
+    unpaidInvoicesQuery.isLoading ||
+    paidInvoicesQuery.isLoading ||
+    dashboardQuery.isLoading;
+
+  // Aggregate error states
+  const error = 
+    userInvoicesQuery.error?.message ||
+    unpaidInvoicesQuery.error?.message ||
+    paidInvoicesQuery.error?.message ||
+    dashboardQuery.error?.message ||
+    null;
 
   return {
     // State
@@ -184,5 +180,13 @@ export const useUserInvoices = () => {
     getInvoiceDashboard,
     getInvoiceDetails,
     refreshInvoices,
+
+    // Expose TanStack Query objects for direct access if needed
+    queries: {
+      userInvoices: userInvoicesQuery,
+      unpaidInvoices: unpaidInvoicesQuery,
+      paidInvoices: paidInvoicesQuery,
+      dashboard: dashboardQuery,
+    }
   };
 };

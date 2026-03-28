@@ -41,6 +41,13 @@ const QUERY = {
     getExchangeRateByCountry: "getExchangeRateByCountry",
     getPartnerInvoices: "getPartnerInvoices",
 
+    // User Invoice Queries
+    getUserInvoices: "getUserInvoices",
+    getUnpaidInvoices: "getUnpaidInvoices",
+    getPaidInvoices: "getPaidInvoices",
+    getUserInvoiceDashboard: "getUserInvoiceDashboard",
+    getUserInvoiceDetails: "getUserInvoiceDetails",
+
     assessmentReviews: "assessmentReviews",
    
 
