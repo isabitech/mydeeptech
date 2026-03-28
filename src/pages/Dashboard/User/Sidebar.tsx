@@ -20,7 +20,7 @@ const Sidebar = () => {
   const handleMobileOverlayClick = () => setIsOpen(false);
 
   return (
-    <div className="bg-white font-[gilroy-regular]">
+    <aside className="bg-white font-[gilroy-regular]">
       <MobileToggle isOpen={isOpen} onToggle={handleMobileToggle} />
 
       {/* Sidebar */}
@@ -47,7 +47,7 @@ const Sidebar = () => {
       </div>
 
       <MobileOverlay isOpen={isOpen} onClose={handleMobileOverlayClick} />
-    </div>
+    </aside>
   );
 };
 

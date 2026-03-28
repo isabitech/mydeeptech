@@ -26,16 +26,16 @@ const DashboardLayout = () => {
 
   return (
       <>
-        <div className="flex h-screen w-full">
+        <section className="flex h-screen w-full">
           <Sidebar />
           <div className="grid grid-rows-[auto_1fr] grid-cols-1 w-full">
           <UserHeader />
             {/* Main Content */}
-            <div className="bg-gray-100 p-6 overflow-y-auto w-full flex flex-col flex-1">
+            <main className="bg-gray-100 p-6 overflow-y-auto w-full flex flex-col flex-1">
               <Outlet />
-            </div>
+            </main>
           </div>
-        </div>
+        </section>
       </>
   );
 };

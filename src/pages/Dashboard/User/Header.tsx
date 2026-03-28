@@ -65,7 +65,7 @@ const Header: React.FC<Props> = ({ title }) => {
 
   return (
     // 
-    <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
+    <header className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
       <div className="pl-10 lg:pl-0 hidden lg:block w-1/2">
         <h2 className="font-medium text-lg capitalize truncate">{title}</h2>
       </div>
@@ -99,7 +99,7 @@ const Header: React.FC<Props> = ({ title }) => {
         </Dropdown>
       </div>
 
-    </div>
+    </header>
   );
 };
 
