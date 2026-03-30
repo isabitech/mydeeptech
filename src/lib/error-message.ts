@@ -18,7 +18,7 @@ const resolveMessage = (err: any): string => {
 };
 
 const errorMessage = (error: unknown): string => {
-  console.log("Error received in errorMessage function:", error);
+
 
   // Handle null or undefined errors
   if (error === null || error === undefined) {

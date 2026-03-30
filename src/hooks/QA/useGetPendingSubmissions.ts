@@ -92,9 +92,9 @@ export const useGetPendingSubmissions = () => {
           break;
       }
       
-      console.log('API Response:', response);
-      console.log('Success:', response.success);
-      console.log('Response data:', response.data);
+
+
+
       
       if (response.success && response.data) {
         const { submissions: submissionsData, pagination: paginationData } = response?.data;

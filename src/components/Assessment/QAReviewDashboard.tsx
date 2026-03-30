@@ -43,7 +43,7 @@ interface QAReviewDashboardProps {
   onReviewComplete?: (submissionId: string, decision: string) => void;
 }
 
-export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
+const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
   onReviewComplete,
 }) => {
   const { getPendingSubmissions, loading, submissions, pagination } = useGetPendingSubmissions();
@@ -698,3 +698,5 @@ export const QAReviewDashboard: React.FC<QAReviewDashboardProps> = ({
     </div>
   );
 };
+
+export default QAReviewDashboard;

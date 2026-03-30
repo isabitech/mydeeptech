@@ -1,4 +1,4 @@
-import Reset from "../../User/settings/Reset";
+import Reset from "../../User/settings/ResetPasswordForm";
 import { Card, Button, Divider } from 'antd';
 import { FileTextOutlined, SafetyOutlined, DownloadOutlined, UserOutlined } from '@ant-design/icons';
 

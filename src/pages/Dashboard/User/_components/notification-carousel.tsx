@@ -78,7 +78,7 @@ const NotificationCarousel = () => {
 
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
+      x: direction > 0 ? 100 : -100,
       opacity: 0,
     }),
     center: {
@@ -88,19 +88,16 @@ const NotificationCarousel = () => {
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 300 : -300,
+      x: direction < 0 ? 100 : -100,
       opacity: 0,
     }),
   };
 
   return (
     <motion.div
-      whileHover={{
-        scale: 1.005,
-        boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1), 0 0 20px 2px rgba(255, 255, 255, 0.05)"
-      }}
+      // whileHover={{ scale: 1.005 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="relative w-full overflow-hidden group rounded-xl"
+      className="relative w-full h-full overflow-hidden group rounded-xl"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
@@ -135,7 +132,7 @@ const NotificationCarousel = () => {
         </>
       )}
 
-      <div className="min-h-[140px] flex items-center px-10 md:px-14 pb-8 pt-2">
+      <div className="flex items-center p-4 lg:p-6">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={activeSlide}

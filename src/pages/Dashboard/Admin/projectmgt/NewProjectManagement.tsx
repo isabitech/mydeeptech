@@ -131,20 +131,6 @@ const ProjectManagement: React.FC = () => {
     fetchProjects();
   }, []);
 
-  // Debug logging for summary data
-  useEffect(() => {
-    console.log('🎯 Summary state updated:', summary);
-    if (summary) {
-      console.log('📈 Summary properties:', {
-        totalProjects: summary.totalProjects,
-        activeProjects: summary.activeProjects,
-        completedProjects: summary.completedProjects,
-        pausedProjects: summary.pausedProjects,
-        allKeys: Object.keys(summary)
-      });
-    }
-  }, [summary]);
-
   const fetchProjects = async () => {
     await getAllProjects({
       page: 1,
@@ -435,8 +421,6 @@ const ProjectManagement: React.FC = () => {
       // Use the proper base URL for the API call
       const apiBaseUrl = baseURL || 'http://localhost:4000'; // Fallback URL
       const apiUrl = `${apiBaseUrl}/admin/projects/${project._id}/export-approved-csv`;
-      console.log('🚀 baseURL:', baseURL);
-      console.log('🚀 Final API URL:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -448,9 +432,6 @@ const ProjectManagement: React.FC = () => {
 
       // Close loading notification
       notification.destroy(loadingKey);
-
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', [...response.headers.entries()]);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -469,7 +450,6 @@ const ProjectManagement: React.FC = () => {
       }
       // Create blob and download
       const blob = await response.blob();
-      console.log('📦 Blob size:', blob.size, 'Type:', blob.type);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -540,7 +520,6 @@ const ProjectManagement: React.FC = () => {
 
   // Show project annotators
   const showProjectAnnotators = (project: Project) => {
-    console.log({ project });
     setSelectedProjectForAnnotators(project);
     setIsAnnotatorsModalVisible(true);
   };

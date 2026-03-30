@@ -3,6 +3,13 @@ import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { retrieveUserInfoFromStorage, storeUserInfoToStorage } from "../helpers";
 
+// Global navigation callback for avoiding page refreshes on logout
+let globalNavigateCallback: ((path: string, options?: { replace?: boolean }) => void) | null = null;
+
+export const setAuthStoreNavigate = (navigateCallback: ((path: string, options?: { replace?: boolean }) => void) | null) => {
+  globalNavigateCallback = navigateCallback;
+};
+
 
 interface RBACPermission {
   _id: string;
@@ -113,8 +120,15 @@ const useUserInfoStore = create<UserInfoStore>()(
         
         set({ userInfo: null });
 
-        // Navigate last, after all cleanup is done
-        window.location.replace('/login');
+
+        // Use global navigate callback if available (no page refresh)
+        // Otherwise fall back to window.location.replace
+        if (globalNavigateCallback) {
+          globalNavigateCallback('/login', { replace: true });
+        } else {
+          console.warn('No global navigate callback set in auth store. Using window.location.replace which causes page refresh.');
+          window.location.replace('/login');
+        }
       },
     }),
     {

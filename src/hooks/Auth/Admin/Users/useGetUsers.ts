@@ -27,7 +27,7 @@ const useGetUsers = () => {
                 }
                 const data = await response.json();
                 setUsers(data.data);
-                console.log(data.data)
+
             } catch (err:any) {
                 setError(err.message);
             } finally {

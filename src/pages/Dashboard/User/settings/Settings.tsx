@@ -1,13 +1,13 @@
-import Reset from "./Reset";
 import { Card, Button, Divider } from 'antd';
-import { FileTextOutlined, SafetyOutlined, DownloadOutlined } from '@ant-design/icons';
+import { FileTextOutlined, SafetyOutlined } from '@ant-design/icons';
+import ResetPasswordForm from "./ResetPasswordForm";
 
 const Settings = () => {
   return (
     <div className="h-full grid grid-cols-1 gap-4 font-[gilroy-regular]">
 
       {/* Reset Password Section */}
-      <Reset />
+      <ResetPasswordForm />
       
       {/* Privacy & Legal Section */}
       <Card 

@@ -1,7 +1,7 @@
 import { Button, Form, Input, message } from "antd";
 import { useResetPassword } from "../../../../hooks/Auth/User/useResetPassword";
 
-const Reset = () => {
+const ResetPasswordForm = () => {
   const [form] = Form.useForm();
   const { resetPassword, loading, error } = useResetPassword();
 
@@ -36,7 +36,8 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
+          autoComplete="current-password"
+            className="!font-[gilroy-regular] !text-[#333333] !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
             placeholder="Old password"
           />
         </Form.Item>
@@ -56,7 +57,8 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333]  !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
+            autoComplete="new-password"
+            className="!font-[gilroy-regular] !text-[#333333]  !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
             placeholder="New password"
           />
         </Form.Item>
@@ -86,13 +88,14 @@ const Reset = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-12 !w-[100%] lg:!w-[50%] !rounded-md !p-4"
+            className="!font-[gilroy-regular] !text-[#333333] !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
             placeholder="Confirm new password"
+            autoComplete="confirm-password"
           />
         </Form.Item>
 
         <Button
-          className="!font-[gilroy-regular] !text-white bg-secondary !h-12 !w-[100%] lg:!w-[50%] !mt-4"
+          className="!font-[gilroy-regular] !text-white bg-secondary !h-11 !w-[100%] lg:!w-[50%] !mt-4"
           type="primary"
           htmlType="submit"
           loading={loading}
@@ -110,4 +113,4 @@ const Reset = () => {
   );
 };
 
-export default Reset;
+export default ResetPasswordForm;

@@ -10,65 +10,41 @@ import {
 } from "../../types/invoice.types";
 import { UnpaidInvoiceResponse } from "../../hooks/Auth/User/Invoices/invoice-type";
 import { PaidInvoiceResponse } from "../../hooks/Auth/User/Invoices/paid-invoice-type";
+import { invoiceQueryBuilder } from "./invoice-helper";
 
-const useUserInvoices = (filters?: InvoiceFilters) => {
+const useUserInvoices = (params?: InvoiceFilters) => {
+  const queryParams = invoiceQueryBuilder(params);
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getUserInvoices, filters],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getUserInvoices, queryParams],
     queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.paymentStatus) queryParams.append("paymentStatus", filters.paymentStatus);
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
-
-      const response = await axiosInstance.get<InvoicesResponse>(
-        `${endpoints.userInvoice.getUserInvoices}?${queryParams.toString()}`
-      );
+      const response = await axiosInstance.get<InvoicesResponse>(`${endpoints.userInvoice.getUserInvoices}?${queryParams}`);
       return response.data;
     },
-    enabled: !!filters, // Only run query when filters are provided
+    enabled: !!queryParams, // Only run query when filters are provided
   });
 };
 
-const useUnpaidInvoices = (filters?: InvoiceFilters) => {
+const useUnpaidInvoices = (params?: InvoiceFilters) => {
+  const queryParams = invoiceQueryBuilder(params);
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getUnpaidInvoices, filters],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getUnpaidInvoices, queryParams],
     queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
-
-      const response = await axiosInstance.get<UnpaidInvoiceResponse>(
-        `${endpoints.userInvoice.getUnpaidInvoices}?${queryParams.toString()}`
-      );
+      const response = await axiosInstance.get<UnpaidInvoiceResponse>(`${endpoints.userInvoice.getUnpaidInvoices}?${queryParams}`);
       return response.data;
     },
-    enabled: !!filters, // Only run query when filters are provided
+    enabled: !!queryParams, // Only run query when params are provided
   });
 };
 
-const usePaidInvoices = (filters?: InvoiceFilters) => {
+const usePaidInvoices = (params?: InvoiceFilters) => {
+  const queryParams = invoiceQueryBuilder(params);
   return useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getPaidInvoices, filters],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getPaidInvoices, queryParams],
     queryFn: async () => {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.page) queryParams.append("page", filters.page.toString());
-      if (filters?.limit) queryParams.append("limit", filters.limit.toString());
-      if (filters?.startDate) queryParams.append("startDate", filters.startDate);
-      if (filters?.endDate) queryParams.append("endDate", filters.endDate);
-
-      const response = await axiosInstance.get<PaidInvoiceResponse>(
-        `${endpoints.userInvoice.getPaidInvoices}?${queryParams.toString()}`
-      );
+      const response = await axiosInstance.get<PaidInvoiceResponse>(`${endpoints.userInvoice.getPaidInvoices}?${queryParams}`);
       return response.data;
     },
-    enabled: !!filters, // Only run query when filters are provided
+    enabled: !!queryParams, // Only run query when params are provided
   });
 };
 
@@ -76,9 +52,7 @@ const useUserInvoiceDashboard = () => {
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getUserInvoiceDashboard],
     queryFn: async () => {
-      const response = await axiosInstance.get<InvoiceDashboardResponse>(
-        endpoints.userInvoice.getInvoiceDashboard
-      );
+      const response = await axiosInstance.get<InvoiceDashboardResponse>(endpoints.userInvoice.getInvoiceDashboard);
       return response.data;
     },
   });
@@ -88,9 +62,10 @@ const useUserInvoiceDetails = (invoiceId: string | null) => {
   return useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getUserInvoiceDetails, invoiceId],
     queryFn: async () => {
-      const response = await axiosInstance.get<InvoiceResponse>(
-        `${endpoints.userInvoice.getInvoiceDetails}/${invoiceId}`
-      );
+        if(!invoiceId) {
+            throw new Error("InvoiceId is required");
+        }
+      const response = await axiosInstance.get<InvoiceResponse>(`${endpoints.userInvoice.getInvoiceDetails}/${invoiceId}`);
       return response.data;
     },
     enabled: !!invoiceId,

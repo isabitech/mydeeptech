@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Inline transition styles */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
 @font-face {
   font-family: "gilroy-light";
   src: url("./assets/Fonts/Gilroy-Light.ttf") format("truetype");
@@ -73,6 +89,13 @@ body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* globals.css */
+.page-enter-active {
+  opacity: 1 !important;
+  transform: translateY(0px) !important;
+  transition: all 0.6s ease-in-out !important;
 }
 
 /* .background {

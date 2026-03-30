@@ -18,23 +18,22 @@ export interface AdminSession {
  */
 export const useAdminSession = (): AdminSession => {
   const { userInfo } = useUserInfoStates();
-  
   const query = useQuery({
     queryKey: ["adminSession", userInfo?.id],
     queryFn: () => {
       try {
-        if (!userInfo) return null;
-        
+        if (!userInfo) {
+          return null;
+        }
         // Parse the admin data using the same schema
         const { data } = parseAdmin(userInfo);
-        
         return data;
       } catch (err) {
-        console.warn("RBAC: Session parsing error", err);
         return null;
       }
     },
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 5, // 5 minutes instead of Infinity
+    enabled: !!userInfo, // Only run query when userInfo exists
   });
 
   const admin = query.data || null;

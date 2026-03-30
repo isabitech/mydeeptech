@@ -150,13 +150,13 @@ export const useAdminChat = () => {
     setError(null);
 
     try {
-      console.log('📤 [useAdminChat] Sending admin message via socket:', { ticketId, message });
+
       
       // Send via socket for real-time delivery (now returns a Promise)
       // The backend identifies admin messages by the @mydeeptech.ng email domain
       if (isConnected) {
         await AdminChatSocketService.sendMessage(ticketId, message, attachments);
-        console.log('✅ [useAdminChat] Admin message sent via socket successfully');
+
         return { success: true, data: { message: 'Message sent successfully' } };
       } else {
         throw new Error('Socket not connected');

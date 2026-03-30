@@ -24,6 +24,7 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { multimediaAssessmentApi } from '../../service/axiosApi';
+import LoadingIndicator from '../LoadingIndicator';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -189,11 +190,7 @@ const AssessmentList: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px] font-[gilroy-regular]">
-        <Spin size="large" />
-      </div>
-    );
+    return <LoadingIndicator />
   }
 
   return (

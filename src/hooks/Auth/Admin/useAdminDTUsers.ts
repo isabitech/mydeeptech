@@ -19,10 +19,10 @@ export const useAdminDTUsers = () => {
     setError(null);
 
     try {
-      console.log('🔗 Calling DTUsers API:', endpoints.adminActions.getAllDTUsers);
+
       const data: any = await apiGet(endpoints.adminActions.getAllDTUsers);
       
-      console.log('📦 DTUsers API Raw Response:', data);
+
 
       if (data.success) {
         // Handle different possible response structures
@@ -39,7 +39,7 @@ export const useAdminDTUsers = () => {
           }
         }
         
-        console.log('✅ Setting DTUsers:', usersData);
+
         setDtUsers(usersData);
         return { success: true, data: { users: usersData } };
       } else {

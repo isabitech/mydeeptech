@@ -54,8 +54,6 @@ export const useAdminApplications = () => {
           { params: queryParams },
         );
 
-        console.log("📦 Applications API Response:", data);
-
         if (data.success) {
           setApplications(data.data.applications);
           setPagination(data.data.pagination);

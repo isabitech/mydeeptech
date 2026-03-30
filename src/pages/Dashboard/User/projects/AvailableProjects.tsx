@@ -294,7 +294,7 @@ const AvailableProjects = () => {
       </div>
 
       {/* Projects Grid */}
-      <Spin spinning={loading}>
+      <Spin spinning={loading} tip="Loading data...">
         {filteredProjects.length === 0 ? (
           <Empty description="No projects available" />
         ) : (
@@ -304,9 +304,7 @@ const AvailableProjects = () => {
                 <Card
                   key={project._id}
                   className="project-card hover:shadow-lg transition-shadow flex flex-col gap-5 justify-between w-full"
-                  classNames={{
-                    actions: "flex items-center justify-between w-full"
-                  }}
+                  classNames={{ actions: "flex items-center justify-between w-full" }}
                   actions={[
                     <Button
                       type="text"
@@ -350,8 +348,8 @@ const AvailableProjects = () => {
                       <Tag color="blue">{project.projectCategory}</Tag>
                       <Tag color={
                         project.difficultyLevel === 'beginner' ? 'green' :
-                          project.difficultyLevel === 'intermediate' ? 'orange' :
-                            project.difficultyLevel === 'advanced' ? 'red' : 'purple'
+                        project.difficultyLevel === 'intermediate' ? 'orange' :
+                        project.difficultyLevel === 'advanced' ? 'red' : 'purple'
                       }>
                         {project.difficultyLevel.toUpperCase()}
                       </Tag>

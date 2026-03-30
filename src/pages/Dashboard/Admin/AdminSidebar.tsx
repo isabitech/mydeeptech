@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   LogoutOutlined,
   DownOutlined,
@@ -9,7 +9,7 @@ import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button, Drawer, Skeleton } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
-import { useUserInfoActions } from "../../../store/useAuthStore";
+import useLogout from "../../../hooks/useLogout";
 import { useSidebarResources } from "../../../hooks/useSidebarResources";
 import { getIconElement } from "../User/SidebarIcon";
 import { ResourceNode } from "../../../api/rbac/rbacSchema";
@@ -134,18 +134,11 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
 const AdminSidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useSidebarContext();
-  const { clearUserInfo } = useUserInfoActions();
   const handleLogOutModal = () => {
     setOpenModal(!openModal);
   };
 
-  const handleLogout = () => {
-    sessionStorage.clear();
-    clearUserInfo();
-    navigate("/auth/admin-login");
-  }
-
-  const navigate = useNavigate();
+  const handleLogout = useLogout({ userType: 'admin' });
 
   return (
     <>
@@ -178,10 +171,10 @@ const AdminSidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button onClick={handleLogout} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+            <Button onClick={() => handleLogout()} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
-            <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">
+            <Button onClick={handleLogOutModal} className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">
               No
             </Button>
           </span>

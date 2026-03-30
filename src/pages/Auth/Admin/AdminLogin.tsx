@@ -31,7 +31,7 @@ const AdminLogin: React.FC = () => {
 
   useEffect(() => {
     // Reset state when component mounts
-    resetState();
+    // resetState();
 
     // Check for success message from signup
     if (location.state?.message) {

@@ -49,6 +49,7 @@ const QUERY = {
     getUserInvoiceDetails: "getUserInvoiceDetails",
 
     assessmentReviews: "assessmentReviews",
+    userNotifications: "userNotifications",
    
 
     userProfile: "userProfile",

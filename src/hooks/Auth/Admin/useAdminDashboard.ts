@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { message } from "antd";
 import apiUtils from "../../../service/axiosApi";
 import { AdminDashboardResponse, AdminDashboardData } from "./admin-dashboard-type";
+import { retrieveTokenFromStorage } from "../../../helpers";
 
 export interface HookOperationResult {
   success: boolean;
@@ -22,12 +23,6 @@ export type {
   RecentActivities,
   Insights
 } from "./admin-dashboard-type";
-
-export interface HookOperationResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-}
 
 export const useAdminDashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -58,10 +53,20 @@ export const useAdminDashboard = () => {
 
   const getDashboardData = useCallback(async (): Promise<HookOperationResult> => {
     return handleApiCall(async () => {
+
+      
+      // Verify token exists before making the call
+      const token = await retrieveTokenFromStorage();
+
+      
       const response = await apiUtils.get<AdminDashboardResponse>("/admin/dashboard");
+
 
       if (response.data.success && response.data.data) {
         setDashboardData(response.data.data);
+
+      } else {
+
       }
 
       return response.data;

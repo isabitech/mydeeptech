@@ -21,7 +21,7 @@ const verifyAccountNumber = async (accountNumber: string, bankCode: string): Pro
   try {
     const response = await axiosInstance.get(`${endpoints.payStack.verifyAccountDetails}?accountNumber=${accountNumber}&bankCode=${bankCode}`, {
     });
-    console.log(response.data);
+
     return response.data;
   } catch (error) {
     console.error("Error verifying account number:", error);

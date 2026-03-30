@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { retrieveUserInfoFromStorage } from '../../helpers';
-import { Loader } from 'lucide-react';
 import { useUserInfoActions, useUserInfoStates, useUserInfoStore } from '../../store/useAuthStore';
+import LoadingIndicator from '../LoadingIndicator';
 
 const ProtectAdminLayout: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -44,15 +44,11 @@ const ProtectAdminLayout: React.FC = () => {
     };
 
     loadUserInfo();
-  }, [setUserInfo]);
+  }, [setUserInfo, userInfo]);
 
   // Show loading spinner while checking authentication
   if (loading) {
-    return (
-      <div className="absolute top-0 left-0 z-[200] h-screen w-screen bg-gradient-to-br from-primary via-primary to-background-accent flex items-center justify-center p-4">
-        <Loader className='text-white animate-spin' />
-      </div>
-    );
+    return <LoadingIndicator />
   }
 
   // Redirect to login if no user info found

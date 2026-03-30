@@ -28,7 +28,7 @@ class PasswordResetService {
     };
 
     try {
-      console.log(`📡 Password Reset API: ${options.method || 'GET'} ${url}`);
+
       
       const response = await fetch(url, config);
       const data = await response.json();

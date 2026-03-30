@@ -3,6 +3,7 @@ import { Avatar, Button, Dropdown, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, MenuOutlined } from '@ant-design/icons';
 import { retrieveUserInfoFromStorage } from '../../helpers';
 import { Navigate, useNavigate } from 'react-router-dom';
+import useLogout from '../../hooks/useLogout';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
 import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
@@ -53,22 +54,7 @@ const AdminHeader: React.FC = () => {
     loadUser();
   }, []);
 
-  const handleLogout = () => {
-    // Clear session storage completely
-    sessionStorage.clear();
-    
-    // Clear any potential legacy localStorage auth data
-    localStorage.removeItem('ACCESS_TOKEN');
-    localStorage.removeItem('userInfo');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminInfo');
-
-    // Clear Zustand store
-    clearUserInfo();
-    
-    // Navigate to login
-    navigate('/auth/admin-login', { replace: true });
-  };
+  const handleLogout = useLogout({ userType: 'admin' });
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -108,7 +94,7 @@ const AdminHeader: React.FC = () => {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Logout',
-      onClick: handleLogout
+      onClick: () => handleLogout()
     }
   ];
 

@@ -77,7 +77,7 @@ class RoleManagementService {
       }
 
       const data = await response.json();
-      console.log("Role update response:", data);
+
       return {
         success: data.responseCode === "200",
         message: data.responseMessage,

@@ -157,7 +157,7 @@ export const useAssessmentTimer = ({
       try {
         await saveProgress(submissionId, currentTaskDataRef.current);
         lastSaveRef.current = Date.now();
-        console.log('📄 Auto-saved progress at:', new Date().toLocaleTimeString());
+
       } catch (error) {
         console.warn('Failed to auto-save progress:', error);
       }

@@ -4,7 +4,7 @@ import { Button } from "antd"
 
 const SlackNotification = () => {
   return (
-  <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-2">
+  <div className="flex-1 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 gap-y-10 p-2">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="bg-white/20 p-2 rounded-lg">

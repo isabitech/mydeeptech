@@ -220,7 +220,7 @@ const UserNotifications: React.FC = () => {
 
       {/* Notifications List */}
       <Card>
-        <Spin spinning={isNotificationsLoading} tip="Loading notifications...">
+        <Spin spinning={isNotificationsLoading} tip="Loading data...">
           {isNotificationsError ? (
             <Alert
               message="Error Loading Notifications"

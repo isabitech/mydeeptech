@@ -9,6 +9,8 @@ import RecentActivityTimeline from "../../../components/Dashboard/User/RecentAct
 import NotificationCarousel from "./_components/notification-carousel";
 import dashboardQueryService from "../../../services/dashboard-service/dashboard-query";
 import errorMessage from "../../../lib/error-message";
+import LoadingIndicator from "../../../components/LoadingIndicator";
+import ErrorIndicatorWithRefresh from "../../../components/ErrorIndicatorWithRefresh";
 
 const Overview = () => {
 
@@ -36,72 +38,17 @@ const Overview = () => {
   const sectionVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
-      opacity: 1,
-      y: 0,
+      opacity: 1, y: 0,
       transition: { duration: 0.5 },
     },
   };
 
   if (isDashboardLoading) {
-    return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
-        <div className="flex justify-center items-center h-64">
-          <Spin size="large" />
-          <span className="ml-3">Loading your dashboard...</span>
-        </div>
-      </div>
-    );
+    return <LoadingIndicator />
   }
 
-  if (isDashboardError) {
-    return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
-       <Alert
-          className="w-full"
-            message="Dashboard Error"
-            description={error}
-            type="error"
-            showIcon
-            action={
-              <Button
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={refreshDashboard}
-                type="primary"
-                className="bg-blue-500"
-              >
-                Retry
-              </Button>
-            }
-          />
-      </div>
-    );
-  }
-
-  if (!dashboardData) {
-    return (
-      <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
-        <div className="flex justify-center items-center h-64">
-          <Alert
-            message="No Data Available"
-            description="Unable to load dashboard data at this time."
-            type="info"
-            showIcon
-            action={
-              <Button
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={refreshDashboard}
-                type="primary"
-                className="bg-blue-500"
-              >
-                Refresh
-              </Button>
-            }
-          />
-        </div>
-      </div>
-    );
+  if (isDashboardError || !dashboardData) {
+    return <ErrorIndicatorWithRefresh title="Dashboard Error" error={error} onRetry={refreshDashboard} /> 
   }
 
   return (
@@ -122,12 +69,12 @@ const Overview = () => {
               </div>
             </div>
 
-            <div className="w-full overflow-hidden">
+            <div className="w-full overflow-hidden min-h-[180px]">
               <NotificationCarousel />
             </div>
 
             {/* Additional Info */}
-            <div className="mt-4 pt-4 border-t border-white/20">
+            <div className="mt-4 p-4 lg:px-6 pb-0 border-t border-white/20">
               <div className="flex flex-wrap items-center gap-6 text-purple-100 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>

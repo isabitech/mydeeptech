@@ -4,6 +4,8 @@ import { Spin } from "antd";
 import { useAdminSession } from "../queries/auth.query";
 import { usePermission } from "../hooks/usePermission";
 import { ACTIONS } from "../utils/permissions";
+import PageTransition from "./PageTransition";
+
 interface PageGuardProps {
   resource: string;
   children: ReactNode;
@@ -43,15 +45,14 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const hasAccess = can(ACTIONS.MANAGE) || can(ACTIONS.VIEW) || can(ACTIONS.VIEW_OWN);
 
   if (!hasAccess) {
-    // navigate(-1);
-    // return null;
+    // Wrap navigation in startTransition to avoid synchronous suspension issues
     return <Navigate to="/admin/overview" replace />;
   }
 
   const isViewOwnOnly = can(ACTIONS.VIEW_OWN) && !can(ACTIONS.VIEW) && !can(ACTIONS.MANAGE);
 
   return (
-    <>
+    <PageTransition nodeKey={location.pathname}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
           return React.cloneElement(
@@ -61,7 +62,7 @@ export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
         }
         return child;
       })}
-    </>
+    </PageTransition>
   );
 };
 

@@ -17,7 +17,7 @@ const PageRoute = () => {
       navigate("/dashboard/overview");
     } else if (userStatus === "admin") {
       // setOpenOutlet(true);
-      navigate("/admin");
+      navigate("/admin/overview");
     }
   };
   return (
