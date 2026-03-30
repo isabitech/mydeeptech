@@ -81,6 +81,7 @@ const Assessment: React.FC = () => {
             centered
             width={500}
             maskClosable={false}
+            
           >
             <div className="text-center py-6">
               <div className="text-green-500 text-6xl mb-4">🎉</div>

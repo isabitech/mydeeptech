@@ -1,22 +1,26 @@
-import { useEffect } from "react";
 import { Spin, Alert, Button, Card } from "antd";
 import { ReloadOutlined, TeamOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
-import { useDTUserDashboard } from "../../../hooks/User/useDTUserDashboard";
 
 import FinancialSummaryCards from "../../../components/Dashboard/User/FinancialSummaryCards";
 import ApplicationStatisticsCharts from "../../../components/Dashboard/User/ApplicationStatisticsCharts";
 import AvailableOpportunitiesComponent from "../../../components/Dashboard/User/AvailableOpportunitiesComponent";
 import RecentActivityTimeline from "../../../components/Dashboard/User/RecentActivityTimeline";
 import NotificationCarousel from "./_components/notification-carousel";
+import dashboardQueryService from "../../../services/dashboard-service/dashboard-query";
+import errorMessage from "../../../lib/error-message";
 
 const Overview = () => {
 
-  const { data, loading, error, getDashboardData, refreshDashboard } = useDTUserDashboard();
+  const { 
+    dashboardData, 
+    isDashboardLoading, 
+    isDashboardError, 
+    dashboardError, 
+    refreshDashboard
+  } = dashboardQueryService.useDashboardQuery();
+  const error = isDashboardError ? errorMessage(dashboardError) : "";
 
-  useEffect(() => {
-    getDashboardData();
-  }, [getDashboardData]);
 
   const pageVariants = {
     hidden: { opacity: 0 },
@@ -38,7 +42,7 @@ const Overview = () => {
     },
   };
 
-  if (loading) {
+  if (isDashboardLoading) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
@@ -49,11 +53,11 @@ const Overview = () => {
     );
   }
 
-  if (error) {
+  if (isDashboardError) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
-        <div className="flex justify-center items-center h-64">
-          <Alert
+       <Alert
+          className="w-full"
             message="Dashboard Error"
             description={error}
             type="error"
@@ -70,12 +74,11 @@ const Overview = () => {
               </Button>
             }
           />
-        </div>
       </div>
     );
   }
 
-  if (!data) {
+  if (!dashboardData) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular] w-full">
         <div className="flex justify-center items-center h-64">
@@ -150,27 +153,27 @@ const Overview = () => {
       <div className="flex flex-col gap-3 lg:gap-6 px-2 max-w-full flex-1">
         <motion.div variants={sectionVariants}>
           <FinancialSummaryCards
-            financialSummary={data?.financialSummary}
-            performanceMetrics={data?.performanceMetrics}
+            financialSummary={dashboardData?.financialSummary}
+            performanceMetrics={dashboardData?.performanceMetrics}
           />
         </motion.div>
 
         <motion.div variants={sectionVariants}>
           <ApplicationStatisticsCharts
-            applicationStatistics={data?.applicationStatistics}
-            resultSubmissions={data?.resultSubmissions}
+            applicationStatistics={dashboardData?.applicationStatistics}
+            resultSubmissions={dashboardData?.resultSubmissions}
           />
         </motion.div>
 
         <motion.div variants={sectionVariants}>
           <AvailableOpportunitiesComponent
-            opportunities={data?.availableOpportunities}
+            opportunities={dashboardData?.availableOpportunities}
           />
         </motion.div>
 
         <motion.div variants={sectionVariants}>
           <RecentActivityTimeline
-            recentActivity={data?.recentActivity}
+            recentActivity={dashboardData?.recentActivity}
           />
         </motion.div>
 
@@ -180,8 +183,8 @@ const Overview = () => {
         >
           <p>
             Dashboard generated on{" "}
-            {new Date(data?.generatedAt).toLocaleString()} • Activity timeframe:{" "}
-            {data?.timeframe?.recentActivity} •
+            {new Date(dashboardData?.generatedAt).toLocaleString()} • Activity timeframe:{" "}
+            {dashboardData?.timeframe?.recentActivity} •
             <Button
               type="link"
               size="small"

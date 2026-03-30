@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   Button,
@@ -17,6 +17,7 @@ import {
   Avatar,
   Badge,
   Spin,
+  Alert,
 } from "antd";
 import {
   ReloadOutlined,
@@ -27,37 +28,26 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useUserNotifications } from "../../../../hooks/Auth/User/useUserNotifications";
 import { Notification } from "../../../../types/notification.types";
+import notificationQueryService from "../../../../services/notification-service/notification-query";
+import notificationMutationService from "../../../../services/notification-service/notification-mutation";
+import errorMessage from "../../../../lib/error-message";
 
 dayjs.extend(relativeTime);
 
 const { Title, Text } = Typography;
 
 const UserNotifications: React.FC = () => {
-  const {
-    loading,
-    notifications,
-    pagination,
-    summary,
-    getUserNotifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    refreshNotifications,
-  } = useUserNotifications();
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [viewingNotification, setViewingNotification] = useState<Notification | null>(null);
   const [filters, setFilters] = useState({ page: 1, limit: 20 });
 
-  useEffect(() => {
-    loadNotifications();
-  }, [filters]);
-
-  const loadNotifications = async () => {
-    await getUserNotifications(filters);
-  };
+  const { notifications, isNotificationsLoading, pagination, summary, refreshNotifications, isNotificationsError, notificationsError } = notificationQueryService.useUserNotificationQuery(filters);
+  const { markAsRead, isMarkAsReadLoading  } = notificationMutationService.useMarkAsReadMutation(filters);
+  const { deleteNotification, isDeleteNotificationLoading } = notificationMutationService.useDeleteNotificationMutation(filters);
+  const { markAllAsRead, isMarkAllAsReadLoading } = notificationMutationService.useMarkAllAsReadMutation(filters);
+  const isLoading = (isNotificationsLoading || isMarkAsReadLoading || isDeleteNotificationLoading || isMarkAllAsReadLoading);
 
   const handleViewNotification = (notification: Notification) => {
     setViewingNotification(notification);
@@ -68,36 +58,61 @@ const UserNotifications: React.FC = () => {
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
-    const result = await markAsRead(notificationId);
-    if (result.success) {
-      message.success("Notification marked as read");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to mark notification as read");
+    if (isLoading) return;
+    if(!notificationId) {
+      message.error("Invalid notification ID");
+      return;
     }
+
+    markAsRead.mutate(notificationId, {
+        onSuccess: () => {
+          message.success("Notification marked as read");
+        },
+        onError: (error) => {
+          const errorMsg = errorMessage(error) || "Failed to mark notification as read";
+          console.error("Error marking notification as read:", error);
+          message.error(errorMsg);
+        }
+    });
   };
 
   const handleMarkAllAsRead = async () => {
-    const result = await markAllAsRead();
-    if (result.success) {
-      message.success("All notifications marked as read");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to mark all notifications as read");
-    }
+
+    if (isLoading) return;
+      markAllAsRead.mutate(undefined, {
+        onSuccess: () => {
+          message.success("All notifications marked as read");
+          refreshNotifications();
+        },
+        onError: (error) => { 
+           const errorMsg = errorMessage(error) || "Failed to mark all notifications as read";
+          console.error("Error marking notifications as read:", error);
+          message.error(errorMsg);
+        }
+      });
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
-    const result = await deleteNotification(notificationId);
-    if (result.success) {
-      message.success("Notification deleted successfully");
-      refreshNotifications(filters);
-    } else {
-      message.error(result.error || "Failed to delete notification");
+    if (isLoading) return;
+    if(!notificationId) {
+      message.error("Invalid notification ID");
+      return;
     }
+     deleteNotification.mutate(notificationId, {
+        onSuccess: () => {
+          message.success("Notification deleted successfully");
+          refreshNotifications();
+        },
+        onError: (error) => {
+          const errorMsg = errorMessage(error) || "Failed to delete notification";
+          console.error("Error deleting notification:", error);
+          message.error(errorMsg);
+        }
+    });
   };
 
   const getTypeColor = (type: string): string => {
+    if (!type) return "default";
     const colors: Record<string, string> = {
       account_update: "blue",
       project_update: "purple",
@@ -112,6 +127,7 @@ const UserNotifications: React.FC = () => {
   };
 
   const getPriorityColor = (priority: string): string => {
+    if (!priority) return "default";
     const colors: Record<string, string> = {
       high: "red",
       medium: "orange",
@@ -121,6 +137,7 @@ const UserNotifications: React.FC = () => {
   };
 
   const getNotificationIcon = (type: string) => {
+    if (!type) return <BellOutlined />;
     const icons: Record<string, React.ReactNode> = {
       account_update: <BellOutlined />,
       project_update: <ExclamationCircleOutlined />,
@@ -147,8 +164,9 @@ const UserNotifications: React.FC = () => {
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => refreshNotifications(filters)}
-            loading={loading}
+            onClick={refreshNotifications}
+            loading={isNotificationsLoading}
+            disabled={isLoading}
           >
             Refresh
           </Button>
@@ -157,7 +175,8 @@ const UserNotifications: React.FC = () => {
               type="primary"
               icon={<CheckOutlined />}
               onClick={handleMarkAllAsRead}
-              loading={loading}
+              loading={isNotificationsLoading}
+              disabled={isLoading}
             >
               Mark All as Read ({summary?.unreadCount || 0})
             </Button>
@@ -201,8 +220,25 @@ const UserNotifications: React.FC = () => {
 
       {/* Notifications List */}
       <Card>
-        <Spin spinning={loading} tip="Loading notifications...">
-          {notifications && notifications.length > 0 ? (
+        <Spin spinning={isNotificationsLoading} tip="Loading notifications...">
+          {isNotificationsError ? (
+            <Alert
+              message="Error Loading Notifications"
+              description={notificationsError ? errorMessage(notificationsError) : "Failed to load notifications. Please try again."}
+              type="error"
+              showIcon
+              action={
+                <Button
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={refreshNotifications}
+                  type="primary"
+                >
+                  Retry
+                </Button>
+              }
+            />
+          ) : notifications && notifications.length > 0 ? (
             <List
               itemLayout="vertical"
               size="large"
@@ -215,13 +251,13 @@ const UserNotifications: React.FC = () => {
                 position: "bottom",
                 align: "center",
                 showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} of ${total} notifications`,
+                  `${range[0]}-${range[1]} of ${total} items`,
                 onChange: (page, limit) => {
                   setFilters({ ...filters, page, limit });
                 },
               }}
               dataSource={notifications}
-              renderItem={(notification: any) => (
+              renderItem={(notification: Notification) => (
                 <List.Item
                   key={notification._id}
                   className={`${
@@ -260,23 +296,23 @@ const UserNotifications: React.FC = () => {
                       <Badge dot={!notification.isRead}>
                         <Avatar
                           style={{
-                            backgroundColor: getTypeColor(notification.type),
+                            backgroundColor: getTypeColor(notification.type || ''),
                             color: "white",
                           }}
-                          icon={getNotificationIcon(notification.type)}
+                          icon={getNotificationIcon(notification.type || '')}
                         />
                       </Badge>
                     }
                     title={
                       <div className="flex items-center gap-2 flex-wrap">
                         <Text strong={!notification.isRead}>
-                          {notification.title}
+                          {notification.title || 'Untitled'}
                         </Text>
-                        <Tag color={getTypeColor(notification.type)}>
-                          {notification.type.replace("_", " ").toUpperCase()}
+                        <Tag color={getTypeColor(notification.type || '')}>
+                          {(notification.type || '').replace("_", " ").toUpperCase() || 'UNKNOWN'}
                         </Tag>
-                        <Tag color={getPriorityColor(notification.priority)}>
-                          {notification.priority.toUpperCase()}
+                        <Tag color={getPriorityColor(notification.priority || '')}>
+                          {(notification.priority || '').toUpperCase() || 'NORMAL'}
                         </Tag>
                       </div>
                     }
@@ -286,13 +322,13 @@ const UserNotifications: React.FC = () => {
                           type="secondary"
                           className={!notification.isRead ? "font-medium" : ""}
                         >
-                          {notification.message.length > 100
-                            ? `${notification.message.substring(0, 100)}...`
-                            : notification.message}
+                          {(notification.message || '').length > 100
+                            ? `${(notification.message || '').substring(0, 100)}...`
+                            : notification.message || 'No message'}
                         </Text>
                         <div className="mt-2">
                           <Text type="secondary" style={{ fontSize: "12px" }}>
-                            {dayjs(notification.createdAt).fromNow()}
+                            {notification.createdAt ? dayjs(notification.createdAt).fromNow() : 'Unknown date'}
                           </Text>
                           {notification.isRead && notification.readAt && (
                             <Text
@@ -317,7 +353,7 @@ const UserNotifications: React.FC = () => {
               <Button
                 type="primary"
                 icon={<ReloadOutlined />}
-                onClick={() => refreshNotifications(filters)}
+                onClick={refreshNotifications}
               >
                 Refresh
               </Button>
@@ -350,19 +386,19 @@ const UserNotifications: React.FC = () => {
         {viewingNotification && (
           <Descriptions column={1} bordered size="small">
             <Descriptions.Item label="Title">
-              <Text strong>{viewingNotification.title}</Text>
+              <Text strong>{viewingNotification.title || 'Untitled'}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Message">
-              <Text>{viewingNotification.message}</Text>
+              <Text>{viewingNotification.message || 'No message'}</Text>
             </Descriptions.Item>
             <Descriptions.Item label="Type">
-              <Tag color={getTypeColor(viewingNotification.type)}>
-                {viewingNotification.type.replace("_", " ").toUpperCase()}
+              <Tag color={getTypeColor(viewingNotification.type || '')}>
+                {(viewingNotification.type || '').replace("_", " ").toUpperCase() || 'UNKNOWN'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Priority">
-              <Tag color={getPriorityColor(viewingNotification.priority)}>
-                {viewingNotification.priority.toUpperCase()}
+              <Tag color={getPriorityColor(viewingNotification.priority || '')}>
+                {(viewingNotification.priority || '').toUpperCase() || 'NORMAL'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
@@ -370,36 +406,35 @@ const UserNotifications: React.FC = () => {
                 {viewingNotification.isRead ? "Read" : "Unread"}
               </Tag>
             </Descriptions.Item>
-            {viewingNotification.data?.actionUrl && (
+            {((viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string') || (viewingNotification.data?.actionUrl && typeof viewingNotification.data.actionUrl === 'string')) && (
               <Descriptions.Item label="Action URL">
                 <a
-                  href={viewingNotification.data.actionUrl}
+                  href={(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#1890ff", textDecoration: "underline" }}
                 >
-                  {viewingNotification.data.actionUrl}
+                  {(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''}
                 </a>
               </Descriptions.Item>
             )}
-            {viewingNotification.data?.actionText && (
+            {(viewingNotification.actionText || viewingNotification.data?.actionText) && (
               <Descriptions.Item label="Action Button Text">
-                <Text code>{viewingNotification.data.actionText}</Text>
+                <Text code>{viewingNotification.actionText || viewingNotification.data?.actionText}</Text>
               </Descriptions.Item>
             )}
             <Descriptions.Item label="Created">
               <Text>
-                {dayjs(viewingNotification.createdAt).format(
-                  "MMM DD, YYYY HH:mm:ss"
-                )}
+                {viewingNotification.createdAt
+                  ? dayjs(viewingNotification.createdAt).format("MMM DD, YYYY HH:mm:ss")
+                  : 'Unknown date'
+                }
               </Text>
             </Descriptions.Item>
             {viewingNotification.readAt && (
               <Descriptions.Item label="Read At">
                 <Text>
-                  {dayjs(viewingNotification.readAt).format(
-                    "MMM DD, YYYY HH:mm:ss"
-                  )}
+                  {dayjs(viewingNotification.readAt).format("MMM DD, YYYY HH:mm:ss")}
                 </Text>
               </Descriptions.Item>
             )}

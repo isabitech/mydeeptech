@@ -13,8 +13,7 @@ import {
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import {
-   UnpaidInvoice } from "../../../../hooks/Auth/User/Invoices/invoice-type";
+import { UnpaidInvoice } from "../../../../hooks/Auth/User/Invoices/invoice-type";
 
 interface UnpaidProps {
   invoices: UnpaidInvoice[];
@@ -153,7 +152,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
         width={600}
       >
         {selectedInvoice && (
-          <div>
+          <article>
             <p><strong>Invoice Number:</strong> {selectedInvoice.invoiceNumber}</p>
             <p><strong>Amount:</strong> {selectedInvoice.currency} {selectedInvoice.invoiceAmount.toFixed(2)}</p>
             <p><strong>Due Date:</strong> {dayjs(selectedInvoice.dueDate).format("MMMM DD, YYYY")}</p>
@@ -162,7 +161,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
             {selectedInvoice.workDescription && (
               <p><strong>Work Description:</strong> {selectedInvoice.workDescription}</p>
             )}
-          </div>
+          </article>
         )}
       </Modal>
     </div>

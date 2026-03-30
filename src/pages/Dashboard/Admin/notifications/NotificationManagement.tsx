@@ -587,7 +587,7 @@ const NotificationManagement: React.FC = () => {
             {(viewingNotification.actionUrl || viewingNotification.data?.actionUrl) && (
               <Descriptions.Item label="Action URL">
                 <a 
-                  href={viewingNotification.actionUrl || viewingNotification.data?.actionUrl} 
+                  href={(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   style={{ color: '#1890ff', textDecoration: 'underline' }}

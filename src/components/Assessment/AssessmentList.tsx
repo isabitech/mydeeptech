@@ -116,8 +116,6 @@ const AssessmentList: React.FC = () => {
 
       const response: AvailableAssessmentsResponse = await multimediaAssessmentApi.getAvailableAssessments();
 
-      console.log('Available Assessments Response:', response.data.assessments);
-
       if (response.success && response.data) {
         // Use the assessments directly from the backend response
         const assessmentData = response.data.assessments || [];

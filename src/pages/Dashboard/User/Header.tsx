@@ -1,10 +1,9 @@
 import { LogoutOutlined, SettingOutlined, UserOutlined } from "@ant-design/icons";
-import { retrieveUserInfoFromStorage } from "../../../helpers";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../../../components/NotificationDropdown";
 import Dropdown from "antd/es/dropdown/dropdown";
 import { Avatar, Typography } from "antd";
+import { useUserInfoActions, useUserInfoStates } from "../../../store/useAuthStore";
 
 const { Text } = Typography;
 
@@ -30,27 +29,9 @@ export type UserInfoProps = {
 };
 
 const Header: React.FC<Props> = ({ title }) => {
-  const [userInfo, setUserInfo] = useState<UserInfoProps | null>(null);
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    // Clear session storage
-    sessionStorage.removeItem('ACCESS_TOKEN');
-    sessionStorage.removeItem('userInfo');
-    
-    // Clear local storage as well (in case any auth data is stored there)
-    localStorage.removeItem('ACCESS_TOKEN');
-    localStorage.removeItem('userInfo');
-    
-    // Clear all storage to ensure complete logout
-    sessionStorage.clear();
-    
-    // Navigate to login and replace current history entry
-    navigate('/login', { replace: true });
-    
-    // Optional: Force a page reload to clear any cached state
-    window.location.replace('/login');
-  };
+  const { userInfo } = useUserInfoStates();
+  const { handleLogout } = useUserInfoActions();
 
   const userMenuItems = [
     {
@@ -81,23 +62,10 @@ const Header: React.FC<Props> = ({ title }) => {
     }
   ];
 
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = await retrieveUserInfoFromStorage();
-      setUserInfo(user);
-    };
-    loadUser();
-  }, []);
-
-  const handleOpenProfile = () => {
-    if (userInfo?.annotatorStatus) {
-      navigate('/dashboard/profile');
-    }
-  }
 
   return (
     // 
-    <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
+    <header className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
       <div className="pl-10 lg:pl-0 hidden lg:block w-1/2">
         <h2 className="font-medium text-lg capitalize truncate">{title}</h2>
       </div>
@@ -131,7 +99,7 @@ const Header: React.FC<Props> = ({ title }) => {
         </Dropdown>
       </div>
 
-    </div>
+    </header>
   );
 };
 

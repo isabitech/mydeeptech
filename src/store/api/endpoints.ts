@@ -82,6 +82,7 @@ export const endpoints = {
   adminActions: {
     getAllDTUsers: "/admin/dtusers",
     updateUserStatus: "/admin/dtusers",
+    approveAnnotator: "/admin/dtusers",
     getAdminUsers: "/admin/admin-users",
     updateUserRole: "/admin/users/:userId/role",
     getRoles: "/admin/roles",

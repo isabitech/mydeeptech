@@ -10,7 +10,7 @@ import axiosInstance from "../../service/axiosApi";
   const useSubmitReviewMutation = () => {
     const queryClient = useQueryClient();
     const mutation = useMutation({
-    mutationKey: ["submitAssessmentReview"],
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.submitAssessmentReview],
     mutationFn: async (payload: SubmitAssessmentReviewPayload): Promise<any> => {
       const data: any = await apiPost(endpoints.assessments.assessmentReview, payload);
       return data.data;
@@ -31,7 +31,7 @@ import axiosInstance from "../../service/axiosApi";
   const useUpdateReview = () => {
     const queryClient = useQueryClient();
     const mutation = useMutation({
-    mutationKey: [REACT_QUERY_KEYS.QUERY.updateAssessmentReview],
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.updateAssessmentReview],
     mutationFn: async ({ assessmentId, ...payload }: SubmitReviewSchema): Promise<SubmitAssessmentReviewPayload> => {
       const response = await axiosInstance.patch(`${endpoints.assessments.updateReviewAssessment}/${assessmentId}`, payload);
       return response.data;

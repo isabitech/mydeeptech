@@ -5,18 +5,18 @@ export interface Notification {
   type: NotificationType;
   priority: Priority;
   isRead: boolean;
-  actionUrl?: string;
-  actionText?: string;
+  actionUrl?: string | null;
+  actionText?: string | null;
   data?: {
-    actionUrl?: string;
-    actionText?: string;
+    actionUrl?: string | null;
+    actionText?: string | null;
     [key: string]: any;
   };
   createdAt: string;
-  readAt?: string;
+  readAt?: string | null;
   recipientId?: string;
   recipientType?: 'user' | 'all';
-  scheduleFor?: string;
+  scheduleFor?: string | null;
 }
 
 export interface NotificationSummary {

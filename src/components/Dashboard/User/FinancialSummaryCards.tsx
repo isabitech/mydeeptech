@@ -9,11 +9,11 @@ import {
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
-import { FinancialSummary, PerformanceMetrics } from '../../../types/dtuser-dashboard.types';
+import { FinancialSummarySchema, PerformanceMetricsSchema } from '../../../validators/dashboard/user-dashboard-schema';
 
 interface FinancialSummaryCardsProps {
-  financialSummary: FinancialSummary;
-  performanceMetrics: PerformanceMetrics;
+  financialSummary: FinancialSummarySchema;
+  performanceMetrics: PerformanceMetricsSchema;
 }
 
 const FinancialSummaryCards: React.FC<FinancialSummaryCardsProps> = ({ 

@@ -32,6 +32,7 @@ interface UserInfo {
   hasSetPassword?: boolean;
   annotatorStatus?: string;
   microTaskerStatus?: string;
+  qaStatus?: string;
   resultLink?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -40,23 +41,30 @@ interface UserInfo {
   isAssessmentSubmitted?: boolean;
 }
 
+
 type UserRoleType = "admin" | "user";
 
+export type UserInfoData = 
+| (UserInfo & { role: "user"; })
+| (UserInfo & { role: "admin"; role_permission: RBACRole })
+
+
+
 type UserInfoStates = {
-  userInfo: UserInfo | null;
+  userInfo: UserInfoData | null;
   userRoleType: UserRoleType | null;
 };
 
 
 
 type UserInfoActions = {
-  setUserInfo: (userInfo: UserInfo | null) => void;
+  setUserInfo: (userInfo: UserInfoData | null) => void;
   setIsAssessmentSubmitted: () => Promise<void>;
   clearUserInfo: () => void;
-
+  handleLogout: () => void;
 };
 
-type UserInfoStore = UserInfoStates & UserInfoActions;
+ type UserInfoStore = UserInfoStates & UserInfoActions;
 
 const initialStates: UserInfoStates = {
   userInfo: null,
@@ -74,19 +82,40 @@ const useUserInfoStore = create<UserInfoStore>()(
   
           const userInfo = await retrieveUserInfoFromStorage();
 
-          if (userInfo) {
+          if (userInfo && userInfo.role === "user") {
             userInfo.isAssessmentSubmitted = true;
-            await storeUserInfoToStorage(userInfo);
           }
-
+    
+          await storeUserInfoToStorage(userInfo);
+    
            set((state) => ({
             ...state,
-            userInfo: state.userInfo
+            userInfo: state.userInfo?.role === "user"
               ? { ...state.userInfo, isAssessmentSubmitted: true }
               : state.userInfo,
           }));
         },
       clearUserInfo: () => set({ userInfo: null }),
+      handleLogout: () => {
+        // Clear session storage
+        sessionStorage.removeItem('ACCESS_TOKEN');
+        sessionStorage.removeItem('userInfo');
+
+        // Clear local storage
+        localStorage.removeItem('ACCESS_TOKEN');
+        localStorage.removeItem('userInfo');
+        
+        // Clear all session storage to ensure complete logout
+        sessionStorage.clear();
+
+        // Clear all local storage to ensure complete logout
+        localStorage.clear();
+        
+        set({ userInfo: null });
+
+        // Navigate last, after all cleanup is done
+        window.location.replace('/login');
+      },
     }),
     {
       name: 'user-info-storage', // unique name for sessionStorage key
@@ -106,6 +135,7 @@ return  useUserInfoStore(
         setUserInfo: state.setUserInfo,
         setIsAssessmentSubmitted: state.setIsAssessmentSubmitted,
         clearUserInfo: state.clearUserInfo,
+        handleLogout: state.handleLogout,
     }))
 )}
 

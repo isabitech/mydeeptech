@@ -4,26 +4,35 @@ import { endpoints } from "../../store/api/endpoints";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { GetSubmissionsResponseSchema } from "../../validators/assessment-reviews/assessment-reviews-schema";
 
-const useAssessmentReviews = () => {
+const useAssessmentReviews = (search?: string) => {
     const query = useQuery({
-        queryKey: [REACT_QUERY_KEYS.QUERY.assessmentReviews],
+        queryKey: [REACT_QUERY_KEYS.QUERY.assessmentReviews, search],
         queryFn: async () => {
-            const response = await axiosInstance.get<GetSubmissionsResponseSchema>(endpoints.assessments.assessmentReviews);
-            return GetSubmissionsResponseSchema.parse(response.data);
+            const params = search ? { search } : {};
+            const response = await axiosInstance.get<GetSubmissionsResponseSchema>(endpoints.assessments.assessmentReviews, { params });
+            const result = GetSubmissionsResponseSchema.safeParse(response.data);
+            if (!result.success) {
+                const errorMessage = result.error.issues[0]?.message || "Failed to parse assessment reviews response";
+                console.error("Assessment reviews parsing error:", result.error);
+                throw new Error(errorMessage);
+            }
+            return result.data;
         },
     });
 
     return {
-        assessmentReviews: query.data?.data.assessmentReviews || [],
-        isAssessmentReviewsLoading: query.isLoading,
-        isAssessmentReviewsError: query.error,
-        pagination: {
-            limit: query.data?.data.limit || 0,
-            page: query.data?.data.page || 0,
-            total: query.data?.data.total || 0,
-            totalPages: query.data?.data.totalPages || 0,
-        },
         ...query,
+        assessmentReviews: query.data?.data.assessmentReviews ?? [],
+        isAssessmentReviewsLoading: query.isLoading,
+        isAssessmentReviewsError: query.isError,
+        assessmentReviewsError: query.error,
+        refreshAssessmentReviews: () => query.refetch(),
+        pagination: {
+            limit: query.data?.data.limit ?? 0,
+            page: query.data?.data.page ?? 0,
+            total: query.data?.data.total ?? 0,
+            totalPages: query.data?.data.totalPages ?? 0,
+        },
     }
 }
 

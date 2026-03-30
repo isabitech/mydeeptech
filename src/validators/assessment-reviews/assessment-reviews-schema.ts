@@ -17,6 +17,27 @@ const SubmissionStatusSchema = z.object({
   problemSolvingTestUploaded: z.boolean(),
 });
 
+// Reviewer schema for populated reviewer data
+const ReviewerSchema = z.object({
+  _id: z.string(),
+  fullName: z.string(),
+  email: z.string().email(),
+  role: z.string(),
+});
+
+const ReviewRatingSchema = z.union([
+  z.number(),
+  z.object({
+    grade: z.string(),
+    score: z.number(),
+    level: z.string(),
+  }),
+  z.object({
+    grade: z.string(),
+    level: z.string(),
+  }),
+]);
+
 // Assessment review schema
 const AssessmentReviewSchema = z.object({
   _id: z.string(),
@@ -24,21 +45,24 @@ const AssessmentReviewSchema = z.object({
   fullName: z.string(),
   emailAddress: z.email(),
   dateOfSubmission: z.string(),
-  timeOfSubmission: z.string(), // e.g. "09:30 AM"
+  timeOfSubmission: z.string(),
   submissionStatus: SubmissionStatusSchema,
-  englishTestScore: z.string(), // kept as string since API returns "82"
+  englishTestScore: z.string(),
   problemSolvingScore: z.string(),
+  resume_url: z.string(),
   googleDriveLink: z.url(),
   encounteredIssues: z.string(),
   issueDescription: z.string().nullable(),
   instructionClarityRating: z.number(),
-  reviewerComment: z.string().nullable(), // Changed from reviewerComments to reviewerComment
+  reviewerComment: z.string().nullable(),
   reviewStatus: z.enum(["Pending", "Reviewed", "Rejected"]).or(z.string()),
-  reviewRating: z.number().nullable(),
-  reviewerId: z.string().nullable(),
+  reviewRating: ReviewRatingSchema.nullable(),
+  reviewerId: z.union([z.string(), ReviewerSchema]).nullable(),
   ...Timestamps,
   ...MongoMeta,
 });
+
+
 
 // Data wrapper schema
 const DataSchema = z.object({
@@ -56,11 +80,25 @@ const GetSubmissionsResponseSchema = z.object({
   data: DataSchema,
 });
 
-const SubmitReviewSchema = z.object({
+ const SubmitReviewSchema = z.object({
   assessmentId: z.string().min(1, "Assessment ID is required"),
-  reviewStatus: z.string().min(1, "Review status is required"),
-  reviewRating: z.coerce.number().min(1, "Rating must be at least 1").max(10, "Rating cannot exceed 10"),
-  reviewerComment: z.string().max(1000, "Comment too long").optional(),
+
+  reviewRating: z
+    .string()
+    .min(1, "Review rating is required"),
+
+  englishTestScore: z.coerce
+    .number()
+    .min(0, "English score must be >= 0"),
+
+  problemSolvingScore: z.coerce
+    .number()
+    .min(0, "Problem solving score must be >= 0"),
+
+  reviewerComment: z
+    .string()
+    .max(1000, "Comment too long")
+    .optional(),
 });
 
 type GetSubmissionsResponseSchema = z.infer<typeof GetSubmissionsResponseSchema>;
@@ -70,3 +108,4 @@ export {
     GetSubmissionsResponseSchema,
     SubmitReviewSchema,
 }
+

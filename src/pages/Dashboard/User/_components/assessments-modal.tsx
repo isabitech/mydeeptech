@@ -36,8 +36,8 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal,
     "Enable screen + Camera recording.",
     "Enable mic + system audio.",
     "Start recording.",
-    <>Go to the British Council English score Website: <a href="https://www.englishscore.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://www.englishscore.com</a> to access the test.</>,
-    "Take the core skills test, speaking test and writing test.",
+    <>Go to the EF SET: <a href="https://www.efset.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">https://www.efset.org</a> to access the test.</>,
+    "Take the 90 mins reading, writing, listening and speaking EF SET test",
     "After taking tests, stop the recording.",
     "Create a Mydeeptech folder in your drive.",
     "Upload a screenshot of your score page and upload Flonnect recording in the folder.",
@@ -75,7 +75,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal,
           <section className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <BookOutlined className="text-purple-600 text-xl" />
-              <Title level={5} className="!mb-0">Steps for British Council English test</Title>
+              <Title level={5} className="!mb-0">Steps for EF SET English test</Title>
             </div>
             <List
               size="small"
@@ -93,7 +93,7 @@ const AssessmentsModal: React.FC<AssessmentsModalProps> = ({ open, onCloseModal,
           <section>
             <div className="flex items-center gap-2 mb-3">
               <SolutionOutlined className="text-purple-600 text-xl" />
-              <Title level={5} className="!mb-0">Steps for Problem solving/ Skill Assessment</Title>
+              <Title level={5} className="!mb-0">Steps for Problem Solving/Skill Assessment</Title>
             </div>
             <List
               size="small"

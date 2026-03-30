@@ -1,9 +1,7 @@
-
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, ArrowRight, AlertCircle, Loader2, CheckCircle, ArrowLeft, Send } from "lucide-react";
+import { Mail, ArrowRight, AlertCircle, Loader2, ArrowLeft, Send } from "lucide-react";
 import { useDTUserForgotPassword } from "../../hooks/Auth/useDTUserForgotPassword";
 
 const ForgotPassword = () => {

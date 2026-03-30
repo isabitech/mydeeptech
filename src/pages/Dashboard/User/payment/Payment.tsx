@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState } from "react";
 import {
   Card,
   Tabs,
@@ -17,54 +17,25 @@ import {
   CheckCircleOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import Header from "../Header";
 import Paid from "./Paid";
 import Unpaid from "./Unpaid";
-import { useUserInvoices } from "../../../../hooks/Auth/User/Invoices/useUserInvoices";
+import userInvoiceQueryService from "../../../../services/user-invoice-service/user-invoice-query";
 
 const { RangePicker } = DatePicker;
 
 const Payment = () => {
   const [activeTab, setActiveTab] = useState("unpaid");
   const [filters, setFilters] = useState({
+    page: 1,
+    limit: 50,
     startDate: undefined as string | undefined,
     endDate: undefined as string | undefined,
   });
 
-  const { 
-    getUserInvoices,
-    getUnpaidInvoices,
-    getPaidInvoices,
-    getInvoiceDashboard,
-    invoices,
-    unpaidInvoices,
-    paidInvoices,
-    dashboardData,
-    loading 
-  } = useUserInvoices();
-
-  useEffect(() => {
-    loadData();
-  }, [activeTab, filters]);
-
-  const loadData = () => {
-    if (activeTab === "paid") {
-      getPaidInvoices({
-        ...filters,
-        page: 1,
-        limit: 50,
-      });
-    } else {
-      getUnpaidInvoices({
-        ...filters,
-        page: 1,
-        limit: 50,
-      });
-    }
-    
-    // Load dashboard data
-    getInvoiceDashboard();
-  };
+  // TanStack Query hooks - automatically reactive to filter changes
+  const dashboardQuery = userInvoiceQueryService.useUserInvoiceDashboard();
+  const unpaidQuery = userInvoiceQueryService.useUnpaidInvoices(activeTab === "unpaid" ? filters : undefined);
+  const paidQuery = userInvoiceQueryService.usePaidInvoices(activeTab === "paid" ? filters : undefined);
 
   const handleDateRangeChange = (dates: any) => {
     setFilters(prev => ({
@@ -75,36 +46,19 @@ const Payment = () => {
   };
 
   const handleRefresh = () => {
-    loadData();
+    dashboardQuery.refetch();
+    if (activeTab === "unpaid") {
+      unpaidQuery.refetch();
+    } else {
+      paidQuery.refetch();
+    }
     message.success("Data refreshed");
-    
   };
-  useEffect(() => {
-    if (dashboardData) {
-      console.log("Dashboard Data Structure:", dashboardData);
-      console.log("Dashboard Data Keys:", Object.keys(dashboardData));
-      if (dashboardData.statistics) {
-        console.log("Statistics:", dashboardData.statistics);
-      }
-      if (dashboardData.summary) {
-        console.log("Summary:", dashboardData.summary);
-      }
-    }
-  }, [dashboardData]);
 
-  useEffect(() => {
-    // Only refetch when filters change, not on mount
-    if (filters.startDate !== undefined || filters.endDate !== undefined) {
-      loadData();
-    }
-  }, [filters]);
-
-  useEffect(() => {
-    // Only refetch when tab changes from the initial load
-    if (activeTab !== "unpaid") {
-      loadData();
-    }
-  }, [activeTab]);
+  // Extract data from queries
+  const dashboardData = dashboardQuery.data?.data || null;
+  const unpaidInvoices = unpaidQuery.data?.data?.unpaidInvoices || [];
+  const paidInvoices = paidQuery.data?.data?.paidInvoices || [];
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
@@ -115,12 +69,7 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Total Invoices"
-              value={
-                dashboardData?.statistics?.totalInvoices || 
-                dashboardData?.summary?.totalInvoices || 
-                dashboardData?.totalInvoices || 
-                0
-              }
+              value={dashboardData?.summary?.totalInvoices || 0}
               prefix={<FileTextOutlined />}
             />
           </Card>
@@ -129,12 +78,7 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Total Amount"
-              value={
-                dashboardData?.statistics?.totalAmount || 
-                dashboardData?.summary?.totalAmount || 
-                dashboardData?.totalAmount || 
-                0
-              }
+              value={dashboardData?.summary?.totalAmount || 0}
               precision={2}
               prefix={<DollarOutlined />}
               suffix="USD"
@@ -145,12 +89,7 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Paid Amount"
-              value={
-                dashboardData?.statistics?.paidAmount || 
-                dashboardData?.summary?.paidAmount || 
-                dashboardData?.paidAmount || 
-                0
-              }
+              value={dashboardData?.summary?.paidAmount || 0}
               precision={2}
               prefix={<CheckCircleOutlined />}
               suffix="USD"
@@ -162,12 +101,7 @@ const Payment = () => {
           <Card>
             <Statistic
               title="Unpaid Amount"
-              value={
-                dashboardData?.statistics?.unpaidAmount || 
-                dashboardData?.summary?.unpaidAmount || 
-                dashboardData?.unpaidAmount || 
-                0
-              }
+              value={dashboardData?.summary?.unpaidAmount || 0}
               precision={2}
               prefix={<ClockCircleOutlined />}
               suffix="USD"
@@ -208,8 +142,8 @@ const Payment = () => {
               children: (
                 <Unpaid
                   invoices={unpaidInvoices || []}
-                  loading={loading}
-                  onRefresh={loadData}
+                  loading={unpaidQuery.isLoading}
+                  onRefresh={() => unpaidQuery.refetch()}
                 />
               ),
             },
@@ -219,8 +153,8 @@ const Payment = () => {
               children: (
                 <Paid
                   invoices={paidInvoices || []}
-                  loading={loading}
-                  onRefresh={loadData}
+                  loading={paidQuery.isLoading}
+                  onRefresh={() => paidQuery.refetch()}
                 />
               ),
             },

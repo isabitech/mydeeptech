@@ -14,10 +14,6 @@ import {
   ApplicationResponse,
   HookOperationResult,
 } from "../../../../types/project.types";
-import {
-  Project as ProjectWithStatus,
-  ProjectStatusResponse,
-} from "./project-status-type";
 
 export type ProjectView = "available" | "applied" | "all";
 export type ApplicationStatus = "approved" | "rejected" | "pending";
@@ -56,10 +52,7 @@ export const useUserProjects = () => {
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.limit) queryParams.limit = params.limit.toString();
 
-        const data: ProjectsResponse = await apiGet(
-          endpoints.userProject.projects,
-          { params: queryParams }
-        );
+        const data: ProjectsResponse = await apiGet(endpoints.userProject.projects,{ params: queryParams });
 
         if (data.success) {
           setProjects(data.data.projects);

@@ -4,7 +4,7 @@ import { LinkOutlined, UserOutlined, MailOutlined, CalendarOutlined, ClockCircle
 import { useUserInfoActions, useUserInfoStates } from '../../../../store/useAuthStore';
 import dayjs from 'dayjs';
 import assessmentMutationService from '../../../../services/assessement-service/assessment-mutation';
-import ErrorMessage from '../../../../lib/error-message';
+import errorMessage from '../../../../lib/error-message';
 import { AssessmentType } from './assessments-modal';
 import authService from '../../../../services/authentication/auth-query';
 import { formSubmitPayload } from './formSubmitPayload';
@@ -62,7 +62,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
             onCloseModal();
           },
           onError: (error) => {
-            message.error(ErrorMessage(error));
+            message.error(errorMessage(error));
           }
         })
   };

@@ -36,7 +36,13 @@ export const useUpdateUserStatus = () => {
         return { success: false, error: errorMessage };
       }
 
-      const url = `${import.meta.env.VITE_API_URL}${endpoints.adminActions.updateUserStatus}/${payload.userId}/${payload.annotatorStatus || payload.microTaskerStatus}`;
+      const url = `${import.meta.env.VITE_API_URL}${endpoints.adminActions.approveAnnotator}/${payload.userId}/approve`;
+
+      const requestBody = {
+        newStatus: payload.annotatorStatus || payload.microTaskerStatus
+      };
+
+      console.log(`🔄 Updating user status for ${payload.userId}:`, requestBody);
 
       const response = await fetch(url, {
         method: "PATCH",
@@ -44,6 +50,7 @@ export const useUpdateUserStatus = () => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

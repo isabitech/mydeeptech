@@ -15,7 +15,7 @@ import { useDomainActions } from "../../store/useDomainStore";
 import domainService from "../../services/domain-service/domain-mutation";
 import { CreateDomainSchema } from "../../validators/domain/domain-validator";
 import domainQueryService from "../../services/domain-service/domain-query";
-import ErrorMessage from "../../lib/error-message";
+import errorMessage from "../../lib/error-message";
 
 const CreateDomainForm: React.FC = () => {
   const [domainForm] = Form.useForm();
@@ -49,7 +49,7 @@ const CreateDomainForm: React.FC = () => {
         domainForm.resetFields();
       },
       onError: (error) => {
-        message.error(ErrorMessage(error));
+        message.error(errorMessage(error));
       }
     })
   };

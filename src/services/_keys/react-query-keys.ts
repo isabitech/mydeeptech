@@ -20,6 +20,13 @@ const MUTATION = {
     updatePartnerInvoice: "updatePartnerInvoice",
     deletePartnerInvoice: "deletePartnerInvoice",
     sendPartnerInvoice: "sendPartnerInvoice",
+
+    submitAssessmentReview: "submitAssessmentReview",
+    updateAssessmentReview: "updateAssessmentReview",
+
+    // Authentication Mutations
+    userSignin: "userSignin",
+    userSignup: "userSignup",
 } as const;
 
 const QUERY = {
@@ -34,10 +41,20 @@ const QUERY = {
     getExchangeRateByCountry: "getExchangeRateByCountry",
     getPartnerInvoices: "getPartnerInvoices",
 
+    // User Invoice Queries
+    getUserInvoices: "getUserInvoices",
+    getUnpaidInvoices: "getUnpaidInvoices",
+    getPaidInvoices: "getPaidInvoices",
+    getUserInvoiceDashboard: "getUserInvoiceDashboard",
+    getUserInvoiceDetails: "getUserInvoiceDetails",
+
     assessmentReviews: "assessmentReviews",
-    updateAssessmentReview: "updateAssessmentReview",
+   
 
     userProfile: "userProfile",
+    getUserProfile: "getUserProfile",
+
+    userDashboardData: "userDashboardData",
 } as const;
 
 const REACT_QUERY_KEYS = {

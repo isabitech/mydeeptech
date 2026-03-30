@@ -14,11 +14,9 @@ const NotificationCarousel = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const { userInfo } = useUserInfoStates();
   const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false;
-  const openModal = false;
-  // const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
+  const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
 
-  // const totalSlides = 2;
-  const totalSlides = 1;
+  const totalSlides = hasSubmitted ? 1 : 2;
 
   const onCloseModal = () => {
     setIsModalOpen(false);
@@ -33,29 +31,50 @@ const NotificationCarousel = () => {
 
   const next = useCallback(() => {
     setDirection(1);
-    setActiveSlide((prev) => (prev + 1) % totalSlides);
-  }, [totalSlides]);
+    if (hasSubmitted) {
+      // Only one slide when hasSubmitted is true, stay on slide 1
+      setActiveSlide(1);
+    } else {
+      setActiveSlide((prev) => (prev + 1) % totalSlides);
+    }
+  }, [totalSlides, hasSubmitted]);
 
   const prev = useCallback(() => {
     setDirection(-1);
-    setActiveSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-  }, [totalSlides]);
+    if (hasSubmitted) {
+      // Only one slide when hasSubmitted is true, stay on slide 1
+      setActiveSlide(1);
+    } else {
+      setActiveSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+    }
+  }, [totalSlides, hasSubmitted]);
 
   const goToSlide = (index: number) => {
     setDirection(index > activeSlide ? 1 : -1);
-    setActiveSlide(index);
+    if (hasSubmitted) {
+      setActiveSlide(1);
+    } else {
+      setActiveSlide(index);
+    }
   };
 
   // Auto-play logic
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || hasSubmitted) return; // Disable autoplay when only one slide
 
     const timer = setInterval(() => {
       next();
     }, 6000);
 
     return () => clearInterval(timer);
-  }, [isAutoPlaying, next]);
+  }, [isAutoPlaying, next, hasSubmitted]);
+
+  // Set initial slide based on hasSubmitted status
+  useEffect(() => {
+    if (hasSubmitted && activeSlide === 0) {
+      setActiveSlide(1);
+    }
+  }, [hasSubmitted, activeSlide]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -86,31 +105,35 @@ const NotificationCarousel = () => {
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
       {/* Navigation Buttons */}
-      <div className="absolute left-1 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          shape="circle"
-          size="middle"
-          icon={<LeftOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            prev();
-          }}
-          className="bg-black/20 hover:!bg-black/40 border-0 text-white backdrop-blur-sm shadow-md"
-        />
-      </div>
+      {!hasSubmitted && (
+        <>
+          <div className="absolute left-1 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              shape="circle"
+              size="middle"
+              icon={<LeftOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                prev();
+              }}
+              className="bg-black/20 hover:!bg-black/40 border-0 text-white backdrop-blur-sm shadow-md"
+            />
+          </div>
 
-      <div className="absolute right-1 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button
-          shape="circle"
-          size="middle"
-          icon={<RightOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            next();
-          }}
-          className="bg-black/20 hover:!bg-black/40 border-0 text-white backdrop-blur-sm shadow-md"
-        />
-      </div>
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              shape="circle"
+              size="middle"
+              icon={<RightOutlined />}
+              onClick={(e) => {
+                e.stopPropagation();
+                next();
+              }}
+              className="bg-black/20 hover:!bg-black/40 border-0 text-white backdrop-blur-sm shadow-md"
+            />
+          </div>
+        </>
+      )}
 
       <div className="min-h-[140px] flex items-center px-10 md:px-14 pb-8 pt-2">
         <AnimatePresence initial={false} custom={direction} mode="wait">
@@ -127,8 +150,8 @@ const NotificationCarousel = () => {
             }}
             className="w-full"
           >
-            {/* SLIDE 1 */}
-            {/* {activeSlide === 0 && (
+            {/* SLIDE 1 - Only show when hasSubmitted is false */}
+            {activeSlide === 0 && !hasSubmitted && (
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -170,26 +193,28 @@ const NotificationCarousel = () => {
                   </Button>
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* SLIDE 2 */}
-            {activeSlide === 0 && <SlackNotification />}
+            {activeSlide === 1 && <SlackNotification />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Indicator Dots */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {[...Array(totalSlides)].map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${activeSlide === i ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
-              }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
+      {/* Indicator Dots - Only show when there are multiple slides */}
+      {!hasSubmitted && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          {[...Array(totalSlides)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goToSlide(i)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${activeSlide === i ? "w-6 bg-white" : "w-1.5 bg-white/40 hover:bg-white/60"
+                }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
       <AssessmentsModal
         open={openModal}

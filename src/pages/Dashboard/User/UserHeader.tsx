@@ -1,24 +1,18 @@
-import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from './Header'
-import { useDTUserDashboard } from '../../../hooks/User/useDTUserDashboard';
-
+import { useUserInfoStates } from '../../../store/useAuthStore';
 
 
 const UserHeader = () => {
-   const { data, getDashboardData } = useDTUserDashboard();
-   const location = useLocation();
- 
-   // Fetch dashboard data on component mount
-   useEffect(() => {
-     getDashboardData();
-   }, [getDashboardData]);
 
+   const location = useLocation();
+   const { userInfo } = useUserInfoStates();
+ 
    // Determine title based on current route
    const getTitle = () => {
      // Check if we're on the overview page (dashboard root)
      if (location.pathname === '/dashboard' || location.pathname === '/dashboard/' || location.pathname === '/dashboard/overview') {
-       return `Welcome back, ${data?.userProfile?.fullName ?? ""}`;
+       return `Welcome back, ${userInfo?.fullName ?? ""}`;
      }
 
      // For other pages, extract the page name from the URL
@@ -31,7 +25,7 @@ const UserHeader = () => {
      }
 
      // Default fallback
-     return `Welcome back, ${data?.userProfile?.fullName ?? ""}`;
+     return `Welcome back, ${userInfo?.fullName ?? ""}`;
    };
 
   return  <Header title={getTitle()} />

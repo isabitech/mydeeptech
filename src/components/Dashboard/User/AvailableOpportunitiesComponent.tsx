@@ -10,10 +10,10 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { motion } from 'framer-motion';
-import { AvailableOpportunities } from '../../../types/dtuser-dashboard.types';
+import { AvailableOpportunitiesSchema } from '../../../validators/dashboard/user-dashboard-schema';
 
 interface AvailableOpportunitiesComponentProps {
-  opportunities: AvailableOpportunities;
+  opportunities: AvailableOpportunitiesSchema;
 }
 
 const AvailableOpportunitiesComponent: React.FC<AvailableOpportunitiesComponentProps> = ({ 
