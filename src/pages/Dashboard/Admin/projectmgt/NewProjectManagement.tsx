@@ -746,7 +746,7 @@ const ProjectManagement: React.FC = () => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       {/* <Header title="Projects" /> */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{summary.totalProjects ?? 0}</div>

@@ -64,8 +64,8 @@ const Payment = () => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
 
       {/* Summary Statistics */}
-      <Row gutter={16}>
-        <Col span={6}>
+      <Row gutter={[16, 16]}>
+        <Col span={6}  xs={24} sm={12} md={6} lg={6} xl={6}>
           <Card>
             <Statistic
               title="Total Invoices"
@@ -74,7 +74,7 @@ const Payment = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
           <Card>
             <Statistic
               title="Total Amount"
@@ -85,7 +85,7 @@ const Payment = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
           <Card>
             <Statistic
               title="Paid Amount"
@@ -97,7 +97,7 @@ const Payment = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
           <Card>
             <Statistic
               title="Unpaid Amount"
