@@ -3,6 +3,8 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
 import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
@@ -68,16 +70,18 @@ import ApplicationsPage from "./pages/admin/ApplicationsPage";
 import UserAssessments from "./pages/Dashboard/Admin/assessmentmgt/UserAssessments";
 import EmployeeMgt from "./pages/Dashboard/Admin/employeemgt/EmployeeMgt";
 import DashboardLayout from "./pages/Dashboard/User/DashboardLayout";
+import MaintenanceLayout from "./components/MaintenanceLayout";
 
 const AppRoutes = () => {
+
   return (
     <Router>
       <MaintenanceProvider>
         {/* Maintenance Routes - Always Accessible */}
-        <Routes>
+        {/* <Routes>
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/admin/maintenance-control" element={<MaintenanceControl />} />
-        </Routes>
+        </Routes> */}
         
         <MaintenanceGuard>
           <CustomerService />
@@ -90,8 +94,12 @@ const AppRoutes = () => {
           />
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Navigate to={"/maintenance"} />} />
+            {/* <Route path="/" element={<Navigate to={"/maintenance"} />} /> */}
+            
+            <Route path="/" element={<MaintenanceLayout/>} >
+          
             {/* <Route path="/" element={<LandingPage />} /> */}
+            <Route index path="/maintenance" element={<MaintenancePage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -113,32 +121,30 @@ const AppRoutes = () => {
             <Route path="/uploadEmail" element={<UploadEmail />} />
             <Route path="/apply" element={<AdsLandingPage />} />
 
-        <Route path="/route" element={<PageRoute />} />
+            <Route path="/route" element={<PageRoute />} />
 
-        {/* Protected Dashboard Routes */}
-        <Route element={<ProtectUserLayout />}>
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            {/* Default route */}
-            <Route index element={<Navigate to="overview" replace />} />
-            {/* User Dashboard */}
-            <Route path="overview" element={<Welcome />} />
-            <Route path="projects" element={<Projects />} />
-            <Route path="jobs" element={<Jobs />} />
-            <Route path="tasks" element={<Tasks />} />
-            <Route path="payment" element={<Payment />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="support" element={<SupportCenter />} />
-            <Route path="assessment" element={<Assessment />} />
-            <Route path="notifications" element={<UserNotifications />} />
-            <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
-            <Route path="qa-review" element={<QAReviewDashboard />} />
-            <Route path="assessments" element={<AssessmentList />} />
-            <Route path="assessment-history" element={<AssessmentHistory />} />
+          {/* Protected Dashboard Routes */}
+          <Route element={<ProtectUserLayout />}>
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              {/* Default route */}
+              <Route index element={<Navigate to="overview" replace />} />
+              {/* User Dashboard */}
+              <Route path="overview" element={<Welcome />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="jobs" element={<Jobs />} />
+              <Route path="tasks" element={<Tasks />} />
+              <Route path="payment" element={<Payment />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="support" element={<SupportCenter />} />
+              <Route path="assessment" element={<Assessment />} />
+              <Route path="notifications" element={<UserNotifications />} />
+              <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
+              <Route path="qa-review" element={<QAReviewDashboard />} />
+              <Route path="assessments" element={<AssessmentList />} />
+              <Route path="assessment-history" element={<AssessmentHistory />} />
+            </Route>
           </Route>
-        </Route>
-
-        {/* Admin auth */}
 
         <Route path="/auth/admin-signup" element={<AdminSignup />} />
         <Route path="/auth/admin-login" element={<AdminLogin />} />
@@ -257,6 +263,10 @@ const AppRoutes = () => {
              <Route path="employees/*" element={<EmployeeMgt /> } />
           </Route>
         </Route>
+            
+            </Route>
+            
+            
 
         {/* Redirect ALL routes to maintenance */}
         <Route path="*" element={<Navigate to="/maintenance" replace />} />
