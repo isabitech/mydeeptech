@@ -14,7 +14,7 @@ interface PageGuardProps {
 /**
  * Page-level guard for React Router.
  */
-export const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
+const PageGuard: React.FC<PageGuardProps> = ({ resource, children }) => {
   const location = useLocation();
   const { isAuthenticated, isLoading: isSessionLoading } = useAdminSession();
   const { can, isLoading: isPermissionLoading } = usePermission(resource);

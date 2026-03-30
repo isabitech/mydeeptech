@@ -1,6 +1,15 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
+// Layout components as static imports
+import DashboardLayout from "./pages/Dashboard/User/DashboardLayout";
+import AdminLayout from "./pages/Dashboard/Admin/AdminLayout";
+
+import ProtectUserLayout from "./components/layouts/ProtectUserLayout";
+import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
+import PublicLayout from "./components/layouts/PublicLayout";
+import PageGuard from "./components/PageGuard";
+
 import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
 import LandingPage from "./pages/Auth/LandingPage";
@@ -58,14 +67,6 @@ const ApplicationsPage = React.lazy(() => import("./pages/admin/ApplicationsPage
 const UserAssessments = React.lazy(() => import("./pages/Dashboard/Admin/assessmentmgt/UserAssessments"));
 const EmployeeMgt = React.lazy(() => import("./pages/Dashboard/Admin/employeemgt/EmployeeMgt"));
 
-// Layout components as static imports
-import DashboardLayout from "./pages/Dashboard/User/DashboardLayout";
-import AdminLayout from "./pages/Dashboard/Admin/AdminLayout";
-
-import ProtectUserLayout from "./components/layouts/ProtectUserLayout";
-import ProtectAdminLayout from "./components/layouts/ProtectAdminLayout";
-import PublicLayout from "./components/layouts/PublicLayout";
-import { PageGuard } from "./components";
 
 const AnimatedRoutes = () => {
 

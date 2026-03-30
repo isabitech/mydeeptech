@@ -101,7 +101,7 @@ const Login = () => {
       onError: (err) => {
       const errorMsg = errorMessage(err);
       console.error("Login failed:", errorMsg);
-      notification.error({  message: errorMsg });
+      // notification.error({  message: errorMsg });
     },
     });
 

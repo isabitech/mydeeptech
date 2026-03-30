@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useAdminLogin } from "../../../hooks/Auth/Admin/useAdminLogin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
+import { AlertCircle } from "lucide-react";
 
 const AdminLogin: React.FC = () => {
 
@@ -165,25 +166,19 @@ const AdminLogin: React.FC = () => {
             </motion.div>
           )}
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="mb-4"
-            >
-              <Alert
-                message="Login Failed"
-                description={authError ?? error}
-                type="error"
-                showIcon
-                closable
-                onClose={() => {
-                  resetState();
-                  localStorage.removeItem("authError");
-                }}
-              />
-            </motion.div>
-          )}
+           {/* Error Display */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+              >
+                <div className="flex items-center">
+                  <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+                  <p className="text-red-800 text-sm">{authError ?? error}</p>
+                </div>
+              </motion.div>
+            )}
 
           <motion.div
             initial={{ opacity: 0 }}
