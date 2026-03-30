@@ -1,43 +1,70 @@
 import { Button, Form, Input, message } from "antd";
-import { useResetPassword } from "../../../../hooks/Auth/User/useResetPassword";
-
+import authMutationService from "../../../../services/authentication/auth-mutation";
+import { ResetPasswordSchema } from "../../../../validators/authentication/user-reset-password-schema";
+import errorMessage from "../../../../lib/error-message";
+import { AlertCircle } from "lucide-react";
 const ResetPasswordForm = () => {
+
   const [form] = Form.useForm();
-  const { resetPassword, loading, error } = useResetPassword();
 
-  const handleSubmit = async (values: any) => {
-    try {
-      const result = await resetPassword({
-        currentPassword: values.oldPassword,
-        newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword,
-      });
+  const { resetPasswordMutation, isResetPasswordLoading, isResetPasswordError, resetPasswordError } = authMutationService.useResetPassword();
 
-      if (result.success) {
-        message.success("Password reset successfully!");
-        form.resetFields();
-      } else {
-        message.error(result.error || "Failed to reset password");
-      }
-    } catch (error) {
-      message.error("An unexpected error occurred");
+  const handleSubmit = async (values: ResetPasswordSchema) => {
+
+    const result = ResetPasswordSchema.safeParse(values);
+
+    if (!result.success) {
+      const errorMessages = result.error.issues[0]?.message;
+      message.error(errorMessages);
+      return;
     }
+
+    resetPasswordMutation.mutate(result.data, {
+      onSuccess: () => {
+        message.success({
+          content: "Password reset successful!",
+          key: "resetPasswordSuccess",
+        });
+        form.resetFields();
+      },
+      onError: (error) => {
+        const errorMsg = errorMessage(error);
+        message.error({
+          content: errorMsg,
+          key: "resetPasswordError",
+        });
+      },
+    });
   };
+
+
   return (
     <div className="flex flex-col gap-4 w-full">
-      <p>Reset Password</p>
 
-      <Form form={form} onFinish={handleSubmit} className="flex flex-col gap-4 w-full">
+
+      <Form form={form} onFinish={handleSubmit} className="flex flex-col gap-4 w-[100%] lg:w-[50%]">
+        {/* Error Display */}
+        {isResetPasswordError && (
+          <div
+            className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+          >
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+              <p className="text-red-800 text-sm">{errorMessage(resetPasswordError)}</p>
+            </div>
+          </div>
+        )}
+        <h2 className="font-semibold text-lg">Reset Password</h2>
         <Form.Item
-          name="oldPassword"
+          name="currentPassword"
           rules={[
             { required: true, message: "Please enter your current password!" },
             { min: 6, message: "Password must be at least 6 characters!" },
           ]}
         >
           <Input.Password
-          autoComplete="current-password"
-            className="!font-[gilroy-regular] !text-[#333333] !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
+            autoComplete="current-password"
+            className="!font-[gilroy-regular] !text-[#333333] !h-11 !rounded-md"
             placeholder="Old password"
           />
         </Form.Item>
@@ -58,7 +85,7 @@ const ResetPasswordForm = () => {
         >
           <Input.Password
             autoComplete="new-password"
-            className="!font-[gilroy-regular] !text-[#333333]  !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
+            className="!font-[gilroy-regular] !text-[#333333]  !h-11 !rounded-md"
             placeholder="New password"
           />
         </Form.Item>
@@ -88,27 +115,24 @@ const ResetPasswordForm = () => {
           ]}
         >
           <Input.Password
-            className="!font-[gilroy-regular] !text-[#333333] !h-11 !w-[100%] lg:!w-[50%] !rounded-md"
+            className="!font-[gilroy-regular] !text-[#333333] !h-11 !rounded-md"
             placeholder="Confirm new password"
             autoComplete="confirm-password"
           />
         </Form.Item>
 
         <Button
-          className="!font-[gilroy-regular] !text-white bg-secondary !h-11 !w-[100%] lg:!w-[50%] !mt-4"
+          className="!font-[gilroy-regular] !text-white bg-secondary !h-11 !mt-4"
           type="primary"
           htmlType="submit"
-          loading={loading}
+          disabled={isResetPasswordLoading}
+          loading={isResetPasswordLoading}
         >
           Reset Password
         </Button>
       </Form>
 
-      {error && (
-        <div className="text-red-500 text-sm mt-2">
-          {error}
-        </div>
-      )}
+
     </div>
   );
 };

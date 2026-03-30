@@ -5,7 +5,7 @@ import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import { persistUserInfo } from "./_helper";
 import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
-
+import { ResetPasswordSchema } from "../../validators/authentication/user-reset-password-schema";
 
 const useUserSignup = () => {
     const mutation  = useMutation({
@@ -49,9 +49,26 @@ const useUserSignin = () => {
     }
 }
 
+const useResetPassword = () => {
+   const mutation =  useMutation({
+        mutationKey: [REACT_QUERY_KEYS.MUTATION.resetPassword],
+        mutationFn: async (payload: ResetPasswordSchema) => {
+            const response = await axiosInstance.post(endpoints.authDT.resetPassword, payload);
+            return response.data;
+        }
+    });
+    return {
+        resetPasswordMutation: mutation,
+        isResetPasswordLoading: mutation.isPending,
+        isResetPasswordError: mutation.isError,
+        resetPasswordError: mutation.error,
+    };
+}
+
 const authMutationService = {
     useUserSignin,
     useUserSignup,
+    useResetPassword,
 }
 
 export default authMutationService;

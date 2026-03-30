@@ -27,6 +27,8 @@ const MUTATION = {
     // Authentication Mutations
     userSignin: "userSignin",
     userSignup: "userSignup",
+
+    resetPassword: "resetPassword",
 } as const;
 
 const QUERY = {

@@ -1,4 +1,4 @@
-import { Spin, Alert, Button, Card } from "antd";
+import { Button, Card } from "antd";
 import { ReloadOutlined, TeamOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
 
@@ -22,7 +22,6 @@ const Overview = () => {
     refreshDashboard
   } = dashboardQueryService.useDashboardQuery();
   const error = isDashboardError ? errorMessage(dashboardError) : "";
-
 
   const pageVariants = {
     hidden: { opacity: 0 },
@@ -106,22 +105,17 @@ const Overview = () => {
         </motion.div>
 
         <motion.div variants={sectionVariants}>
-          <ApplicationStatisticsCharts
-            applicationStatistics={dashboardData?.applicationStatistics}
+          <ApplicationStatisticsCharts applicationStatistics={dashboardData?.applicationStatistics}
             resultSubmissions={dashboardData?.resultSubmissions}
           />
         </motion.div>
 
         <motion.div variants={sectionVariants}>
-          <AvailableOpportunitiesComponent
-            opportunities={dashboardData?.availableOpportunities}
-          />
+          <AvailableOpportunitiesComponent opportunities={dashboardData?.availableOpportunities}  />
         </motion.div>
 
         <motion.div variants={sectionVariants}>
-          <RecentActivityTimeline
-            recentActivity={dashboardData?.recentActivity}
-          />
+          <RecentActivityTimeline  recentActivity={dashboardData?.recentActivity} />
         </motion.div>
 
         <motion.div
