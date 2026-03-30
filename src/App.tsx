@@ -38,6 +38,10 @@ import SupportCenter from "./pages/Dashboard/User/SupportCenter";
 import AssessmentManagementList from "./pages/Dashboard/Admin/assessmentmgt/AssessmentManagementList";
 import AdsLandingPage from "./pages/Ads/AdsLandingPage";
 import VerifyEmail from "./pages/Auth/VerifyEmail";
+import MaintenanceGuard from "./components/MaintenanceGuard";
+import { MaintenanceProvider } from "./hooks/useMaintenance";
+import MaintenancePage from "./pages/Maintenance/MaintenancePage";
+import MaintenanceControl from "./components/MaintenanceControl";
 import SignupPage from "./pages/Auth/SignupPage";
 import AdminSignup from "./pages/Auth/Admin/AdminSignup";
 import AdminLogin from "./pages/Auth/Admin/AdminLogin";
@@ -68,35 +72,46 @@ import DashboardLayout from "./pages/Dashboard/User/DashboardLayout";
 const AppRoutes = () => {
   return (
     <Router>
-      <CustomerService />
-      <Toaster
-        position="top-right"
-        richColors
-        closeButton
-        expand={true}
-        duration={4000}
-      />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/verify-email/:id" element={<VerifyEmail />} />
-        <Route path="/assessment" element={<Assessment />} />
-        <Route path="/about-us" element={<AboutUs />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-of-service" element={<TermsOfService />} />
-        <Route path="/new-projects" element={<NewProjects />} />
-        {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
-        <Route path="/careers" element={<Hiring />} />
-        <Route path="/careers/math-ai-trainer" element={<MathTalent />} />
-        <Route path="/demo/multimedia-assessment" element={<MultimediaAssessmentDemo />} />
-        <Route path="/video-test" element={<VideoTest />} />
+      <MaintenanceProvider>
+        {/* Maintenance Routes - Always Accessible */}
+        <Routes>
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/admin/maintenance-control" element={<MaintenanceControl />} />
+        </Routes>
+        
+        <MaintenanceGuard>
+          <CustomerService />
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            expand={true}
+            duration={4000}
+          />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Navigate to={"/maintenance"} />} />
+            {/* <Route path="/" element={<LandingPage />} /> */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email/:id" element={<VerifyEmail />} />
+            <Route path="/assessment" element={<Assessment />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/new-projects" element={<NewProjects />} />
+            {/* <Route path="/new-projects/survey" element={<Survey/>} /> */}
+            <Route path="/careers" element={<Hiring />} />
+            <Route path="/careers/math-ai-trainer" element={<MathTalent />} />
+            <Route path="/demo/multimedia-assessment" element={<MultimediaAssessmentDemo />} />
+            <Route path="/video-test" element={<VideoTest />} />
 
-        <Route path="/uploadEmail" element={<UploadEmail />} />
-        <Route path="/apply" element={<AdsLandingPage />} />
+            {/* Maintenance Routes moved outside guard */}
+
+            <Route path="/uploadEmail" element={<UploadEmail />} />
+            <Route path="/apply" element={<AdsLandingPage />} />
 
         <Route path="/route" element={<PageRoute />} />
 
@@ -223,6 +238,11 @@ const AppRoutes = () => {
                 <SettingsMgt />
               </PageGuard>
             } />
+            <Route path="maintenance" element={
+              <PageGuard resource="settings">
+                <MaintenanceControl />
+              </PageGuard>
+            } />
             <Route path="invoice-page/*" element={
               <PageGuard resource="invoice">
                 <InvoiceRoutes />
@@ -238,9 +258,11 @@ const AppRoutes = () => {
           </Route>
         </Route>
 
-        {/* Redirect unmatched routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Redirect ALL routes to maintenance */}
+        <Route path="*" element={<Navigate to="/maintenance" replace />} />
       </Routes>
+        </MaintenanceGuard>
+      </MaintenanceProvider>
     </Router>
   );
 };
