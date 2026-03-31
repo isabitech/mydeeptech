@@ -30,8 +30,8 @@ export const useLogout = (options?: UseLogoutOptions) => {
     clearUserInfo();
 
     // Determine redirect path based on userType
-    const finalUserType = userType || options?.userType;
-    const redirectPath = finalUserType === 'user' ? "/login"  : '/auth/admin-login'
+    // const finalUserType = userType || options?.userType;
+    const redirectPath = options?.userType === "user" ? "/login"  : '/auth/admin-login'
     
     // Navigate to appropriate login page
     navigate(redirectPath, { replace: true });
