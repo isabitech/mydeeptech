@@ -1,4 +1,6 @@
-import { NavLink } from "react-router-dom";import React, { useState } from "react";import {
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
+import {
   LogoutOutlined,
   DownOutlined,
   RightOutlined
@@ -77,8 +79,9 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
     );
   };
 
+  // Sidebar
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${openModal ? "hidden" : "block"} h-full`}>
       <div className="p-4 text-center flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
         <div className="h-[80px]">
           <img className="h-full w-full rounded-md pointer-events-none" src={Logo} alt="" />
@@ -136,6 +139,11 @@ const AdminSidebar = () => {
     setOpenModal(!openModal);
   };
 
+  const handleSidebarClose = () => {
+    setOpenModal(false); // Close logout modal if open
+    toggleSidebar(); // Close sidebar
+  };
+
   const handleLogout = useLogout({ userType: 'admin' });
 
   return (
@@ -143,8 +151,8 @@ const AdminSidebar = () => {
       <Drawer
         width={300}
         placement="left"
-        onClose={toggleSidebar}
-        open={sidebarCollapsed}
+        onClose={handleSidebarClose}
+        open={!sidebarCollapsed && window.innerWidth < 768}
         title={null}
         closable={false}
         className="!bg-primary text-white [&_.ant-drawer-close]:text-white [&_.ant-drawer-close:hover]:text-gray-200"
@@ -155,7 +163,7 @@ const AdminSidebar = () => {
           handleLogOutModal={handleLogOutModal}
         />
       </Drawer>
-      <div className="min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] flex flex-col overflow-y-auto p-1 border-r-2">
+      <div className={` ${sidebarCollapsed || window.innerWidth < 768 ? "hidden" : "block"} min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] flex flex-col overflow-y-auto p-1 border-r-2`}>
         <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
       </div>
 

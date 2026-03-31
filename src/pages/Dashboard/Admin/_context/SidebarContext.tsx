@@ -10,20 +10,25 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 const SidebarProvider = ({ children }: { children: React.ReactNode }) => {
 
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        // Initialize based on screen size
+        return window.innerWidth < 768;
+    });
 
     const toggleSidebar = () => {
         setSidebarCollapsed((prevState) => !prevState);
     };
 
     const handleCloseSidebar = () => {
-        setSidebarCollapsed(false);
+        setSidebarCollapsed(true);
     }
 
     useEffect(() => {
         const handleResize = () => {
-            if (window.innerWidth > 250) {
-                setSidebarCollapsed(false);
+            if (window.innerWidth >= 768) {
+                setSidebarCollapsed(false); // Desktop: sidebar open
+            } else {
+                setSidebarCollapsed(true); // Mobile: sidebar closed
             }
         };
 
