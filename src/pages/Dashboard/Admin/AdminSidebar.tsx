@@ -1,11 +1,9 @@
-import { NavLink } from "react-router-dom";
-import {
+import { NavLink } from "react-router-dom";import React, { useState } from "react";import {
   LogoutOutlined,
   DownOutlined,
   RightOutlined
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
-import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button, Drawer, Skeleton } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
@@ -157,7 +155,7 @@ const AdminSidebar = () => {
           handleLogOutModal={handleLogOutModal}
         />
       </Drawer>
-      <div className="hidden min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] lg:flex flex-col overflow-y-auto p-1">
+      <div className="min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] flex flex-col overflow-y-auto p-1 border-r-2">
         <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
       </div>
 
