@@ -1,30 +1,30 @@
 import { RightOutlined, TeamOutlined } from "@ant-design/icons"
-import { Button } from "antd"
+// import { Button } from "antd"
 
 
 const SlackNotification = () => {
   return (
-  <div className="flex-1 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 gap-y-10 p-2">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-white/20 p-2 rounded-lg">
-                    <TeamOutlined className="text-white text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-bold text-lg mb-1">Join Our Community</h3>
-                    <p className="text-purple-100 text-sm">
-                      Connect with fellow annotators on Slack
-                    </p>
-                  </div>
-                </div>
-                
-                <p className="text-purple-100 text-sm leading-relaxed max-w-2xl">
-                  Be part of our growing community! Get real-time updates, collaborate with other annotators, 
-                  ask questions, and stay connected with the MyDeepTech team on our official Slack channel.
-                </p>
-              </div>
-              
-              <div className="flex-shrink-0">
+    <div className="flex-1 relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 gap-y-10 p-2">
+      <div className="flex-1">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="bg-white/20 p-2 rounded-lg">
+            <TeamOutlined className="text-white text-xl" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg mb-1">Join Our Community</h3>
+            <p className="text-purple-100 text-sm">
+              Connect with fellow annotators on Slack
+            </p>
+          </div>
+        </div>
+
+        <p className="text-purple-100 text-sm leading-relaxed max-w-2xl">
+          Be part of our growing community! Get real-time updates, collaborate with other annotators,
+          ask questions, and stay connected with the MyDeepTech team on our official Slack channel.
+        </p>
+      </div>
+
+      {/* <div className="flex-shrink-0">
                 <Button
                   type="primary"
                   size="large"
@@ -37,8 +37,8 @@ const SlackNotification = () => {
                 >
                   Join Slack Community
                 </Button>
-              </div>
-  </div>
+              </div> */}
+    </div>
   )
 }
 
