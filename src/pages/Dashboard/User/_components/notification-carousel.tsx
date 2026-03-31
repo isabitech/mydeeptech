@@ -136,7 +136,7 @@ const NotificationCarousel = () => {
 
       <div className="flex items-center p-4 lg:p-6">
         <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.div
+          {/* <motion.div
             key={activeSlide}
             custom={direction}
             variants={slideVariants}
@@ -148,7 +148,7 @@ const NotificationCarousel = () => {
               opacity: { duration: 0.4 },
             }}
             className="w-full"
-          >
+          > */}
             {/* SLIDE 1 - Only show when hasSubmitted is false */}
             {/* {activeSlide === 0 && !hasSubmitted && (
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
@@ -195,8 +195,9 @@ const NotificationCarousel = () => {
             )} */}
 
             {/* SLIDE 2 */}
-            {activeSlide === 0 && <SlackNotification />}
-          </motion.div>
+            {/* {activeSlide === 0 && <SlackNotification />} */}
+          {/* </motion.div> */}
+          <SlackNotification />
         </AnimatePresence>
       </div>
 
