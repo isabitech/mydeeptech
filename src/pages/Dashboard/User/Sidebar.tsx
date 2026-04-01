@@ -1,4 +1,4 @@
-import { useUserInfoStates } from "../../../store/useAuthStore";
+import { useGetUserInfo } from "../../../store/useAuthStore";
 import useLogout from "../../../hooks/useLogout";
 import {
   MobileToggle,
@@ -11,7 +11,7 @@ import {
 } from "./_components/_sidebar";
 
 const Sidebar = () => {
-  const { userInfo } = useUserInfoStates();
+  const userInfo = useGetUserInfo("user");
   const handleLogout = useLogout({ userType: 'user' });
   
   const { isOpen, setIsOpen, filteredMenuItems, isMenuItemLocked } = useSidebarLogic(userInfo);

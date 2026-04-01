@@ -6,6 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucid
 import authMutationService from "../../services/authentication/auth-mutation";
 import errorMessage from "../../lib/error-message";
 import LoginLeftHeroSection from "./_components/LoginLeftHeroSection";
+import { formatUserInfo } from "../../services/authentication/_helper";
 
 const Login = () => {
   const location = useLocation();
@@ -49,7 +50,7 @@ const Login = () => {
     signinMutation.mutate(formData, {
       onSuccess: (data) => {
 
-        const userData = data?.user;
+        const userData = formatUserInfo(data);
 
         if(!userData) {
           notification.open({
@@ -68,7 +69,6 @@ const Login = () => {
           notification.error({
             message: "Please verify your email before logging in. Check your inbox for verification link.",
           });
-  
           return navigate("/login", { state: { email: formData.email }, replace: true });
       }
 
@@ -80,7 +80,7 @@ const Login = () => {
         return navigate("/login", { state: { email: formData.email }, replace: true });
       }
   
-      if(userData?.role !== "user") {
+      if(userData.role !== "user") {
           notification.open({
               type: "error",
               message: "Invalid credentials.",
@@ -89,19 +89,23 @@ const Login = () => {
         return navigate("/login", { replace: true });
       }
 
-        notification.open({ type: "success", message: "Login successful!" });
+        notification.open({ type: "success", message: "Login successful!", key: "login_success" });
 
-        if (userData.annotatorStatus || userData.microTaskerStatus) {
-          navigate(from ?? "/dashboard/overview");
-        } else {
-          navigate(from ?? "/admin/overview");
-        }
-
+        // Check user status for navigation
+        // const hasAnnotatorStatus = userData.annotatorStatus === "approved" || userData.annotatorStatus === "pending" || userData.annotatorStatus === "submitted";
+        // const hasMicroTaskerStatus = userData.microTaskerStatus === "approved" || userData.microTaskerStatus === "pending";
+        
+        // if (hasAnnotatorStatus || hasMicroTaskerStatus) {
+        //   navigate(from ?? "/dashboard/overview");
+        // } else {
+        //   navigate(from ?? "/admin/overview");
+        // }
+        navigate(from ?? "/dashboard/overview");
       },
       onError: (err) => {
       const errorMsg = errorMessage(err);
       console.error("Login failed:", errorMsg);
-      // notification.error({  message: errorMsg });
+      notification.error({  message: errorMsg, key: "login_error" });
     },
     });
 

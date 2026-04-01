@@ -1,12 +1,12 @@
 import { useLocation } from 'react-router-dom'
 import Header from './Header'
-import { useUserInfoStates } from '../../../store/useAuthStore';
+import { useGetUserInfo } from '../../../store/useAuthStore';
 
 
 const UserHeader = () => {
 
    const location = useLocation();
-   const { userInfo } = useUserInfoStates();
+  const userInfo = useGetUserInfo("user");
  
    // Determine title based on current route
    const getTitle = () => {

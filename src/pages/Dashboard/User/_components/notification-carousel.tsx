@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "antd";
-import { LeftOutlined, RightOutlined, BookOutlined } from "@ant-design/icons";
+import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import SlackNotification from "./slack-notification";
 import AssessmentsModal from "./assessments-modal";
-import { useUserInfoStates } from "../../../../store/useAuthStore";
+// import { useGetUserInfo } from "../../../../store/useAuthStore";
 
 const NotificationCarousel = () => {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -12,7 +12,7 @@ const NotificationCarousel = () => {
   const [isModalDismissed, setIsModalDismissed] = useState(false);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const { userInfo } = useUserInfoStates();
+  // const userInfo = useGetUserInfo("user");
   // const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false; // Uncomment this
   const hasSubmitted = true;
   const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
@@ -78,22 +78,22 @@ const NotificationCarousel = () => {
     }
   }, [hasSubmitted, activeSlide]);
 
-  const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      zIndex: 1,
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      zIndex: 0,
-      x: direction < 0 ? 100 : -100,
-      opacity: 0,
-    }),
-  };
+  // const slideVariants = {
+  //   enter: (direction: number) => ({
+  //     x: direction > 0 ? 100 : -100,
+  //     opacity: 0,
+  //   }),
+  //   center: {
+  //     zIndex: 1,
+  //     x: 0,
+  //     opacity: 1,
+  //   },
+  //   exit: (direction: number) => ({
+  //     zIndex: 0,
+  //     x: direction < 0 ? 100 : -100,
+  //     opacity: 0,
+  //   }),
+  // };
 
   return (
     <motion.div

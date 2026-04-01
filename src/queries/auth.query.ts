@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { parseAdmin, Admin, Permission } from "../schemas/permission.schema";
-import { useUserInfoStates } from "../store/useAuthStore";
+import { useGetUserInfo } from "../store/useAuthStore";
 
 export interface AdminSession {
   admin: Admin | null;
@@ -17,7 +17,7 @@ export interface AdminSession {
  * Uses TanStack Query for optimal caching and reactive updates.
  */
 export const useAdminSession = (): AdminSession => {
-  const { userInfo } = useUserInfoStates();
+  const userInfo = useGetUserInfo("admin");
   const query = useQuery({
     queryKey: ["adminSession", userInfo?.id],
     queryFn: () => {
@@ -28,7 +28,7 @@ export const useAdminSession = (): AdminSession => {
         // Parse the admin data using the same schema
         const { data } = parseAdmin(userInfo);
         return data;
-      } catch (err) {
+      } catch {
         return null;
       }
     },
@@ -42,7 +42,7 @@ export const useAdminSession = (): AdminSession => {
   const role = admin?.role || null;
   const roleName = admin?.role_permission?.name || null;
   
-  const permissions = (admin?.role_permission?.isActive !== false)
+  const permissions = (admin?.role_permission?.isActive)
     ? (admin?.role_permission?.permissions || [])
     : [];
 

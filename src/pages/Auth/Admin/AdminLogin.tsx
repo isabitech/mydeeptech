@@ -19,15 +19,15 @@ const AdminLogin: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string>("");
   const authError = localStorage.getItem('authError') ?? null;
 
-  const { login, loading, error: hookError, resetState } = useAdminLogin();
+  const { login, loading, error: hookError } = useAdminLogin();
   const navigate = useNavigate();
   const location = useLocation();
 
   const error = authError || hookError; // Prioritize authError from localStorage if it exists
-  const from =
-    typeof location.state?.from === "string"
-      ? location.state.from
-      : location.state?.from?.pathname;
+  // const from =
+  //   typeof location.state?.from === "string"
+  //     ? location.state.from
+  //     : location.state?.from?.pathname;
 
 
   useEffect(() => {

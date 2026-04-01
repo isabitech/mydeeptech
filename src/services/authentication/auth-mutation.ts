@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useUserInfoActions } from "../../store/useAuthStore";
+import { LoginResponse, useUserInfoActions } from "../../store/useAuthStore";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
@@ -31,7 +31,7 @@ const useUserSignin = () => {
     const mutation  = useMutation({
         mutationKey: [REACT_QUERY_KEYS.MUTATION.userSignin],
         mutationFn: async (payload: { email: string; password: string }) => {
-            const response = await axiosInstance.post(endpoints.authDT.loginDTUser, payload);
+            const response = await axiosInstance.post<LoginResponse>(endpoints.authDT.loginDTUser, payload);
             return response.data;
         },
         onSuccess: async (data) => {

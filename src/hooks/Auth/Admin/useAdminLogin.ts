@@ -6,7 +6,8 @@ import { storeTokenToStorage, storeUserInfoToStorage } from "../../../helpers";
 import { useUserInfoActions } from "../../../store/useAuthStore";
 import axiosInstance from "../../../service/axiosApi";
 import { getDefaultRedirectPath } from "../../../utils/permissions";
-import ErrorMessage from "../../../lib/error-message";
+import { formatUserInfo, persistUserInfo } from "../../../services/authentication/_helper";
+import errorMessage from "../../../lib/error-message";
 
 interface AdminLoginPayload {
   email: string;
@@ -69,23 +70,25 @@ export const useAdminLogin = () => {
         }
 
         // Store user information
-        const adminInfo = {
-          id: data.admin.id,
-          fullName: data.admin.fullName,
-          email: data.admin.email,
-          role: data.admin.role,
-          phone: data.admin.phone,
-          isEmailVerified: data.admin.isEmailVerified,
-          hasSetPassword: data.admin.hasSetPassword,
-          role_permission: data.admin.role_permission,
-        };
-        
+
+        // const adminInfo = {
+        //   id: data.admin.id,
+        //   fullName: data.admin.fullName,
+        //   email: data.admin.email,
+        //   role: data.admin.role,
+        //   phone: data.admin.phone,
+        //   isEmailVerified: data.admin.isEmailVerified,
+        //   hasSetPassword: data.admin.hasSetPassword,
+        //   role_permission: data.admin.role_permission,
+        // };
+
+        const adminInfo = formatUserInfo(data);
+        // Store in encrypted sessionStorage only - more secure for admin auth
+        // await storeUserInfoToStorage(adminInfo);
+        // await storeTokenToStorage(data.token);
+        await persistUserInfo(data);
         setUserInfo(adminInfo);
         
-        // Store in encrypted sessionStorage only - more secure for admin auth
-        await storeUserInfoToStorage(adminInfo);
-        await storeTokenToStorage(data.token);
-
         notification.success({
           message: "Login successful",
           key: "admin-login-success",
@@ -104,9 +107,9 @@ export const useAdminLogin = () => {
 
       setError(data.message);
       return { success: false };
-    } catch (err: any) {
-      const errorMessage = ErrorMessage(err);
-      setError(errorMessage);
+    } catch (err: unknown) {
+      const errorMsg = errorMessage(err);
+      setError(errorMsg);
       return { success: false };
     } finally {
       setLoading(false);

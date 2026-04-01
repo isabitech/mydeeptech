@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { retrieveUserInfoFromStorage, storeUserInfoToStorage } from "../helpers";
+import { AdminLoginResponseSchema, RolePermissionSchema } from "../validators/authentication/admin-schema";
+import { LoginResponseSchema } from "../validators/authentication/user-schema";
 
 // Global navigation callback for avoiding page refreshes on logout
 let globalNavigateCallback: ((path: string, options?: { replace?: boolean }) => void) | null = null;
@@ -10,59 +12,52 @@ export const setAuthStoreNavigate = (navigateCallback: ((path: string, options?:
   globalNavigateCallback = navigateCallback;
 };
 
-
-interface RBACPermission {
-  _id: string;
-  name: string;
-  description: string;
-  resource: string;
-  action: string;
-}
-
-interface RBACRole {
-  _id: string;
-  name: string;
-  description: string;
-  permissions: RBACPermission[];
-  isActive: boolean;
-}
-
-interface UserInfo {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  domains?: string[];
-  socialsFollowed?: any[];
-  consent?: boolean;
-  isEmailVerified?: boolean;
-  hasSetPassword?: boolean;
-  annotatorStatus?: string;
-  microTaskerStatus?: string;
-  qaStatus?: string;
-  resultLink?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  role?: string;
-  role_permission?: RBACRole;
-  isAssessmentSubmitted?: boolean;
-}
-
-
 type UserRoleType = "admin" | "user";
+type RoleInfoMap<T extends UserRoleType> = T extends "admin" ? AdminInfo : UserInfo;
 
-export type UserInfoData = 
-| (UserInfo & { role: "user"; })
-| (UserInfo & { role: "admin"; role_permission: RBACRole })
+export type LoginResponse = AdminLoginResponseSchema | LoginResponseSchema;
 
+export type AdminInfo = {
+      id: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      domains: string[];
+      isEmailVerified: boolean;
+      hasSetPassword: boolean;
+      annotatorStatus: "approved" | "pending" | "rejected";
+      microTaskerStatus: "approved" | "pending" | "rejected";
+      qaStatus: "approved" | "pending" | "rejected";
+      role: string;
+      isAdmin: boolean;
+      role_permission: RolePermissionSchema;
+};
 
+export type UserInfo = {
+      id: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      domains: string[];
+      isEmailVerified: boolean;
+      hasSetPassword: boolean;
+      annotatorStatus: "approved" | "pending" | "rejected" | "submitted";
+      microTaskerStatus: "approved" | "pending" | "rejected";
+      qaStatus: "approved" | "pending" | "rejected";
+      role: string;
+      socialsFollowed: string[];
+      consent: boolean;
+      resultLink: string;
+      isAssessmentSubmitted: boolean;
+      isAdmin: boolean;
+}
+
+export type UserInfoData = AdminInfo | UserInfo;
 
 type UserInfoStates = {
   userInfo: UserInfoData | null;
   userRoleType: UserRoleType | null;
 };
-
-
 
 type UserInfoActions = {
   setUserInfo: (userInfo: UserInfoData | null) => void;
@@ -71,7 +66,7 @@ type UserInfoActions = {
   handleLogout: () => void;
 };
 
- type UserInfoStore = UserInfoStates & UserInfoActions;
+type UserInfoStore = UserInfoStates & UserInfoActions;
 
 const initialStates: UserInfoStates = {
   userInfo: null,
@@ -86,21 +81,23 @@ const useUserInfoStore = create<UserInfoStore>()(
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
 
         setIsAssessmentSubmitted: async () => {
-  
-          const userInfo = await retrieveUserInfoFromStorage();
+          const userInfo = await retrieveUserInfoFromStorage() as UserInfoData;
 
           if (userInfo && userInfo.role === "user") {
-            userInfo.isAssessmentSubmitted = true;
-          }
-    
-          await storeUserInfoToStorage(userInfo);
-    
-           set((state) => ({
-            ...state,
-            userInfo: state.userInfo?.role === "user"
-              ? { ...state.userInfo, isAssessmentSubmitted: true }
-              : state.userInfo,
-          }));
+            const updatedUserInfo: UserInfoData = {
+              ...userInfo,
+              isAssessmentSubmitted: true,
+            };
+
+            await storeUserInfoToStorage(updatedUserInfo);
+
+            set((state) => ({
+              ...state,
+              userInfo: state.userInfo?.role === "user"
+                ? { ...state.userInfo, isAssessmentSubmitted: true }
+                : state.userInfo,
+            }));
+          } 
         },
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
@@ -162,5 +159,13 @@ return  useUserInfoStore(
 )}
 
 
+const useGetUserInfo = <T extends UserRoleType>(roleType: T): RoleInfoMap<T> | null => {
+  return useUserInfoStore((state) => {
+    const data = roleType === "admin" ? state.userInfo : state.userInfo;
+    return (data as RoleInfoMap<T>) || null;
+  });
+};
+
+
 export type { UserInfoStore, UserInfoStates, UserInfoActions };
-export { useUserInfoStates, useUserInfoActions, useUserInfoStore };
+export { useUserInfoStates, useUserInfoActions, useUserInfoStore, useGetUserInfo };

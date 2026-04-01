@@ -1,15 +1,14 @@
-import { useUserInfoStates } from "../store/useAuthStore";
+import { useGetUserInfo } from "../store/useAuthStore";
 
 /**
  * RBAC Utilities for frontend permission gating.
  */
 
 export const useRBAC = () => {
-    const { userInfo } = useUserInfoStates();
-
-    const rolePermission = userInfo?.role_permission;
+    const adminInfo = useGetUserInfo("admin");
+    const rolePermission = adminInfo?.role_permission;
     const permissions = rolePermission?.permissions || [];
-    const roleName = rolePermission?.name || userInfo?.role || "";
+    const roleName = rolePermission?.name || adminInfo?.role || "";
     const isActive = rolePermission?.isActive ?? true;
 
     /**
@@ -19,7 +18,7 @@ export const useRBAC = () => {
      */
     const hasPermission = (resource: string, action: string = "view"): boolean => {
         if (!isActive) return false;
-        if (roleName === "super_admin" || userInfo?.role === "admin") return true;
+        if (roleName === "super_admin" || adminInfo?.role === "admin") return true;
 
         return permissions.some(p =>
             p.resource === resource && (p.action === action || p.action === "manage")
@@ -31,7 +30,7 @@ export const useRBAC = () => {
      */
     const hasAnyPermission = (checks: { resource: string; action?: string }[]): boolean => {
         if (!isActive) return false;
-        if (roleName === "super_admin" || userInfo?.role === "admin") return true;
+        if (roleName === "super_admin" || adminInfo?.role === "admin") return true;
 
         return checks.some(check => hasPermission(check.resource, check.action || "view"));
     };

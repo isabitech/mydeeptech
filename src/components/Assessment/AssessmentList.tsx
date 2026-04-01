@@ -9,15 +9,10 @@ import {
   Tag,
   Space,
   Empty,
-  Spin,
-  Statistic,
 } from 'antd';
 import {
   PlayCircleOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
   BookOutlined,
-  TrophyOutlined,
   HistoryOutlined,
   StarOutlined,
 } from '@ant-design/icons';
@@ -171,14 +166,14 @@ const AssessmentList: React.FC = () => {
     return 'default';
   };
 
-  const getStatusIcon = (userStatus: Assessment['userStatus']) => {
-    if (userStatus.hasAttempted) {
-      if (userStatus.passed) return <CheckCircleOutlined />;
-      if (userStatus.latestScore !== undefined && userStatus.latestScore < 60) return <ClockCircleOutlined />;
-      return <HistoryOutlined />;
-    }
-    return <BookOutlined />;
-  };
+  // const getStatusIcon = (userStatus: Assessment['userStatus']) => {
+  //   if (userStatus.hasAttempted) {
+  //     if (userStatus.passed) return <CheckCircleOutlined />;
+  //     if (userStatus.latestScore !== undefined && userStatus.latestScore < 60) return <ClockCircleOutlined />;
+  //     return <HistoryOutlined />;
+  //   }
+  //   return <BookOutlined />;
+  // };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {

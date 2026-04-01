@@ -1,10 +1,10 @@
 import React from 'react'
 import { Navigate, Outlet, useLocation,  } from 'react-router-dom';
-import { useUserInfoStates } from '../../store/useAuthStore';
+import { useGetUserInfo } from '../../store/useAuthStore';
 
 const ProtectDashboardLayout: React.FC = () => {
 
-    const { userInfo } = useUserInfoStates();
+    const userInfo = useGetUserInfo("admin");
     const location = useLocation();
 
     if (!userInfo) {

@@ -1,72 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Avatar, Button, Dropdown, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, MenuOutlined } from '@ant-design/icons';
-import { retrieveUserInfoFromStorage } from '../../helpers';
 import { Navigate, useNavigate } from 'react-router-dom';
 import useLogout from '../../hooks/useLogout';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
-import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
-import LoadingIndicator from '../LoadingIndicator';
+import { useGetUserInfo } from '../../store/useAuthStore';
 
 const { Text } = Typography;
 
-// interface UserInfo {
-//   id: string;
-//   fullName: string;
-//   email: string;
-//   phone: string;
-//   domains: string[];
-//   socialsFollowed: any[];
-//   consent: boolean;
-//   isEmailVerified: boolean;
-//   hasSetPassword: boolean;
-//   annotatorStatus: string;
-//   microTaskerStatus: string;
-//   resultLink: string;
-//   createdAt: string;
-//   updatedAt: string;
-// }
-
 const AdminHeader: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
   const { toggleSidebar } = useSidebarContext();
-  const { setUserInfo, clearUserInfo } = useUserInfoActions();
-  const { userInfo } = useUserInfoStates();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await retrieveUserInfoFromStorage();
-        if (user) {
-          setUserInfo(user);
-        }
-      } catch (error) {
-        console.error('Error loading user info in AdminHeader:', error);
-        // Only clear user info if we don't have existing user info in store
-        if (!userInfo) {
-          clearUserInfo();
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadUser();
-  }, []);
-
   const handleLogout = useLogout({ userType: 'admin' });
-
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return <LoadingIndicator />
-  }
-
+  const userInfo = useGetUserInfo("admin");
+  
   // Only redirect after we've finished loading
   if (!userInfo) {
     return <Navigate to="/auth/admin-login" replace />;
   }
-
 
   const userMenuItems = [
     {
@@ -131,7 +84,7 @@ const AdminHeader: React.FC = () => {
                 {userInfo?.fullName || 'Admin User'}
               </Text>
               <Text className="text-xs text-gray-500 leading-tight">
-                Administrator
+                {userInfo?.role || 'Administrator'}
               </Text>
             </div>
           </div>

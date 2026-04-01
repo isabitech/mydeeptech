@@ -1,7 +1,7 @@
 import { Form, Card } from "antd";
 import profileService from "../../../../services/profile-service/profile-query.js";
 import { useListAllNGNBanks } from "../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
-import { useUserInfoStates } from "../../../../store/useAuthStore";
+import { useGetUserInfo } from "../../../../store/useAuthStore";
 
 // Import custom hooks
 import { useAccountVerification } from "./hooks/useAccountVerification";
@@ -24,7 +24,7 @@ import ErrorIndicatorWithRefresh from "../../../../components/ErrorIndicatorWith
 const Profile = () => {
   const [form] = Form.useForm();
 
-  const { userInfo } = useUserInfoStates();
+  const userInfo = useGetUserInfo("user");
   // Get userId directly from userInfo
   const userId = userInfo?.id;
 
