@@ -214,16 +214,8 @@ export const useUserRoleUpdate = () => {
       const rawResponse = await axiosInstance.post(url, {});
       return apiResponseSchema.parse(rawResponse.data);
     },
-    onSuccess: (validatedResponse) => {
-      if (validatedResponse.success) {
-        message.success(validatedResponse.message || "User role updated successfully");
-        queryClient.invalidateQueries({ queryKey: rbacQueryKey.users });
-      } else {
-        message.error(validatedResponse.message || "Failed to update user role");
-      }
-    },
-    onError: (error) => {
-      message.error(error instanceof Error ? error.message : "An unexpected error occurred");
-    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: rbacQueryKey.users });
+    }
   });
 };
