@@ -15,7 +15,7 @@ const useUserNotificationQuery = (params: NotificationFiltersSchema) => {
            const result = NotificationsResponseSchema.safeParse(response.data);
            if (!result.success) {
                 const errorMessages = result.error.issues[0]?.message || "Invalid response format";
-                console.error("Notification parsing error:", errorMessages);
+                console.error("Notification Error:", errorMessages);
                 throw new Error(errorMessages);
            }
            return result.data;

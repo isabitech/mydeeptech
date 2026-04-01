@@ -12,12 +12,6 @@ const formatUserInfo = (data: LoginResponse): UserInfoData => {
     const isUser = isUserData(data);
     const raw = isUser ? (data.user) : data.admin;
 
-    console.log({
-        isUser,
-        raw,
-        data,
-    })
-
     // Base data
     const base = {
         id: raw._id || (raw as typeof raw & {id?: string}).id || '',

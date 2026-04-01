@@ -116,6 +116,10 @@ export type NotificationType =
   | 'system_alert'
   | 'system_announcement'
   | 'security_alert'
-  | 'payment_update';
+  | 'payment_update'
+  | 'support_agent_joined'
+  | 'support_reply'
+  | 'support_chat'
+  | 'support_resolved';
 
 export type Priority = 'low' | 'medium' | 'high';

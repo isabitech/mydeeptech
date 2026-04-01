@@ -248,7 +248,7 @@ const AdminChatNotifications: React.FC<AdminChatNotificationsProps> = ({ classNa
 
   return (
     <Dropdown
-      dropdownRender={() => dropdownContent}
+      popupRender={() => dropdownContent}
       trigger={['click']}
       open={isOpen}
       onOpenChange={setIsOpen}

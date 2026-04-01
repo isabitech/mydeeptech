@@ -9,6 +9,10 @@ export const NOTIFICATION_ICON_TYPES = {
   system_announcement: 'info',
   security_alert: 'exclamation',
   payment_update: 'dollar',
+  support_agent_joined: 'user',
+  support_reply: 'info',
+  support_chat: 'info',
+  support_resolved: 'safety',
 } as const;
 
 export const PRIORITY_COLOR_MAP = {
@@ -26,6 +30,10 @@ export const NOTIFICATION_COLOR_MAP = {
   system_announcement: "#1890ff",
   security_alert: "#ff4d4f",
   payment_update: "#eb2f96",
+  support_agent_joined: "#52c41a",
+  support_reply: "#1890ff",
+  support_chat: "#13c2c2",
+  support_resolved: "#52c41a",
 } as const;
 
 export const DROPDOWN_STYLES = {

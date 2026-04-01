@@ -17,6 +17,7 @@ interface NotificationDropdownProps {
 }
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isAdmin = false }) => {
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
   // React Query services  
@@ -79,7 +80,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isAdmin = f
 
   return (
     <Dropdown
-      dropdownRender={() => dropdownContent}
+      popupRender={() => dropdownContent}
       trigger={['click']}
       placement="bottomRight"
       open={dropdownOpen}

@@ -28,10 +28,10 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Notification } from "../../../../types/notification.types";
 import notificationQueryService from "../../../../services/notification-service/notification-query";
 import notificationMutationService from "../../../../services/notification-service/notification-mutation";
 import errorMessage from "../../../../lib/error-message";
+import { NotificationSchema } from "../../../../validators/notification/notification-schema";
 
 dayjs.extend(relativeTime);
 
@@ -40,16 +40,16 @@ const { Title, Text } = Typography;
 const UserNotifications: React.FC = () => {
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [viewingNotification, setViewingNotification] = useState<Notification | null>(null);
+  const [viewingNotification, setViewingNotification] = useState<NotificationSchema | null>(null);
   const [filters, setFilters] = useState({ page: 1, limit: 20 });
 
   const { notifications, isNotificationsLoading, pagination, summary, refreshNotifications, isNotificationsError, notificationsError } = notificationQueryService.useUserNotificationQuery(filters);
   const { markAsRead, isMarkAsReadLoading  } = notificationMutationService.useMarkAsReadMutation(filters);
-  const { deleteNotification, isDeleteNotificationLoading } = notificationMutationService.useDeleteNotificationMutation(filters);
+  const { isDeleteNotificationLoading } = notificationMutationService.useDeleteNotificationMutation(filters);
   const { markAllAsRead, isMarkAllAsReadLoading } = notificationMutationService.useMarkAllAsReadMutation(filters);
   const isLoading = (isNotificationsLoading || isMarkAsReadLoading || isDeleteNotificationLoading || isMarkAllAsReadLoading);
 
-  const handleViewNotification = (notification: Notification) => {
+  const handleViewNotification = (notification: NotificationSchema) => {
     setViewingNotification(notification);
     setViewModalOpen(true);
     if (!notification.isRead) {
@@ -60,18 +60,18 @@ const UserNotifications: React.FC = () => {
   const handleMarkAsRead = async (notificationId: string) => {
     if (isLoading) return;
     if(!notificationId) {
-      message.error("Invalid notification ID");
+      message.error({ content: "Invalid notification ID", key: "invalid_notification_id" });
       return;
     }
 
     markAsRead.mutate(notificationId, {
         onSuccess: () => {
-          message.success("Notification marked as read");
+          message.success({ content: "Notification marked as read", key: "mark_as_read_success" });
         },
         onError: (error) => {
           const errorMsg = errorMessage(error) || "Failed to mark notification as read";
           console.error("Error marking notification as read:", error);
-          message.error(errorMsg);
+          message.error({ content: errorMsg, key: "mark_as_read_error" });
         }
     });
   };
@@ -81,35 +81,35 @@ const UserNotifications: React.FC = () => {
     if (isLoading) return;
       markAllAsRead.mutate(undefined, {
         onSuccess: () => {
-          message.success("All notifications marked as read");
+          message.success({ content: "All notifications marked as read", key: "mark_all_as_read_success" });
           refreshNotifications();
         },
         onError: (error) => { 
            const errorMsg = errorMessage(error) || "Failed to mark all notifications as read";
           console.error("Error marking notifications as read:", error);
-          message.error(errorMsg);
+          message.error({ content: errorMsg, key: "mark_all_as_read_error" });
         }
       });
   };
 
-  const handleDeleteNotification = async (notificationId: string) => {
-    if (isLoading) return;
-    if(!notificationId) {
-      message.error("Invalid notification ID");
-      return;
-    }
-     deleteNotification.mutate(notificationId, {
-        onSuccess: () => {
-          message.success("Notification deleted successfully");
-          refreshNotifications();
-        },
-        onError: (error) => {
-          const errorMsg = errorMessage(error) || "Failed to delete notification";
-          console.error("Error deleting notification:", error);
-          message.error(errorMsg);
-        }
-    });
-  };
+  // const handleDeleteNotification = async (notificationId: string) => {
+  //   if (isLoading) return;
+  //   if(!notificationId) {
+  //     message.error({ content: "Invalid notification ID", key: "invalid_notification_id" });
+  //     return;
+  //   }
+  //    deleteNotification.mutate(notificationId, {
+  //       onSuccess: () => {
+  //         message.success({ content: "Notification deleted successfully", key: "delete_notification_success" });
+  //         refreshNotifications();
+  //       },
+  //       onError: (error) => {
+  //         const errorMsg = errorMessage(error) || "Failed to delete notification";
+  //         console.error("Error deleting notification:", error);
+  //         message.error({ content: errorMsg, key: "delete_notification_error" });
+  //       }
+  //   });
+  // };
 
   const getTypeColor = (type: string): string => {
     if (!type) return "default";
@@ -257,7 +257,7 @@ const UserNotifications: React.FC = () => {
                 },
               }}
               dataSource={notifications}
-              renderItem={(notification: Notification) => (
+              renderItem={(notification: NotificationSchema) => (
                 <List.Item
                   key={notification._id}
                   className={`${

@@ -33,7 +33,7 @@ const DomainModal: React.FC = () => {
       onCancel={handleCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       <Tabs
         activeKey={activeTab}

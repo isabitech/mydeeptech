@@ -6,6 +6,16 @@ import { useResourceCreate, useResourceUpdate } from "../../../../api/rbac/resou
 const { TextArea } = Input;
 const { Option } = Select;
 
+interface ResourceFormValues {
+  title: string;
+  link: string;
+  parent?: string;
+  icon?: string;
+  sortOrder?: number;
+  description?: string;
+  isPublished: boolean;
+}
+
 interface ResourceFormProps {
   visible: boolean;
   onCancel: () => void;
@@ -42,7 +52,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
     }
   }, [visible, editingResource, form]);
 
-  const onFinish = (values: any) => {
+  const onFinish = (values: ResourceFormValues) => {
     if (editingResource?._id) {
       updateResource(
         { id: editingResource._id, rawPayload: values },
@@ -68,7 +78,7 @@ const ResourceForm: React.FC<ResourceFormProps> = ({
       onCancel={onCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form 
         form={form}
