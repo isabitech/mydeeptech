@@ -7,25 +7,26 @@ import useLogout from '../../hooks/useLogout';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
 import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
+import LoadingIndicator from '../LoadingIndicator';
 
 const { Text } = Typography;
 
-interface UserInfo {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  domains: string[];
-  socialsFollowed: any[];
-  consent: boolean;
-  isEmailVerified: boolean;
-  hasSetPassword: boolean;
-  annotatorStatus: string;
-  microTaskerStatus: string;
-  resultLink: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// interface UserInfo {
+//   id: string;
+//   fullName: string;
+//   email: string;
+//   phone: string;
+//   domains: string[];
+//   socialsFollowed: any[];
+//   consent: boolean;
+//   isEmailVerified: boolean;
+//   hasSetPassword: boolean;
+//   annotatorStatus: string;
+//   microTaskerStatus: string;
+//   resultLink: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
 
 const AdminHeader: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -58,11 +59,7 @@ const AdminHeader: React.FC = () => {
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return (
-      <div className="bg-white shadow-sm border-b px-6 py-3 flex items-center justify-center">
-        <div className="text-sm text-gray-500">Loading...</div>
-      </div>
-    );
+    return <LoadingIndicator />
   }
 
   // Only redirect after we've finished loading
@@ -101,7 +98,7 @@ const AdminHeader: React.FC = () => {
   return (
     <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
       <div className='flex items-center gap-2'>
-        <Button className='size-8 lg:hidden rounded-sm flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
+        <Button className='size-8 lg:hidden rounded-md flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
           <MenuOutlined />
         </Button>
         <Text className="hidden lg:block text-lg font-['gilroy-semibold'] text-[#333333]">
