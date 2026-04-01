@@ -64,7 +64,12 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       <li key={node._id} className="w-full">
         <NavLink
           to={`/admin${node.link}`}
-          onClick={handleCloseSidebar}
+          onClick={() => {
+            // Only close sidebar on mobile screens
+            if (window.innerWidth < 768) {
+              handleCloseSidebar();
+            }
+          }}
           className={({ isActive }) =>
             `flex items-center gap-3 py-3 pr-4 text-sm font-medium transition-colors ${
               isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
