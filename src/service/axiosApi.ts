@@ -8,6 +8,7 @@ import { useCallback, useMemo } from "react";
 import { retrieveTokenFromStorage, RESPONSE_CODE } from "../helpers";
 import { baseURL } from "../store/api/endpoints";
 import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from "./apiUtils";
+import errorMessage from "../lib/error-message";
 
 /**
  * Global navigation callback for handling auth redirects
@@ -129,7 +130,7 @@ export const useAxiosApi = () => {
         });
         
         // Store error message for logout if it's a 401
-        let authErrorMessage = "Your session has expired. Please login again.";
+        const authErrorMessage = errorMessage(error ?? "Your session has expired. Please login again.");
 
         if (error.response?.status === 401) {
           // Skip 401 redirects for login endpoints - let them handle their own errors
@@ -140,14 +141,13 @@ export const useAxiosApi = () => {
             // For login endpoints, just pass the error through without redirecting
             console.log('Login endpoint 401 - skipping redirect, letting component handle error');
           } else {
-            // For other endpoints, extract error message and logout user 
-            const errorData = error.response?.data as any;
-            if (errorData?.message) {
-              authErrorMessage = errorData.message;
-            } else if (errorData?.error) {
-              authErrorMessage = typeof errorData.error === "string" ? errorData.error : errorData.error.message;
-            }
-
+            // For other endpoints, extract error message and logout user
+            // const errorData = error.response?.data as any;
+            // if (errorData?.message) {
+            //   authErrorMessage = errorData.message;
+            // } else if (errorData?.error) {
+            //   authErrorMessage = typeof errorData.error === "string" ? errorData.error : errorData.error.message;
+            // }
             // Use the hook's logout function for non-login endpoints
             logoutUser(authErrorMessage);
           }
@@ -166,33 +166,33 @@ export const useAxiosApi = () => {
           const { status, data } = error.response;
 
           // Extract error message from various possible API response formats
-          let errorMessage = "An error occurred";
-          let errorData = data as any;
+          const errorMsg = errorMessage(error ?? "An error occurred");
+          const errorData = data as any;
 
-          if (errorData) {
-            // Common API error formats
-            if (errorData.message) {
-              errorMessage = errorData.message;
-            } else if (errorData.error) {
-              errorMessage =
-                typeof errorData.error === "string"
-                  ? errorData.error
-                  : errorData.error.message;
-            } else if (errorData.errors) {
-              // Handle validation errors
-              if (Array.isArray(errorData.errors)) {
-                errorMessage = errorData.errors
-                  .map((err: any) => err.message || err)
-                  .join(", ");
-              } else if (typeof errorData.errors === "object") {
-                errorMessage = Object.values(errorData.errors).flat().join(", ");
-              }
-            } else if (typeof errorData === "string") {
-              errorMessage = errorData;
-            }
-          }
+          // if (errorData) {
+          //   // Common API error formats
+          //   if (errorData.message) {
+          //     errorMessage = errorData.message;
+          //   } else if (errorData.error) {
+          //     errorMessage =
+          //       typeof errorData.error === "string"
+          //         ? errorData.error
+          //         : errorData.error.message;
+          //   } else if (errorData.errors) {
+          //     // Handle validation errors
+          //     if (Array.isArray(errorData.errors)) {
+          //       errorMessage = errorData.errors
+          //         .map((err: any) => err.message || err)
+          //         .join(", ");
+          //     } else if (typeof errorData.errors === "object") {
+          //       errorMessage = Object.values(errorData.errors).flat().join(", ");
+          //     }
+          //   } else if (typeof errorData === "string") {
+          //     errorMessage = errorData;
+          //   }
+          // }
 
-          errorResponse.message = errorMessage;
+          errorResponse.message = errorMsg;
           errorResponse.status = status;
           errorResponse.data = errorData;
 
@@ -200,27 +200,27 @@ export const useAxiosApi = () => {
           switch (status) {
             case RESPONSE_CODE.unauthorized:
               errorResponse.message =
-                errorMessage || "You are not authorized to perform this action";
+                errorMsg || "You are not authorized to perform this action";
               // Optionally clear token and redirect to login
               break;
             case RESPONSE_CODE.invalidToken:
               errorResponse.message =
-                errorMessage || "Your session has expired. Please login again";
+                errorMsg || "Your session has expired. Please login again";
               // Optionally clear token and redirect to login
               break;
             case RESPONSE_CODE.badRequest:
               errorResponse.message =
-                errorMessage || "Invalid request. Please check your input";
+                errorMsg || "Invalid request. Please check your input";
               break;
             case RESPONSE_CODE.internalServerError:
               errorResponse.message =
-                errorMessage || "Server error. Please try again later";
+                errorMsg || "Server error. Please try again later";
               break;
             case RESPONSE_CODE.dataDuplication:
-              errorResponse.message = errorMessage || "Data already exists";
+              errorResponse.message = errorMsg || "Data already exists";
               break;
             default:
-              errorResponse.message = errorMessage;
+              errorResponse.message = errorMsg;
           }
         } else if (error.request) {
           // Network error
