@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, Button, Dropdown, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, MenuOutlined } from '@ant-design/icons';
 import { retrieveUserInfoFromStorage } from '../../helpers';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
 import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
@@ -29,6 +29,8 @@ interface UserInfo {
 const AdminHeader: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHvncRoute = location.pathname.startsWith('/admin/hvnc');
   const { toggleSidebar } = useSidebarContext();
   const { setUserInfo, clearUserInfo } = useUserInfoActions();
   const { userInfo } = useUserInfoStates();
@@ -110,7 +112,7 @@ const AdminHeader: React.FC = () => {
   return (
     <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
       <div className='flex items-center gap-2'>
-        <Button className='size-8 lg:hidden rounded-sm flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
+        <Button className={`size-8 rounded-sm flex items-center justify-center bg-primary text-white ${isHvncRoute ? '' : 'lg:hidden'}`} onClick={toggleSidebar}>
           <MenuOutlined />
         </Button>
         <Text className="hidden lg:block text-lg font-['gilroy-semibold'] text-[#333333]">

@@ -173,7 +173,7 @@ class EnhancedChatAPI implements IChatAPI {
 
   async getNotifications() {
     try {
-      const response = await apiGet('/api/notifications');
+      const response = await apiGet('/notifications');
       return response;
     } catch (error) {
       console.error('Failed to get notifications:', error);
@@ -194,7 +194,7 @@ class EnhancedChatAPI implements IChatAPI {
   // Bulk operations for admin
   async bulkCloseChats(ticketIds: string[], resolutionSummary: string = '') {
     try {
-      const response = await apiPost('/api/chat/admin/bulk-close', {
+      const response = await apiPost('/chat/admin/bulk-close', {
         ticketIds,
         resolutionSummary
       });
@@ -208,7 +208,7 @@ class EnhancedChatAPI implements IChatAPI {
 
   async bulkAssignAgent(ticketIds: string[], agentId: string) {
     try {
-      const response = await apiPost('/api/chat/admin/bulk-assign', {
+      const response = await apiPost('/chat/admin/bulk-assign', {
         ticketIds,
         agentId
       });

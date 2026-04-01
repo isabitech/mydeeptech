@@ -78,4 +78,51 @@
     background-size: cover;
     background-position: center; */
   /* } */
+
+/* ─── Device Users View Styling ─────────────────────────────────────────── */
+.device-users-view .users-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+  color: #262626;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.device-users-view .users-table .ant-table-tbody > tr:hover > td {
+  background-color: #f8faff;
+  cursor: pointer;
+}
+
+.device-users-view .users-table .ant-table-tbody > tr > td {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.device-users-view .device-users-tab {
+  padding: 0;
+}
+
+.device-users-view .ant-statistic-title {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.device-users-view .ant-statistic-content-value {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .device-users-view .users-table .ant-table {
+    font-size: 12px;
+  }
   
+  .device-users-view .users-table .ant-table-tbody > tr > td {
+    padding: 12px 8px;
+  }
+  
+  .device-users-view .ant-statistic-content-value {
+    font-size: 20px;
+  }
+}

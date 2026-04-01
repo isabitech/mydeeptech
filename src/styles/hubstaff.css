@@ -1,0 +1,414 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HUBSTAFF INTEGRATION STYLES
+   Custom styling for Hubstaff timer widgets and admin dashboards
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ─── Timer Widget Styling ─────────────────────────────────────────────────── */
+.hubstaff-timer-widget {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.hubstaff-timer-widget .ant-card-head {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hubstaff-timer-widget .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* ─── Active Timer Display ─────────────────────────────────────────────────── */
+.active-timer {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.status-indicator h3 {
+  color: #059669;
+  font-weight: 600;
+}
+
+.timer-display {
+  display: flex;
+  justify-content: space-around;
+  margin: 24px 0;
+  gap: 16px;
+}
+
+.timer-display > div {
+  flex: 1;
+  transition: transform 0.2s ease;
+}
+
+.timer-display > div:hover {
+  transform: translateY(-2px);
+}
+
+.time-large {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  display: block;
+  font-family: 'Monaco', 'Menlo', monospace;
+  letter-spacing: -1px;
+}
+
+.time-small {
+  font-size: 1.2rem;
+  color: #6b7280;
+  display: block;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* ─── Session Cards ────────────────────────────────────────────────────────── */
+.session-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.session-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.session-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.session-card:hover::before {
+  transform: scaleX(1);
+}
+
+.session-card .ant-card-body {
+  padding: 20px;
+}
+
+/* ─── Status Badges ────────────────────────────────────────────────────────── */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+
+.status-badge.active {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #059669;
+  border-color: #10b981;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.inactive {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
+  border-color: #ef4444;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* ─── Admin Dashboard Specific ─────────────────────────────────────────────── */
+.admin-hubstaff-dashboard {
+  min-height: 100vh;
+}
+
+.admin-hubstaff-dashboard .hubstaff-dashboard-tabs .ant-tabs-nav {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+  padding: 8px;
+}
+
+.admin-hubstaff-dashboard .hubstaff-dashboard-tabs .ant-tabs-tab {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.admin-hubstaff-dashboard .hubstaff-dashboard-tabs .ant-tabs-tab-active {
+  background: #3b82f6;
+  color: white !important;
+}
+
+.admin-hubstaff-dashboard .hubstaff-dashboard-tabs .ant-tabs-tab-active .anticon {
+  color: white !important;
+}
+
+/* ─── User Dashboard Specific ──────────────────────────────────────────────── */
+.user-hubstaff-dashboard {
+  min-height: 100vh;
+}
+
+.user-hubstaff-dashboard .main-timer-widget {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Active Sessions Grid ─────────────────────────────────────────────────── */
+.admin-active-sessions .session-card {
+  height: 100%;
+  cursor: pointer;
+}
+
+.admin-active-sessions .session-card .ant-card-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Device Utilization View ──────────────────────────────────────────────── */
+.device-utilization-view .ant-statistic-title {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.device-utilization-view .ant-statistic-content {
+  color: inherit;
+}
+
+/* ─── Responsive Design ────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .timer-display {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .time-large {
+    font-size: 2rem;
+  }
+  
+  .session-card {
+    margin-bottom: 16px;
+  }
+  
+  .hubstaff-timer-widget {
+    margin-bottom: 16px;
+  }
+  
+  .admin-hubstaff-dashboard,
+  .user-hubstaff-dashboard {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .time-large {
+    font-size: 1.5rem;
+  }
+  
+  .time-small {
+    font-size: 1rem;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
+
+/* ─── Animation Classes ────────────────────────────────────────────────────── */
+.pulse-animation {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Connection Status Indicator ───────────────────────────────────────────── */
+.connection-status {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.connection-status.connected .anticon {
+  color: #10b981;
+  animation: pulse 2s infinite;
+}
+
+.connection-status.disconnected .anticon {
+  color: #ef4444;
+}
+
+/* ─── Real-time Badge ──────────────────────────────────────────────────────── */
+.live-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+}
+
+/* ─── Gradient Backgrounds ─────────────────────────────────────────────────── */
+.gradient-blue {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #bbf7d0;
+}
+
+.gradient-orange {
+  background: linear-gradient(135deg, #fffbeb, #fed7aa);
+  border: 1px solid #fdba74;
+}
+
+.gradient-purple {
+  background: linear-gradient(135deg, #faf5ff, #e9d5ff);
+  border: 1px solid #d8b4fe;
+}
+
+/* ─── Monthly Tracking View ────────────────────────────────────────────────── */
+.monthly-tracking-view .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #262626;
+}
+
+.monthly-tracking-view .ant-statistic-title {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.monthly-tracking-view .ant-statistic-content {
+  color: inherit;
+}
+
+.monthly-tracking-view .performance-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.monthly-tracking-view .performance-badge.excellent {
+  background: #f6ffed;
+  color: #52c41a;
+  border: 1px solid #b7eb8f;
+}
+
+.monthly-tracking-view .performance-badge.good {
+  background: #fffbe6;
+  color: #faad14;
+  border: 1px solid #ffe58f;
+}
+
+.monthly-tracking-view .performance-badge.needs-improvement {
+  background: #fff2f0;
+  color: #ff4d4f;
+  border: 1px solid #ffb3a6;
+}
+
+/* ─── Color Utilities ──────────────────────────────────────────────────────── */
+.text-gold-500 {
+  color: #faad14;
+}
+
+.bg-gold-50 {
+  background-color: #fffbe6;
+}
+
+.border-gold-200 {
+  border-color: #ffe58f;
+}
+
+/* ─── Dark Mode Support (Optional) ─────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  .hubstaff-timer-widget {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .session-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .time-large {
+    color: #60a5fa;
+  }
+  
+  .time-small {
+    color: #94a3b8;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .hubstaff-timer-widget {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .session-card {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .time-large {
+    color: #60a5fa;
+  }
+  
+  .time-small {
+    color: #94a3b8;
+  }
+}

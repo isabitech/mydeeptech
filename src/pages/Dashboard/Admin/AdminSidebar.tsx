@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   HomeOutlined,
   UserOutlined,
@@ -182,6 +182,8 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
 const AdminSidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useSidebarContext();
+  const location = useLocation();
+  const isHvncRoute = location.pathname.startsWith('/admin/hvnc');
   const { clearUserInfo } = useUserInfoActions();
   const handleLogOutModal = () => {
     setOpenModal(!openModal);
@@ -212,7 +214,7 @@ const AdminSidebar = () => {
           handleLogOutModal={handleLogOutModal}
         />
       </Drawer>
-      <div className="hidden min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] lg:flex flex-col overflow-y-auto p-1">
+      <div className={`min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] flex-col overflow-y-auto p-1 ${isHvncRoute ? 'hidden' : 'hidden lg:flex'}`}>
         <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
       </div>
 

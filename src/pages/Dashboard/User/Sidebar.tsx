@@ -23,7 +23,11 @@ import PageModal from "../../../components/Modal/PageModal";
 import { Button } from "antd";
 import { retrieveUserInfoFromStorage } from "../../../helpers";
 
-const Sidebar = () => {
+interface SidebarProps {
+  forceCollapse?: boolean;
+}
+
+const Sidebar = ({ forceCollapse = false }: SidebarProps) => {
   const [openModal, setOpenModal] = useState(false);
   const [isOpen, setIsOpen] = useState(false); // for mobile toggle
   const [userInfo, setUserInfo] = useState<any>(null);
@@ -176,8 +180,8 @@ const Sidebar = () => {
 
   return (
     <div className="bg-white font-[gilroy-regular]">
-      {/* Mobile top bar */}
-      <div className="absolute top-3 left-3 lg:hidden rounded-sm flex items-center justify-center size-10  bg-primary text-white">
+      {/* Mobile top bar — always visible when forceCollapse (e.g. /dashboard/hvnc) */}
+      <div className={`absolute top-3 left-3 rounded-sm flex items-center justify-center size-10 bg-primary text-white ${forceCollapse ? '' : 'lg:hidden'}`}>
         <button onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <CloseOutlined className="text-lg" /> : <MenuOutlined className="text-lg" />}
         </button>
@@ -186,9 +190,10 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div
         className={`
-          fixed lg:static top-0 left-0 h-full bg-primary text-white w-[250px] flex flex-col
-          transform ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-          lg:translate-x-0 transition-transform duration-300 z-50 p-2
+          fixed top-0 left-0 h-full bg-primary text-white w-[250px] flex flex-col
+          transform ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          ${forceCollapse ? "" : "lg:static lg:translate-x-0"}
+          transition-transform duration-300 z-50 p-2
         `}
       >
         {/* Logo (desktop only) */}
@@ -301,10 +306,10 @@ const Sidebar = () => {
         </PageModal>
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile (or always when forceCollapse) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
+          className={`fixed inset-0 bg-black bg-opacity-40 z-40 ${forceCollapse ? "" : "lg:hidden"}`}
           onClick={() => setIsOpen(false)}
         ></div>
       )}

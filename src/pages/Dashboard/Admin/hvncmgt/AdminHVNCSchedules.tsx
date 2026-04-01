@@ -1,76 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { PlusOutlined, DownloadOutlined } from '@ant-design/icons';
-import { message, Select } from 'antd';
+import { PlusOutlined, DownloadOutlined, ReloadOutlined, CalendarOutlined } from '@ant-design/icons';
+import { message, Select, Spin, Alert } from 'antd';
 import { useAdminHVNCSchedules } from '../../../../hooks/HVNC/Admin/useAdminHVNCSchedules';
 import { useAdminHVNCDevices } from '../../../../hooks/HVNC/Admin/useAdminHVNCDevices';
+import { useAdminHVNCMultiAssignment } from '../../../../hooks/HVNC/Admin/useAdminHVNCMultiAssignment';
 import { useGetAllDtUsers } from '../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers';
+import { HVNCDeviceScheduleResponse, HVNCScheduleSlot } from '../../../../hooks/HVNC/hvnc.types';
+import dayjs from 'dayjs';
+import DeviceScheduleCalendar from '../../../../components/Admin/HVNC/DeviceScheduleCalendar';
 
 const { Option } = Select;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Shift {
-  time: string;
-  person: string;
-  device: string;
-  isPrimary: boolean;
+interface RealTimeShift {
+  timeSlot: string;
+  userName: string;
+  userEmail: string;
+  deviceName: string;
+  deviceId: string;
+  shiftId: string;
+  status: string;
+  isPrimary?: boolean;
 }
 
-interface DayColumn {
+interface RealTimeDayColumn {
   label: string;
   date: string;
+  dayName: string;
   isToday?: boolean;
   isWeekend?: boolean;
-  shifts: Shift[];
-  isEmpty?: boolean;
+  shifts: RealTimeShift[];
+  availableSlots?: string[];
 }
 
-// ─── Static Data ─────────────────────────────────────────────────────────────
-
-const weekDays: DayColumn[] = [
-  {
-    label: 'Mon', date: '02',
-    shifts: [
-      { time: '09:00 - 17:00', person: 'John Doe',     device: 'PC-ALPHA-01', isPrimary: true },
-      { time: '17:00 - 01:00', person: 'Emma Wilson',  device: 'PC-BETA-04',  isPrimary: false },
-    ],
-  },
-  {
-    label: 'Tue', date: '03',
-    shifts: [
-      { time: '09:00 - 17:00', person: 'Sarah Miller', device: 'PC-GAMMA-02', isPrimary: true },
-    ],
-    isEmpty: true, // shows the "+ Add Shift" slot after shifts
-  },
-  {
-    label: 'Wed', date: '04', isToday: true,
-    shifts: [
-      { time: '09:00 - 17:00', person: 'John Doe',    device: 'PC-ALPHA-01', isPrimary: true },
-      { time: '17:00 - 01:00', person: 'David Smith', device: 'PC-BETA-04',  isPrimary: false },
-    ],
-  },
-  {
-    label: 'Thu', date: '05',
-    shifts: [
-      { time: '09:00 - 17:00', person: 'Mike Ross', device: 'PC-DELTA-03', isPrimary: true },
-    ],
-  },
-  {
-    label: 'Fri', date: '06',
-    shifts: [
-      { time: '09:00 - 17:00', person: 'Sarah Miller', device: 'PC-GAMMA-02',   isPrimary: true },
-      { time: '01:00 - 09:00', person: 'Alex Chen',    device: 'PC-EPSILON-05', isPrimary: false },
-    ],
-  },
-  {
-    label: 'Sat', date: '07', isWeekend: true,
-    shifts: [],
-  },
-  {
-    label: 'Sun', date: '08', isWeekend: true,
-    shifts: [],
-  },
-];
+interface ScheduleOverviewData {
+  totalShifts: number;
+  activeDevices: number; 
+  totalUsers: number;
+  utilizationPercentage: number;
+}
 
 const timezones = [
   '(GMT-05:00) Eastern Time',
@@ -84,19 +53,20 @@ const DEFAULT_DAYS = [true, true, true, true, true, false, false];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const ShiftCard = ({ shift, isToday }: { shift: Shift; isToday?: boolean }) => (
+const ShiftCard = ({ shift, isToday }: { shift: RealTimeShift; isToday?: boolean }) => (
   <div
     className={`p-4 rounded-xl border-l-4 transition-all
-      ${shift.isPrimary
+      ${shift.isPrimary !== false
         ? `border-l-[#F6921E] bg-[rgba(43,43,43,0.6)] backdrop-blur-sm border border-white/5 ${isToday ? 'ring-1 ring-[#F6921E]/20' : ''}`
         : 'border-l-slate-600 bg-[rgba(43,43,43,0.6)] backdrop-blur-sm border border-white/5 opacity-80'
       }`}
   >
-    <p className={`text-[10px] font-bold uppercase mb-1 ${shift.isPrimary ? 'text-[#F6921E]' : 'text-slate-400'}`}>
-      {shift.time}
+    <p className={`text-[10px] font-bold uppercase mb-1 ${shift.isPrimary !== false ? 'text-[#F6921E]' : 'text-slate-400'}`}>
+      {shift.timeSlot}
     </p>
-    <p className="font-bold text-sm text-white">{shift.person}</p>
-    <p className="text-xs text-slate-400 mt-0.5">Device: {shift.device}</p>
+    <p className="font-bold text-sm text-white">{shift.userName}</p>
+    <p className="text-xs text-slate-400 mt-0.5">Device: {shift.deviceName}</p>
+    <p className="text-xs text-slate-500 mt-0.5">{shift.userEmail}</p>
   </div>
 );
 
@@ -106,6 +76,16 @@ type ViewMode = 'Month' | 'Week' | 'Day';
 
 const AdminHVNCSchedules: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
+  const [currentWeek, setCurrentWeek] = useState(0);
+  const [selectedDevice, setSelectedDevice] = useState<string>('');
+  const [allSchedules, setAllSchedules] = useState<Record<string, HVNCDeviceScheduleResponse>>({});
+  const [weekDays, setWeekDays] = useState<RealTimeDayColumn[]>([]);
+  const [overviewData, setOverviewData] = useState<ScheduleOverviewData>({
+    totalShifts: 0,
+    activeDevices: 0,
+    totalUsers: 0,
+    utilizationPercentage: 0
+  });
   const [recurringDays, setRecurringDays] = useState<boolean[]>(DEFAULT_DAYS);
   const [formUser, setFormUser] = useState('');
   const [formDevice, setFormDevice] = useState('');
@@ -129,6 +109,11 @@ const AdminHVNCSchedules: React.FC = () => {
   } = useAdminHVNCDevices();
 
   const {
+    getDeviceSchedule,
+    loading: scheduleLoading,
+  } = useAdminHVNCMultiAssignment();
+
+  const {
     getAllDTUsers,
     loading: dtUsersLoading,
     users: dtUsers,
@@ -149,8 +134,16 @@ const AdminHVNCSchedules: React.FC = () => {
   useEffect(() => {
     getAllDevices();
     loadDTUsers();
+    loadAllSchedules();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentWeek]);
+
+  useEffect(() => {
+    if (devices.length > 0) {
+      loadAllSchedules();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devices]);
 
   const loadDTUsers = async () => {
     try {
@@ -161,6 +154,118 @@ const AdminHVNCSchedules: React.FC = () => {
     } catch (error) {
       console.error('Failed to load DTUsers:', error);
     }
+  };
+
+  const loadAllSchedules = async () => {
+    try {
+      const schedulePromises = devices.map(async (device) => {
+        const result = await getDeviceSchedule(device.id.toString(), currentWeek, true);
+        return {
+          deviceId: device.id.toString(),
+          schedule: result.success ? result.data! : null,
+        };
+      });
+
+      const scheduleResults = await Promise.all(schedulePromises);
+      const newSchedules: Record<string, HVNCDeviceScheduleResponse> = {};
+      
+      scheduleResults.forEach(({ deviceId, schedule }) => {
+        if (schedule) {
+          newSchedules[deviceId] = schedule;
+        }
+      });
+
+      setAllSchedules(newSchedules);
+      generateWeekView(newSchedules);
+      calculateOverviewData(newSchedules);
+    } catch (error) {
+      console.error('Failed to load schedules:', error);
+    }
+  };
+
+  const generateWeekView = (schedules: Record<string, HVNCDeviceScheduleResponse>) => {
+    const baseDate = dayjs().add(currentWeek, 'week');
+    const startOfWeek = baseDate.startOf('week');
+    
+    const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    const newWeekDays: RealTimeDayColumn[] = DAYS_OF_WEEK.map((dayName, index) => {
+      const currentDate = startOfWeek.add(index, 'day');
+      const isToday = currentDate.isSame(dayjs(), 'day');
+      const isWeekend = index >= 5; // Saturday, Sunday
+      
+      // Collect all shifts for this day from all devices
+      const shifts: RealTimeShift[] = [];
+      
+      Object.values(schedules).forEach(schedule => {
+        const daySchedule = schedule.schedule[dayName] || [];
+        daySchedule.forEach(slot => {
+          shifts.push({
+            timeSlot: slot.timeSlot,
+            userName: slot.userName,
+            userEmail: slot.userEmail,
+            deviceName: schedule.deviceName,
+            deviceId: schedule.deviceId,
+            shiftId: slot.shiftId,
+            status: slot.status,
+            isPrimary: slot.status === 'active'
+          });
+        });
+      });
+
+      // Sort shifts by time
+      shifts.sort((a, b) => {
+        const timeA = a.timeSlot.split('-')[0];
+        const timeB = b.timeSlot.split('-')[0];
+        return timeA.localeCompare(timeB);
+      });
+
+      return {
+        label: dayName.slice(0, 3),
+        date: currentDate.format('DD'),
+        dayName,
+        isToday,
+        isWeekend,
+        shifts,
+      };
+    });
+
+    setWeekDays(newWeekDays);
+  };
+
+  const calculateOverviewData = (schedules: Record<string, HVNCDeviceScheduleResponse>) => {
+    let totalShifts = 0;
+    let totalUtilization = 0;
+    const activeDevices = Object.keys(schedules).length;
+    const uniqueUsers = new Set<string>();
+
+    Object.values(schedules).forEach(schedule => {
+      Object.values(schedule.schedule).forEach(daySchedule => {
+        totalShifts += daySchedule.length;
+        daySchedule.forEach(slot => {
+          uniqueUsers.add(slot.userEmail);
+        });
+      });
+      
+      if (schedule.utilizationStats) {
+        totalUtilization += schedule.utilizationStats.utilizationPercentage;
+      }
+    });
+
+    setOverviewData({
+      totalShifts,
+      activeDevices,
+      totalUsers: uniqueUsers.size,
+      utilizationPercentage: activeDevices > 0 ? totalUtilization / activeDevices : 0
+    });
+  };
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    setCurrentWeek(prev => direction === 'next' ? prev + 1 : prev - 1);
+  };
+
+  const refreshSchedules = () => {
+    loadAllSchedules();
   };
 
   const toggleDay = (idx: number) => {
@@ -228,9 +333,33 @@ const AdminHVNCSchedules: React.FC = () => {
       >
         <h1 className="text-base font-extrabold tracking-tight uppercase text-white">
           Shift Scheduling{' '}
-          <span className="text-[#F6921E] ml-2">— March 2026</span>
+          <span className="text-[#F6921E] ml-2">— {dayjs().add(currentWeek, 'week').format('MMMM YYYY')}</span>
         </h1>
         <div className="flex items-center gap-4">
+          {/* Week Navigation */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigateWeek('prev')}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition-colors"
+              title="Previous Week"
+            >
+              ←
+            </button>
+            <span className="text-sm text-slate-300 min-w-[100px] text-center">
+              {currentWeek === 0 ? 'This Week' : 
+               currentWeek === -1 ? 'Last Week' : 
+               currentWeek === 1 ? 'Next Week' : 
+               `${currentWeek > 0 ? '+' : ''}${currentWeek} weeks`}
+            </span>
+            <button
+              onClick={() => navigateWeek('next')}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition-colors"
+              title="Next Week"
+            >
+              →
+            </button>
+          </div>
+
           {/* View Toggle */}
           <div className="flex bg-slate-800/50 p-1 rounded-lg">
             {(['Month', 'Week', 'Day'] as ViewMode[]).map((v) => (
@@ -246,6 +375,17 @@ const AdminHVNCSchedules: React.FC = () => {
               </button>
             ))}
           </div>
+          
+          <button
+            onClick={refreshSchedules}
+            disabled={scheduleLoading}
+            className="flex items-center gap-2 bg-[#333333] text-slate-100 px-4 py-2 rounded-lg text-sm
+              font-bold border border-slate-700 hover:bg-slate-800 transition-all disabled:opacity-50"
+          >
+            <ReloadOutlined className={scheduleLoading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
+          
           <button
             className="flex items-center gap-2 bg-[#333333] text-slate-100 px-4 py-2 rounded-lg text-sm
               font-bold border border-slate-700 hover:bg-slate-800 transition-all"
@@ -260,52 +400,82 @@ const AdminHVNCSchedules: React.FC = () => {
       {/* ── Scrollable Body ─────────────────────────────────────────── */}
       <div className="p-6 space-y-6">
 
+        {/* ── Overview Stats ──────────────────────────────────────── */}
+        <section className="grid grid-cols-4 gap-4">
+          <div className="bg-[#333333] p-4 rounded-xl border border-white/10">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Total Shifts</p>
+            <p className="text-2xl font-black text-[#F6921E] leading-none">{overviewData.totalShifts}</p>
+          </div>
+          <div className="bg-[#333333] p-4 rounded-xl border border-white/10">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Active Devices</p>
+            <p className="text-2xl font-black text-white leading-none">{overviewData.activeDevices}</p>
+          </div>
+          <div className="bg-[#333333] p-4 rounded-xl border border-white/10">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Total Users</p>
+            <p className="text-2xl font-black text-white leading-none">{overviewData.totalUsers}</p>
+          </div>
+          <div className="bg-[#333333] p-4 rounded-xl border border-white/10">
+            <p className="text-slate-400 text-xs uppercase font-bold mb-2">Avg Utilization</p>
+            <p className="text-2xl font-black text-green-400 leading-none">{overviewData.utilizationPercentage.toFixed(1)}%</p>
+          </div>
+        </section>
+
         {/* ── Weekly Calendar ──────────────────────────────────────── */}
         <section className="space-y-3">
-          {/* Day Headers */}
-          <div className="grid grid-cols-7 gap-4">
-            {weekDays.map((day) => (
-              <div
-                key={day.label + day.date}
-                className={`text-center text-xs font-black uppercase tracking-widest
-                  ${day.isToday ? 'text-[#F6921E]' : day.isWeekend ? 'text-slate-700' : 'text-slate-500'}`}
-              >
-                {day.label} {day.date}
+          {scheduleLoading || devicesLoading ? (
+            <div className="flex items-center justify-center h-64 bg-[#333333] rounded-xl">
+              <div className="text-center">
+                <Spin size="large" />
+                <p className="text-slate-400 mt-4">Loading schedules...</p>
               </div>
-            ))}
-          </div>
-
-          {/* Day Columns */}
-          <div className="grid grid-cols-7 gap-4 min-h-[420px]">
-            {weekDays.map((day) => (
-              <div
-                key={day.label + day.date + 'col'}
-                className={`space-y-3 ${day.isToday ? 'bg-white/5 rounded-2xl p-2 -mx-1' : ''}`}
-              >
-                {day.isWeekend ? (
-                  /* Weekend placeholder */
-                  <div className="border border-slate-800 p-4 rounded-xl bg-slate-800/20 opacity-60 h-full flex flex-col">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Off-Peak</p>
-                    <p className="font-bold text-sm text-slate-500 italic text-center py-6">No Shifts Scheduled</p>
+            </div>
+          ) : (
+            <>
+              {/* Day Headers */}
+              <div className="grid grid-cols-7 gap-4">
+                {weekDays.map((day) => (
+                  <div
+                    key={day.label + day.date}
+                    className={`text-center text-xs font-black uppercase tracking-widest
+                      ${day.isToday ? 'text-[#F6921E]' : day.isWeekend ? 'text-slate-700' : 'text-slate-500'}`}
+                  >
+                    {day.label} {day.date}
                   </div>
-                ) : (
-                  <>
-                    {day.shifts.map((shift, idx) => (
-                      <ShiftCard key={idx} shift={shift} isToday={day.isToday} />
-                    ))}
-                    {/* Add Shift slot for Tuesday */}
-                    {day.isEmpty && (
-                      <div className="bg-[#F6921E]/5 border border-dashed border-[#F6921E]/30 rounded-xl flex items-center justify-center py-8">
-                        <button className="text-[#F6921E] text-xs font-bold hover:underline flex items-center gap-1">
-                          <PlusOutlined className="text-xs" /> Add Shift
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
+
+              {/* Day Columns */}
+              <div className="grid grid-cols-7 gap-4 min-h-[420px]">
+                {weekDays.map((day) => (
+                  <div
+                    key={day.label + day.date + 'col'}
+                    className={`space-y-3 ${day.isToday ? 'bg-white/5 rounded-2xl p-2 -mx-1' : ''}`}
+                  >
+                    {day.isWeekend ? (
+                      /* Weekend placeholder */
+                      <div className="border border-slate-800 p-4 rounded-xl bg-slate-800/20 opacity-60 h-full flex flex-col">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Off-Peak</p>
+                        <p className="font-bold text-sm text-slate-500 italic text-center py-6">No Shifts Scheduled</p>
+                      </div>
+                    ) : day.shifts.length === 0 ? (
+                      /* Empty day */
+                      <div className="border border-dashed border-slate-600 p-4 rounded-xl h-full flex flex-col items-center justify-center">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Available</p>
+                        <p className="font-bold text-sm text-slate-500 text-center">No Shifts</p>
+                        <CalendarOutlined className="text-slate-600 text-lg mt-2" />
+                      </div>
+                    ) : (
+                      <>
+                        {day.shifts.map((shift, idx) => (
+                          <ShiftCard key={idx} shift={shift} isToday={day.isToday} />
+                        ))}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* ── Create New Shift Form ─────────────────────────────────── */}

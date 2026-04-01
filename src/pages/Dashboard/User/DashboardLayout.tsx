@@ -1,11 +1,13 @@
 import Sidebar from "./Sidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { retrieveTokenFromStorage } from "../../../helpers";
 import { useState, useEffect } from "react";
 import UserHeader from "./UserHeader";
 
 
 const DashboardLayout = () => {
+  const location = useLocation();
+  const isHvncRoute = location.pathname.startsWith('/dashboard/hvnc');
   const [token, setToken] = useState<string>('');
 
   useEffect(() => {
@@ -25,7 +27,7 @@ const DashboardLayout = () => {
   return (
       <>
       <div className="flex h-screen w-full">
-         <Sidebar />
+         <Sidebar forceCollapse={isHvncRoute} />
         <div className="grid grid-rows-[auto_1fr] grid-cols-1 w-full">
          <UserHeader />
           {/* Main Content */}

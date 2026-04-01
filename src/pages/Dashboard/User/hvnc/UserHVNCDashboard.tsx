@@ -11,6 +11,7 @@ import {
   DisconnectOutlined,
   CalendarOutlined,
   SettingOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { Card, Row, Col, Statistic, Table, Tag, Button, Avatar, Spin, Alert } from 'antd';
 import { useUserHVNCPortal } from '../../../../hooks/HVNC/User/useUserHVNCPortal';
@@ -53,6 +54,7 @@ const UserHVNCDashboard: React.FC<Props> = ({ onJoinSession }) => {
   } = useUserHVNCPortal();
 
   const [deviceLoading, setDeviceLoading] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     initializeDashboard();
@@ -67,6 +69,17 @@ const UserHVNCDashboard: React.FC<Props> = ({ onJoinSession }) => {
       ]);
     } catch (error) {
       console.error('Failed to load dashboard:', error);
+    }
+  };
+
+  const handleRefreshDevices = async () => {
+    setRefreshing(true);
+    try {
+      await getDevices();
+    } catch (error) {
+      console.error('Failed to refresh devices:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -288,9 +301,20 @@ const UserHVNCDashboard: React.FC<Props> = ({ onJoinSession }) => {
       {/* Devices Table */}
       <Card
         title={
-          <div className="flex items-center gap-2 text-white">
-            <DesktopOutlined className="text-[#F6921E]" />
-            <span>Assigned Devices</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white">
+              <DesktopOutlined className="text-[#F6921E]" />
+              <span>Assigned Devices</span>
+            </div>
+            <Button
+              icon={<ReloadOutlined spin={refreshing} />}
+              loading={refreshing}
+              onClick={handleRefreshDevices}
+              size="small"
+              className="bg-[#333333] text-white border-slate-600 hover:bg-slate-700"
+            >
+              Refresh
+            </Button>
           </div>
         }
         className="bg-[#2a2a2a] border-slate-700 mb-8"

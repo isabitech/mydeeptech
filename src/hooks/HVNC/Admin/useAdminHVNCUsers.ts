@@ -6,6 +6,9 @@ import {
   HVNCAssignedDevice,
   HVNCUserLog,
   HVNCOperationResult,
+  HVNCAssignDevicePayload,
+  HVNCAssignDeviceResponse,
+  HVNCUserSession,
 } from "../hvnc.types";
 
 export const useAdminHVNCUsers = () => {
@@ -14,6 +17,7 @@ export const useAdminHVNCUsers = () => {
   const [users, setUsers] = useState<HVNCUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<HVNCUser | null>(null);
   const [userLogs, setUserLogs] = useState<HVNCUserLog[]>([]);
+  const [userSessions, setUserSessions] = useState<HVNCUserSession[]>([]);
 
   const getAllUsers = useCallback(
     async (filters?: {
@@ -287,6 +291,87 @@ export const useAdminHVNCUsers = () => {
     []
   );
 
+  // ── POST /users/:userId/assign-device (new schedule format) ─────────────────
+  const assignDeviceWithSchedule = useCallback(
+    async (
+      userId: number | string,
+      payload: HVNCAssignDevicePayload
+    ): Promise<HVNCOperationResult<HVNCAssignDeviceResponse>> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `${endpoints.adminHVNC.assignDeviceWithSchedule}/${userId}/assign-device`;
+        const data = await apiPost<{ success?: boolean; data?: HVNCAssignDeviceResponse } & HVNCAssignDeviceResponse>(
+          url,
+          payload
+        );
+        const result: HVNCAssignDeviceResponse = (data as any).data ?? data;
+        return { success: true, data: result };
+      } catch (err: any) {
+        const msg = getErrorMessage(err);
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // ── DELETE /users/:userId/remove-device/:deviceId ────────────────────────────
+  const removeDevice = useCallback(
+    async (userId: number | string, deviceId: string): Promise<HVNCOperationResult> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `${endpoints.adminHVNC.removeDevice}/${userId}/remove-device/${deviceId}`;
+        const data = await apiDelete(url);
+        // Remove from selectedUser assigned devices
+        if (selectedUser?.id === userId) {
+          setSelectedUser((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  assignedDevices: (prev.assignedDevices ?? []).filter((d) => d.id !== deviceId),
+                  deviceCount: Math.max((prev.deviceCount ?? 1) - 1, 0),
+                }
+              : prev
+          );
+        }
+        return { success: true, data };
+      } catch (err: any) {
+        const msg = getErrorMessage(err);
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedUser]
+  );
+
+  // ── GET /users/:userId/sessions ──────────────────────────────────────────────
+  const getUserSessions = useCallback(
+    async (userId: number | string): Promise<HVNCOperationResult<HVNCUserSession[]>> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `${endpoints.adminHVNC.getUserSessions}/${userId}/sessions`;
+        const data = await apiGet<{ success?: boolean; sessions?: HVNCUserSession[]; data?: { sessions: HVNCUserSession[] } }>(url);
+        const sessions = data.sessions ?? data.data?.sessions ?? [];
+        setUserSessions(sessions);
+        return { success: true, data: sessions };
+      } catch (err: any) {
+        const msg = getErrorMessage(err);
+        setError(msg);
+        return { success: false, error: msg };
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   return {
     // State
     loading,
@@ -294,6 +379,7 @@ export const useAdminHVNCUsers = () => {
     users,
     selectedUser,
     userLogs,
+    userSessions,
     // Actions
     getAllUsers,
     getUserById,
@@ -305,6 +391,9 @@ export const useAdminHVNCUsers = () => {
     assignDevice,
     unassignDevice,
     getUserLogs,
+    assignDeviceWithSchedule,
+    removeDevice,
+    getUserSessions,
     // State setters
     setSelectedUser,
     setUsers,

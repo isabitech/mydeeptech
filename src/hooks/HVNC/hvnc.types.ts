@@ -196,6 +196,181 @@ export interface HVNCUserLog {
   status: string;
 }
 
+// ─── DTUser (Enhanced User Management) ───────────────────────────────────────
+
+export interface HVNCDTUser {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  role: string;
+  isActive: boolean;
+  metadata?: {
+    department?: string;
+    position?: string;
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HVNCDTUserListResponse {
+  users: HVNCDTUser[];
+  totalUsers: number;
+  totalPages: number;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface HVNCDTUserFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+}
+
+// ─── Single User Device Assignment (new format) ───────────────────────────────
+
+export interface HVNCAssignDevicePayload {
+  deviceId: string;
+  startTime: string;
+  endTime: string;
+  assignedDays: string[];
+}
+
+export interface HVNCAssignDeviceResponse {
+  shiftId: string;
+  userId: string;
+  deviceId: string;
+  startTime: string;
+  endTime: string;
+  assignedDays: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface HVNCTimeConflict {
+  day: string;
+  conflictStart: string;
+  conflictEnd: string;
+  existingUser: {
+    name: string;
+    email: string;
+    timeSlot: string;
+  };
+}
+
+// ─── Multi-User Device Assignment ─────────────────────────────────────────────
+
+export interface HVNCUserAssignmentInput {
+  userId: string;
+  startTime: string;
+  endTime: string;
+  assignedDays: string[];
+}
+
+export interface HVNCAssignmentSuccess {
+  userId: string;
+  shiftId: string;
+  message: string;
+}
+
+export interface HVNCAssignmentFailure {
+  userId: string;
+  error: string;
+  conflicts?: HVNCTimeConflict[];
+}
+
+export interface HVNCBulkAssignmentResult {
+  deviceId: string;
+  successfulAssignments: HVNCAssignmentSuccess[];
+  failedAssignments: HVNCAssignmentFailure[];
+  totalSuccessful: number;
+  totalFailed: number;
+}
+
+// ─── Device Users ─────────────────────────────────────────────────────────────
+
+export interface HVNCShiftDetails {
+  shiftId: string;
+  startTime: string;
+  endTime: string;
+  assignedDays: string[];
+  isActive: boolean;
+}
+
+export interface HVNCDeviceUserEntry {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  shiftDetails: HVNCShiftDetails;
+}
+
+export interface HVNCDeviceUsersResponse {
+  deviceId: string;
+  deviceName: string;
+  assignedUsers: HVNCDeviceUserEntry[];
+  totalAssignedUsers: number;
+}
+
+// ─── Device Schedule ──────────────────────────────────────────────────────────
+
+export interface HVNCScheduleSlot {
+  timeSlot: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  shiftId: string;
+  status: string;
+}
+
+export interface HVNCWeekInfo {
+  startDate: string;
+  endDate: string;
+  weekNumber: number;
+}
+
+export interface HVNCUtilizationStats {
+  totalHoursScheduled: number;
+  totalHoursAvailable: number;
+  utilizationPercentage: number;
+  busyDays: string[];
+  availableDays: string[];
+  peakUsageDay: string;
+  peakUsageHours: number;
+}
+
+export interface HVNCAvailableTimeSlot {
+  day: string;
+  availableSlots: string[];
+}
+
+export interface HVNCDeviceScheduleResponse {
+  deviceId: string;
+  deviceName: string;
+  weekInfo: HVNCWeekInfo;
+  schedule: Record<string, HVNCScheduleSlot[]>;
+  utilizationStats: HVNCUtilizationStats;
+  availableTimeSlots: HVNCAvailableTimeSlot[];
+}
+
+// ─── User Session History ─────────────────────────────────────────────────────
+
+export interface HVNCUserSession {
+  id: string;
+  deviceId: string;
+  deviceName: string;
+  startTime: string;
+  endTime?: string;
+  duration?: string;
+  status: string;
+  createdAt: string;
+}
+
 // ─── User Session ─────────────────────────────────────────────────────────────
 
 export interface HVNCValidateResponse {

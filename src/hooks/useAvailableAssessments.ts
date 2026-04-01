@@ -44,7 +44,7 @@ export const useAvailableAssessments = () => {
     setError(null);
 
     try {
-      const response = await apiGet('/api/assessments/available');
+      const response = await apiGet('/assessments/available');
       
       if (response.success) {
         setAssessments(response.data || []);

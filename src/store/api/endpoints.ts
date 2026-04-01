@@ -251,6 +251,16 @@ export const endpoints = {
     assignDevice: "/hvnc/admin/users",           // + /:userId/devices
     unassignDevice: "/hvnc/admin/users",         // + /:userId/devices/:deviceId
     getUserLogs: "/hvnc/admin/users",            // + /:userId/logs
+
+    // Enhanced User Management (new format)
+    assignDeviceWithSchedule: "/hvnc/admin/users", // + /:userId/assign-device
+    removeDevice: "/hvnc/admin/users",             // + /:userId/remove-device/:deviceId
+    getUserSessions: "/hvnc/admin/users",          // + /:userId/sessions
+
+    // Multi-User Device Assignment (NEW)
+    getDeviceUsers: "/hvnc/admin/devices",         // + /:deviceId/users
+    assignMultipleUsers: "/hvnc/admin/devices",    // + /:deviceId/assign-multiple-users
+    getDeviceSchedule: "/hvnc/admin/devices",      // + /:deviceId/schedule
   },
 
   // User HVNC endpoints

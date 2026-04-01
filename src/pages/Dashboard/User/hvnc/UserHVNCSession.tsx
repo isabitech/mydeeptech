@@ -22,6 +22,10 @@ import {
   LoadingOutlined,
   WifiOutlined,
   DisconnectOutlined,
+  SoundOutlined,
+  AudioMutedOutlined,
+  FullscreenOutlined,
+  FullscreenExitOutlined,
 } from '@ant-design/icons';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -86,16 +90,155 @@ const UserHVNCSession: React.FC<Props> = ({
   const [activeNav, setActiveNav] = useState('Sessions');
 
   // ── Socket / stream state ────────────────────────────────────────────────────
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const socketRef    = useRef<Socket | null>(null);
+  const canvasRef            = useRef<HTMLCanvasElement>(null);
+  const cursorCanvasRef      = useRef<HTMLCanvasElement>(null);
+  const socketRef            = useRef<Socket | null>(null);
+  const sessionContainerRef  = useRef<HTMLDivElement>(null);
+  const canvasContainerRef   = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isConnected,      setIsConnected]      = useState(false);
   const [isStreaming,      setIsStreaming]       = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>('Connecting...');
   const [remoteSession,    setRemoteSession]     = useState<RemoteSessionInfo | null>(null);
   const [streamQuality,    setStreamQuality]     = useState(70);
+
+  // ── Reconnect state ───────────────────────────────────────────────────────
+  const [reconnectKey,      setReconnectKey]      = useState(0);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [isReconnecting,    setIsReconnecting]    = useState(false);
   const [streamStats, setStreamStats] = useState<StreamStats>({
     fps: 0, frameCount: 0, lastFrameTime: 0, avgFrameSize: 0,
   });
+
+  // ── Audio refs (no re-render needed) ─────────────────────────────────────────
+  const audioCtxRef     = useRef<AudioContext | null>(null);
+  const nextPlayTimeRef = useRef<number>(0);
+  const isMutedRef      = useRef<boolean>(false);
+  const gainNodeRef     = useRef<GainNode | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [audioActive, setAudioActive] = useState(false);
+
+  // ── Stream stats refs — updated every frame, state flushed once/sec ──────────
+  const frameCountRef      = useRef<number>(0);
+  const lastFrameTimeRef   = useRef<number>(0);
+  const lastFrameSizeRef   = useRef<number>(0);
+  const statsFlushTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── H.264 WebCodecs decoder refs ──────────────────────────────────────────
+  const decoderRef       = useRef<any>(null);
+  const decoderWidthRef  = useRef<number>(0);
+  const decoderHeightRef = useRef<number>(0);
+
+  // ── Local cursor overlay — instant feedback, no server round-trip ────────────
+  const drawLocalCursor = useCallback((displayX: number, displayY: number) => {
+    const cc = cursorCanvasRef.current;
+    if (!cc) return;
+
+    // Keep overlay pixel buffer = display size for 1:1 coord mapping
+    const videoCanvas = canvasRef.current;
+    if (videoCanvas) {
+      const r = videoCanvas.getBoundingClientRect();
+      if (cc.width !== r.width || cc.height !== r.height) {
+        cc.width  = r.width;
+        cc.height = r.height;
+      }
+    }
+
+    const ctx = cc.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, cc.width, cc.height);
+
+    // Classic arrow cursor (white fill, black 1px outline)
+    ctx.save();
+    ctx.translate(displayX, displayY);
+    ctx.beginPath();
+    ctx.moveTo(0,    0);
+    ctx.lineTo(0,    16);
+    ctx.lineTo(4,    12);
+    ctx.lineTo(6.5,  17);
+    ctx.lineTo(8,    16.5);
+    ctx.lineTo(5.5,  11);
+    ctx.lineTo(10,   11);
+    ctx.closePath();
+    ctx.fillStyle   = 'white';
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth   = 1.2;
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }, []);
+
+  const clearLocalCursor = useCallback(() => {
+    const cc = cursorCanvasRef.current;
+    if (!cc) return;
+    cc.getContext('2d')?.clearRect(0, 0, cc.width, cc.height);
+  }, []);
+
+  // ── Audio: initialise / resume AudioContext on first user gesture ────────────
+  const ensureAudioContext = useCallback(() => {
+    if (!audioCtxRef.current) {
+      const ctx  = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const gain = ctx.createGain();
+      gain.gain.value = isMutedRef.current ? 0 : 1;
+      gain.connect(ctx.destination);
+      audioCtxRef.current = ctx;
+      gainNodeRef.current = gain;
+      setAudioActive(true);
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+  }, []);
+
+  // ── Audio: decode and schedule incoming PCM chunks ────────────────────────
+  const handleAudioFrame = useCallback((frameData: {
+    data: string;
+    sample_rate?: number;
+    channels?: number;
+  }) => {
+    if (!frameData?.data || !audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
+    if (ctx.state === 'suspended') ctx.resume();
+
+    try {
+      const binary = atob(frameData.data);
+      const bytes  = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+      const sampleRate   = frameData.sample_rate ?? 44100;
+      const channels     = frameData.channels    ?? 2;
+      const int16        = new Int16Array(bytes.buffer);
+      const samplesPerCh = Math.floor(int16.length / channels);
+      if (samplesPerCh === 0) return;
+
+      const audioBuf = ctx.createBuffer(channels, samplesPerCh, sampleRate);
+      for (let c = 0; c < channels; c++) {
+        const ch = audioBuf.getChannelData(c);
+        for (let i = 0; i < samplesPerCh; i++) {
+          ch[i] = int16[i * channels + c] / 32768;
+        }
+      }
+
+      const now  = ctx.currentTime;
+      const when = Math.max(now + 0.05, nextPlayTimeRef.current);
+      const src  = ctx.createBufferSource();
+      src.buffer = audioBuf;
+      src.connect(gainNodeRef.current!);
+      src.start(when);
+      nextPlayTimeRef.current = when + audioBuf.duration;
+    } catch {
+      // Malformed chunk — skip silently
+    }
+  }, []);
+
+  // ── Audio: mute toggle ────────────────────────────────────────────────────
+  const toggleMute = () => {
+    isMutedRef.current = !isMutedRef.current;
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = isMutedRef.current ? 0 : 1;
+    }
+    setIsMuted(isMutedRef.current);
+  };
 
   // ── Hubstaff + session timers ─────────────────────────────────────────────
   useEffect(() => {
@@ -106,33 +249,154 @@ const UserHVNCSession: React.FC<Props> = ({
     return () => clearInterval(timer);
   }, [hubstaffPaused]);
 
-  // ── Screen frame handler ──────────────────────────────────────────────────
-  const handleScreenFrame = useCallback((frameData: { data: string; format?: string }) => {
-    if (!frameData?.data) return;
+  // ── H.264 WebCodecs: create / reinit decoder ─────────────────────────────
+  const createDecoder = useCallback((width: number, height: number) => {
+    if (decoderRef.current) {
+      try { decoderRef.current.close(); } catch {}
+      decoderRef.current = null;
+    }
+    decoderWidthRef.current  = width;
+    decoderHeightRef.current = height;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width  = width;
+      canvas.height = height;
+    }
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const img = new Image();
-    img.onload = () => {
-      canvas.width  = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      setIsStreaming(true);
+    const decoder = new (window as any).VideoDecoder({
+      output: (videoFrame: any) => {
+        ctx.drawImage(videoFrame, 0, 0, canvas.width, canvas.height);
+        videoFrame.close();
+        setIsStreaming((prev) => { if (!prev) return true; return prev; });
+        const now = Date.now();
+        if (now - lastFrameTimeRef.current > 0) {
+          frameCountRef.current   += 1;
+          lastFrameTimeRef.current = now;
+        }
+      },
+      error: (e: Error) => {
+        console.error('[VideoDecoder] error:', e);
+        try { decoderRef.current?.close(); } catch {}
+        decoderRef.current = null;
+      },
+    });
+
+    decoder.configure({
+      codec:                 'avc1.42001f', // H.264 Baseline Level 3.1
+      codedWidth:            width,
+      codedHeight:           height,
+      hardwareAcceleration:  'prefer-hardware',
+      optimizeForLatency:    true,
+    });
+
+    decoderRef.current = decoder;
+  }, []);
+
+  // Cleanup decoder on unmount
+  useEffect(() => () => {
+    try { decoderRef.current?.close(); } catch {}
+    decoderRef.current = null;
+  }, []);
+
+  // ── Screen frame handler — H.264 (WebCodecs) + JPEG fallback ─────────────
+  const handleScreenFrame = useCallback((frameData: {
+    data:       string;
+    format?:    string;
+    keyframe?:  boolean;
+    width?:     number;
+    height?:    number;
+    timestamp?: number;
+  }) => {
+    if (!frameData?.data) return;
+
+    // ── H.264 path ────────────────────────────────────────────────────────
+    if (frameData.format === 'h264') {
+      if (!('VideoDecoder' in window)) return; // browser doesn't support WebCodecs
+
+      const isKey  = !!frameData.keyframe;
+      const width  = frameData.width  ?? decoderWidthRef.current;
+      const height = frameData.height ?? decoderHeightRef.current;
+
+      // Init or reinit when dimensions change — must start on a keyframe
+      if (!decoderRef.current || decoderRef.current.state === 'closed'
+          || decoderWidthRef.current !== width || decoderHeightRef.current !== height) {
+        if (!isKey) return;
+        createDecoder(width, height);
+      }
+
+      try {
+        const binary = atob(frameData.data);
+        const bytes  = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        decoderRef.current!.decode(new (window as any).EncodedVideoChunk({
+          type:      isKey ? 'key' : 'delta',
+          timestamp: (frameData.timestamp ?? 0) * 1000, // ms → µs
+          data:      bytes,
+        }));
+
+        lastFrameSizeRef.current = Math.round((frameData.data.length * 3) / 4);
+      } catch (e) {
+        console.warn('[VideoDecoder] decode error — waiting for next keyframe', e);
+        try { decoderRef.current?.close(); } catch {}
+        decoderRef.current = null;
+      }
+      return;
+    }
+
+    // ── JPEG fallback path (createImageBitmap — no DOM overhead) ─────────
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const byteStr = atob(frameData.data);
+    const bytes   = new Uint8Array(byteStr.length);
+    for (let i = 0; i < byteStr.length; i++) bytes[i] = byteStr.charCodeAt(i);
+    const blob = new Blob([bytes], { type: `image/${frameData.format ?? 'jpeg'}` });
+
+    createImageBitmap(blob).then((bitmap) => {
+      if (canvas.width !== bitmap.width || canvas.height !== bitmap.height) {
+        canvas.width  = bitmap.width;
+        canvas.height = bitmap.height;
+      }
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+
+      setIsStreaming((prev) => { if (!prev) return true; return prev; });
 
       const now = Date.now();
-      setStreamStats((prev) => ({
-        fps: prev.lastFrameTime > 0
-          ? Math.round(1000 / Math.max(now - prev.lastFrameTime, 1))
-          : prev.fps,
-        frameCount: prev.frameCount + 1,
-        lastFrameTime: now,
-        avgFrameSize: Math.round((frameData.data.length * 3) / 4),
-      }));
+      if (now - lastFrameTimeRef.current > 0) {
+        frameCountRef.current    += 1;
+        lastFrameSizeRef.current  = Math.round((frameData.data.length * 3) / 4);
+        lastFrameTimeRef.current  = now;
+      }
+    }).catch(() => {/* malformed frame — skip */});
+  }, [createDecoder]);
+
+  // ── Stats flush: update React state once per second from refs ────────────
+  useEffect(() => {
+    statsFlushTimerRef.current = setInterval(() => {
+      const now     = Date.now();
+      const elapsed = now - lastFrameTimeRef.current;
+      // If we haven't received a frame in >2s, fps is 0
+      const fps = elapsed < 2000 && lastFrameTimeRef.current > 0
+        ? Math.round(1000 / Math.max(elapsed, 1))
+        : 0;
+      setStreamStats({
+        fps,
+        frameCount:    frameCountRef.current,
+        lastFrameTime: lastFrameTimeRef.current,
+        avgFrameSize:  lastFrameSizeRef.current,
+      });
+    }, 1000);
+    return () => {
+      if (statsFlushTimerRef.current) clearInterval(statsFlushTimerRef.current);
     };
-    img.src = `data:image/${frameData.format ?? 'jpeg'};base64,${frameData.data}`;
   }, []);
 
   // ── Socket.IO connection ──────────────────────────────────────────────────
@@ -166,6 +430,8 @@ const UserHVNCSession: React.FC<Props> = ({
 
       socket.on('connect', () => {
         setIsConnected(true);
+        setIsReconnecting(false);
+        setReconnectAttempts(0);
         setConnectionStatus('Connected');
         socket.emit('start_session', {
           device_id: deviceId,
@@ -182,6 +448,8 @@ const UserHVNCSession: React.FC<Props> = ({
       socket.on('session_started', (data: RemoteSessionInfo) => {
         setRemoteSession(data);
         setConnectionStatus('Session Active');
+        setReconnectAttempts(0);
+        ensureAudioContext();
       });
 
       socket.on('session_ended', () => {
@@ -191,13 +459,18 @@ const UserHVNCSession: React.FC<Props> = ({
       });
 
       socket.on('live_desktop_frame', handleScreenFrame);
+      socket.on('live_audio_frame',   handleAudioFrame);
 
       socket.on('session_error', (err: { error: string }) => {
         setConnectionStatus(`Error: ${err.error}`);
+        setIsReconnecting(false);
+        setReconnectAttempts((n) => n + 1);
       });
 
       socket.on('connect_error', (err: Error) => {
         setConnectionStatus(`Connection failed: ${err.message}`);
+        setIsReconnecting(false);
+        setReconnectAttempts((n) => n + 1);
       });
     };
 
@@ -206,7 +479,7 @@ const UserHVNCSession: React.FC<Props> = ({
     return () => {
       socketRef.current?.disconnect();
     };
-  }, [jwtToken, deviceId, validatedSessionId, handleScreenFrame]);
+  }, [jwtToken, deviceId, validatedSessionId, reconnectKey, handleScreenFrame, handleAudioFrame, ensureAudioContext]);
 
   // ── Keyboard events (while streaming) ────────────────────────────────────
   const handleKeyboardEvent = useCallback((event: KeyboardEvent) => {
@@ -245,11 +518,22 @@ const UserHVNCSession: React.FC<Props> = ({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const rect   = canvas.getBoundingClientRect();
+    // Activate audio on first user interaction (browser autoplay policy)
+    ensureAudioContext();
+
+    const rect     = canvas.getBoundingClientRect();
+    const displayX = event.clientX - rect.left;
+    const displayY = event.clientY - rect.top;
+
+    // Instant local cursor — no server round-trip
+    // if (isStreaming) drawLocalCursor(displayX, displayY);
+
     const scaleX = canvas.width  / rect.width;
     const scaleY = canvas.height / rect.height;
-    const x = Math.round((event.clientX - rect.left) * scaleX);
-    const y = Math.round((event.clientY - rect.top)  * scaleY);
+    const x = Math.round(displayX * scaleX);
+    const y = Math.round(displayY * scaleY);
+
+    console.log(`[Mouse] display=(${Math.round(displayX)},${Math.round(displayY)}) remote=(${x},${y}) scale=(${scaleX.toFixed(2)},${scaleY.toFixed(2)}) canvas=${canvas.width}x${canvas.height}`);
 
     let action: string = 'move';
     let button: string | null = null;
@@ -277,7 +561,7 @@ const UserHVNCSession: React.FC<Props> = ({
     });
 
     event.preventDefault();
-  }, [remoteSession, isStreaming]);
+  }, [remoteSession, isStreaming, ensureAudioContext, drawLocalCursor]);
 
   // ── Quality control ───────────────────────────────────────────────────────
   const handleQualityChange = (quality: number) => {
@@ -307,6 +591,34 @@ const UserHVNCSession: React.FC<Props> = ({
     onDisconnect();
   };
 
+  // ── Reconnect — reuse validated session data, no new validation needed ────
+  const handleReconnect = useCallback(() => {
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    setIsConnected(false);
+    setIsStreaming(false);
+    setIsReconnecting(true);
+    setConnectionStatus('Reconnecting...');
+    setReconnectKey((k) => k + 1);
+  }, []);
+
+  // ── Fullscreen ────────────────────────────────────────────────────────────
+  const toggleFullscreen = () => {
+    const el = canvasContainerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
   // ── Connection status badge ───────────────────────────────────────────────
   const statusColor = isStreaming
     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
@@ -321,7 +633,7 @@ const UserHVNCSession: React.FC<Props> = ({
     : DisconnectOutlined;
 
   return (
-    <div className="flex flex-col h-full font-[gilroy-regular] text-slate-100" style={{ background: '#1a1a1a' }}>
+    <div ref={sessionContainerRef} className="flex flex-col h-full font-[gilroy-regular] text-slate-100" style={{ background: '#1a1a1a' }}>
 
       {/* ── Top Header ─────────────────────────────────────────────── */}
       <header className="flex items-center justify-between border-b border-white/10 bg-[#2B2B2B] px-6 py-2.5 shrink-0">
@@ -369,6 +681,13 @@ const UserHVNCSession: React.FC<Props> = ({
           </button>
           <button className="flex items-center justify-center rounded-lg h-9 w-9 bg-slate-800 text-slate-300 hover:text-[#F6921E] hover:bg-[#F6921E]/10 transition-all">
             <QuestionCircleOutlined className="text-base" />
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            className="flex items-center justify-center rounded-lg h-9 w-9 bg-slate-800 text-slate-300 hover:text-[#F6921E] hover:bg-[#F6921E]/10 transition-all"
+          >
+            {isFullscreen ? <FullscreenExitOutlined className="text-base" /> : <FullscreenOutlined className="text-base" />}
           </button>
           <div className="h-9 w-9 rounded-full border-2 border-[#F6921E] bg-[#F6921E]/20 flex items-center justify-center">
             <UserOutlined className="text-[#F6921E] text-base" />
@@ -469,22 +788,58 @@ const UserHVNCSession: React.FC<Props> = ({
         <main className="flex-1 flex flex-col overflow-hidden">
 
           {/* ── Live Desktop Canvas ──────────────────────────────────── */}
-          <div className="flex-1 relative bg-black overflow-hidden flex items-center justify-center">
-            {/* Canvas — always rendered so the ref is available */}
-            <canvas
-              ref={canvasRef}
-              tabIndex={0}
-              style={{
-                display: 'block',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                cursor: isStreaming ? 'none' : 'default',
-              }}
-              onMouseDown={handleMouseEvent}
-              onMouseUp={handleMouseEvent}
-              onMouseMove={handleMouseEvent}
-              onWheel={handleMouseEvent}
-            />
+          <div
+            ref={canvasContainerRef}
+            className="flex-1 relative bg-black overflow-hidden flex items-center justify-center"
+            style={isFullscreen ? { width: '100vw', height: '100vh', padding: 0, margin: 0 } : undefined}
+          >
+            {/* Canvas wrapper — video canvas + cursor overlay stacked */}
+            <div style={{
+              position: 'relative',
+              display: 'inline-block',
+              lineHeight: 0,
+              ...(isFullscreen
+                ? { width: '100%', height: '100%', maxWidth: '100vw', maxHeight: '100vh' }
+                : { maxWidth: '100%', maxHeight: '100%' }),
+            }}>
+              <canvas
+                ref={canvasRef}
+                tabIndex={0}
+                style={{
+                  display: 'block',
+                  ...(isFullscreen
+                    ? { width: '100vw', height: '100vh', maxWidth: '100vw', maxHeight: '100vh' }
+                    : { maxWidth: '100%', maxHeight: '100%' }),
+                  cursor: isStreaming ? 'none' : 'default',
+                }}
+                onMouseDown={handleMouseEvent}
+                onMouseUp={handleMouseEvent}
+                onMouseMove={handleMouseEvent}
+                onMouseLeave={clearLocalCursor}
+                onWheel={handleMouseEvent}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              {/* Transparent overlay for the instant local cursor */}
+              {/* <canvas
+                ref={cursorCanvasRef}
+                style={{
+                  position: 'absolute',
+                  top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  pointerEvents: 'none',
+                }}
+              /> */}
+            </div>
+
+            {/* Audio activation hint — shown until user clicks */}
+            {isStreaming && !audioActive && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="flex items-center gap-2 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-xs font-semibold border border-white/20">
+                  <SoundOutlined />
+                  Click on the desktop area once to activate audio
+                </div>
+              </div>
+            )}
 
             {/* Overlay — waiting for first frame */}
             {!isStreaming && remoteSession && (
@@ -507,17 +862,49 @@ const UserHVNCSession: React.FC<Props> = ({
             {/* Overlay — not connected */}
             {!isConnected && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/90">
-                <DisconnectOutlined className="text-red-400 text-5xl" />
-                <p className="text-white font-bold text-base">Not Connected</p>
-                <p className="text-slate-400 text-sm">{connectionStatus}</p>
-                {!deviceId && (
-                  <p className="text-yellow-400 text-xs mt-1">No device selected</p>
+                {isReconnecting ? (
+                  <>
+                    <LoadingOutlined className="text-[#F6921E] text-5xl" spin />
+                    <p className="text-white font-bold text-base">Reconnecting...</p>
+                    <p className="text-slate-400 text-sm">Restoring your session, please wait</p>
+                  </>
+                ) : (
+                  <>
+                    <DisconnectOutlined className="text-red-400 text-5xl" />
+                    <p className="text-white font-bold text-base">Connection Lost</p>
+                    <p className="text-slate-400 text-sm">{connectionStatus}</p>
+                    {!deviceId && (
+                      <p className="text-yellow-400 text-xs">No device selected</p>
+                    )}
+                    <button
+                      onClick={handleReconnect}
+                      className="mt-2 flex items-center gap-2 bg-[#F6921E] hover:bg-[#D47C16] text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-all"
+                    >
+                      <ReloadOutlined /> Reconnect Session
+                    </button>
+                    {reconnectAttempts >= 3 && (
+                      <div className="mt-2 flex flex-col items-center gap-2 border border-red-500/30 bg-red-500/10 rounded-lg px-5 py-3 text-center max-w-xs">
+                        <p className="text-red-400 text-xs font-semibold">
+                          Reconnection is failing after {reconnectAttempts} attempts.
+                        </p>
+                        <p className="text-slate-400 text-xs">
+                          If the problem persists, terminate the session to start a new one.
+                        </p>
+                        <button
+                          onClick={handleTerminate}
+                          className="mt-1 flex items-center gap-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-1.5 rounded-lg text-xs font-bold border border-red-500/30 transition-all"
+                        >
+                          <PoweroffOutlined /> Terminate &amp; Start Fresh
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
 
             {/* Live badge (top-right) */}
-            {isStreaming && (
+            {/* {isStreaming && (
               <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5 pointer-events-none">
                 <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-white/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -527,7 +914,7 @@ const UserHVNCSession: React.FC<Props> = ({
                   Frame #{streamStats.frameCount}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* ── Bottom Taskbar ────────────────────────────────────── */}
@@ -556,6 +943,16 @@ const UserHVNCSession: React.FC<Props> = ({
                     {streamStats.fps} FPS · {Math.round(streamStats.avgFrameSize / 1024)}KB
                   </span>
                 </div>
+              )}
+              {/* Mute toggle — only shown once audio is active */}
+              {audioActive && (
+                <button
+                  onClick={toggleMute}
+                  className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition-all"
+                >
+                  {isMuted ? <AudioMutedOutlined className="text-red-400" /> : <SoundOutlined className="text-emerald-400" />}
+                  {isMuted ? 'Unmute' : 'Mute'}
+                </button>
               )}
             </div>
 
