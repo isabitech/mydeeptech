@@ -117,8 +117,8 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.4, duration: 0.6 }}
       >
-        <Card title="User Engagement Metrics" className="h-96">
-          <ResponsiveContainer width="100%" height={300}>
+        <Card title="User Engagement Metrics" className="h-full">
+          <ResponsiveContainer width="100%" height={350}>
             <BarChart data={engagementData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -126,7 +126,7 @@ const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => 
                 tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
-                height={60}
+                height={80}
               />
               <YAxis />
               <Tooltip />
