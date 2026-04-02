@@ -455,9 +455,9 @@ const Unpaid: React.FC<UnpaidProps> = ({
     }
 
     // Check if exchange rate is available
-    if (exchangeRateError || !exchangeRateToSend || exchangeRateToSend === 0) {
+    if (exchangeRateError || !exchangeRateToSend || exchangeRateToSend <= 0) {
       message.error({
-        content: 'Exchange rate is not available. Please load the exchange rate first before processing payments.',
+        content: 'Exchange rate is not available or invalid. Please load the exchange rate first before processing payments.',
         duration: 5,
         key: 'exchange-rate-required'
       });
@@ -830,7 +830,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
             icon={<CreditCardOutlined />}
             onClick={handleLogSelectedInvoices}
             loading={paymentWithInvoiceMutation.bulkPaymentMutationIsPending}
-            disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending || (typeof exchangeRateToSend === 'number' && exchangeRateToSend === 0)}
+            disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending || (typeof exchangeRateToSend === 'number' && exchangeRateToSend <= 0)}
             className="border-gray-500 text-gray-600 hover:border-gray-600 hover:text-gray-700"
           >
             {`Pay Invoice${selectedInvoiceIds.length > 1 ? 's' : ''}`} ({selectedInvoiceIds.length})

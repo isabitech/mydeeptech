@@ -48,7 +48,7 @@ const PaymentManagement = () => {
 
   // Country select and exchange rate state
   const [selectedCountry, setSelectedCountry] = useState<string>('Nigeria');
-  // Adjustment input state
+  // Manual exchange rate state (overrides API rate when > 0)
   const [exchangeRateAdjustment, setExchangeRateAdjustment] = useState<number>(0);
   // Retry counter for exchange rate
   const [retryCount, setRetryCount] = useState<number>(0);
@@ -159,10 +159,10 @@ const PaymentManagement = () => {
   const convertedSelectedTotal = React.useMemo(() => {
     if (selectedInvoicesTotal === 0) return 0;
     
-    const exchangeRate = !isExchangeRateError && exchangeRateData?.rate !== undefined 
-      ? Math.max(0, exchangeRateData.rate - exchangeRateAdjustment)
-      : isExchangeRateError && exchangeRateAdjustment > 0
-        ? exchangeRateAdjustment
+    const exchangeRate = exchangeRateAdjustment > 0
+      ? exchangeRateAdjustment
+      : !isExchangeRateError && exchangeRateData?.rate !== undefined 
+        ? exchangeRateData.rate
         : 0;
     
     return selectedInvoicesTotal * exchangeRate;
@@ -214,8 +214,14 @@ const PaymentManagement = () => {
 
   const handleAuthorizePayment = async () => {
     if (!selectedInvoice) return;
-    if (exchangeRateAdjustment === 0) {
-      message.warning('Adjustment value is zero. Invoice will not be sent.');
+    
+    // Calculate the final exchange rate to use
+    const finalExchangeRate = exchangeRateAdjustment > 0 
+      ? exchangeRateAdjustment 
+      : exchangeRateData?.rate;
+    
+    if (!finalExchangeRate || finalExchangeRate <= 0) {
+      message.error('Please provide a valid exchange rate or load the current rate first.');
       return;
     }
 
@@ -363,14 +369,6 @@ const PaymentManagement = () => {
                       {retryCount >= 3 ? 'Max retries reached' : `Retry (${retryCount}/3)`}
                     </Button>
                   </span>
-                ) : exchangeRateData && exchangeRateData.rate !== undefined ? (
-                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#1890ff' }}>
-                    {formatMoney(
-                      Math.max(0, exchangeRateData.rate - exchangeRateAdjustment),
-                      countryCurrencyMap[selectedCountry],
-                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
-                    )}
-                  </span>
                 ) : exchangeRateAdjustment > 0 ? (
                   <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#f39c12' }}>
                     {formatMoney(
@@ -379,7 +377,18 @@ const PaymentManagement = () => {
                       selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
                     )}
                     <span style={{ fontSize: "12px", color: '#666', marginLeft: 4 }}>
-                      (using adjusted price)
+                      (manual rate)
+                    </span>
+                  </span>
+                ) : exchangeRateData && exchangeRateData.rate !== undefined ? (
+                  <span style={{ marginLeft: 8, fontWeight: 'bold', fontSize: "20px", color: '#1890ff' }}>
+                    {formatMoney(
+                      exchangeRateData.rate,
+                      countryCurrencyMap[selectedCountry],
+                      selectedCountry === 'Nigeria' ? 'en-NG' : 'en-US'
+                    )}
+                    <span style={{ fontSize: "12px", color: '#666', marginLeft: 4 }}>
+                      (API rate)
                     </span>
                   </span>
                 ) : (
@@ -398,14 +407,14 @@ const PaymentManagement = () => {
                 </div>
                 
                <div className="flex flex-col gap-1.5">
-                  <span style={{ fontWeight: 500, marginLeft: 16 }}>Adjust Price:</span>
+                  <span style={{ fontWeight: 500, marginLeft: 16 }}>Manual Rate:</span>
                    <input
                     type="number"
                     min="0"
                     step="any"
                     value={exchangeRateAdjustment}
                     onChange={e => setExchangeRateAdjustment(Number(e.target.value))}
-                    placeholder="Adjustment"
+                    placeholder="Enter manual rate"
                     style={{ width: 120, marginLeft: 16, padding: '4px 8px', borderRadius: 4, border: '1px solid #ccc' }}
                 />
                </div>
@@ -491,10 +500,10 @@ const PaymentManagement = () => {
                   onGeneratePaystackCSV={(invoiceIds) => generatePaystackCSV(invoiceIds)}
                   onGenerateMpesaCSV={(invoiceIds) => generateMpesaCSV(invoiceIds)}
                   exchangeRateToSend={
-                    !isExchangeRateError && exchangeRateData?.rate !== undefined 
-                      ? Number(Math.max(0, exchangeRateData.rate - exchangeRateAdjustment).toFixed(2)) 
-                      : isExchangeRateError && exchangeRateAdjustment > 0
-                        ? Number(exchangeRateAdjustment.toFixed(2))
+                    exchangeRateAdjustment > 0
+                      ? Number(exchangeRateAdjustment.toFixed(2))
+                      : !isExchangeRateError && exchangeRateData?.rate !== undefined 
+                        ? Number(exchangeRateData.rate.toFixed(2))
                         : undefined
                   }
                   exchangeRateError={isExchangeRateError}
