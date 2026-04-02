@@ -12,8 +12,8 @@ export const setAuthStoreNavigate = (navigateCallback: ((path: string, options?:
   globalNavigateCallback = navigateCallback;
 };
 
-type UserRoleType = "admin" | "user";
-type RoleInfoMap<T extends UserRoleType> = T extends "admin" ? AdminInfo : UserInfo;
+type UserRoleType =  "user" | "admin";
+type RoleInfoMap<T extends UserRoleType> = T extends "user" ? UserInfo : AdminInfo;
 
 export type LoginResponse = AdminLoginResponseSchema | LoginResponseSchema;
 
@@ -82,7 +82,6 @@ const useUserInfoStore = create<UserInfoStore>()(
 
         setIsAssessmentSubmitted: async () => {
           const userInfo = await retrieveUserInfoFromStorage() as UserInfoData;
-
           if (userInfo && userInfo.role === "user") {
             const updatedUserInfo: UserInfoData = {
               ...userInfo,
@@ -97,7 +96,7 @@ const useUserInfoStore = create<UserInfoStore>()(
                 ? { ...state.userInfo, isAssessmentSubmitted: true }
                 : state.userInfo,
             }));
-          } 
+          }
         },
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
@@ -161,11 +160,10 @@ return  useUserInfoStore(
 
 const useGetUserInfo = <T extends UserRoleType>(roleType: T): RoleInfoMap<T> | null => {
   return useUserInfoStore((state) => {
-    const data = roleType === "admin" ? state.userInfo : state.userInfo;
-    return (data as RoleInfoMap<T>) || null;
+    if (!state.userInfo || !roleType) return null;
+    return state.userInfo as RoleInfoMap<T>;
   });
 };
-
 
 export type { UserInfoStore, UserInfoStates, UserInfoActions };
 export { useUserInfoStates, useUserInfoActions, useUserInfoStore, useGetUserInfo };

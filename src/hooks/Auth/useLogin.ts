@@ -6,6 +6,7 @@ import { notification } from "antd";
 import { useUserContext } from "../../UserContext";
 import { storeUserInfoToStorage, storeTokenToStorage } from "../../helpers";
 import { apiPost, getErrorMessage } from "../../service/apiUtils";
+import { UserInfoData } from "../../store/useAuthStore";
 
 interface LoginPayload {
   email: string;
@@ -25,7 +26,7 @@ export interface User {
   email: string;
   phone: string;
   domains: string[];
-  socialsFollowed: any[];
+  socialsFollowed: string[];
   consent: boolean;
   isEmailVerified: boolean;
   hasSetPassword: boolean;
@@ -103,7 +104,7 @@ export const useLogin = () => {
         setUserInfo(userInfo);
 
         // Store user information and token using encrypted storage
-        await storeUserInfoToStorage(userInfo);
+        await storeUserInfoToStorage(userInfo as UserInfoData);
         await storeTokenToStorage(data.token);
 
         // Navigate based on user status or role
@@ -121,10 +122,10 @@ export const useLogin = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = getErrorMessage(err);
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
     }

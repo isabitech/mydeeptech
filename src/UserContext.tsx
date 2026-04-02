@@ -7,7 +7,7 @@ export interface UserInfo {
   email: string;
   phone: string;
   domains: string[];
-  socialsFollowed: any[];
+  socialsFollowed: string[];
   consent: boolean;
   isEmailVerified: boolean;
   hasSetPassword: boolean;

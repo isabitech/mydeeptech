@@ -12,23 +12,6 @@ type Props = {
   title: string;
 };
 
-export type UserInfoProps = {
-  id: string
-  fullName: string
-  email: string
-  phone: string
-  domains: string[]
-  socialsFollowed: any[]
-  consent: boolean
-  isEmailVerified: boolean
-  hasSetPassword: boolean
-  annotatorStatus: string
-  microTaskerStatus: string
-  resultLink: string
-  createdAt: string
-  updatedAt: string
-};
-
 const Header: React.FC<Props> = ({ title }) => {
   const navigate = useNavigate();
   const userInfo = useGetUserInfo("user");
