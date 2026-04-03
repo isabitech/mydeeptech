@@ -242,9 +242,17 @@ const Unpaid: React.FC<UnpaidProps> = ({
       })
     : invoices;
 
+  // Create array of filtered invoice IDs for validation
+  const filteredInvoiceIds = filteredInvoices.map(invoice => invoice._id);
+
+  // Only keep selected invoice IDs that exist in current filtered data
+  const validSelectedInvoiceIds = selectedInvoiceIds.filter(id => 
+    filteredInvoiceIds.includes(id)
+  );
+
   // Get selected invoice objects (not just IDs)
   const selectedInvoices = filteredInvoices.filter(invoice => 
-    selectedInvoiceIds.includes(invoice._id)
+    validSelectedInvoiceIds.includes(invoice._id)
   );
 
   // Check if user has NGN payment info
@@ -289,7 +297,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
   };
 
   const rowSelection = {
-    selectedRowKeys: selectedInvoiceIds,
+    selectedRowKeys: validSelectedInvoiceIds,
     onChange: (selectedRowKeys: React.Key[]) => {
       updateSelectedInvoiceIds(selectedRowKeys as string[]);
     },
@@ -805,7 +813,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
               icon={<FileExcelOutlined />}
               onClick={handleGeneratePaystackCSV}
               loading={isGeneratingCSV}
-              disabled={!invoices.length || loading || selectedInvoiceIds.length === 0}
+              disabled={!invoices.length || loading || validSelectedInvoiceIds.length === 0}
               className="border-orange-500 text-orange-600 hover:border-orange-600 hover:text-orange-700"
             >
               Generate Paystack CSV
@@ -818,7 +826,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
               icon={<FileExcelOutlined />}
               onClick={handleGenerateMpesaCSV}
               loading={isGeneratingMpesaCSV}
-              disabled={!invoices.length || loading || selectedInvoiceIds.length === 0}
+              disabled={!invoices.length || loading || validSelectedInvoiceIds.length === 0}
               className="border-blue-500 text-blue-600 hover:border-blue-600 hover:text-blue-700"
             >
               Generate MPESA CSV
@@ -833,7 +841,7 @@ const Unpaid: React.FC<UnpaidProps> = ({
             disabled={!invoices.length || paymentWithInvoiceMutation.bulkPaymentMutationIsPending || (typeof exchangeRateToSend === 'number' && exchangeRateToSend <= 0)}
             className="border-gray-500 text-gray-600 hover:border-gray-600 hover:text-gray-700"
           >
-            {`Pay Invoice${selectedInvoiceIds.length > 1 ? 's' : ''}`} ({selectedInvoiceIds.length})
+            {`Pay Invoice${validSelectedInvoiceIds.length > 1 ? 's' : ''}`} ({validSelectedInvoiceIds.length})
           </Button>
         </div>
       </div>
@@ -884,15 +892,15 @@ const Unpaid: React.FC<UnpaidProps> = ({
                 </Checkbox>
               </div>
               
-              {selectedInvoiceIds.length > 0 && (
+              {validSelectedInvoiceIds.length > 0 && (
                 <div className="text-sm text-blue-600">
-                  {selectedInvoiceIds.length} invoice(s) selected
+                  {validSelectedInvoiceIds.length} invoice(s) selected
                 </div>
               )}
             </div>
             
             <div className="flex items-center gap-2">
-              {selectedInvoiceIds.length > 0 && (
+              {validSelectedInvoiceIds.length > 0 && (
                 <Button 
                   size="small" 
                   onClick={() => updateSelectedInvoiceIds([])}
