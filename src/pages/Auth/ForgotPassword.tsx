@@ -3,36 +3,42 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, ArrowRight, AlertCircle, Loader2, ArrowLeft, Send } from "lucide-react";
 import { useDTUserForgotPassword } from "../../hooks/Auth/useDTUserForgotPassword";
+import authMutationService from "../../services/authentication/auth-mutation";
+import { message } from "antd";
+import errorMessage from "../../lib/error-message";
+import { EmailSchema } from "../../validators/authentication/user-signup-schema";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  const { requestPasswordReset, loading, error, emailSent, resetState } = useDTUserForgotPassword();
+  const { resetState } = useDTUserForgotPassword();
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = "Enter a valid email address";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const authMutation = authMutationService.useForgotPassword();
+  const error = authMutation.isError ? errorMessage(authMutation.error): "";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    const result = await requestPasswordReset(email);
-    
-    if (!result.success && result.error) {
-      console.error("Failed to send reset email:", result.error);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    const result  = EmailSchema.safeParse(email);
+    if (!result.success) {
+      const errMsg = errorMessage(`${result.error.issues[0]?.message}`);
+      console.error("errMsg", result.error);
+      setErrors({ email: errMsg });
+      return;
     }
+
+    authMutation.mutate(email, {
+      onSuccess: () => {
+        message.success({ content: "Reset link sent! Please check your email.", key: "forgot-password-success" });
+        setErrors({});
+        resetState();
+      },
+      onError: (err) => {
+        const errMsg = errorMessage(err || "An error occurred while sending the reset email. Please try again.");
+        console.error("errMsg", errMsg);
+        message.error({ content: errMsg, key: "forgot-password-error"});
+      } 
+    });
   };
 
   const handleInputChange = (value: string) => {
@@ -51,7 +57,7 @@ const ForgotPassword = () => {
     setErrors({});
   };
 
-  if (emailSent) {
+  if (authMutation.isSuccess) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center font-[gilroy-regular] justify-center p-6">
         <motion.div 
@@ -175,7 +181,7 @@ const ForgotPassword = () => {
                     focus:ring-2 focus:ring-[#F6921E]/20 focus:outline-none
                   `}
                   placeholder="Enter your email address"
-                  disabled={loading}
+                  disabled={authMutation.isPending}
                 />
               </div>
               
@@ -208,7 +214,7 @@ const ForgotPassword = () => {
             {/* Submit Button */}
             <motion.button
               type="submit"
-              disabled={loading || !email}
+              disabled={authMutation.isPending || !email}
               className={`
                 w-full py-3 px-4 rounded-lg font-gilroy-semibold text-white
                 bg-[#F6921E] hover:bg-[#E8831B] focus:bg-[#E8831B]
@@ -216,10 +222,10 @@ const ForgotPassword = () => {
                 disabled:bg-gray-300 disabled:cursor-not-allowed
                 transition-all duration-200 flex items-center justify-center space-x-2
               `}
-              whileHover={!loading && email ? { scale: 1.02 } : {}}
-              whileTap={!loading && email ? { scale: 0.98 } : {}}
+              whileHover={!authMutation.isPending && email ? { scale: 1.02 } : {}}
+              whileTap={!authMutation.isPending && email ? { scale: 0.98 } : {}}
             >
-              {loading ? (
+              {authMutation.isPending ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span>Sending Reset Link...</span>

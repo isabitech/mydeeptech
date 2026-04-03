@@ -4,7 +4,7 @@ import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import { persistUserInfo } from "./_helper";
-import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
+import { EmailSchema, SignUpSchema } from "../../validators/authentication/user-signup-schema";
 import { ResetPasswordSchema } from "../../validators/authentication/user-reset-password-schema";
 
 const useUserSignup = () => {
@@ -65,10 +65,32 @@ const useResetPassword = () => {
     };
 }
 
+/**
+ *   async requestDTUserPasswordReset(email: string): Promise<ApiResponse> {
+     return this.request(endpoints.authDT.forgotPassword, {
+       method: 'POST',
+       body: JSON.stringify({ email }),
+     });
+   }
+ */
+
+   const useForgotPassword = () => {
+    const mutation = useMutation({
+        mutationKey: [REACT_QUERY_KEYS.MUTATION.forgotPassword],
+        mutationFn: async (email: EmailSchema) => {
+            const response = await axiosInstance.post(endpoints.authDT.forgotPassword, { email });
+            return response.data;
+        }
+    });
+
+    return mutation;
+}   
+
 const authMutationService = {
     useUserSignin,
     useUserSignup,
     useResetPassword,
+    useForgotPassword,
 }
 
 export default authMutationService;

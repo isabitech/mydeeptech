@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import passwordResetService, { ApiResponse } from "../../service/PasswordResetService";
+import errorMessage from "../../lib/error-message";
 
 interface ForgotPasswordResult {
   success: boolean;
@@ -41,10 +42,10 @@ export const useDTUserForgotPassword = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = err.message || "An error occurred while sending the reset email. Please try again.";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+    } catch (err) {
+      const errMsg = errorMessage(err || "An error occurred while sending the reset email. Please try again.");
+      setError(errMsg);
+      return { success: false, error: errMsg };
     } finally {
       setLoading(false);
     }

@@ -29,6 +29,7 @@ const MUTATION = {
     userSignup: "userSignup",
 
     resetPassword: "resetPassword",
+    forgotPassword: "forgotPassword",
 } as const;
 
 const QUERY = {

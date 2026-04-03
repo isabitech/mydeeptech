@@ -23,6 +23,7 @@ import {
   Input,
   Select,
   Grid,
+  MenuProps,
 } from "antd";
 import {
   UserOutlined,
@@ -45,6 +46,7 @@ import {
   RecentApplication,
   RemoveApplicantRequest,
 } from "../../../../types/project.types";
+import errorMessage from "../../../../lib/error-message";
 
 const { Text } = Typography;
 const { TabPane } = Tabs;
@@ -57,6 +59,8 @@ interface ProjectAnnotatorsProps {
   visible: boolean;
   onClose: () => void;
 }
+
+type MenuItem = Required<MenuProps>['items'][number];
 
 const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   projectId,
@@ -160,8 +164,6 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const handleConfirmRemoval = async () => {
     if (!selectedForRemoval) return;
 
-    console.log({ selectedForRemoval });
-
     try {
       const values = await removalForm.validateFields();
       const removalData: RemoveApplicantRequest = {
@@ -182,7 +184,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         message.error(result.error || 'Failed to remove annotator');
       }
     } catch (error) {
-      message.error('Please fill in all required fields');
+      const errMsg = errorMessage(error);
+      message.error(errMsg || 'Please fill in all required fields');
     }
   };
 
@@ -202,15 +205,15 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     return colors[status] || "default";
   };
 
-  const getAnnotatorStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      approved: "green",
-      verified: "blue",
-      pending: "orange",
-      rejected: "red",
-    };
-    return colors[status] || "default";
-  };
+  // const getAnnotatorStatusColor = (status: string) => {
+  //   const colors: { [key: string]: string } = {
+  //     approved: "green",
+  //     verified: "blue",
+  //     pending: "orange",
+  //     rejected: "red",
+  //   };
+  //   return colors[status] || "default";
+  // };
 
   // Use backend-filtered data directly
   const approvedAnnotators = data?.annotators?.approved || [];
@@ -218,115 +221,121 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const pendingAnnotators = data?.annotators?.pending || [];
 
   // Columns for recentApplications (lightweight records)
-  const applicationColumns = [
-    {
-      title: "Applicant",
-      key: "applicant",
-      render: (record: RecentApplication) => (
-        <div className="flex items-center space-x-3">
-          <Avatar size={40} icon={<UserOutlined />} />
-          <div>
-            <div className="font-semibold">{record.applicantId.fullName}</div>
-            <div className="text-gray-500 text-sm">{record.applicantId.email}</div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: "Status",
-      key: "status",
-      render: (record: RecentApplication) => (
-        <div className="space-y-1">
-          <Tag color={getStatusColor(record.status)}>
-            {record.status.toUpperCase()}
-          </Tag>
-          {/* <Tag color={getAnnotatorStatusColor(record.applicantId.annotatorStatus)}>
-            {record.applicantId.annotatorStatus.toUpperCase()}
-          </Tag> */}
-        </div>
-      ),
-    },
-    {
-      title: "Proposed Rate",
-      key: "proposedRate",
-      render: (record: RecentApplication) => (
-        <span>
-          <DollarOutlined /> {record.proposedRate || "Not specified"}
-        </span>
-      ),
-    },
-    {
-      title: "Availability",
-      dataIndex: "availability",
-      key: "availability",
-    },
-    {
-      title: "Applied",
-      key: "appliedAt",
-      render: (record: RecentApplication) => moment(record.appliedAt).format("MMM DD, YYYY"),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (record: RecentApplication) => {
-        // Create dropdown menu based on the current tab
-        const getDropdownMenu = () => {
-          const items = [
-            {
-              key: 'view',
-              icon: <EyeOutlined />,
-              label: 'View Details',
-              onClick: () => handleViewApplication(record)
-            }
-          ];
+  // const applicationColumns = [
+  //   {
+  //     title: "Applicant",
+  //     key: "applicant",
+  //     render: (record: RecentApplication) => (
+  //       <div className="flex items-center space-x-3">
+  //         <Avatar size={40} icon={<UserOutlined />} />
+  //         <div>
+  //           <div className="font-semibold">{record.applicantId.fullName}</div>
+  //           <div className="text-gray-500 text-sm">{record.applicantId.email}</div>
+  //         </div>
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     title: "Status",
+  //     key: "status",
+  //     render: (record: RecentApplication) => (
+  //       <div className="space-y-1">
+  //         <Tag color={getStatusColor(record.status)}>
+  //           {record.status.toUpperCase()}
+  //         </Tag>
+  //         {/* <Tag color={getAnnotatorStatusColor(record.applicantId.annotatorStatus)}>
+  //           {record.applicantId.annotatorStatus.toUpperCase()}
+  //         </Tag> */}
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     title: "Proposed Rate",
+  //     key: "proposedRate",
+  //     render: (record: RecentApplication) => (
+  //       <span>
+  //         <DollarOutlined /> {record.proposedRate || "Not specified"}
+  //       </span>
+  //     ),
+  //   },
+  //   {
+  //     title: "Availability",
+  //     dataIndex: "availability",
+  //     key: "availability",
+  //   },
+  //   {
+  //     title: "Applied",
+  //     key: "appliedAt",
+  //     render: (record: RecentApplication) => moment(record.appliedAt).format("MMM DD, YYYY"),
+  //   },
+  //   {
+  //     title: "Actions",
+  //     key: "actions",
+  //     render: (record: RecentApplication) => {
+  //       // Create dropdown menu based on the current tab
+  //       const getDropdownMenu = () => {
+  //         const items = [
+  //           {
+  //             key: 'view',
+  //             icon: <EyeOutlined />,
+  //             label: 'View Details',
+  //             onClick: () => handleViewApplication(record)
+  //           }
+  //         ];
 
-          // Only show remove option for approved applications
-          if (record.status === 'approved') {
-            items.push({
-              key: 'remove',
-              icon: <DeleteOutlined />,
-              label: 'Remove Annotator',
-              onClick: () => handleRemoveAnnotator(record)
-            });
-          }
+  //         // Only show remove option for approved applications
+  //         if (record.status === 'approved') {
+  //           items.push({
+  //             key: 'remove',
+  //             icon: <DeleteOutlined />,
+  //             label: 'Remove Annotator',
+  //             onClick: () => handleRemoveAnnotator(record)
+  //           });
+  //         }
 
-          return { items };
-        };
+  //         return { items };
+  //       };
 
-        return (
-          <Dropdown menu={getDropdownMenu()} trigger={['click']}>
-            <Button
-              type="text"
-              icon={<MoreOutlined />}
-              onClick={(e) => e.preventDefault()}
-            />
-          </Dropdown>
-        );
-      },
-    },
-  ];
+  //       return (
+  //         <Dropdown menu={getDropdownMenu()} trigger={['click']}>
+  //           <Button
+  //             type="text"
+  //             icon={<MoreOutlined />}
+  //             onClick={(e) => e.preventDefault()}
+  //           />
+  //         </Dropdown>
+  //       );
+  //     },
+  //   },
+  // ];
 
   // Columns for detailed annotator applications (approved/rejected/pending lists)
   const annotatorColumns = [
     {
       title: "Applicant",
       key: "annotator",
-      render: (record: any) => (
+      render: (record: Record<string, unknown>) => {
+        return (
         <div className="flex items-center space-x-3">
           <Avatar size={40} icon={<UserOutlined />} />
           <div>
-            <div className="font-semibold">{record.annotator?.fullName}</div>
-            <div className="text-gray-500 text-sm">{record.annotator?.email}</div>
+            <div className="font-semibold">
+              {(record.annotator as { fullName?: string })?.fullName}
+            </div>
+            <div className="text-gray-500 text-sm">
+              {(record.annotator as { email?: string })?.email}
+            </div>
           </div>
         </div>
-      ),
+      )
+      },
     },
     {
       title: "Status",
       key: "status",
-      render: (record: any) => (
+      render: (record: Record<string, string>) => (
         <div className="space-y-1">
-          <Tag color={getStatusColor(record.applicationStatus)}>
+          <Tag color={getStatusColor(record?.applicationStatus)}>
             {String(record.applicationStatus || '').toUpperCase()}
           </Tag>
         </div>
@@ -335,22 +344,22 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     {
       title: "Applied",
       key: "appliedAt",
-      render: (record: any) => record.appliedAt ? moment(record.appliedAt).format("MMM DD, YYYY") : "N/A",
+      render: (record: Record<string, string>) => record.appliedAt ? moment(record.appliedAt).format("MMM DD, YYYY") : "N/A",
     },
     {
       title: "Reviewed",
       key: "reviewedAt",
-      render: (record: any) => record.reviewedAt ? moment(record.reviewedAt).format("MMM DD, YYYY") : "N/A",
+      render: (record: Record<string, string>) => record.reviewedAt ? moment(record.reviewedAt).format("MMM DD, YYYY") : "N/A",
     },
     {
       title: "Actions",
       key: "actions",
-      render: (record: any) => {
+      render: (record: Record<string, string>) => {
         const isApproved = record.applicationStatus === 'approved';
-        const onView = () => handleViewApplication(record as any);
-        const onRemove = () => handleRemoveAnnotator(record);
-
-        const items: any[] = [
+        const onView = () => handleViewApplication(record as unknown as RecentApplication);
+        const onRemove = () => handleRemoveAnnotator(record as unknown as RecentApplication);
+        
+        const items: MenuItem[] = [
           {
             key: 'view',
             icon: <EyeOutlined />,
