@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "antd";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { BookOutlined, LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import SlackNotification from "./slack-notification";
 import AssessmentsModal from "./assessments-modal";
-// import { useGetUserInfo } from "../../../../store/useAuthStore";
+import { useGetUserInfo } from "../../../../store/useAuthStore";
 
 const NotificationCarousel = () => {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -12,13 +12,13 @@ const NotificationCarousel = () => {
   const [isModalDismissed, setIsModalDismissed] = useState(false);
   const [direction, setDirection] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  // const userInfo = useGetUserInfo("user");
-  // const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false; // Uncomment this
-  const hasSubmitted = true;
+  const userInfo = useGetUserInfo("user");
+  const hasSubmitted = userInfo?.isAssessmentSubmitted ?? false;
+  // const hasSubmitted = true;
   const openModal = isModalOpen || (!hasSubmitted && !isModalDismissed);
 
-  const totalSlides = 1;
-  // const totalSlides = hasSubmitted ? 1 : 2;  // Uncomment this
+  // const totalSlides = 1;
+  const totalSlides = hasSubmitted ? 1 : 2;
 
   const onCloseModal = () => {
     setIsModalOpen(false);
@@ -78,22 +78,22 @@ const NotificationCarousel = () => {
     }
   }, [hasSubmitted, activeSlide]);
 
-  // const slideVariants = {
-  //   enter: (direction: number) => ({
-  //     x: direction > 0 ? 100 : -100,
-  //     opacity: 0,
-  //   }),
-  //   center: {
-  //     zIndex: 1,
-  //     x: 0,
-  //     opacity: 1,
-  //   },
-  //   exit: (direction: number) => ({
-  //     zIndex: 0,
-  //     x: direction < 0 ? 100 : -100,
-  //     opacity: 0,
-  //   }),
-  // };
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 100 : -100,
+      opacity: 0,
+    }),
+  };
 
   return (
     <motion.div
@@ -136,7 +136,7 @@ const NotificationCarousel = () => {
 
       <div className="flex items-center p-4 lg:p-6">
         <AnimatePresence initial={false} custom={direction} mode="wait">
-          {/* <motion.div
+          <motion.div
             key={activeSlide}
             custom={direction}
             variants={slideVariants}
@@ -148,9 +148,9 @@ const NotificationCarousel = () => {
               opacity: { duration: 0.4 },
             }}
             className="w-full"
-          > */}
+          >
             {/* SLIDE 1 - Only show when hasSubmitted is false */}
-            {/* {activeSlide === 0 && !hasSubmitted && (
+            {activeSlide === 0 && !hasSubmitted && (
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 py-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -192,12 +192,12 @@ const NotificationCarousel = () => {
                   </Button>
                 </div>
               </div>
-            )} */}
+            )}
 
             {/* SLIDE 2 */}
-            {/* {activeSlide === 0 && <SlackNotification />} */}
-          {/* </motion.div> */}
-          <SlackNotification />
+            {activeSlide === 1 && <SlackNotification />}
+          </motion.div>
+          {/* <SlackNotification /> */}
         </AnimatePresence>
       </div>
 
