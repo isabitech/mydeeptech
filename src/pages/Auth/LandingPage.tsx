@@ -25,12 +25,12 @@ const LandingPage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
 
-    const location = useLocation();
-    const navigate  = useNavigate();
+    // const location = useLocation();
+    // const navigate  = useNavigate();
   
-    useEffect(() => {
-      navigate("/maintenance");
-    }, [location.pathname]);
+    // useEffect(() => {
+    //   navigate("/maintenance");
+    // }, [location.pathname]);
 
   // Animation trigger on mount
   useEffect(() => {
