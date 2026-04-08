@@ -17,12 +17,20 @@ import {
   TeamOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const [isLoginModal, setIsLoginModal] = useState(false);
   const [isSignUpModal, setIsSignUpModal] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+
+    // const location = useLocation();
+    // const navigate  = useNavigate();
+  
+    // useEffect(() => {
+    //   navigate("/maintenance");
+    // }, [location.pathname]);
 
   // Animation trigger on mount
   useEffect(() => {

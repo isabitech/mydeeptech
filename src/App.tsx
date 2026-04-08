@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import AnimatedRoutes from "./AnimatedRoutes";
 
 const AppRoutes = () => {
+
   return (
     <Router>
       <CustomerService />
