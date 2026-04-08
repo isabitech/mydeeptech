@@ -8,9 +8,13 @@ const isUserData = (data: LoginResponse): data is LoginResponseSchema => {
 
 
 const formatUserInfo = (data: LoginResponse): UserInfoData => {
-
+    // console.log("🔧 formatUserInfo input:", data);
+    
     const isUser = isUserData(data);
+    // console.log("👤 Is User Data:", isUser);
+    
     const raw = isUser ? (data.user) : data.admin;
+    // console.log("📦 Raw user/admin data:", raw);
 
     // Base data
     const base = {
@@ -19,7 +23,7 @@ const formatUserInfo = (data: LoginResponse): UserInfoData => {
         email: raw.email,
         phone: raw.phone,
         domains: raw.domains,
-        role: raw.role,
+        role: raw.role || (isUser ? 'user' : 'admin'), // Default role based on user type
         isAdmin: !isUser,
         isEmailVerified: raw.isEmailVerified,
         hasSetPassword: raw.hasSetPassword,
@@ -27,26 +31,34 @@ const formatUserInfo = (data: LoginResponse): UserInfoData => {
         microTaskerStatus: raw.microTaskerStatus,
         qaStatus: raw.qaStatus,
     };
+    
+    // console.log("📝 Base data created:", base);
 
     // User data
     if(isUser) {
             const user = data.user;
-            return {
+            const userResult = {
             ...base,
             socialsFollowed: user.socialsFollowed,
             consent: user.consent,
             resultLink: user.resultLink,
             isAssessmentSubmitted: user.isAssessmentSubmitted,
         } as UserInfo;
+        
+        // console.log("✅ Returning User Info:", userResult);
+        return userResult;
     }
 
     const admin = data.admin;
     //Admin data
-    return {
+    const adminResult = {
         ...base,
         role: admin.role_permission.name ?? "admin",
         role_permission: admin.role_permission,
     } as AdminInfo;
+    
+    // console.log("✅ Returning Admin Info:", adminResult);
+    return adminResult;
 
 }
 
