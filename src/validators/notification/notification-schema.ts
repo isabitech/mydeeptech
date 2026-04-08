@@ -8,12 +8,16 @@ import { z } from "zod";
 const NotificationTypeSchema = z.enum([
   "account_update",
   "project_update",
-  "application_update",
+  "application_update",  
   "assessment_result",
   "system_alert",
   "system_announcement",
   "security_alert",
   "payment_update",
+  "support_agent_joined",
+  "support_reply",
+  "support_chat", 
+  "support_resolved",
 ]);
 
 const PrioritySchema = z.enum(["low", "medium", "high"]);

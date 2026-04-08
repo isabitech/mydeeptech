@@ -35,7 +35,7 @@ const Tasks = () => {
   
 
   return (
-    <div className="h-full flex flex-col gap-4  font-[gilroy-regular]">
+    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       <Header title="Tasks" />
 
       {/* Navigation Buttons */}
@@ -46,7 +46,7 @@ const Tasks = () => {
             className={`px-4 py-2 rounded ${
               selectedProject === item.key
                 ? "bg-secondary text-white"
-                : "bg-gray-300 text-black"
+                : "bg-gray-300 text-black hover:bg-gray-400"
             }`}
             onClick={() => setSelectedProject(item.key)}
           >
@@ -56,7 +56,7 @@ const Tasks = () => {
       </div>
 
       {/* Render the selected component */}
-      <div className="mt-4">
+      <div className="flex-1">
         {list.find((item) => item.key === selectedProject)?.component}
       </div>
     </div>

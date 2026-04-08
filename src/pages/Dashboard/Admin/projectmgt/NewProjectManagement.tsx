@@ -16,7 +16,6 @@ import {
   Descriptions,
   Steps,
   Dropdown,
-  Menu,
   Switch,
 } from "antd";
 import {
@@ -31,7 +30,6 @@ import {
   MoreOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import Header from "../../User/Header";
 import ProjectAnnotators from "./ProjectAnnotators";
 import moment from "moment";
 import dayjs from "dayjs";
@@ -49,6 +47,7 @@ import {
 import PageModal from "../../../../components/Modal/PageModal";
 import { retrieveTokenFromStorage } from "../../../../helpers";
 import { baseURL } from "../../../../store/api/endpoints";
+import errorMessage from "../../../../lib/error-message";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -99,7 +98,7 @@ const ProjectManagement: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [activeFilter, setActiveFilter] = useState<string>(""); // "true", "false", or "" (all)
+  const [activeFilter] = useState<string>(""); // "true", "false", or "" (all)
   const [openCloseFilter, setOpenCloseFilter] = useState<string>(""); // "open", "close", or "" (all)
   const [toggleLoadingIds, setToggleLoadingIds] = useState<Set<string>>(new Set());
   const [token, setToken] = useState<string | null>(null);
@@ -130,20 +129,6 @@ const ProjectManagement: React.FC = () => {
   useEffect(() => {
     fetchProjects();
   }, []);
-
-  // Debug logging for summary data
-  useEffect(() => {
-    console.log('🎯 Summary state updated:', summary);
-    if (summary) {
-      console.log('📈 Summary properties:', {
-        totalProjects: summary.totalProjects,
-        activeProjects: summary.activeProjects,
-        completedProjects: summary.completedProjects,
-        pausedProjects: summary.pausedProjects,
-        allKeys: Object.keys(summary)
-      });
-    }
-  }, [summary]);
 
   const fetchProjects = async () => {
     await getAllProjects({
@@ -199,16 +184,16 @@ const ProjectManagement: React.FC = () => {
     });
   };
 
-  const handleActiveFilter = (value: string) => {
-    setActiveFilter(value);
-    getAllProjects({
-      isActive: value || undefined,
-      search: searchText || undefined,
-      status: statusFilter || undefined,
-      category: categoryFilter || undefined,
-      openCloseStatus: openCloseFilter || undefined,
-    });
-  };
+  // const handleActiveFilter = (value: string) => {
+  //   setActiveFilter(value);
+  //   getAllProjects({
+  //     isActive: value || undefined,
+  //     search: searchText || undefined,
+  //     status: statusFilter || undefined,
+  //     category: categoryFilter || undefined,
+  //     openCloseStatus: openCloseFilter || undefined,
+  //   });
+  // };
 
   // Handle open/close filter
   const handleOpenCloseFilter = (value: string) => {
@@ -228,6 +213,7 @@ const ProjectManagement: React.FC = () => {
       const values = await form.validateFields();
 
       // Exclude status from payload when editing
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { status, ...formValues } = values;
 
       const payload: CreateProjectForm = {
@@ -260,10 +246,11 @@ const ProjectManagement: React.FC = () => {
           description: result.error,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+       const errMsg = errorMessage(error);
       notification.error({
         message: `Error ${isEditMode ? "Updating" : "Creating"} Project`,
-        description: error.message,
+        description: errMsg || `Failed to ${isEditMode ? "update" : "create"} project`,
       });
     }
   };
@@ -321,10 +308,11 @@ const ProjectManagement: React.FC = () => {
           description: result.error,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+       const errMsg = errorMessage(error);
       notification.error({
         message: "Error",
-        description: error.message || "Failed to request deletion OTP",
+        description: errMsg || "Failed to request deletion OTP",
       });
     }
   };
@@ -355,10 +343,11 @@ const ProjectManagement: React.FC = () => {
           description: result.error,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+       const errMsg = errorMessage(error);
       notification.error({
         message: "Error",
-        description: error.message || "Failed to verify deletion OTP",
+        description: errMsg || "Failed to verify deletion OTP",
       });
     }
   };
@@ -396,10 +385,11 @@ const ProjectManagement: React.FC = () => {
           description: result.error,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+       const errMsg = errorMessage(error);
       notification.error({
         message: "Error",
-        description: error.message || "Failed to toggle project status",
+        description: errMsg || "Failed to toggle project status",
       });
     } finally {
       // Remove from loading set
@@ -435,8 +425,6 @@ const ProjectManagement: React.FC = () => {
       // Use the proper base URL for the API call
       const apiBaseUrl = baseURL || 'http://localhost:4000'; // Fallback URL
       const apiUrl = `${apiBaseUrl}/admin/projects/${project._id}/export-approved-csv`;
-      console.log('🚀 baseURL:', baseURL);
-      console.log('🚀 Final API URL:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -448,9 +436,6 @@ const ProjectManagement: React.FC = () => {
 
       // Close loading notification
       notification.destroy(loadingKey);
-
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', [...response.headers.entries()]);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -469,7 +454,6 @@ const ProjectManagement: React.FC = () => {
       }
       // Create blob and download
       const blob = await response.blob();
-      console.log('📦 Blob size:', blob.size, 'Type:', blob.type);
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -484,11 +468,12 @@ const ProjectManagement: React.FC = () => {
         message: 'CSV Exported Successfully',
         description: `Approved annotators data for "${project.projectName}" has been downloaded.`,
       });
-    } catch (error: any) {
+    } catch (error) {
+      const errMsg = errorMessage(error);
       console.error('❌ Error exporting CSV:', error);
       notification.error({
         message: 'Export Failed',
-        description: error.message || 'Failed to export approved annotators CSV',
+        description: errMsg || 'Failed to export approved annotators CSV',
       });
     }
   };
@@ -540,7 +525,6 @@ const ProjectManagement: React.FC = () => {
 
   // Show project annotators
   const showProjectAnnotators = (project: Project) => {
-    console.log({ project });
     setSelectedProjectForAnnotators(project);
     setIsAnnotatorsModalVisible(true);
   };
@@ -659,7 +643,7 @@ const ProjectManagement: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      render: (_: any, record: Project) => {
+      render: (_: unknown, record: Project) => {
         const menuItems = [
           {
             key: 'view',
@@ -767,7 +751,7 @@ const ProjectManagement: React.FC = () => {
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       {/* <Header title="Projects" /> */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">{summary.totalProjects ?? 0}</div>
@@ -994,34 +978,7 @@ const ProjectManagement: React.FC = () => {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* <Form.Item
-              name="deadline"
-              label="Project Deadline"
-              rules={[{ required: true, message: "Please select project deadline!" }]}
-            >
-              <DatePicker
-                showTime
-                style={{ width: "100%" }}
-                placeholder="Select deadline"
-                disabledDate={(current) => current && current.isBefore(dayjs(), 'day')}
-              />
-            </Form.Item> */}
-
-            {/* <Form.Item
-              name="applicationDeadline"
-              label="Application Deadline"
-              rules={[{ required: true, message: "Please select application deadline!" }]}
-            >
-              <DatePicker
-                showTime
-                style={{ width: "100%" }}
-                placeholder="Select application deadline"
-                disabledDate={(current) => current && current.isBefore(dayjs(), 'day')}
-              />
-            </Form.Item> */}
-
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
           <Form.Item
             name="estimatedDuration"

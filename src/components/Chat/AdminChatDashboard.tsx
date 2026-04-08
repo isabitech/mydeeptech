@@ -67,15 +67,15 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
   } = useAdminChat();
 
   useEffect(() => {
-    console.log('🔧 [AdminChatDashboard] Initializing with adminToken:', adminToken ? 'Present' : 'Missing');
+    // console.log('🔧 [AdminChatDashboard] Initializing with adminToken:', adminToken ? 'Present' : 'Missing');
     
     // Initialize admin socket connection
     if (adminToken) {
-      console.log('🔌 [AdminChatDashboard] Connecting to admin chat socket...');
+      // console.log('🔌 [AdminChatDashboard] Connecting to admin chat socket...');
       initializeAdminConnection(adminToken)
         .then((result) => {
           if (result.success) {
-            console.log('✅ [AdminChatDashboard] Admin socket connection successful');
+            // console.log('✅ [AdminChatDashboard] Admin socket connection successful');
           } else {
             console.error('❌ [AdminChatDashboard] Admin socket connection failed:', result.error);
           }
@@ -83,40 +83,29 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
     }
     
     // Load initial data
-    console.log('📋 [AdminChatDashboard] Loading initial chat data...');
+    // console.log('📋 [AdminChatDashboard] Loading initial chat data...');
     loadChats();
 
     // Socket event listeners
     AdminChatSocketService.on('connection_status', (data: { connected: boolean }) => {
-      console.log('🔗 [AdminChatDashboard] Admin connection status changed:', data);
+      // console.log('🔗 [AdminChatDashboard] Admin connection status changed:', data);
       if (data.connected) {
-        console.log('🏠 [AdminChatDashboard] Joining admin room...');
+        // console.log('🏠 [AdminChatDashboard] Joining admin room...');
         AdminChatSocketService.joinAdminRoom();
       }
     });
 
     AdminChatSocketService.on('new_chat_ticket', (data: any) => {
-      console.log('🎫 [AdminChatDashboard] New chat ticket received:', data);
       message.info(`New chat from ${data.userName}`);
       loadChats(); // Refresh chat list
     });
 
     AdminChatSocketService.on('user_message', (data: any) => {
-      console.log('👤 [AdminChatDashboard] User message received via user_message event:', data);
-      console.log('📊 [AdminChatDashboard] User message data:', {
-        ticketId: data.ticketId,
-        userId: data.userId,
-        userName: data.userName,
-        message: data.message,
-        selectedChatId: selectedChat?.ticketId
-      });
-      
       // Update chat list with latest message
       updateChatInList(data.ticketId, data.message);
       
       // Only add to current chat if this ticket is selected
       if (selectedChat?.ticketId === data.ticketId) {
-        console.log('💬 [AdminChatDashboard] Adding user message to selected chat');
         const newMsg: ChatMessage = {
           _id: data._id || `msg-${Date.now()}`,
           ticketId: data.ticketId,
@@ -134,10 +123,10 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
              Math.abs(new Date(m.timestamp).getTime() - new Date(newMsg.timestamp).getTime()) < 2000)
           );
           if (!exists) {
-            console.log('📨 [AdminChatDashboard] Adding user message via user_message event:', newMsg);
+            // console.log('📨 [AdminChatDashboard] Adding user message via user_message event:', newMsg);
             return [...prev, newMsg];
           }
-          console.log('⚠️ [AdminChatDashboard] User message already exists (via user_message), skipping');
+          // console.log('⚠️ [AdminChatDashboard] User message already exists (via user_message), skipping');
           return prev;
         });
       }
@@ -145,30 +134,14 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
     // Listen for all new messages (including user and admin messages) for real-time sync
     AdminChatSocketService.on('new_message', (data: any) => {
-      console.log('💬 [AdminChatDashboard] New message received:', data);
-      console.log('📊 [AdminChatDashboard] Message data details:', {
-        ticketId: data.ticketId,
-        senderEmail: data.senderEmail,
-        userEmail: data.userEmail,
-        message: data.message,
-        senderName: data.senderName,
-        selectedChatId: selectedChat?._id,
-        selectedTicketId: selectedChat?.ticketId
-      });
+
       
       if (selectedChat?.ticketId === data.ticketId || selectedChat?._id === data.ticketId) {
-        console.log('✅ [AdminChatDashboard] Message is for selected chat, updating UI');
+        // console.log('✅ [AdminChatDashboard] Message is for selected chat, updating UI');
         
         // Use isAdminReply === true to identify admin messages 
         const senderEmail = data.senderEmail || data.userEmail || '';
         const isFromAdmin = data.isAdminReply === true;
-        
-        console.log('🔍 [AdminChatDashboard] Message identification:', {
-          senderEmail,
-          isAdminReply: data.isAdminReply,
-          isFromAdmin,
-          messageType: isFromAdmin ? 'ADMIN MESSAGE' : 'USER MESSAGE'
-        });
         
         const newMsg: ChatMessage = {
           _id: data._id || `msg-${Date.now()}`,
@@ -189,10 +162,8 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
                Math.abs(new Date(m.timestamp).getTime() - new Date(newMsg.timestamp).getTime()) < 2000)
             );
             if (!exists) {
-              console.log('📨 [AdminChatDashboard] Adding user message to chat:', newMsg);
               return [...prev, newMsg];
             }
-            console.log('⚠️ [AdminChatDashboard] User message already exists, skipping duplicate');
             return prev;
           });
           
@@ -203,60 +174,49 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
           message.info(`New message from ${newMsg.senderName}`);
           
         } else {
-          console.log('🔄 [AdminChatDashboard] Admin message (isAdminReply: true) echo detected, skipping to avoid duplicate');
+          // console.log('🔄 [AdminChatDashboard] Admin message (isAdminReply: true) echo detected, skipping to avoid duplicate');
         }
       } else {
-        console.log('⚠️ [AdminChatDashboard] Message not for current chat, but updating chat list');
+        // console.log('⚠️ [AdminChatDashboard] Message not for current chat, but updating chat list');
         // Update chat list for user messages (isAdminReply === false)
         const isUserMessage = data.isAdminReply === false;
         if (isUserMessage) {
-          console.log('📝 [AdminChatDashboard] Updating chat list with user message');
+          // console.log('📝 [AdminChatDashboard] Updating chat list with user message');
           updateChatInList(data.ticketId, data.message);
         } else {
-          console.log('🔄 [AdminChatDashboard] Skipping chat list update for admin message');
+          // console.log('🔄 [AdminChatDashboard] Skipping chat list update for admin message');
         }
       }
     });
 
     // Add more socket event listeners for debugging
     AdminChatSocketService.on('message_sent', (data: any) => {
-      console.log('✅ [AdminChatDashboard] Message sent confirmation:', data);
+      // console.log('✅ [AdminChatDashboard] Message sent confirmation:', data);
     });
 
     AdminChatSocketService.on('chat_error', (data: any) => {
-      console.error('❌ [AdminChatDashboard] Chat error:', data);
+      // console.error('❌ [AdminChatDashboard] Chat error:', data);
       message.error(`Chat error: ${data.message || 'Unknown error'}`);
     });
 
     return () => {
-      console.log('🔌 [AdminChatDashboard] Disconnecting admin socket...');
+      // console.log('🔌 [AdminChatDashboard] Disconnecting admin socket...');
       AdminChatSocketService.disconnect();
     };
   }, [adminToken]);
 
   useEffect(() => {
-    console.log('📊 [AdminChatDashboard] selectedChatMessages updated:', {
-      count: selectedChatMessages.length,
-      messages: selectedChatMessages.map(m => ({
-        id: m._id,
-        message: m.message.substring(0, 50) + '...',
-        isAdminReply: m.isAdminReply,
-        senderName: m.senderName,
-        senderType: m.isAdminReply ? 'Admin' : 'User'
-      }))
-    });
     scrollToBottom();
   }, [selectedChatMessages]);
 
   const loadChats = async () => {
-    console.log('📋 [AdminChatDashboard] Loading chats with filter:', statusFilter);
+  
     try {
       const result = await getActiveChats(statusFilter);
-      console.log('📋 [AdminChatDashboard] Chat loading result:', result);
       if (result.success) {
-        console.log('✅ [AdminChatDashboard] Successfully loaded chats:', result.data);
+        // console.log('✅ [AdminChatDashboard] Successfully loaded chats:', result.data);
       } else {
-        console.error('❌ [AdminChatDashboard] Failed to load chats:', result.error);
+        // console.error('❌ [AdminChatDashboard] Failed to load chats:', result.error);
       }
     } catch (error) {
       console.error('❌ [AdminChatDashboard] Error loading chats:', error);
@@ -268,13 +228,13 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
   };
 
   const handleJoinChat = async (chat: ChatTicket) => {
-    console.log('🔗 [AdminChatDashboard] Attempting to join chat:', chat);
+    // console.log('🔗 [AdminChatDashboard] Attempting to join chat:', chat);
     try {
       const result = await joinChat(chat._id);
-      console.log('🔗 [AdminChatDashboard] Join chat API result:', result);
+      // console.log('🔗 [AdminChatDashboard] Join chat API result:', result);
       
       if (result.success && result.data) {
-        console.log('✅ [AdminChatDashboard] Successfully joined chat, setting messages:', result.data.messages?.length || 0, 'messages');
+        // console.log('✅ [AdminChatDashboard] Successfully joined chat, setting messages:', result.data.messages?.length || 0, 'messages');
         setSelectedChatMessages(result.data.messages || []);
         
         // Update the selected chat with user info from the response
@@ -285,15 +245,15 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
           ticketId: result.data.ticketId,
           status: result.data.status as any
         };
-        console.log('👤 [AdminChatDashboard] Updated chat object:', updatedChat);
+        // console.log('👤 [AdminChatDashboard] Updated chat object:', updatedChat);
         setSelectedChat(updatedChat);
         
         // Join socket room for real-time updates using the ticketId from response
         if (isConnected) {
-          console.log('🏠 [AdminChatDashboard] Joining chat room for ticket:', result.data.ticketId);
+          // console.log('🏠 [AdminChatDashboard] Joining chat room for ticket:', result.data.ticketId);
           AdminChatSocketService.joinChatRoom(result.data.ticketId);
         } else {
-          console.warn('⚠️ [AdminChatDashboard] Socket not connected, cannot join room');
+          // console.warn('⚠️ [AdminChatDashboard] Socket not connected, cannot join room');
         }
         
         message.success(`Joined chat with ${result.data.userName}`);
@@ -309,18 +269,12 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) {
-      console.warn('⚠️ [AdminChatDashboard] Cannot send message: empty message or no selected chat');
+      // console.warn('⚠️ [AdminChatDashboard] Cannot send message: empty message or no selected chat');
       return;
     }
 
     const messageText = newMessage.trim();
     const ticketId = selectedChat.ticketId || selectedChat._id;
-    console.log('📤 [AdminChatDashboard] Attempting to send message:', {
-      message: messageText,
-      ticketId,
-      selectedChat: selectedChat,
-      isConnected
-    });
 
     const adminMessage: ChatMessage = {
       _id: `temp-${Date.now()}`,
@@ -331,7 +285,7 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
       timestamp: new Date()
     };
 
-    console.log('➕ [AdminChatDashboard] Adding message to UI:', adminMessage);
+    // console.log('➕ [AdminChatDashboard] Adding message to UI:', adminMessage);
     setSelectedChatMessages(prev => [...prev, adminMessage]);
 
     // Clear input immediately for better UX
@@ -342,10 +296,10 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
     // Try socket first if connected
     if (isConnected && AdminChatSocketService.isSocketConnected()) {
-      console.log('🔌 [AdminChatDashboard] Sending via AdminChatSocketService to ticket:', ticketId);
+      // console.log('🔌 [AdminChatDashboard] Sending via AdminChatSocketService to ticket:', ticketId);
       try {
         AdminChatSocketService.sendMessage(ticketId, messageText, []);
-        console.log('✅ [AdminChatDashboard] Admin socket message sent successfully');
+        // console.log('✅ [AdminChatDashboard] Admin socket message sent successfully');
         socketSuccess = true;
       } catch (socketError) {
         console.error('❌ [AdminChatDashboard] Admin socket send error:', socketError);
@@ -353,35 +307,21 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
     }
 
     // Always try API as well for reliability
-    console.log('📡 [AdminChatDashboard] Sending message via API as backup/confirmation');
-    // try {
-    //   const apiResult = await sendMessageAPI(ticketId, messageText);
-    //   console.log('📡 [AdminChatDashboard] API send message result:', apiResult);
-      
-    //   if (apiResult.success) {
-    //     console.log('✅ [AdminChatDashboard] Message sent via API successfully');
-    //     apiSuccess = true;
-    //   } else {
-    //     console.error('❌ [AdminChatDashboard] API send failed:', apiResult.error);
-    //   }
-    // } catch (apiError) {
-    //   console.error('❌ [AdminChatDashboard] API send error:', apiError);
-    // }
-
+  
     // Show user feedback based on results
     if (socketSuccess || apiSuccess) {
       if (socketSuccess && apiSuccess) {
-        console.log('✅ [AdminChatDashboard] Message sent via both socket and API');
+        // console.log('✅ [AdminChatDashboard] Message sent via both socket and API');
         // Don't show message to avoid spam - socket success is enough
       } else if (socketSuccess) {
-        console.log('✅ [AdminChatDashboard] Message sent via socket only');
+        // console.log('✅ [AdminChatDashboard] Message sent via socket only');
         message.success('Message sent (real-time)');
       } else if (apiSuccess) {
-        console.log('✅ [AdminChatDashboard] Message sent via API only');
+        // console.log('✅ [AdminChatDashboard] Message sent via API only');
         message.success('Message sent (API)');
       }
     } else {
-      console.error('❌ [AdminChatDashboard] Failed to send message via both socket and API');
+      // console.error('❌ [AdminChatDashboard] Failed to send message via both socket and API');
       message.error('Failed to send message. Please check your connection.');
       
       // Optionally remove the message from UI if both failed
@@ -391,27 +331,23 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
   const handleCloseChat = async () => {
     if (!selectedChat) {
-      console.warn('⚠️ [AdminChatDashboard] Cannot close chat: no selected chat');
       return;
     }
 
-    console.log('🔒 [AdminChatDashboard] Attempting to close chat:', selectedChat._id);
     try {
       const result = await closeChat(selectedChat._id, {
         resolutionSummary: 'Chat session completed successfully'
       });
       
-      console.log('🔒 [AdminChatDashboard] Close chat result:', result);
       
       if (result.success) {
-        console.log('✅ [AdminChatDashboard] Chat closed successfully');
         message.success('Chat closed successfully');
         setSelectedChatMessages([]);
         setSelectedChat(null);
         
         // Also notify via socket if connected
         if (isConnected) {
-          console.log('📡 [AdminChatDashboard] Notifying admin socket about chat closure');
+          // console.log('📡 [AdminChatDashboard] Notifying admin socket about chat closure');
           AdminChatSocketService.closeChat(selectedChat._id, 'Chat session completed successfully');
         }
         

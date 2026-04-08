@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Button, Typography, message, DatePicker, TimePicker, Checkbox, Radio, Row, Col } from 'antd';
 import { LinkOutlined, UserOutlined, MailOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useUserInfoActions, useUserInfoStates } from '../../../../store/useAuthStore';
+import { useGetUserInfo, useUserInfoActions } from '../../../../store/useAuthStore';
 import dayjs from 'dayjs';
 import assessmentMutationService from '../../../../services/assessement-service/assessment-mutation';
 import errorMessage from '../../../../lib/error-message';
@@ -28,7 +28,7 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
 }) => {
 
   const [form] = Form.useForm();
-  const { userInfo } = useUserInfoStates();
+  const userInfo = useGetUserInfo("user");
   const { setIsAssessmentSubmitted } = useUserInfoActions();
   const { submitReviewMutation, isSubmitReviewLoading } = assessmentMutationService.useSubmitReviewMutation();
   const { userProfileRefetch } = authService.useProfile(); // Refetch user profile to get latest info after submission

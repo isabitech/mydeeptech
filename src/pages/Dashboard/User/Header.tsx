@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "../../../components/NotificationDropdown";
 import Dropdown from "antd/es/dropdown/dropdown";
 import { Avatar, Typography } from "antd";
-import { useUserInfoActions, useUserInfoStates } from "../../../store/useAuthStore";
+import { useGetUserInfo } from "../../../store/useAuthStore";
+import useLogout from "../../../hooks/useLogout";
 
 const { Text } = Typography;
 
@@ -11,27 +12,10 @@ type Props = {
   title: string;
 };
 
-export type UserInfoProps = {
-  id: string
-  fullName: string
-  email: string
-  phone: string
-  domains: string[]
-  socialsFollowed: any[]
-  consent: boolean
-  isEmailVerified: boolean
-  hasSetPassword: boolean
-  annotatorStatus: string
-  microTaskerStatus: string
-  resultLink: string
-  createdAt: string
-  updatedAt: string
-};
-
 const Header: React.FC<Props> = ({ title }) => {
   const navigate = useNavigate();
-  const { userInfo } = useUserInfoStates();
-  const { handleLogout } = useUserInfoActions();
+  const userInfo = useGetUserInfo("user");
+  const handleLogout = useLogout({ userType: 'user' });
 
   const userMenuItems = [
     {
@@ -58,7 +42,7 @@ const Header: React.FC<Props> = ({ title }) => {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Logout',
-      onClick: handleLogout
+      onClick: () => handleLogout()
     }
   ];
 

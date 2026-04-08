@@ -1,15 +1,15 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
   LogoutOutlined,
   DownOutlined,
   RightOutlined
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
-import { useState } from "react";
 import PageModal from "../../../components/Modal/PageModal";
 import { Button, Drawer, Skeleton } from "antd";
 import { useSidebarContext } from "./_context/SidebarContext";
-import { useUserInfoActions } from "../../../store/useAuthStore";
+import useLogout from "../../../hooks/useLogout";
 import { useSidebarResources } from "../../../hooks/useSidebarResources";
 import { getIconElement } from "../User/SidebarIcon";
 import { ResourceNode } from "../../../api/rbac/rbacSchema";
@@ -64,7 +64,12 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
       <li key={node._id} className="w-full">
         <NavLink
           to={`/admin${node.link}`}
-          onClick={handleCloseSidebar}
+          onClick={() => {
+            // Only close sidebar on mobile screens
+            if (window.innerWidth < 768) {
+              handleCloseSidebar();
+            }
+          }}
           className={({ isActive }) =>
             `flex items-center gap-3 py-3 pr-4 text-sm font-medium transition-colors ${
               isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
@@ -79,8 +84,9 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
     );
   };
 
+  // Sidebar
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${openModal ? "hidden" : "block"} h-full`}>
       <div className="p-4 text-center flex flex-col gap-2 items-center justify-center font-bold text-xl border-b border-gray-700">
         <div className="h-[80px]">
           <img className="h-full w-full rounded-md pointer-events-none" src={Logo} alt="" />
@@ -134,26 +140,24 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
 const AdminSidebar = () => {
   const [openModal, setOpenModal] = useState(false);
   const { sidebarCollapsed, toggleSidebar } = useSidebarContext();
-  const { clearUserInfo } = useUserInfoActions();
   const handleLogOutModal = () => {
     setOpenModal(!openModal);
   };
 
-  const handleLogout = () => {
-    sessionStorage.clear();
-    clearUserInfo();
-    navigate("/auth/admin-login");
-  }
+  const handleSidebarClose = () => {
+    setOpenModal(false); // Close logout modal if open
+    toggleSidebar(); // Close sidebar
+  };
 
-  const navigate = useNavigate();
+  const handleLogout = useLogout({ userType: 'admin' });
 
   return (
     <>
       <Drawer
         width={300}
         placement="left"
-        onClose={toggleSidebar}
-        open={sidebarCollapsed}
+        onClose={handleSidebarClose}
+        open={!sidebarCollapsed && window.innerWidth < 768}
         title={null}
         closable={false}
         className="!bg-primary text-white [&_.ant-drawer-close]:text-white [&_.ant-drawer-close:hover]:text-gray-200"
@@ -164,7 +168,7 @@ const AdminSidebar = () => {
           handleLogOutModal={handleLogOutModal}
         />
       </Drawer>
-      <div className="hidden min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] lg:flex flex-col overflow-y-auto p-1">
+      <div className={` ${sidebarCollapsed || window.innerWidth < 768 ? "hidden" : "block"} min-h-full font-[gilroy-regular] bg-primary text-white w-[300px] flex flex-col overflow-y-auto p-1 border-r-2`}>
         <SidebarMenus openModal={openModal} handleLogOutModal={handleLogOutModal} />
       </div>
 
@@ -178,10 +182,10 @@ const AdminSidebar = () => {
         <div className=" font-[gilroy-regular] flex flex-col gap-4">
           <p>Are you sure you want to Logout?</p>
           <span className=" flex justify-end gap-4">
-            <Button onClick={handleLogout} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
+            <Button onClick={() => handleLogout()} className=" !font-[gilroy-regular] !bg-secondary !text-primary !border-none">
               Yes
             </Button>
-            <Button className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">
+            <Button onClick={handleLogOutModal} className=" !font-[gilroy-regular]  !border-none !bg-primary !text-white">
               No
             </Button>
           </span>

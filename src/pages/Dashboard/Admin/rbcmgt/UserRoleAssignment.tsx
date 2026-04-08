@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Table, Input, Select, Avatar, Space, Button } from "antd";
+import { Table, Input, Select, Avatar, Space, Button, message } from "antd";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import {
   userListQueryOptions,
@@ -9,6 +9,7 @@ import { useUserRoleUpdate } from "../../../../api/rbac/rbacMutations";
 import { RbacUser, Role } from "../../../../api/rbac/rbacSchema";
 import Loader from "../../../../components/Loader";
 import { useQuery } from "@tanstack/react-query";
+import errorMessage from "../../../../lib/error-message";
 
 const { Option } = Select;
 
@@ -51,6 +52,14 @@ const UserRoleAssignment: React.FC = () => {
           delete next[userId];
           return next;
         });
+      },
+      onError: (error) => {
+        // Optionally handle error (e.g., show notification)
+      const errorMsg = errorMessage(error);
+        message.error({
+          content: errorMsg || "Failed to update user role. Please try again.",
+          key: "update-role-error",
+        })
       }
     });
   };

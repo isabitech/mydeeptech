@@ -13,9 +13,7 @@ import {
   Input,
   Descriptions,
   message,
-  Popconfirm,
   Dropdown,
-  Menu,
   TableColumnsType,
   TableProps,
 } from "antd";
@@ -27,23 +25,20 @@ import {
   SearchOutlined,
   MoreOutlined,
   FilePdfOutlined,
-  DeleteOutlined,
 } from "@ant-design/icons";
 import { PDFViewerModal, usePDFViewer } from "../../../../components/PDFViewer";
-import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 
-import Header from "../../User/Header";
 import moment from "moment";
 import { useAdminApplications } from "../../../../hooks/Auth/Admin/Projects/useAdminApplications";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
 import {
   Application,
-  Project,
   ApproveApplicationForm,
   RejectApplicationForm,
   RejectionReason,
 } from "../../../../types/project.types";
 import PageModal from "../../../../components/Modal/PageModal";
+import errorMessage from "../../../../lib/error-message";
 
 
 const { Option } = Select;
@@ -59,17 +54,13 @@ const REJECTION_REASONS: { value: RejectionReason; label: string }[] = [
 
 
 const ApplicationManagement: React.FC = () => {
-  // Initialize PDF viewer plugin
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
-  const [selectedApplication, setSelectedApplication] =
-    useState<Application | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [isRejectionModalVisible, setIsRejectionModalVisible] = useState(false);
   const { isVisible: isPdfModalVisible, fileUrl: pdfUrl, openPDFViewer, closePDFViewer } = usePDFViewer();
-  const [pdfViewerApplication, setPdfViewerApplication] =
-    useState<Application | null>(null);
+  const [pdfViewerApplication, setPdfViewerApplication] = useState<Application | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [projectFilter, setProjectFilter] = useState<string>("");
   const [searchText, setSearchText] = useState<string>("");
@@ -186,7 +177,8 @@ const ApplicationManagement: React.FC = () => {
         message.error(result.error || "Failed to approve application");
       }
     } catch (error) {
-      message.error("Please complete the required fields");
+       const errorMsg = errorMessage(error);
+      message.error(errorMsg || "Please complete the required fields");
     }
   };
 
@@ -214,7 +206,8 @@ const ApplicationManagement: React.FC = () => {
         message.error(result.error || "Failed to reject application");
       }
     } catch (error) {
-      message.error("Please complete the required fields");
+      const errorMsg = errorMessage(error);
+      message.error(errorMsg || "Please complete the required fields");
     }
   };
 
@@ -263,7 +256,7 @@ const ApplicationManagement: React.FC = () => {
     {
       title: "Resume",
       key: "resumeUrl",
-      render: (_: any, record: Application) =>
+      render: (_, record: Application) =>
         record.resumeUrl ? (
           <Button
             type="link"
@@ -281,49 +274,41 @@ const ApplicationManagement: React.FC = () => {
       title: "Actions",
       key: "actions",
       width: 100,
-      render: (_: any, record: Application) => (
+      render: (_, record: Application) => (
         <Dropdown
-          overlay={
-            <Menu>
-              <Menu.Item
-                key="view-details"
-                icon={<EyeOutlined />}
-                onClick={() => showApplicationDetails(record)}
-              >
-                View Details
-              </Menu.Item>
-              {record.resumeUrl && (
-                <Menu.Item
-                  key="view-resume"
-                  icon={<FilePdfOutlined />}
-                  onClick={() => viewResume(record.resumeUrl!, record)}
-                >
-                  View Resume
-                </Menu.Item>
-              )}
-              {record.status === "pending" && (
-                <>
-                  <Menu.Divider />
-                  <Menu.Item
-                    key="approve"
-                    icon={<CheckOutlined />}
-                    onClick={() => showApprovalModal(record)}
-                    className="text-green-600"
-                  >
-                    Approve
-                  </Menu.Item>
-                  <Menu.Item
-                    key="reject"
-                    icon={<CloseOutlined />}
-                    onClick={() => showRejectionModal(record)}
-                    className="text-red-600"
-                  >
-                    Reject
-                  </Menu.Item>
-                </>
-              )}
-            </Menu>
-          }
+          menu={{
+            items: [
+              {
+                key: "view-details",
+                label: "View Details",
+                icon: <EyeOutlined />,
+                onClick: () => showApplicationDetails(record),
+              },
+              ...(record.resumeUrl ? [{
+                key: "view-resume",
+                label: "View Resume",
+                icon: <FilePdfOutlined />,
+                onClick: () => viewResume(record.resumeUrl!, record),
+              }] : []),
+              ...(record.status === "pending" ? [
+                { type: "divider" as const },
+                {
+                  key: "approve",
+                  label: "Approve",
+                  icon: <CheckOutlined />,
+                  onClick: () => showApprovalModal(record),
+                  className: "text-green-600",
+                },
+                {
+                  key: "reject",
+                  label: "Reject",
+                  icon: <CloseOutlined />,
+                  onClick: () => showRejectionModal(record),
+                  className: "text-red-600",
+                },
+              ] : []),
+            ],
+          }}
           trigger={["click"]}
         >
           <Button
@@ -519,7 +504,7 @@ const ApplicationManagement: React.FC = () => {
            rowSelection={rowSelection}
           columns={columns}
           dataSource={applications}
-          rowKey={(record) => record.applicationId || (record as any)?._id || String(Math.random())}
+          rowKey={(record) => record.applicationId || (record as Application & { _id?: string })?._id}
           pagination={{
             current: pagination?.currentPage || 1,
             pageSize: pagination?.limit || 50,

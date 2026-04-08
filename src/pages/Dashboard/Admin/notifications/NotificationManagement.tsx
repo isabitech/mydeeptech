@@ -11,7 +11,6 @@ import {
   Statistic,
   Select,
   DatePicker,
-  Input,
   message,
   Popconfirm,
   Tooltip,
@@ -40,12 +39,11 @@ import {
 } from "../../../../types/notification.types";
 import CreateNotificationModal from "./CreateNotificationModal";
 import BroadcastNotificationModal from "./BroadcastNotificationModal";
-import Header from "../../User/Header";
+import errorMessage from "../../../../lib/error-message";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Search } = Input;
 
 const NotificationManagement: React.FC = () => {
   const {
@@ -117,7 +115,8 @@ const NotificationManagement: React.FC = () => {
         message.error(result.error || "Failed to delete notification");
       }
     } catch (error) {
-      message.error("Failed to delete notification");
+      const errorMsg = errorMessage(error);
+      message.error({ content: errorMsg, key: "delete_notification_error" });
     }
   };
 
@@ -131,6 +130,10 @@ const NotificationManagement: React.FC = () => {
       system_announcement: "geekblue",
       security_alert: "red",
       payment_update: "magenta",
+      support_agent_joined: "green",
+      support_reply: "blue",
+      support_chat: "cyan",
+      support_resolved: "green",
     };
     return colors[type] || "default";
   };
@@ -144,21 +147,21 @@ const NotificationManagement: React.FC = () => {
     return colors[priority];
   };
 
-  const columns: ColumnsType<any> = [
+  const columns: ColumnsType<Notification> = [
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
       width: 300,
-      render: (title: string, record: any) => (
+      render: (title: string, record: Notification) => (
         <div>
-          <Text strong>{title}</Text>
+          <span className="font-semibold">{title}</span>
           <br />
-          <Text type="secondary" style={{ fontSize: "12px" }}>
+          <span className="text-xs">
             {record.message.length > 100
               ? `${record.message.substring(0, 100)}...`
               : record.message}
-          </Text>
+          </span>
         </div>
       ),
     },
@@ -166,30 +169,32 @@ const NotificationManagement: React.FC = () => {
       title: "Recipient",
       key: "recipient",
       width: 200,
-      render: (_, record: any) => (
-        <div>
+      render: (_, record: Notification) => (
           <Space>
-            {record.recipientType === "all" ? (
-              <GlobalOutlined style={{ color: "#1890ff" }} />
-            ) : (
-              <UserOutlined />
-            )}
-            <div>
-              {record.recipientType === "all" ? (
-                <Text>All Users</Text>
-              ) : (
-                <div>
-                  <Text>{record.recipientId?.fullName || "N/A"}</Text>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
-                    {record.recipientId?.email}
-                  </Text>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <div className="self-start">
+                  {record.recipientType === "all" ? (
+                    <GlobalOutlined style={{ color: "#1890ff" }} />
+                  ) : (
+                    <UserOutlined />
+                  )}
                 </div>
-              )}
+                <div>
+                  {record.recipientType === "all" ? (
+                    <span className="text-xs">All Users</span>
+                  ) : (
+                    <span className="text-xs">Specific User</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs">
+                <span>ID:</span>
+                <span className="text-secondary"> {record.recipientId ?? "N/A"}</span>
+              </div>
             </div>
           </Space>
-        </div>
-      ),
+        ),
     },
     {
       title: "Type",
@@ -210,6 +215,10 @@ const NotificationManagement: React.FC = () => {
         { text: "System Announcement", value: "system_announcement" },
         { text: "Security Alert", value: "security_alert" },
         { text: "Payment Update", value: "payment_update" },
+        { text: "Support Agent Joined", value: "support_agent_joined" },
+        { text: "Support Reply", value: "support_reply" },
+        { text: "Support Chat", value: "support_chat" },
+        { text: "Support Resolved", value: "support_resolved" },
       ],
     },
     {
@@ -232,16 +241,11 @@ const NotificationManagement: React.FC = () => {
       title: "Status",
       key: "status",
       width: 120,
-      render: (_, record: any) => (
+      render: (_, record: Notification) => (
         <div>
           <Tag color={record.isRead ? "green" : "orange"}>
             {record.isRead ? "Read" : "Unread"}
           </Tag>
-          {record.emailSent && (
-            <Tag color="blue" style={{ marginTop: 4 }}>
-              Email Sent
-            </Tag>
-          )}
         </div>
       ),
     },
@@ -265,7 +269,7 @@ const NotificationManagement: React.FC = () => {
       title: "Actions",
       key: "actions",
       width: 120,
-      render: (_, record: any) => (
+      render: (_, record: Notification) => (
         <Space>
           <Tooltip title="View Details">
             <Button
@@ -398,6 +402,10 @@ const NotificationManagement: React.FC = () => {
               <Option value="system_announcement">System Announcement</Option>
               <Option value="security_alert">Security Alert</Option>
               <Option value="payment_update">Payment Update</Option>
+              <Option value="support_agent_joined">Support Agent Joined</Option>
+              <Option value="support_reply">Support Reply</Option>
+              <Option value="support_chat">Support Chat</Option>
+              <Option value="support_resolved">Support Resolved</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={6} lg={4}>
@@ -433,7 +441,7 @@ const NotificationManagement: React.FC = () => {
             <RangePicker
               placeholder={["Start Date", "End Date"]}
               value={filters.startDate && filters.endDate ? [
-                dayjs(filters.startDate), 
+                dayjs(filters.startDate),
                 dayjs(filters.endDate)
               ] : undefined}
               onChange={(dates) => {
@@ -460,11 +468,11 @@ const NotificationManagement: React.FC = () => {
                 onClick={() => {
                   setFilters({ page: 1, limit: 20 });
                 }}
-                disabled={!Boolean(
-                  filters.type || 
-                  filters.priority || 
-                  filters.isRead !== undefined || 
-                  filters.startDate || 
+                disabled={!(
+                  filters.type ||
+                  filters.priority ||
+                  filters.isRead !== undefined ||
+                  filters.startDate ||
                   filters.endDate
                 )}
               >
@@ -586,9 +594,9 @@ const NotificationManagement: React.FC = () => {
             </Descriptions.Item>
             {(viewingNotification.actionUrl || viewingNotification.data?.actionUrl) && (
               <Descriptions.Item label="Action URL">
-                <a 
-                  href={(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''} 
-                  target="_blank" 
+                <a
+                  href={(viewingNotification.actionUrl && typeof viewingNotification.actionUrl === 'string' ? viewingNotification.actionUrl : viewingNotification.data?.actionUrl) || ''}
+                  target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#1890ff', textDecoration: 'underline' }}
                 >

@@ -13,7 +13,7 @@ const LogoutSection = ({ onLogout }: LogoutSectionProps) => {
     <>
       <button
         onClick={() => setOpenModal(true)}
-        className="flex items-center gap-2 pl-4 mb-2"
+        className="flex items-center gap-2 pl-4 my-1.5 h-11 text-red-500 hover:bg-black/20 rounded-md transition-colors"
       >
         <LogoutOutlined /> Logout
       </button>

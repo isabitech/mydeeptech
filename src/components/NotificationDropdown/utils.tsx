@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import { NotificationType, Priority } from "../../types/notification.types";
 import { NOTIFICATION_ICON_TYPES, PRIORITY_COLOR_MAP, NOTIFICATION_COLOR_MAP } from "./constants";
+import { NotificationTypeSchema } from "../../validators/notification/notification-schema";
 
 export const getNotificationIcon = (type: NotificationType) => {
   const iconType = NOTIFICATION_ICON_TYPES[type];
@@ -37,6 +38,6 @@ export const getPriorityColor = (priority: Priority) => {
   return PRIORITY_COLOR_MAP[priority];
 };
 
-export const getNotificationColor = (type: NotificationType) => {
+export const getNotificationColor = (type: NotificationTypeSchema) => {
   return NOTIFICATION_COLOR_MAP[type] || "#1890ff";
 };

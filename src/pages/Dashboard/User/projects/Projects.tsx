@@ -51,12 +51,9 @@ const Projects = () => {
         ))}
       </div>
 
-      {/* Render the selected component */}
-      <div className="mt-4 flex-1">
-        {selectedProject === 1 && <AvailableProjects key={`tab-${selectedProject}`} />}
-        {selectedProject === 2 && <ActiveProjects key={`tab-${selectedProject}`} />}
-        {selectedProject === 3 && <PendingProjects key={`tab-${selectedProject}`} />}
-        {selectedProject === 4 && <RejectedProjects key={`tab-${selectedProject}`} />}
+      {/* Dynamic Content Area */}
+      <div className="flex-1">
+        {list.find(item => item.key === selectedProject)?.component}
       </div>
     </div>
   );

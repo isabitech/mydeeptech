@@ -31,7 +31,7 @@ class EnhancedChatSocketService implements IChatSocketService {
   async connect(token: string, userType: ChatUserType = 'user'): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
-      console.log('🔌 Connecting to Socket.IO server:', url);
+
       
       this.userType = userType;
       
@@ -52,7 +52,7 @@ class EnhancedChatSocketService implements IChatSocketService {
 
       // Connection success/failure handling
       this.socket.on('connect', () => {
-        console.log('✅ Chat service connected successfully');
+
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.flushMessageQueue();
@@ -87,14 +87,14 @@ class EnhancedChatSocketService implements IChatSocketService {
 
     // Connection events
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ Chat service disconnected:', reason);
+
       this.isConnected = false;
       this.emit('connection_status', { connected: false, reason });
     });
 
     // Chat session events
     this.socket.on('active_tickets', (data) => {
-      console.log('📋 Active tickets loaded:', data);
+
       if (data.tickets && Array.isArray(data.tickets)) {
         data.tickets.forEach((ticket: ChatTicket) => {
           this.currentTickets.set(ticket._id, ticket);
@@ -104,7 +104,7 @@ class EnhancedChatSocketService implements IChatSocketService {
     });
 
     this.socket.on('chat_started', (data) => {
-      console.log('🚀 Chat started:', data);
+
       const ticket: ChatTicket = {
         _id: data.ticketId,
         ticketId: data.ticketId,
@@ -123,7 +123,7 @@ class EnhancedChatSocketService implements IChatSocketService {
     });
 
     this.socket.on('chat_history', (data) => {
-      console.log('📋 Chat history received:', data);
+
       if (data.ticket) {
         this.currentTickets.set(data.ticket._id, data.ticket);
         this.emit('chat_history_loaded', data.ticket);
@@ -131,7 +131,7 @@ class EnhancedChatSocketService implements IChatSocketService {
     });
 
     this.socket.on('ticket_rejoined', (data) => {
-      console.log('🔄 Ticket rejoined:', data);
+
       if (data.ticket) {
         this.currentTickets.set(data.ticket._id, data.ticket);
         this.emit('ticket_rejoined', data.ticket);
@@ -140,7 +140,7 @@ class EnhancedChatSocketService implements IChatSocketService {
 
     // Message events - CRITICAL FOR SYNCED COMMUNICATION
     this.socket.on('new_message', (message: ChatMessage) => {
-      console.log('💬 New message received:', message);
+
       
       // Update local ticket data
       const ticket = this.currentTickets.get(message.ticketId);
@@ -158,35 +158,35 @@ class EnhancedChatSocketService implements IChatSocketService {
     });
 
     this.socket.on('message_sent', (data) => {
-      console.log('✅ Message sent confirmation:', data);
+
       this.emit('message_sent', data);
     });
 
     // Admin events
     this.socket.on('agent_joined', (data) => {
-      console.log('👨‍💼 Agent joined chat:', data);
+
       this.emit('agent_joined', data);
     });
 
     this.socket.on('agent_typing', (data) => {
-      console.log('⌨️ Agent is typing:', data);
+
       this.emit('agent_typing', data);
     });
 
     this.socket.on('user_typing', (data) => {
-      console.log('⌨️ User is typing:', data);
+
       this.emit('user_typing', data);
     });
 
     // Status events
     this.socket.on('chat_closed', (data) => {
-      console.log('📪 Chat closed:', data);
+
       this.currentTickets.delete(data.ticketId);
       this.emit('chat_closed', data);
     });
 
     this.socket.on('ticket_status_updated', (data) => {
-      console.log('📊 Ticket status updated:', data);
+
       const ticket = this.currentTickets.get(data.ticketId);
       if (ticket) {
         ticket.status = data.status;

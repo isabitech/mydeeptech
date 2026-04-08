@@ -1,44 +1,56 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
+interface ApiResponseData {
+  message?: string;
+  data?: {
+    message?: string;
+  };
+}
 
-const resolveMessage = (err: any): string => {
-  // Handle null/undefined
+interface ResolvableError {
+  response?: {
+    data?: ApiResponseData;
+  };
+  message?: string;
+}
+
+const resolveMessage = (err: ResolvableError | string): string => {
   if (!err) {
     return "An unknown error occurred.";
   }
 
-  // Extract message from various error structures
-  const message = 
-    err?.response?.data?.data?.message ||
-    err?.response?.data?.message ||
-    err?.message ||
-    (typeof err === "string" ? err : null);
+  const message =
+    typeof err === "string"
+      ? err
+      : err?.response?.data?.data?.message ||
+        err?.response?.data?.message ||
+        err?.message;
 
   return message || "An unknown error occurred.";
 };
 
 const errorMessage = (error: unknown): string => {
-  console.log("Error received in errorMessage function:", error);
-
-  // Handle null or undefined errors
   if (error === null || error === undefined) {
     return "An unknown error occurred.";
   }
 
-  if (axios.isAxiosError(error)) {
-    return resolveMessage(error);
+  if (axios.isAxiosError<ApiResponseData>(error)) {
+    return resolveMessage(error as AxiosError<ApiResponseData> & ResolvableError);
   }
 
   if (error instanceof Error) {
     return resolveMessage(error);
   }
 
-  // Handle string errors
   if (typeof error === "string") {
     return error || "An unknown error occurred.";
   }
 
-  return resolveMessage(error);
+  if (typeof error === "object") {
+    return resolveMessage(error as ResolvableError);
+  }
+
+  return "An unknown error occurred.";
 };
 
 export default errorMessage;

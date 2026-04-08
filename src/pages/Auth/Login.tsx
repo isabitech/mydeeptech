@@ -6,6 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucid
 import authMutationService from "../../services/authentication/auth-mutation";
 import errorMessage from "../../lib/error-message";
 import LoginLeftHeroSection from "./_components/LoginLeftHeroSection";
+import { formatUserInfo } from "../../services/authentication/_helper";
 
 const Login = () => {
   const location = useLocation();
@@ -48,10 +49,14 @@ const Login = () => {
 
     signinMutation.mutate(formData, {
       onSuccess: (data) => {
-
-        const userData = data?.user;
+        // console.log("🚀 Login API Response:", data);
+        
+        const userData = formatUserInfo(data);
+        // console.log("🔍 Formatted User Data:", userData);
+        // console.log("💡 User Data Type Check:", typeof userData, "Falsy?", !userData);
 
         if(!userData) {
+          // console.error("❌ formatUserInfo returned falsy value!");
           notification.open({
             type: "error",
             message: "Invalid credentials.",
@@ -59,7 +64,9 @@ const Login = () => {
           return navigate("/login", { replace: true });
         }
 
+        // console.log("📧 Email Verification Check - isEmailVerified:", userData.isEmailVerified);
         if (!userData.isEmailVerified) {
+          // console.warn("⚠️ Email not verified");
           notification.open({
             type: "warning",
             message: "Please verify your email before logging in. Check your inbox for verification link.",
@@ -68,11 +75,12 @@ const Login = () => {
           notification.error({
             message: "Please verify your email before logging in. Check your inbox for verification link.",
           });
-  
           return navigate("/login", { state: { email: formData.email }, replace: true });
       }
 
+      // console.log("🔐 Password Setup Check - hasSetPassword:", userData.hasSetPassword);
       if (!userData.hasSetPassword) {
+        // console.warn("⚠️ Password not set");
         notification.open({
           type: "warning",
           message: "Please complete your account setup by setting a password.",
@@ -80,29 +88,39 @@ const Login = () => {
         return navigate("/login", { state: { email: formData.email }, replace: true });
       }
   
-      if(userData?.role !== "user") {
+      // console.log("🔑 User Role Check - Expected: 'user', Actual:", userData.role);
+      
+      // Since this is the user login endpoint, we know this is a user
+      // Only reject if explicitly marked as non-user (like admin)
+      if(userData.role && userData.role !== "user" && userData.isAdmin) {
+          // console.error("❌ Admin trying to use user login endpoint:", userData.role);
           notification.open({
               type: "error",
-              message: "Invalid credentials.",
+              message: "Please use the admin login page.",
               key: "invalid_credentials",
           });
-        return navigate("/login", { replace: true });
+        return navigate("/auth/admin-login", { replace: true });
       }
+      
+      // console.log("✅ User login validated!");
 
-        notification.open({ type: "success", message: "Login successful!" });
+        notification.open({ type: "success", message: "Login successful!", key: "login_success" });
 
-        if (userData.annotatorStatus || userData.microTaskerStatus) {
-          navigate(from ?? "/dashboard/overview");
-        } else {
-          navigate(from ?? "/admin/overview");
-        }
-
+        // Check user status for navigation
+        // const hasAnnotatorStatus = userData.annotatorStatus === "approved" || userData.annotatorStatus === "pending" || userData.annotatorStatus === "submitted";
+        // const hasMicroTaskerStatus = userData.microTaskerStatus === "approved" || userData.microTaskerStatus === "pending";
+        
+        // if (hasAnnotatorStatus || hasMicroTaskerStatus) {
+        //   navigate(from ?? "/dashboard/overview");
+        // } else {
+        //   navigate(from ?? "/admin/overview");
+        // }
+        navigate(from ?? "/dashboard/overview");
       },
       onError: (err) => {
       const errorMsg = errorMessage(err);
       console.error("Login failed:", errorMsg);
-      console.error("Login failed:", errorMsg);
-      notification.error({  message: errorMsg });
+      notification.error({  message: errorMsg, key: "login_error" });
     },
     });
 

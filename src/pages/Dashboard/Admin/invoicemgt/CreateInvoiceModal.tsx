@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Modal,
   Form,
@@ -46,13 +46,30 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const [dtUsers, setDtUsers] = useState<DTUser[]>([]);
   const [projectDTUsers, setProjectDTUsers] = useState<DTUser[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [loadingDTUsers, setLoadingDTUsers] = useState(false);
+  const [searchingUsers, setSearchingUsers] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       loadInitialData();
+    } else {
+      // Clean up search timeout when modal closes
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
     }
   }, [open]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
   
 
 
@@ -96,10 +113,108 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     }
   };
 
+  // Function to load DTUsers for selected project with optional search
+  const loadProjectDTUsers = async (projectId: string, search?: string) => {
+    try {
+      // Build search parameters
+      const searchParams: any = {
+        projectId,
+        status: "approved",
+        limit: 1000,
+      };
+
+      // Add search parameter if provided
+      if (search && search.trim()) {
+        searchParams.search = search.trim();
+      }
+
+      // Get approved applications for this project
+      const applicationsResult = await getAllApplications(searchParams);
+
+      if (applicationsResult.success) {
+        const applications = applicationsResult.data.data.applications;
+        
+        if (!applications || applications.length === 0) {
+          return [];
+        }
+        
+        // Extract DTUsers directly from approved applications
+        const assignedDTUsers = applications
+          .map((app: Application) => {
+            if (!app.applicantId) {
+              return null;
+            }
+            
+            const dtUser: DTUser = {
+              _id: app.applicantId._id,
+              fullName: app.applicantId.fullName,
+              email: app.applicantId.email,
+              annotatorStatus: app.applicantId.annotatorStatus || 'unknown',
+              microTaskerStatus: app.applicantId.microTaskerStatus || 'unknown',
+              isEmailVerified: true,
+              hasSetPassword: true,
+              skills: app.applicantId.professionalBackground?.skills || [],
+              domains: []
+            };
+            
+            return dtUser;
+          })
+          .filter((user: DTUser | null) => user !== null) as DTUser[];
+
+        return assignedDTUsers;
+      } else {
+        throw new Error(applicationsResult.error || 'Failed to load applications');
+      }
+    } catch (error) {
+      console.error('Error loading project users:', error);
+      throw error;
+    }
+  };
+
+  // Debounced search function
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const debouncedSearch = useCallback(
+    (projectId: string, searchValue: string) => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      
+      searchTimeoutRef.current = setTimeout(async () => {
+        if (!projectId) return;
+        
+        setSearchingUsers(true);
+        try {
+          const users = await loadProjectDTUsers(projectId, searchValue);
+          setProjectDTUsers(users);
+          
+          if (searchValue && users.length === 0) {
+            message.info(`No users found matching "${searchValue}"`);
+          }
+        } catch (error) {
+          message.error('Failed to search users: ' + (error instanceof Error ? error.message : 'Unknown error'));
+        } finally {
+          setSearchingUsers(false);
+        }
+      }, 500);
+    },
+    []
+  );
+
+  // Handle DTUser search
+  const handleUserSearch = (value: string) => {
+    setSearchTerm(value);
+    if (selectedProjectId) {
+      debouncedSearch(selectedProjectId, value);
+    }
+  };
+
   const handleProjectChange = async (projectId: string) => {
     console.log('🎯 Project selected:', projectId);
     setSelectedProjectId(projectId);
     setProjectDTUsers([]);
+    setLoadingDTUsers(true);
+    setSearchTerm(""); // Reset search term
     
     // Reset the DTUser field
     form.setFieldValue('dtUserId', undefined);
@@ -124,67 +239,37 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
         }
       }
       
-      // Get approved applications for this project to find assigned DTUsers
-      const applicationsResult = await getAllApplications({
-        projectId,
-        status: "approved",
-        limit: 1000,
-      });
+      // Load initial approved DTUsers (without search filter)
+      const assignedDTUsers = await loadProjectDTUsers(projectId);
+      setProjectDTUsers(assignedDTUsers);
 
-      if (applicationsResult.success) {
-        const applications = applicationsResult.data.data.applications;
-        
-        if (!applications || applications.length === 0) {
-          // Check if there were any applications at all from our earlier call
-          if (allAppsData.length > 0) {
-            message.info(`This project has ${allAppsData.length} application(s), but none are approved yet. Please review and approve applications first.`);
-          }
-          return;
-        }
-        
-        // Extract DTUsers directly from approved applications and map to DTUser format
-        const assignedDTUsers = applications
-          .map((app: Application) => {
-            // Map Application.applicantId to DTUser format
-            if (!app.applicantId) {
-              return null;
-            }
-            
-            const dtUser: DTUser = {
-              _id: app.applicantId._id,  // Use the MongoDB ObjectId directly
-              fullName: app.applicantId.fullName,
-              email: app.applicantId.email,
-              annotatorStatus: app.applicantId.annotatorStatus || 'unknown',
-              microTaskerStatus: app.applicantId.microTaskerStatus || 'unknown',
-              isEmailVerified: true, // Default for approved users  
-              hasSetPassword: true, // Default for approved users
-              skills: app.applicantId.professionalBackground?.skills || [],
-              domains: [] // Not available in Application.applicantId
-            };
-            
-            return dtUser;
-          })
-          .filter((user: DTUser | null) => user !== null) as DTUser[];
-
-        setProjectDTUsers(assignedDTUsers);
-
-        if (assignedDTUsers.length === 0) {
-          message.warning('No DTUsers found in approved applications');
-        } else {
-          message.success(`Found ${assignedDTUsers.length} assigned user(s) for this project`);
+      if (assignedDTUsers.length === 0) {
+        // Check if there were any applications at all from our earlier call
+        if (allAppsData.length > 0) {
+          message.info(`This project has ${allAppsData.length} application(s), but none are approved yet. Please review and approve applications first.`);
         }
       } else {
-        message.error('Failed to load project applications: ' + (applicationsResult.error || 'Unknown error'));
+        message.success(`Found ${assignedDTUsers.length} assigned user(s) for this project`);
       }
     } catch (error) {
       message.error('Failed to load project users: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setLoadingDTUsers(false);
     }
   };
 
   const handleCancel = () => {
+    // Clean up search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
     form.resetFields();
     setSelectedProjectId(null);
     setProjectDTUsers([]);
+    setLoadingDTUsers(false);
+    setSearchingUsers(false);
+    setSearchTerm("");
     onClose();
   };
 
@@ -212,6 +297,8 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
         form.resetFields();
         setSelectedProjectId(null);
         setProjectDTUsers([]);
+        setSearchTerm("");
+        setSearchingUsers(false);
         message.success("Invoice created successfully!");
         onSuccess();
       } else {
@@ -291,28 +378,42 @@ const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
               >
                 <Select 
                   placeholder={
-                    selectedProjectId 
-                      ? projectDTUsers.length > 0 
-                        ? "Select DTUser assigned to this project" 
-                        : "No approved applicants available"
-                      : "Please select a project first"
+                    loadingDTUsers
+                      ? "Loading users..."
+                      : searchingUsers
+                        ? "Searching..."
+                        : selectedProjectId 
+                          ? projectDTUsers.length > 0 
+                            ? "Type to search DTUsers or select from list" 
+                            : "No approved applicants available"
+                          : "Please select a project first"
                   }
-                  disabled={!selectedProjectId}
+                  disabled={!selectedProjectId || loadingDTUsers}
                   showSearch
-                  loading={loadingData}
-                  filterOption={(input, option) =>
-                    String(option?.label || '').toLowerCase().includes(input.toLowerCase())
-                  }
+                  allowClear
+                  searchValue={searchTerm}
+                  loading={loadingDTUsers || searchingUsers}
+                  onSearch={handleUserSearch}
+                  onClear={() => {
+                    setSearchTerm("");
+                    form.setFieldValue('dtUserId', undefined);
+                  }}
+                  filterOption={false} // Disable frontend filtering
                   notFoundContent={
-                    selectedProjectId && projectDTUsers.length === 0 
-                      ? "No approved applicants found. Users must apply to the project and be approved before invoices can be created." 
-                      : "No DTUsers found"
+                    loadingDTUsers || searchingUsers
+                      ? "Loading..."
+                      : searchTerm 
+                        ? `No users found matching "${searchTerm}"`
+                        : selectedProjectId && projectDTUsers.length === 0 
+                          ? "No approved applicants found. Users must apply to the project and be approved before invoices can be created." 
+                          : "Type to search for users"
                   }
                 >
                   {projectDTUsers.map((user, index) => (
                     <Option 
-                    key={user._id || `user-${index}`} 
-                    value={user._id} 
+                      key={user._id || `user-${index}`} 
+                      value={user._id}
+                      label={`${user.fullName || 'Unknown User'} (${user.email || 'No email'})`}
                     >
                       <div className="block">
                         <div style={{ fontWeight: 'bold' }}>{user.fullName || 'Unknown User'}</div>

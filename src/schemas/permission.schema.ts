@@ -49,7 +49,7 @@ export const parseAdmin = (raw: unknown): { data: Admin | null; error: z.ZodErro
       return { data: null, error: result.error };
     }
     return { data: result.data, error: null };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.warn("RBAC: Unexpected error during admin parsing", err);
     return { data: null, error: err instanceof z.ZodError ? err : null };
   }

@@ -1,16 +1,16 @@
 import { Spin } from "antd";
 
 interface LoadingIndicatorProps {
-  message?: string;
+  title?: string;
+  subTitle?: string;
 }
 
-const LoadingIndicator = ({ message = "Loading..." }: LoadingIndicatorProps) => {
+const LoadingIndicator = ({ title = "Loading data...", subTitle = "" }: LoadingIndicatorProps) => {
   return (
-    <div className="h-full flex flex-col justify-center items-center gap-4 font-[gilroy-regular] flex-1">
-      <div className="flex flex-col gap-3 justify-center items-center">
-          <Spin size="large" />
-          <span className="text-lg">{message}</span>
-        </div>
+    <div className="h-full flex flex-col items-center gap-2 font-[gilroy-regular] flex-1 p-3">
+        <Spin size="large" />
+        { title ? <span className="text-base text-gray-500">{title}</span> : null }
+        { subTitle ? <span className="text-sm text-gray-400 lg:w-[50%]">{subTitle}</span> : null }
     </div>
   );
 };

@@ -17,7 +17,7 @@ class AdminChatSocketService {
   async connect(token: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
-      console.log('🔌 [AdminChatSocket] Connecting to Socket.IO server:', url);
+
       
       this.socket = io(url, {
         auth: { token },
@@ -36,7 +36,7 @@ class AdminChatSocketService {
 
       // Connection success
       this.socket.on('connect', () => {
-        console.log('✅ [AdminChatSocket] Admin connected successfully');
+
         this.isConnected = true;
         this.reconnectAttempts = 0;
         this.emit('connection_status', { connected: true });
@@ -66,35 +66,35 @@ class AdminChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('disconnect', (reason) => {
-      console.log('❌ [AdminChatSocket] Admin disconnected:', reason);
+
       this.isConnected = false;
       this.emit('connection_status', { connected: false, reason });
     });
 
     // Admin-specific events
     this.socket.on('new_chat_ticket', (data) => {
-      console.log('🎫 [AdminChatSocket] New chat ticket received:', data);
+
       this.emit('new_chat_ticket', data);
     });
 
     this.socket.on('user_message', (data) => {
-      console.log('👤 [AdminChatSocket] User message received:', data);
+
       this.emit('user_message', data);
     });
 
     // Handle all messages for real-time sync
     this.socket.on('new_message', (data) => {
-      console.log('💬 [AdminChatSocket] New message received:', data);
+
       this.emit('new_message', data);
     });
 
     this.socket.on('message_sent', (data) => {
-      console.log('✅ [AdminChatSocket] Message sent confirmation:', data);
+
       this.emit('message_sent', data);
     });
 
     this.socket.on('message_send_success', (data) => {
-      console.log('✅ [AdminChatSocket] Message send success:', data);
+
       this.emit('message_send_success', data);
     });
 
@@ -104,17 +104,17 @@ class AdminChatSocketService {
     });
 
     this.socket.on('chat_closed', (data) => {
-      console.log('📪 [AdminChatSocket] Chat closed:', data);
+
       this.emit('chat_closed', data);
     });
 
     this.socket.on('ticket_status_updated', (data) => {
-      console.log('📊 [AdminChatSocket] Ticket status updated:', data);
+
       this.emit('ticket_status_updated', data);
     });
 
     this.socket.on('user_typing', (data) => {
-      console.log('⌨️ [AdminChatSocket] User is typing:', data);
+
       this.emit('user_typing', data);
     });
 
@@ -134,7 +134,7 @@ class AdminChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('reconnect', (attemptNumber) => {
-      console.log(`🔄 [AdminChatSocket] Admin reconnected after ${attemptNumber} attempts`);
+
       this.isConnected = true;
       // Rejoin admin room after reconnection
       this.socket?.emit('join_admin_room');
@@ -150,7 +150,7 @@ class AdminChatSocketService {
   // Admin room management
   joinAdminRoom() {
     if (this.isConnected && this.socket) {
-      console.log('🏠 [AdminChatSocket] Joining admin room');
+
       this.socket.emit('join_admin_room');
     }
   }
@@ -158,7 +158,7 @@ class AdminChatSocketService {
   // Join specific chat ticket as admin
   joinChatRoom(ticketId: string) {
     if (this.isConnected && this.socket) {
-      console.log('🏠 [AdminChatSocket] Admin joining chat room:', ticketId);
+
       this.socket.emit('join_ticket', { ticketId });
     } else {
       console.error('❌ [AdminChatSocket] Cannot join chat room: Not connected');
@@ -175,13 +175,13 @@ class AdminChatSocketService {
         return;
       }
 
-      console.log('📤 [AdminChatSocket] Sending admin message:', { ticketId, message });
+
       
       // Set up one-time listeners for this message
       const messageId = `${ticketId}_${Date.now()}`;
       
       const onSuccess = (data: any) => {
-        console.log('✅ [AdminChatSocket] Message sent successfully:', data);
+
         this.socket?.off('message_send_success', onSuccess);
         this.socket?.off('message_send_error', onError);
         resolve();
@@ -219,7 +219,7 @@ class AdminChatSocketService {
   // Close chat as admin
   closeChat(ticketId: string, resolutionSummary?: string): void {
     if (this.isConnected && this.socket) {
-      console.log('🔒 [AdminChatSocket] Admin closing chat:', ticketId);
+
       this.socket.emit('admin_close_chat', {
         ticketId,
         resolutionSummary
@@ -237,7 +237,7 @@ class AdminChatSocketService {
   // Get active tickets for admin
   getActiveTickets(status?: string): void {
     if (this.isConnected && this.socket) {
-      console.log('📋 [AdminChatSocket] Requesting active tickets for admin');
+
       this.socket.emit('get_admin_active_tickets', { status });
     }
   }
@@ -245,7 +245,7 @@ class AdminChatSocketService {
   // Join chat as admin
   joinChat(ticketId: string): void {
     if (this.isConnected && this.socket) {
-      console.log('🔗 [AdminChatSocket] Admin joining chat:', ticketId);
+
       this.socket.emit('join_chat', { ticketId });
     }
   }
@@ -305,7 +305,7 @@ class AdminChatSocketService {
   // Clean disconnect
   disconnect(): void {
     if (this.socket) {
-      console.log('🔌 [AdminChatSocket] Admin disconnecting...');
+
       this.socket.disconnect();
       this.isConnected = false;
       this.eventListeners.clear();

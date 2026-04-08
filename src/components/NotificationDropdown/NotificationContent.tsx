@@ -1,18 +1,18 @@
 import React from "react";
-import { Button, List, Typography, Empty, Spin, Avatar, Space, Tag } from "antd";
+import { Button, List, Typography, Empty, Spin, Avatar, Tag } from "antd";
 import { CheckOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { Notification } from "../../types/notification.types";
 import { DROPDOWN_STYLES } from "./constants";
 import { getNotificationIcon, getPriorityColor, getNotificationColor } from "./utils";
+import { NotificationSchema } from "../../validators/notification/notification-schema";
 
 const { Text } = Typography;
 
 interface NotificationContentProps {
   isLoading: boolean;
-  notifications: Notification[] | undefined;
+  notifications: NotificationSchema[] | undefined;
   markingAsReadId: string | null;
-  onNotificationClick: (notification: Notification) => void;
+  onNotificationClick: (notification: NotificationSchema) => void;
   onMarkAsRead: (notificationId: string, event: React.MouseEvent) => void;
   onDeleteNotification: (notificationId: string, event: React.MouseEvent) => void;
 }
@@ -47,7 +47,7 @@ export const NotificationContent: React.FC<NotificationContentProps> = ({
   return (
     <List
       dataSource={notifications}
-      renderItem={(notification: Notification) => {
+      renderItem={(notification: NotificationSchema) => {
         const isMarkingAsRead = markingAsReadId === notification._id;
         return (
           <List.Item

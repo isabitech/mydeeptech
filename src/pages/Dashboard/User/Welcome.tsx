@@ -1,12 +1,11 @@
 import { Button } from "antd";
 import { Link, useSearchParams } from "react-router-dom";
 import Overview from "./Overview";
-import { useUserInfoStates } from "../../../store/useAuthStore";
-
+import { useGetUserInfo } from "../../../store/useAuthStore";
 
 const Welcome = () => {
   const [searchParams] = useSearchParams();
-  const { userInfo } = useUserInfoStates();
+   const userInfo = useGetUserInfo("user");
   const resultSubmitted = searchParams.get("resultSubmitted=true");
 
   if (userInfo?.annotatorStatus === "pending" && userInfo?.microTaskerStatus === "pending") {

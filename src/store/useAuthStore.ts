@@ -2,60 +2,62 @@ import { create } from "zustand";
 import { useShallow } from "zustand/shallow";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { retrieveUserInfoFromStorage, storeUserInfoToStorage } from "../helpers";
+import { AdminLoginResponseSchema, RolePermissionSchema } from "../validators/authentication/admin-schema";
+import { LoginResponseSchema } from "../validators/authentication/user-schema";
 
+// Global navigation callback for avoiding page refreshes on logout
+let globalNavigateCallback: ((path: string, options?: { replace?: boolean }) => void) | null = null;
 
-interface RBACPermission {
-  _id: string;
-  name: string;
-  description: string;
-  resource: string;
-  action: string;
+export const setAuthStoreNavigate = (navigateCallback: ((path: string, options?: { replace?: boolean }) => void) | null) => {
+  globalNavigateCallback = navigateCallback;
+};
+
+type UserRoleType =  "user" | "admin";
+type RoleInfoMap<T extends UserRoleType> = T extends "user" ? UserInfo : AdminInfo;
+
+export type LoginResponse = AdminLoginResponseSchema | LoginResponseSchema;
+
+export type AdminInfo = {
+      id: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      domains: string[];
+      isEmailVerified: boolean;
+      hasSetPassword: boolean;
+      annotatorStatus: "approved" | "pending" | "rejected";
+      microTaskerStatus: "approved" | "pending" | "rejected";
+      qaStatus: "approved" | "pending" | "rejected";
+      role: string;
+      isAdmin: boolean;
+      role_permission: RolePermissionSchema;
+};
+
+export type UserInfo = {
+      id: string;
+      fullName: string;
+      email: string;
+      phone: string;
+      domains: string[];
+      isEmailVerified: boolean;
+      hasSetPassword: boolean;
+      annotatorStatus: "approved" | "pending" | "rejected" | "submitted";
+      microTaskerStatus: "approved" | "pending" | "rejected";
+      qaStatus: "approved" | "pending" | "rejected";
+      role: string;
+      socialsFollowed: string[];
+      consent: boolean;
+      resultLink: string;
+      isAssessmentSubmitted: boolean;
+      isAdmin: boolean;
 }
 
-interface RBACRole {
-  _id: string;
-  name: string;
-  description: string;
-  permissions: RBACPermission[];
-  isActive: boolean;
-}
-
-interface UserInfo {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  domains?: string[];
-  socialsFollowed?: any[];
-  consent?: boolean;
-  isEmailVerified?: boolean;
-  hasSetPassword?: boolean;
-  annotatorStatus?: string;
-  microTaskerStatus?: string;
-  qaStatus?: string;
-  resultLink?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  role?: string;
-  role_permission?: RBACRole;
-  isAssessmentSubmitted?: boolean;
-}
-
-
-type UserRoleType = "admin" | "user";
-
-export type UserInfoData = 
-| (UserInfo & { role: "user"; })
-| (UserInfo & { role: "admin"; role_permission: RBACRole })
-
-
+export type UserInfoData = AdminInfo | UserInfo;
 
 type UserInfoStates = {
   userInfo: UserInfoData | null;
   userRoleType: UserRoleType | null;
 };
-
-
 
 type UserInfoActions = {
   setUserInfo: (userInfo: UserInfoData | null) => void;
@@ -64,7 +66,7 @@ type UserInfoActions = {
   handleLogout: () => void;
 };
 
- type UserInfoStore = UserInfoStates & UserInfoActions;
+type UserInfoStore = UserInfoStates & UserInfoActions;
 
 const initialStates: UserInfoStates = {
   userInfo: null,
@@ -79,21 +81,22 @@ const useUserInfoStore = create<UserInfoStore>()(
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
 
         setIsAssessmentSubmitted: async () => {
-  
-          const userInfo = await retrieveUserInfoFromStorage();
-
+          const userInfo = await retrieveUserInfoFromStorage() as UserInfoData;
           if (userInfo && userInfo.role === "user") {
-            userInfo.isAssessmentSubmitted = true;
+            const updatedUserInfo: UserInfoData = {
+              ...userInfo,
+              isAssessmentSubmitted: true,
+            };
+
+            await storeUserInfoToStorage(updatedUserInfo);
+
+            set((state) => ({
+              ...state,
+              userInfo: state.userInfo?.role === "user"
+                ? { ...state.userInfo, isAssessmentSubmitted: true }
+                : state.userInfo,
+            }));
           }
-    
-          await storeUserInfoToStorage(userInfo);
-    
-           set((state) => ({
-            ...state,
-            userInfo: state.userInfo?.role === "user"
-              ? { ...state.userInfo, isAssessmentSubmitted: true }
-              : state.userInfo,
-          }));
         },
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
@@ -113,8 +116,15 @@ const useUserInfoStore = create<UserInfoStore>()(
         
         set({ userInfo: null });
 
-        // Navigate last, after all cleanup is done
-        window.location.replace('/login');
+
+        // Use global navigate callback if available (no page refresh)
+        // Otherwise fall back to window.location.replace
+        if (globalNavigateCallback) {
+          globalNavigateCallback('/login', { replace: true });
+        } else {
+          console.warn('No global navigate callback set in auth store. Using window.location.replace which causes page refresh.');
+          window.location.replace('/login');
+        }
       },
     }),
     {
@@ -148,5 +158,12 @@ return  useUserInfoStore(
 )}
 
 
+const useGetUserInfo = <T extends UserRoleType>(roleType: T): RoleInfoMap<T> | null => {
+  return useUserInfoStore((state) => {
+    if (!state.userInfo || !roleType) return null;
+    return state.userInfo as RoleInfoMap<T>;
+  });
+};
+
 export type { UserInfoStore, UserInfoStates, UserInfoActions };
-export { useUserInfoStates, useUserInfoActions, useUserInfoStore };
+export { useUserInfoStates, useUserInfoActions, useUserInfoStore, useGetUserInfo };

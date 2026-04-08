@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Typography, Button, Tabs } from "antd";
-import { PlusOutlined, SafetyOutlined, TeamOutlined, ControlOutlined, AppstoreOutlined } from "@ant-design/icons";
+import { Typography, Tabs } from "antd";
+import { SafetyOutlined, TeamOutlined, ControlOutlined, AppstoreOutlined } from "@ant-design/icons";
 import RolesList from "./RolesList";
 import UserRoleAssignment from "./UserRoleAssignment";
 import RolePermissionMatrix from "./RolePermissionMatrix";

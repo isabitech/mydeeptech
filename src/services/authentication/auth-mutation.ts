@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { useUserInfoActions } from "../../store/useAuthStore";
+import { LoginResponse, useUserInfoActions } from "../../store/useAuthStore";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import { persistUserInfo } from "./_helper";
-import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
-
+import { EmailSchema, SignUpSchema } from "../../validators/authentication/user-signup-schema";
+import { ResetPasswordSchema } from "../../validators/authentication/user-reset-password-schema";
 
 const useUserSignup = () => {
     const mutation  = useMutation({
@@ -31,7 +31,7 @@ const useUserSignin = () => {
     const mutation  = useMutation({
         mutationKey: [REACT_QUERY_KEYS.MUTATION.userSignin],
         mutationFn: async (payload: { email: string; password: string }) => {
-            const response = await axiosInstance.post(endpoints.authDT.loginDTUser, payload);
+            const response = await axiosInstance.post<LoginResponse>(endpoints.authDT.loginDTUser, payload);
             return response.data;
         },
         onSuccess: async (data) => {
@@ -49,9 +49,48 @@ const useUserSignin = () => {
     }
 }
 
+const useResetPassword = () => {
+   const mutation =  useMutation({
+        mutationKey: [REACT_QUERY_KEYS.MUTATION.resetPassword],
+        mutationFn: async (payload: ResetPasswordSchema) => {
+            const response = await axiosInstance.post(endpoints.authDT.resetPassword, payload);
+            return response.data;
+        }
+    });
+    return {
+        resetPasswordMutation: mutation,
+        isResetPasswordLoading: mutation.isPending,
+        isResetPasswordError: mutation.isError,
+        resetPasswordError: mutation.error,
+    };
+}
+
+/**
+ *   async requestDTUserPasswordReset(email: string): Promise<ApiResponse> {
+     return this.request(endpoints.authDT.forgotPassword, {
+       method: 'POST',
+       body: JSON.stringify({ email }),
+     });
+   }
+ */
+
+   const useForgotPassword = () => {
+    const mutation = useMutation({
+        mutationKey: [REACT_QUERY_KEYS.MUTATION.forgotPassword],
+        mutationFn: async (email: EmailSchema) => {
+            const response = await axiosInstance.post(endpoints.authDT.forgotPassword, { email });
+            return response.data;
+        }
+    });
+
+    return mutation;
+}   
+
 const authMutationService = {
     useUserSignin,
     useUserSignup,
+    useResetPassword,
+    useForgotPassword,
 }
 
 export default authMutationService;

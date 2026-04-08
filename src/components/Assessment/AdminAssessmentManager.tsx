@@ -10,14 +10,10 @@ import { useReelAssessmentData } from '../Assessment/adminassessmentmanager/hook
 import { AssessmentModal } from '../Assessment/adminassessmentmanager/modals/AssessmentModal';
 import { ReelModal } from '../Assessment/adminassessmentmanager/modals/ReelModal';
 import { BulkUploadModal } from '../Assessment/adminassessmentmanager/modals/BulkUploadModal';
-import { ButtonModal } from '../Assessment/adminassessmentmanager/modals/ButtonModal';
-
 
 import { multimediaAssessmentApi } from '../../service/axiosApi';
 import { toast } from 'sonner';
 import { AssessmentConfig, VideoReel } from '../Assessment/adminassessmentmanager/types';
-import { Space } from 'lucide-react';
-import AssesmentDomain from '../../pages/Dashboard/Admin/annotatorsmgt/AnnotatorsDomain';
 const { Title } = Typography; 
 
 interface AdminReelAssessmentManagerProps {
@@ -25,19 +21,14 @@ interface AdminReelAssessmentManagerProps {
 }
 
 
-
-
-export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAssessmentManagerProps) => {
-  const { assessments, videoReels, loading, reloadAssessments, reloadReels } =
-    useReelAssessmentData();
+const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAssessmentManagerProps) => {
+  const { assessments, videoReels, loading, reloadAssessments, reloadReels } = useReelAssessmentData();
 
   const [activeTab, setActiveTab] = useState('assessments');
 
   const [showAssessmentModal, setShowAssessmentModal] = useState(false);
   const [showReelModal, setShowReelModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
-  const [showActionsModal, setShowActionsModal] = useState(false);
-  const [showCaModal, setShowCaModal] = useState(false);
 
   const [editingAssessment, setEditingAssessment] = useState<AssessmentConfig | null>(null);
   const [editingReel, setEditingReel] = useState<VideoReel | null>(null);
@@ -119,14 +110,13 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
         <Tabs.TabPane tab="Assessment Configurations" key="assessments">
           <Card
             extra={
-              
-                  <Button
-      type="primary"
-      icon={<PlusOutlined />}
-      onClick={() => setShowAssessmentModal(true)}
-    >
-      New Assesment
-    </Button>
+            <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setShowAssessmentModal(true)}
+          >
+            New Assesment
+          </Button>
             }
           >
             <Table
@@ -237,7 +227,8 @@ export const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAss
           >
             <AssesmentDomain/>
           </Modal> */}
-
     </div>
   );
 };
+
+export default AdminReelAssessmentManager;

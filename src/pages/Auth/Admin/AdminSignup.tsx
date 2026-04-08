@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, Input, Button, Alert, Spin, notification } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useAdminSignup } from "../../../hooks/Auth/Admin/useAdminSignup";
 import { useAdminVerifyOTP } from "../../../hooks/Auth/Admin/useAdminVerifyOTP";
@@ -346,12 +346,9 @@ const AdminSignup: React.FC = () => {
               >
                 <p className="text-gray-600">
                   Already have an admin account?{" "}
-                  <button
-                    onClick={() => navigate("/auth/admin-login")}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
+                  <Link to="/auth/admin-login" className="text-blue-600 hover:text-blue-700 font-medium">
                     Sign in here
-                  </button>
+                  </Link> 
                 </p>
               </motion.div>
             </>

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { endpoints } from "../../../store/api/endpoints";
-import { apiPatch, apiPost, getErrorMessage } from "../../../service/apiUtils";
+import { apiPatch, getErrorMessage } from "../../../service/apiUtils";
 
 interface ResetPasswordForm {
   currentPassword: string;

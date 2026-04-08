@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+const EmailSchema = z.email("Invalid email address");
+
 const SignUpSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string(),
-  email: z.email("Invalid email address"),
+  email: EmailSchema,
   domains: z.array(z.string().min(1, "Domain cannot be empty")).min(1, "Select at least one domain"),
   socialsFollowed: z.array(z.string().min(1)).optional().default([]),
     consent: z.enum(["yes", "no"], {
@@ -13,5 +15,6 @@ const SignUpSchema = z.object({
 
 
 type SignUpSchema = z.infer<typeof SignUpSchema>;
+type EmailSchema = z.infer<typeof EmailSchema>;
 
-export { SignUpSchema,  };
+export { SignUpSchema, EmailSchema };

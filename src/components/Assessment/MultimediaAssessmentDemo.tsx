@@ -10,8 +10,8 @@ import {
 } from '@ant-design/icons';
 import VideoReelMarketplace from './VideoReelMarketplace';
 import ConversationBuilder from './ConversationBuilder';
-import { QAReviewDashboard } from './QAReviewDashboard';
-import { AdminReelAssessmentManager } from './AdminAssessmentManager';
+import QAReviewDashboard from './QAReviewDashboard';
+import AdminReelAssessmentManager from './AdminAssessmentManager';
 import { VideoReel, MultimediaConversation } from '../../types/multimedia-assessment.types';
 import AssessmentSession from './AssessmentSession';
 

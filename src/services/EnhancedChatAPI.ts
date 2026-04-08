@@ -21,7 +21,7 @@ class EnhancedChatAPI implements IChatAPI {
         priority
       });
       
-      console.log('📝 Chat started via API:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to start chat:', error);
@@ -32,7 +32,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getActiveChats(): Promise<ActiveChatsResponse> {
     try {
       const response = await apiGet('/chat/active?status=active');
-      console.log('📋 Active chats fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get active chats:', error);
@@ -43,7 +43,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getChatHistory(page: number = 1, limit: number = 50): Promise<ChatHistoryResponse> {
     try {
       const response = await apiGet(`/api/chat/history?page=${page}&limit=${limit}`);
-      console.log('📚 Chat history fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get chat history:', error);
@@ -54,7 +54,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getChatTicket(ticketId: string) {
     try {
       const response = await apiGet(`${endpoints.chat.getChat}/${ticketId}`);
-      console.log('🎫 Chat ticket fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get chat ticket:', error);
@@ -68,7 +68,7 @@ class EnhancedChatAPI implements IChatAPI {
         message,
         attachments
       });
-      console.log('💬 Message sent via API:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -89,7 +89,7 @@ class EnhancedChatAPI implements IChatAPI {
         }
       });
       
-      console.log('📎 File uploaded:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to upload file:', error);
@@ -102,7 +102,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getAdminActiveChats(status: string = 'active'): Promise<AdminActiveChatsResponse> {
     try {
       const response = await apiGet(`${endpoints.chat.admin.getActiveChats}?status=${status}`);
-      console.log('👨‍💼 Admin active chats fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get admin active chats:', error);
@@ -113,7 +113,7 @@ class EnhancedChatAPI implements IChatAPI {
   async joinChatAsAdmin(ticketId: string): Promise<JoinChatResponse> {
     try {
       const response = await apiPost(`${endpoints.chat.admin.joinChat}/${ticketId}`);
-      console.log('👨‍💼 Admin joined chat:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to join chat as admin:', error);
@@ -126,7 +126,7 @@ class EnhancedChatAPI implements IChatAPI {
       const response = await apiPost(`${endpoints.chat.admin.closeChat}/${ticketId}`, {
         resolutionSummary
       });
-      console.log('✅ Chat closed by admin:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to close chat as admin:', error);
@@ -137,7 +137,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getChatStats() {
     try {
       const response = await apiGet(endpoints.chat.admin.getStats);
-      console.log('📊 Chat stats fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get chat stats:', error);
@@ -150,7 +150,7 @@ class EnhancedChatAPI implements IChatAPI {
       const response = await apiPost(`${endpoints.chat.admin.assignAgent}/${ticketId}`, {
         agentId
       });
-      console.log('👤 Agent assigned:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to assign agent:', error);
@@ -161,7 +161,7 @@ class EnhancedChatAPI implements IChatAPI {
   async getChatDetails(ticketId: string) {
     try {
       const response = await apiGet(`${endpoints.chat.admin.getChatDetails}/${ticketId}`);
-      console.log('📋 Admin chat details fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get chat details:', error);
@@ -198,7 +198,7 @@ class EnhancedChatAPI implements IChatAPI {
         ticketIds,
         resolutionSummary
       });
-      console.log('📦 Bulk close operation completed:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to bulk close chats:', error);
@@ -212,7 +212,7 @@ class EnhancedChatAPI implements IChatAPI {
         ticketIds,
         agentId
       });
-      console.log('📦 Bulk assign operation completed:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to bulk assign agent:', error);
@@ -229,7 +229,7 @@ class EnhancedChatAPI implements IChatAPI {
       });
       
       const response = await apiGet(`/api/chat/search?${params.toString()}`);
-      console.log('🔍 Chat search results:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to search chats:', error);
@@ -241,7 +241,7 @@ class EnhancedChatAPI implements IChatAPI {
   async exportChatHistory(ticketId: string, format: 'pdf' | 'csv' = 'pdf') {
     try {
       const response = await apiGet(`/api/chat/${ticketId}/export?format=${format}`);
-      console.log('📄 Chat export completed:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to export chat:', error);
@@ -256,7 +256,7 @@ class EnhancedChatAPI implements IChatAPI {
         `?start=${dateRange.start}&end=${dateRange.end}` : '';
       
       const response = await apiGet(`/api/chat/admin/analytics${params}`);
-      console.log('📈 Chat analytics fetched:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to get chat analytics:', error);
@@ -268,7 +268,7 @@ class EnhancedChatAPI implements IChatAPI {
   async updateChatStatus(ticketId: string, status: 'open' | 'in_progress' | 'waiting_for_user' | 'closed') {
     try {
       const response = await apiPatch(`/api/chat/${ticketId}/status`, { status });
-      console.log('🔄 Chat status updated:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to update chat status:', error);
@@ -280,7 +280,7 @@ class EnhancedChatAPI implements IChatAPI {
   async updateChatPriority(ticketId: string, priority: 'low' | 'medium' | 'high' | 'urgent') {
     try {
       const response = await apiPatch(`/api/chat/${ticketId}/priority`, { priority });
-      console.log('⚡ Chat priority updated:', response);
+
       return response;
     } catch (error) {
       console.error('Failed to update chat priority:', error);

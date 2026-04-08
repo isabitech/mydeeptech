@@ -24,14 +24,14 @@ export const useGetSubmissionDetails = () => {
     try {
       const response = await multimediaAssessmentApi.getSubmissionForReview(submissionId);
 
-      console.log("API response", response);
+
       
       if (response?.data?.success && response.data?.data) {
         const { submission, qaReview: reviewData, isReviewed: reviewStatus } = response.data.data;
         
         // Set the actual submission data from the API response
         setSubmissionDetails(submission);
-        console.log("Setting submission details", submission);
+
         setQaReview(reviewData);
         setIsReviewed(reviewStatus);
         

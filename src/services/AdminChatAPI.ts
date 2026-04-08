@@ -12,7 +12,7 @@ class AdminChatAPI {
     try {
       const statusFilter = status === 'active' ? '?status=active' : `?status=${status}`;
       const response = await apiGet(`/chat/admin/active${statusFilter}`);
-      console.log('📋 [AdminChatAPI] Admin active chats fetched:', response);
+
       return response;
     } catch (error) {
       console.error('[AdminChatAPI] Failed to get admin active chats:', error);
@@ -23,7 +23,7 @@ class AdminChatAPI {
   async joinChat(ticketId: string): Promise<JoinChatResponse> {
     try {
       const response = await apiPost(`/chat/admin/join/${ticketId}`, {});
-      console.log('👨‍💼 [AdminChatAPI] Admin joined chat:', response);
+
       return response;
     } catch (error) {
       console.error('[AdminChatAPI] Failed to join chat as admin:', error);
@@ -52,7 +52,7 @@ class AdminChatAPI {
       const response = await apiPost(`/chat/admin/close/${ticketId}`, {
         resolutionSummary
       });
-      console.log('✅ [AdminChatAPI] Chat closed by admin:', response);
+
       return response;
     } catch (error) {
       console.error('[AdminChatAPI] Failed to close chat as admin:', error);

@@ -1,89 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Avatar, Button, Dropdown, Typography } from 'antd';
 import { UserOutlined, LogoutOutlined, SettingOutlined, MenuOutlined } from '@ant-design/icons';
-import { retrieveUserInfoFromStorage } from '../../helpers';
 import { Navigate, useNavigate } from 'react-router-dom';
+import useLogout from '../../hooks/useLogout';
 import NotificationDropdown from '../NotificationDropdown';
 import { useSidebarContext } from '../../pages/Dashboard/Admin/_context/SidebarContext';
-import { useUserInfoActions, useUserInfoStates } from '../../store/useAuthStore';
+import { useGetUserInfo } from '../../store/useAuthStore';
 
 const { Text } = Typography;
 
-interface UserInfo {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  domains: string[];
-  socialsFollowed: any[];
-  consent: boolean;
-  isEmailVerified: boolean;
-  hasSetPassword: boolean;
-  annotatorStatus: string;
-  microTaskerStatus: string;
-  resultLink: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 const AdminHeader: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
   const { toggleSidebar } = useSidebarContext();
-  const { setUserInfo, clearUserInfo } = useUserInfoActions();
-  const { userInfo } = useUserInfoStates();
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const user = await retrieveUserInfoFromStorage();
-        if (user) {
-          setUserInfo(user);
-        }
-      } catch (error) {
-        console.error('Error loading user info in AdminHeader:', error);
-        // Only clear user info if we don't have existing user info in store
-        if (!userInfo) {
-          clearUserInfo();
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadUser();
-  }, []);
-
-  const handleLogout = () => {
-    // Clear session storage completely
-    sessionStorage.clear();
-    
-    // Clear any potential legacy localStorage auth data
-    localStorage.removeItem('ACCESS_TOKEN');
-    localStorage.removeItem('userInfo');
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminInfo');
-
-    // Clear Zustand store
-    clearUserInfo();
-    
-    // Navigate to login
-    navigate('/auth/admin-login', { replace: true });
-  };
-
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="bg-white shadow-sm border-b px-6 py-3 flex items-center justify-center">
-        <div className="text-sm text-gray-500">Loading...</div>
-      </div>
-    );
-  }
-
+  const handleLogout = useLogout({ userType: 'admin' });
+  const userInfo = useGetUserInfo("admin");
+  
   // Only redirect after we've finished loading
   if (!userInfo) {
     return <Navigate to="/auth/admin-login" replace />;
   }
-
 
   const userMenuItems = [
     {
@@ -108,14 +44,14 @@ const AdminHeader: React.FC = () => {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: 'Logout',
-      onClick: handleLogout
+      onClick: () => handleLogout()
     }
   ];
 
   return (
     <div className="bg-white shadow-sm border-b px-6 py-3 flex flex-wrap items-center">
       <div className='flex items-center gap-2'>
-        <Button className='size-8 lg:hidden rounded-sm flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
+        <Button className='size-8 lg:hidden rounded-md flex items-center justify-center  bg-primary text-white' onClick={toggleSidebar}>
           <MenuOutlined />
         </Button>
         <Text className="hidden lg:block text-lg font-['gilroy-semibold'] text-[#333333]">
@@ -148,7 +84,7 @@ const AdminHeader: React.FC = () => {
                 {userInfo?.fullName || 'Admin User'}
               </Text>
               <Text className="text-xs text-gray-500 leading-tight">
-                Administrator
+                {userInfo?.role || 'Administrator'}
               </Text>
             </div>
           </div>

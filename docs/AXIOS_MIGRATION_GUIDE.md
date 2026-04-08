@@ -1,193 +1,237 @@
-# API Migration Guide: From Fetch to Axios
+# Migration Guide: Converting to Hook-based Axios API
 
-This guide shows how to convert your existing fetch-based API calls to use the new axios configuration that properly handles error messages.
+This guide shows you how to migrate from the old `window.location.replace` approach to the new React Hook approach that uses `useNavigate`.
 
-## ✅ **What We've Set Up**
+## Important: Preventing Page Refreshes on Auth Failures
 
-### 1. **Axios Instance** (`/src/service/axiosApi.ts`)
-- ✅ Configured with base URL from your environment
-- ✅ Automatic token injection from encrypted storage
-- ✅ Enhanced error handling that extracts API error messages
-- ✅ Response/Request interceptors for consistent behavior
-- ✅ 30-second timeout for requests
+To prevent page refreshes when authentication fails, you need to set up global navigation in your app root:
 
-### 2. **API Utilities** (`/src/service/apiUtils.ts`)
-- ✅ Simple wrapper functions: `apiGet`, `apiPost`, `apiPut`, `apiPatch`, `apiDelete`
-- ✅ File upload helper: `apiUpload`
-- ✅ Error message extraction: `getErrorMessage`
-- ✅ URL builder: `createApiUrl`
-- ✅ Error type checkers: `isNetworkError`, `isAuthError`
+### Option 1: Using the provided hook
+```tsx
+// In your App.tsx or root component
+import { useGlobalNavigation } from './hooks/useGlobalNavigation';
 
-## 📝 **Migration Patterns**
-
-### **Before (Fetch):**
-```typescript
-const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoints.adminProject.createProject}`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
-  },
-  body: JSON.stringify(projectData),
-});
-
-if (!response.ok) {
-  if (response.status === 401) {
-    throw new Error("Unauthorized. Please log in again.");
-  }
-  throw new Error(`Request failed with status ${response.status}`);
-}
-
-const data = await response.json();
-```
-
-### **After (Axios):**
-```typescript
-const data = await apiPost(endpoints.adminProject.createProject, projectData);
-```
-
-## 🔄 **Quick Conversion Examples**
-
-### **GET Request with Parameters**
-```typescript
-// Before
-const queryParams = new URLSearchParams();
-if (params?.page) queryParams.append('page', params.page.toString());
-const url = `${baseURL}${endpoint}?${queryParams.toString()}`;
-const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-
-// After
-const queryParams = { page: params?.page?.toString() };
-const data = await apiGet(endpoint, { params: queryParams });
-```
-
-### **POST Request**
-```typescript
-// Before
-const response = await fetch(`${baseURL}${endpoint}`, {
-  method: "POST",
-  body: JSON.stringify(body),
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-});
-
-// After
-const data = await apiPost(endpoint, body);
-```
-
-### **PUT/PATCH Request**
-```typescript
-// Before
-const response = await fetch(`${baseURL}${endpoint}/${id}`, {
-  method: "PUT",
-  body: JSON.stringify(updateData),
-  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-});
-
-// After
-const url = createApiUrl(endpoint, id);
-const data = await apiPut(url, updateData);
-// OR
-const data = await apiPatch(url, updateData);
-```
-
-### **DELETE Request**
-```typescript
-// Before
-const response = await fetch(`${baseURL}${endpoint}/${id}`, {
-  method: "DELETE",
-  headers: { Authorization: `Bearer ${token}` }
-});
-
-// After
-const url = createApiUrl(endpoint, id);
-const data = await apiDelete(url);
-```
-
-## 🎯 **Enhanced Error Handling**
-
-### **Before (Manual Error Handling):**
-```typescript
-catch (err: any) {
-  const errorMessage = err.message || "An error occurred";
-  setError(errorMessage);
-  return { success: false, error: errorMessage };
+function App() {
+  useGlobalNavigation(); // Prevents page refreshes on auth failures
+  
+  return (
+    <BrowserRouter>
+      {/* Your app components */}
+    </BrowserRouter>
+  );
 }
 ```
 
-### **After (Enhanced Error Messages):**
-```typescript
-catch (err: any) {
-  const errorMessage = getErrorMessage(err); // Extracts API error messages properly
-  setError(errorMessage);
-  return { success: false, error: errorMessage };
+### Option 2: Manual setup
+```tsx
+// In your App.tsx or root component  
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { setGlobalNavigate } from './service/axiosApi';
+
+function App() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    setGlobalNavigate(navigate);
+  }, [navigate]);
+  
+  return (
+    <BrowserRouter>
+      {/* Your app components */}
+    </BrowserRouter>
+  );
 }
 ```
 
-## 📁 **Files to Migrate**
+**Without this setup, auth failures will still work but will cause page refreshes instead of smooth React Router navigation.**
 
-### **Hook Files to Convert:**
-1. `useAdminProjects.ts` ➜ ✅ **Done** (`useAdminProjects_axios.ts` created)
-2. `useUserProjects.ts` ➜ ✅ **Done** (`useUserProjects_axios.ts` created)
-3. `useAdminApplications.ts` ➜ 🔄 **Needs conversion**
-4. `useUserActiveProjects.ts` ➜ 🔄 **Needs conversion**
-5. `useLogin.ts` ➜ 🔄 **Needs conversion**
-6. `useSignUp.ts` ➜ 🔄 **Needs conversion**
-7. Any other hooks with fetch calls
+## What Changed?
 
-### **Component Files to Check:**
-- Look for direct fetch calls in components
-- Update import statements to use new axios hooks
+- ✅ Previously: `window.location.replace()` for redirects (causes full page reload)
+- ✅ Now: `useNavigate()` from React Router (single-page app navigation)
+- ✅ Better integration with React Router
+- ✅ Maintains app state during navigation
+- ✅ No full page reloads
 
-## 🚀 **How to Apply Changes**
+## Migration Steps
 
-### **Step 1: Replace Hook Imports**
-```typescript
-// Before
-import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
+### Step 1: Update Imports
 
-// After
-import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects_axios";
+**Before:**
+```tsx
+import { multimediaAssessmentApi } from '../service/axiosApi';
 ```
 
-### **Step 2: Test Error Handling**
-The new axios setup will now properly extract error messages from your API responses in these formats:
-- `{ message: "Error message" }`
-- `{ error: "Error message" }`
-- `{ error: { message: "Error message" } }`
-- `{ errors: ["Error 1", "Error 2"] }`
-- `{ errors: { field: ["Error message"] } }`
-
-### **Step 3: Update Direct API Calls**
-If you have any direct fetch calls in components, convert them:
-```typescript
-// Before
-const response = await fetch(url, options);
-
-// After
-import { apiPost, getErrorMessage } from "../../service/apiUtils";
-try {
-  const data = await apiPost(endpoint, body);
-} catch (error) {
-  console.error(getErrorMessage(error));
-}
+**After (Option A - Direct hook usage):**
+```tsx
+import { useAxiosApi, createMultimediaAssessmentApi } from '../service/axiosApi';
 ```
 
-## ⚡ **Benefits of New Setup**
+**After (Option B - Custom hook pattern):**
+```tsx
+import { useAxiosApi, createMultimediaAssessmentApi } from '../service/axiosApi';
 
-1. **Better Error Messages**: Automatically extracts and displays API error messages
-2. **Automatic Token Management**: No need to manually add Authorization headers
-3. **Consistent Error Handling**: Standardized error format across all API calls
-4. **Less Boilerplate**: Significantly less code per API call
-5. **Type Safety**: Better TypeScript support with axios
-6. **Network Error Detection**: Built-in network and auth error detection
-7. **File Upload Support**: Ready-to-use file upload functionality
+// Create a custom hook for cleaner usage
+const useMultimediaApi = () => {
+  const { axiosInstance } = useAxiosApi();
+  return createMultimediaAssessmentApi(axiosInstance);
+};
+```
 
-## 🛠 **Next Steps**
+### Step 2: Update Component Logic
 
-1. **Test the new hooks**: Replace imports in your components with the `_axios` versions
-2. **Monitor error messages**: Check that API errors are now properly displayed
-3. **Convert remaining hooks**: Apply the same pattern to other hooks
-4. **Remove old files**: Once testing is complete, replace original files
-5. **Update components**: Replace any direct fetch calls with axios utilities
+**Before:**
+```tsx
+const MyComponent = () => {
+  const fetchData = async () => {
+    try {
+      const result = await multimediaAssessmentApi.getAvailableAssessments();
+      // Handle success
+    } catch (error) {
+      // Handle error - redirects use window.location.replace
+    }
+  };
 
-The migration maintains the exact same interface, so your components won't need any changes other than import paths!
+  return <button onClick={fetchData}>Fetch Data</button>;
+};
+```
+
+**After (Option A):**
+```tsx
+const MyComponent = () => {
+  const { axiosInstance } = useAxiosApi();
+  const api = createMultimediaAssessmentApi(axiosInstance);
+
+  const fetchData = async () => {
+    try {
+      const result = await api.getAvailableAssessments();
+      // Handle success
+    } catch (error) {
+      // Handle error - redirects now use React Router navigate
+    }
+  };
+
+  return <button onClick={fetchData}>Fetch Data</button>;
+};
+```
+
+**After (Option B - Cleaner with custom hook):**
+```tsx
+const MyComponent = () => {
+  const api = useMultimediaApi(); // Custom hook from above
+
+  const fetchData = async () => {
+    try {
+      const result = await api.getAvailableAssessments();
+      // Handle success
+    } catch (error) {
+      // Handle error - redirects now use React Router navigate
+    }
+  };
+
+  return <button onClick={fetchData}>Fetch Data</button>;
+};
+```
+
+### Step 3: Create Reusable API Hooks (Recommended)
+
+Create a dedicated hooks file for your API calls:
+
+**`src/hooks/useApi.ts`:**
+```tsx
+import { useAxiosApi, createMultimediaAssessmentApi } from '../service/axiosApi';
+
+export const useMultimediaApi = () => {
+  const { axiosInstance } = useAxiosApi();
+  return createMultimediaAssessmentApi(axiosInstance);
+};
+
+// You can create specific hooks for different features
+export const useAssessmentQueries = () => {
+  const api = useMultimediaApi();
+  
+  const fetchAssessments = async () => {
+    return await api.getAvailableAssessments();
+  };
+
+  const startAssessment = async (assessmentId: string) => {
+    return await api.startAssessment(assessmentId);
+  };
+
+  return {
+    fetchAssessments,
+    startAssessment,
+  };
+};
+```
+
+**Using the custom hooks:**
+```tsx
+import { useAssessmentQueries } from '../hooks/useApi';
+
+const AssessmentComponent = () => {
+  const { fetchAssessments, startAssessment } = useAssessmentQueries();
+
+  // Clean and simple usage
+  const handleFetch = () => fetchAssessments();
+  const handleStart = (id: string) => startAssessment(id);
+
+  return (
+    <div>
+      <button onClick={handleFetch}>Fetch Assessments</button>
+      <button onClick={() => handleStart('assessment-1')}>Start Assessment</button>
+    </div>
+  );
+};
+```
+
+## Backwards Compatibility
+
+If you have components that can't be converted immediately, the old API still works:
+
+```tsx
+import { multimediaAssessmentApi } from '../service/axiosApi';
+
+// This still works but will use window.location.replace for redirects
+const result = await multimediaAssessmentApi.getAvailableAssessments();
+```
+
+## Integration with React Query/TanStack Query
+
+The new hooks work perfectly with React Query:
+
+```tsx
+import { useQuery } from '@tanstack/react-query';
+import { useMultimediaApi } from '../hooks/useApi';
+
+const AssessmentComponent = () => {
+  const api = useMultimediaApi();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['assessments'],
+    queryFn: () => api.getAvailableAssessments(),
+  });
+
+  // React Query handles error states, and 401s will still redirect properly
+  return <div>{/* Your component JSX */}</div>;
+};
+```
+
+## Key Benefits
+
+1. **Better UX**: No page reloads on auth failures
+2. **React Router Integration**: Proper navigation with browser history
+3. **State Preservation**: App state maintained during navigation
+4. **Cleaner Code**: More React-like patterns
+5. **Type Safety**: Full TypeScript support
+6. **Backwards Compatible**: Existing code continues to work
+
+## Migration Checklist
+
+- [ ] Install/ensure `react-router-dom` is available
+- [ ] Update components one by one to use `useAxiosApi` hook
+- [ ] Create custom API hooks for common patterns
+- [ ] Test authentication flows to ensure proper navigation
+- [ ] Remove old imports once migration is complete
+- [ ] Update error handling if needed
