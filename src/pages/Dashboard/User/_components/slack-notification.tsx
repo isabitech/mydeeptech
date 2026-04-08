@@ -1,4 +1,5 @@
 import { RightOutlined, TeamOutlined } from "@ant-design/icons"
+import { Button } from "antd"
 // import { Button } from "antd"
 
 
@@ -24,7 +25,7 @@ const SlackNotification = () => {
         </p>
       </div>
 
-      {/* <div className="flex-shrink-0">
+      <div className="flex-shrink-0">
                 <Button
                   type="primary"
                   size="large"
@@ -37,7 +38,7 @@ const SlackNotification = () => {
                 >
                   Join Slack Community
                 </Button>
-              </div> */}
+              </div>
     </div>
   )
 }
