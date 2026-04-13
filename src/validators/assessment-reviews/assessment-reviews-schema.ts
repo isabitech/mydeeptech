@@ -36,6 +36,12 @@ const ReviewRatingSchema = z.union([
     grade: z.string(),
     level: z.string(),
   }),
+  z.object({
+    grade: z.string().nullable(),
+    score: z.number().nullable(), 
+    level: z.string().nullable(),
+  }),
+  z.object({}).passthrough(), // Allow any object structure as fallback
 ]);
 
 // Assessment review schema
