@@ -5,6 +5,14 @@ import { SubmitReviewSchema } from "../../../../validators/assessment-reviews/as
 import assessmentMutationService from "../../../../services/assessement-service/assessment-mutation";
 import useDebounce from "../../../../hooks/useDebounce";
 
+// Form values interface
+interface ReviewFormValues {
+  reviewRating: string;
+  englishScore: string | number;
+  problemSolvingScore: string | number;
+  reviewerComment?: string;
+}
+
 import {
   AssessmentPageHeader,
   AssessmentSearch,
@@ -74,7 +82,7 @@ const UserAssessments = () => {
     setIsViewModalVisible(false);
   };
 
-  const handleReviewSubmit = (values: any) => {
+  const handleReviewSubmit = (values: ReviewFormValues) => {
     if (!selectedAssessment) return;
     if(isUpdateReviewLoading) return;
 
@@ -82,8 +90,8 @@ const UserAssessments = () => {
        const payload = {
         assessmentId: selectedAssessment._id,
         reviewRating: values.reviewRating,
-        englishTestScore: values.englishScore ? parseInt(values.englishScore) : 0,
-        problemSolvingScore: values.problemSolvingScore ? parseInt(values.problemSolvingScore) : 0,
+        englishTestScore: values.englishScore ? parseInt(values.englishScore.toString()) : 0,
+        problemSolvingScore: values.problemSolvingScore ? parseInt(values.problemSolvingScore.toString()) : 0,
         reviewerComment: values.reviewerComment ?? "",
     };
 
