@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Input, Select, Tag } from "antd";
-import { africanCountries } from "../../../../../utils/africanCountries";
+import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import './PhoneInput.css';
+import { worldCountries } from "../../../../../utils/worldCountries";
 import DomainsSection from "./DomainsSection";
 import { Domain } from "../types.js";
+
+// Define the E164Number type locally since it's not exported
+type E164Number = string;
 
 interface PersonalDetailsFormProps {
   profile: any;
@@ -10,6 +16,7 @@ interface PersonalDetailsFormProps {
   isEditing: boolean;
   hasSelectedCountry: boolean;
   onCountryChange: (countryValue: string) => void;
+  onPhoneChange?: (phone: string, country?: string) => void;
   assignedDomains: any[];
   mergedDomains: Domain[];
   selectedDomains: string[];
@@ -22,11 +29,53 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
   isEditing,
   hasSelectedCountry,
   onCountryChange,
+  onPhoneChange,
   assignedDomains,
   mergedDomains,
   selectedDomains,
   onDomainsChange,
 }) => {
+  const form = Form.useFormInstance();
+  const phoneNumber = Form.useWatch('phoneNumber', form);
+
+  // Extract country from phone number when it changes
+  useEffect(() => {
+    if (phoneNumber && onPhoneChange) {
+      const parsedPhone = parsePhoneNumber(phoneNumber);
+      if (parsedPhone && parsedPhone.country) {
+        const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+        const countryName = regionNames.of(parsedPhone.country);
+        onPhoneChange(phoneNumber, countryName || "");
+      } else {
+        onPhoneChange(phoneNumber);
+      }
+    }
+  }, [phoneNumber, onPhoneChange]);
+
+  // Custom PhoneInput wrapper that works with Ant Design Forms
+  const FormPhoneInput: React.FC<{ 
+    value?: E164Number; 
+    onChange?: (value: E164Number | undefined) => void; 
+    disabled?: boolean 
+  }> = ({ value, onChange, disabled }) => (
+    <PhoneInput
+      international
+      defaultCountry="NG"
+      countryCallingCodeEditable={false}
+      disabled={disabled}
+      value={value}
+      onChange={(phoneValue: E164Number | undefined) => {
+        if (onChange) {
+          onChange(phoneValue);
+        }
+      }}
+      placeholder="Enter phone number"
+      className="phone-input-container h-8"
+      numberInputProps={{
+        className: "ant-input"
+      }}
+    />
+  );
   return (
     <>
       <Form.Item label="Email">
@@ -80,12 +129,11 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
           />
         </Form.Item>
 
-        <Form.Item label="Phone Number" name="phoneNumber">
-          <Input
-            disabled={true}
-            className="!font-[gilroy-regular]"
-            placeholder="System managed"
-          />
+        <Form.Item 
+          label="Phone Number" 
+          name="phoneNumber"
+        >
+          <FormPhoneInput disabled={!isEditing} />
         </Form.Item>
 
         <Form.Item label="Country" name="country">
@@ -100,7 +148,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                 .toLowerCase()
                 .includes(input.toLowerCase())
             }
-            options={africanCountries}
+            options={worldCountries}
           />
         </Form.Item>
 

@@ -4,11 +4,19 @@ import { endpoints } from "../../store/api/endpoints";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { GetSubmissionsResponseSchema } from "../../validators/assessment-reviews/assessment-reviews-schema";
 
-const useAssessmentReviews = (search?: string) => {
+interface AssessmentFilters {
+    search?: string;
+    scoreRange?: string;
+}
+
+const useAssessmentReviews = (search?: string, scoreRange?: string) => {
     const query = useQuery({
-        queryKey: [REACT_QUERY_KEYS.QUERY.assessmentReviews, search],
+        queryKey: [REACT_QUERY_KEYS.QUERY.assessmentReviews, search, scoreRange],
         queryFn: async () => {
-            const params = search ? { search } : {};
+            const params: AssessmentFilters = {};
+            if (search) params.search = search;
+            if (scoreRange && scoreRange !== "all") params.scoreRange = scoreRange;
+            
             const response = await axiosInstance.get<GetSubmissionsResponseSchema>(endpoints.assessments.assessmentReviews, { params });
             const result = GetSubmissionsResponseSchema.safeParse(response.data);
             if (!result.success) {

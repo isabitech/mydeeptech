@@ -26,19 +26,21 @@ import errorMessage from "../../../../lib/error-message";
 
 const UserAssessments = () => {
   const [searchText, setSearchText] = useState("");
+  const [scoreRange, setScoreRange] = useState("all");
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [reviewForm] = Form.useForm();
   
-  // Debounce search text to avoid excessive API calls
+  // Debounce search text and score range to avoid excessive API calls
   const debouncedSearchText = useDebounce(searchText, 500);
+  const debouncedScoreRange = useDebounce(scoreRange, 300);
   
   // Watch form fields for dynamic calculations
   const problemSolvingScore = Form.useWatch('problemSolvingScore', reviewForm);
   const englishScore = Form.useWatch('englishScore', reviewForm);
  
-  const { assessmentReviews, isAssessmentReviewsLoading } = assessmentQueryService.useAssessmentReviews(debouncedSearchText);
+  const { assessmentReviews, isAssessmentReviewsLoading } = assessmentQueryService.useAssessmentReviews(debouncedSearchText, debouncedScoreRange);
   const { updateReviewMutation, isUpdateReviewLoading } = assessmentMutationService.useUpdateReview();
 
   const handleReviewAssessment = (assessment: Assessment) => {
@@ -71,6 +73,10 @@ const UserAssessments = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchText(value);
+  };
+
+  const handleScoreRangeChange = (value: string) => {
+    setScoreRange(value);
   };
 
   const handleReviewModalCancel = () => {
@@ -125,6 +131,8 @@ const UserAssessments = () => {
       <AssessmentSearch
         searchText={searchText}
         onSearchChange={handleSearchChange}
+        scoreRange={scoreRange}
+        onScoreRangeChange={handleScoreRangeChange}
       />
 
       {/* Table */}

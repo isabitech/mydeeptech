@@ -31,6 +31,7 @@ import {
   ApplyToProjectForm,
   Availability,
 } from "../../../../types/project.types";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -173,7 +174,9 @@ const AvailableProjects = () => {
         message.error(result.error || "Failed to submit application");
       }
     } catch (error) {
-      message.error("Please complete the required fields");
+      const errMsg = getErrorMessage(error);
+      console.error("Application error:", errMsg);
+      message.error("errMsg");
     }
   };
 

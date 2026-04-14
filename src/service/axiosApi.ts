@@ -49,6 +49,14 @@ export const setGlobalNavigate = (navigateCallback: ((path: string, options?: { 
  * ```
  */
 
+  export const axiosInstance = axios.create({
+      baseURL: baseURL,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 30000,
+  });
+
 // Custom hook to create and configure axios instance with React Router navigation
 export const useAxiosApi = () => {
   const navigate = useNavigate();
@@ -72,7 +80,7 @@ export const useAxiosApi = () => {
   }, [navigate]);
 
   // Create axios instance with memoization for performance
-  const axiosInstance = useMemo(() => {
+    const axiosInstance = useMemo(() => {
     const instance = axios.create({
       baseURL: baseURL,
       headers: {
@@ -680,5 +688,19 @@ export const createMultimediaAssessmentApi = (axiosInstance: any) => ({
   },
 });
 
+// SOP (Standard Operating Procedure) API functions factory
+export const createSopApi = (axiosInstance?: any) => ({
+  // Check if user has accepted the SOP
+  getSopAcceptanceStatus: async () => {
+    return apiGet("/auth/sop-acceptance/status");
+  },
+
+  // Record user's acceptance of the SOP
+  recordSopAcceptance: async (sopVersion: string = "v1.0") => {
+    return apiPost("/auth/sop-acceptance", { sop_version: sopVersion });
+  },
+});
+
 // Backwards compatible export - uses default axios instance without React Router navigation
 export const multimediaAssessmentApi = createMultimediaAssessmentApi(defaultAxiosInstance);
+export const sopApi = createSopApi(defaultAxiosInstance);

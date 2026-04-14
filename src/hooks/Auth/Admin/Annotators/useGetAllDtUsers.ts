@@ -13,8 +13,6 @@ interface HookOperationResult {
   error?: string;
 }
 
-
-
 export const useGetAllDtUsers = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +25,7 @@ export const useGetAllDtUsers = () => {
     limit?: number;
     status?: string;
     search?: string;
+    country?: string;
   }): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
@@ -45,6 +44,7 @@ export const useGetAllDtUsers = () => {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
+      if (params?.country) queryParams.append('country', params.country);
 
       const url = `${import.meta.env.VITE_API_URL}${endpoints.adminActions.getAllDTUsers}${
         queryParams.toString() ? `?${queryParams.toString()}` : ''
