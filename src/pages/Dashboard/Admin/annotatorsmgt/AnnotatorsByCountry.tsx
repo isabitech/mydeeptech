@@ -52,7 +52,11 @@ const AnnotatorsByCountry = ({ selectedCountry, onCountryChange }: AnnotatorsByC
     const stats: { [key: string]: CountryStats } = {};
 
     users.forEach((user) => {
-      const country = user.personal_info?.country || "Unknown";
+      // Normalize country name: trim whitespace, convert to proper case to avoid duplicates
+      const rawCountry = user.personal_info?.country;
+      const country = rawCountry ? 
+        rawCountry.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : 
+        "Unknown";
       
       if (!stats[country]) {
         stats[country] = {
@@ -99,9 +103,13 @@ const AnnotatorsByCountry = ({ selectedCountry, onCountryChange }: AnnotatorsByC
     if (selectedCountry === "all") {
       setFilteredUsers(users);
     } else {
-      const filtered = users.filter(
-        (user) => user.personal_info?.country === selectedCountry
-      );
+      const filtered = users.filter((user) => {
+        const userCountry = user.personal_info?.country;
+        const normalizedUserCountry = userCountry ? 
+          userCountry.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) : 
+          "Unknown";
+        return normalizedUserCountry === selectedCountry;
+      });
       setFilteredUsers(filtered);
     }
   };
