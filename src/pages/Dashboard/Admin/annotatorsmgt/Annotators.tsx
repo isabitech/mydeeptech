@@ -33,7 +33,6 @@ const Annotators = () => {
   useEffect(() => {
     fetchCounts();
   }, []);
-
   // Update counts when summary changes
   useEffect(() => {
     if (summary?.statusBreakdown) {
