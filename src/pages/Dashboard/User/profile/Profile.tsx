@@ -102,7 +102,7 @@ const Profile = () => {
 
         <div className="col-span-12">
           <Form form={form} layout="vertical">
-            <Card title="Personal Information" className="mb-6">
+            <Card title="User Information" className="mb-6">
               <PersonalDetailsForm
                 profile={profile}
                 userInfo={userInfo}
