@@ -32,6 +32,7 @@ const Annotators = () => {
   // Fetch counts when component mounts
   useEffect(() => {
     fetchCounts();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Update counts when summary changes
   useEffect(() => {
