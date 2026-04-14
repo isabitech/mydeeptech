@@ -249,5 +249,9 @@ export const endpoints = {
       byId: "/resources/:id",
       togglePublish: "/resources/:id/toggle-publish",
     }
+  },
+  sop: {
+      getSopAcceptanceStatus: "/auth/sop-acceptance/status",
+      recordSopAcceptance: "/auth/sop-acceptance",
   }
 };

@@ -10,7 +10,11 @@ import errorMessage from "../../../../lib/error-message";
 const { Search } = Input;
 const { Option } = Select;
 
-const AllAnnotators = () => {
+interface AllAnnotatorsProps {
+  countryFilter: string;
+}
+
+const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,14 +48,15 @@ const AllAnnotators = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [countryFilter]); // Re-fetch when country filter changes
 
-  const fetchUsers = async (page = currentPage, limit = pageSize, search = searchTerm, status = statusFilter) => {
+  const fetchUsers = async (page = currentPage, limit = pageSize, search = searchTerm, status = statusFilter, country = countryFilter) => {
     await getAllDTUsers({
       page,
       limit,
       ...(status !== "all" && { status }),
-      ...(search && { search })
+      ...(search && { search }),
+      ...(country !== "all" && { country })
     });
   };
 
@@ -60,14 +65,14 @@ const AllAnnotators = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setCurrentPage(1);
-    fetchUsers(1, pageSize, "", "all");
+    fetchUsers(1, pageSize, "", "all", countryFilter);
   };
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
     // Pass the search value directly to avoid stale state
-    fetchUsers(1, pageSize, value, statusFilter);
+    fetchUsers(1, pageSize, value, statusFilter, countryFilter);
   };
 
   // Debounced search for real-time typing
@@ -82,16 +87,16 @@ const AllAnnotators = () => {
     // If search is cleared, fetch immediately
     if (!value) {
       setCurrentPage(1);
-      fetchUsers(1, pageSize, "", statusFilter);
+      fetchUsers(1, pageSize, "", statusFilter, countryFilter);
       return;
     }
 
     // Set new timeout for debounced search
     searchTimeoutRef.current = setTimeout(() => {
       setCurrentPage(1);
-      fetchUsers(1, pageSize, value, statusFilter);
+      fetchUsers(1, pageSize, value, statusFilter, countryFilter);
     }, 500); // 500ms delay
-  }, [pageSize, statusFilter]);
+  }, [pageSize, statusFilter, countryFilter]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -106,7 +111,7 @@ const AllAnnotators = () => {
     setStatusFilter(value);
     setCurrentPage(1);
     // Pass the filter value directly to avoid stale state
-    fetchUsers(1, pageSize, searchTerm, value);
+    fetchUsers(1, pageSize, searchTerm, value, countryFilter);
   };
 
   const handleViewDetails = (annotator: DTUser) => {
@@ -523,7 +528,7 @@ const AllAnnotators = () => {
               setCurrentPage(page);
               setPageSize(size || 10);
               // Fetch new data when pagination changes using updated fetchUsers function
-              fetchUsers(page, size || 10, searchTerm, statusFilter);
+              fetchUsers(page, size || 10, searchTerm, statusFilter, countryFilter);
             }
           }}
           scroll={{ x: "max-content" }}

@@ -1,0 +1,52 @@
+.phone-input-container {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  overflow: hidden;
+  display: flex;
+  transition: border-color 0.2s;
+}
+
+.phone-input-container:hover {
+  border-color: #4096ff;
+}
+
+.phone-input-container:focus-within {
+  border-color: #4096ff;
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+}
+
+.phone-input-container .PhoneInputCountry {
+  padding: 4px 8px;
+  border-right: 1px solid #d9d9d9;
+  background: white;
+}
+
+.phone-input-container .PhoneInputCountrySelect {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.phone-input-container .PhoneInputCountryIconImg {
+  width: 1.25rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+.phone-input-container .ant-input {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  flex: 1;
+  font-family: 'gilroy-regular' !important;
+}
+
+.phone-input-container .ant-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.PhoneInputCountrySelectArrow {
+  color: #999 !important;
+}

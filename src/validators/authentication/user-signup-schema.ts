@@ -6,7 +6,11 @@ const SignUpSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   phone: z.string(),
   email: EmailSchema,
-  domains: z.array(z.string().min(1, "Domain cannot be empty")).min(1, "Select at least one domain"),
+  country: z.string().min(2, "Country is required").max(100, "Country name too long"),
+  domains: z.array(z.object({
+    id: z.string().min(1, "Domain ID is required"),
+    name: z.string().min(1, "Domain name cannot be empty")
+  })).min(1, "Select at least one domain"),
   socialsFollowed: z.array(z.string().min(1)).optional().default([]),
     consent: z.enum(["yes", "no"], {
     error: () => ({ message: "Please select yes or no" }),

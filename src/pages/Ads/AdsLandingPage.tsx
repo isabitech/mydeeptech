@@ -5,7 +5,7 @@ type FormState = {
   fullName: string;
   phone: string;
   email: string;
-  domains: string[];
+  domains: { id: string; name: string }[];
   socialsFollowed: string[];
   consent: "yes" | "no" | "";
 };

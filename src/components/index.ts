@@ -1,4 +1,4 @@
 export { PermissionGate } from './PermissionGate';
 export { PermissionButton } from './PermissionButton';
-export { PDFViewerModal, usePDFViewer } from './PDFViewer';
+export { PDFViewerModal, usePDFViewer, MultiPDFViewerModal, useMultiPDFViewer } from './PDFViewer';
 export { default as ErrorBoundary } from './ErrorBoundary';

@@ -202,19 +202,6 @@ const AssessmentList: React.FC = () => {
           Complete these assessments to qualify for different types of annotation projects.
         </Paragraph>
       </div>
-
-      <div className="col-span-12 lg:col-span-3  bgred-500 flex items-center lg:justify-end">
-          <a 
-            href="/assets/Standard_Operating_Procedure_(SOP)_for_Freelancers.pdf" 
-            download="Standard_Operating_Procedure_(SOP)_for_Freelancers.pdf" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="inline-flex items-center px-4 py-3 bg-[#F6921E] text-white font-[gilroy-regular] text-sm rounded-lg hover:bg-[#e5831c] transition-colors duration-200 no-underline hover:no-underline"
-          >
-            <BookOutlined className="mr-2" />
-            Download Instructions
-          </a>
-      </div>
   
       </div>
 
@@ -433,7 +420,8 @@ const AssessmentList: React.FC = () => {
             </Col>
           ))}
         </Row>
-      )}
+      )}   
+      
     </div>
   );
 };

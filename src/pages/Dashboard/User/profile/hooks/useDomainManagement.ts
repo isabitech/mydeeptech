@@ -10,11 +10,7 @@ export const useDomainManagement = (profile: any) => {
   const removeDomainMutation = domainMutation.useRemoveDomainFromUser();
 
   // Fetch domains with high limit to get all available options
-  const {
-    data: domainsData,
-    isLoading: domainsLoading,
-    error: domainsError,
-  } = domainQueryService.useDomains({ limit: 1000 });
+  const {data: domainsData, isLoading: domainsLoading, error: domainsError} = domainQueryService.useDomains({ limit: 1000 });
 
   const allDomains = domainsData?.data?.domain || [];
   const mergedDomains = allDomains;
@@ -58,7 +54,6 @@ export const useDomainManagement = (profile: any) => {
     const normId = normalizeDomainId(d);
     if (normId && !assignedDomainsMap.has(normId)) {
       const fullDomain = mergedDomains.find((m: any) => m._id === normId);
-      
       assignedDomainsMap.set(normId, {
         domain: fullDomain || (typeof d === "object" ? d : { _id: normId, name: d }),
         id: null, // Legacy domains don't have assignment IDs

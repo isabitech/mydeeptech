@@ -25,10 +25,7 @@ const DomainsSection: React.FC<DomainsSectionProps> = ({
             const dId = domainParam.domainId;
             const domainObj = domainParam.domain || {};
             // Defensive name lookup: check domain object's name, then look up in mergedDomains, finally fallback to ID
-            const domainName = domainObj?.name || 
-                              mergedDomains.find((m: any) => m._id === dId)?.name || 
-                              dId;
-
+            const domainName = domainObj?.name || mergedDomains.find((m: any) => m._id === dId)?.name || dId;
             return (
               <Tag key={dId} closable={false} color="blue">
                 {domainName}
