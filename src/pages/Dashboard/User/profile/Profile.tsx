@@ -132,7 +132,7 @@ if (!profile) return <ErrorIndicatorWithRefresh error="Profile not found" />;
             </Card>
 
             <Card title="Device Information" className="mb-6">
-              <SystemInfoForm isEditing={profileActions.isEditing} />
+              <SystemInfoForm isEditing={profileActions.isEditing} profile={profile} />
             </Card>
 
             <SkillsExperienceForm isEditing={profileActions.isEditing} />

@@ -6,18 +6,27 @@ import './PhoneInput.css';
 import { worldCountries } from "../../../../../utils/worldCountries";
 import DomainsSection from "./DomainsSection";
 import { Domain } from "../types.js";
+import { Profile } from "../../../../../validators/profile/profile-schema";
+import { UserInfo } from "../../../../../UserContext";
 
 // Define the E164Number type locally since it's not exported
 type E164Number = string;
 
+// Define the assigned domain structure
+interface AssignedDomain {
+  domain: Domain;
+  id: string | null;
+  domainId: string;
+}
+
 interface PersonalDetailsFormProps {
-  profile: any;
-  userInfo: any;
+  profile: Profile | null | undefined;
+  userInfo: UserInfo | null;
   isEditing: boolean;
   hasSelectedCountry: boolean;
   onCountryChange: (countryValue: string) => void;
   onPhoneChange?: (phone: string, country?: string) => void;
-  assignedDomains: any[];
+  assignedDomains: AssignedDomain[];
   mergedDomains: Domain[];
   selectedDomains: string[];
   onDomainsChange: (values: string[]) => void;
@@ -70,9 +79,9 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
         }
       }}
       placeholder="Enter phone number"
-      className="phone-input-container h-8"
+      className="phone-input-container h-8 disabled:cursor-not-allowed disabled:bg-gray-100"
       numberInputProps={{
-        className: "ant-input"
+        className: "ant-input disabled:cursor-not-allowed disabled:bg-gray-100"
       }}
     />
   );
@@ -133,7 +142,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
           label="Phone Number" 
           name="phoneNumber"
         >
-          <FormPhoneInput disabled={!isEditing} />
+          <FormPhoneInput disabled={true} />
         </Form.Item>
 
         <Form.Item label="Country" name="country">

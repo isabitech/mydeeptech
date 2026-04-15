@@ -1,9 +1,9 @@
 import React from "react";
-import { Form, Input, Select, Button, Spin } from "antd";
+import { Form, Input, Select, Button, Spin, FormInstance } from "antd";
 import { Bank } from "../../../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
 
 interface NGNPaymentFormProps {
-  form: any;
+  form: FormInstance;
   isEditing: boolean;
   accountNumber: string;
   bankCode: string;
@@ -86,13 +86,15 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
               : "Account name will appear after verification"
           }
           suffix={
-            isVerifying ? (
-              <Spin size="small" />
-            ) : verificationSuccess ? (
-              <span className="text-green-500">✓</span>
-            ) : verificationError ? (
-              <span className="text-red-500">✗</span>
-            ) : null
+            <span style={{ minWidth: '20px', display: 'inline-block' }}>
+              {isVerifying ? (
+                <Spin size="small" />
+              ) : verificationSuccess ? (
+                <span className="text-green-500">✓</span>
+              ) : verificationError ? (
+                <span className="text-red-500">✗</span>
+              ) : null}
+            </span>
           }
         />
       </Form.Item>

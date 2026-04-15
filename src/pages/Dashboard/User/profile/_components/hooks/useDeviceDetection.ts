@@ -9,7 +9,7 @@ import {
   detectMediaDevices
 } from '../utils/deviceDetectionUtils';
 
-export const useDeviceDetection = () => {
+export const useDeviceDetection = (existingSystemInfo?: any) => {
   const [detecting, setDetecting] = useState(true);
   const [detectionStatus, setDetectionStatus] = useState<DetectionStatus>({
     deviceType: { detected: false, manual: false },
@@ -27,40 +27,55 @@ export const useDeviceDetection = () => {
     const newDetectionStatus = { ...detectionStatus };
 
     try {
-      // Detect device type
+      // Get current form values to avoid overriding existing data
+      const currentValues = form.getFieldsValue();
+
+      // Check if we have saved system info data
+      const hasSavedDeviceType = existingSystemInfo?.deviceType !== undefined && existingSystemInfo?.deviceType !== null;
+      const hasSavedOS = existingSystemInfo?.operatingSystem !== undefined && existingSystemInfo?.operatingSystem !== null;
+      const hasSavedInternetSpeed = existingSystemInfo?.internetSpeedMbps !== undefined && existingSystemInfo?.internetSpeedMbps !== null;
+      const hasSavedPowerBackup = existingSystemInfo?.powerBackup !== undefined && existingSystemInfo?.powerBackup !== null;
+      const hasSavedWebcam = existingSystemInfo?.hasWebcam !== undefined && existingSystemInfo?.hasWebcam !== null;
+      const hasSavedMicrophone = existingSystemInfo?.hasMicrophone !== undefined && existingSystemInfo?.hasMicrophone !== null;
+
+      // Detect device type - only if no saved data
       const deviceType = detectDeviceType();
-      if (deviceType) {
+      if (deviceType && !hasSavedDeviceType && !currentValues.deviceType) {
         newDetectionStatus.deviceType = { detected: true, value: deviceType, manual: false };
         form.setFieldValue('deviceType', deviceType);
       }
 
-      // Detect operating system
+      // Detect operating system - only if no saved data
       const os = detectOperatingSystem();
-      if (os) {
+      if (os && !hasSavedOS && !currentValues.operatingSystem) {
         newDetectionStatus.operatingSystem = { detected: true, value: os, manual: false };
         form.setFieldValue('operatingSystem', os);
       }
 
-      // Detect internet speed
+      // Detect internet speed - only if no saved data
       const speed = await detectInternetSpeed();
-      if (speed !== null && speed > 0) {
+      if (speed !== null && speed > 0 && !hasSavedInternetSpeed && (!currentValues.internetSpeedMbps || currentValues.internetSpeedMbps === 0)) {
         newDetectionStatus.internetSpeed = { detected: true, value: speed, manual: false };
         form.setFieldValue('internetSpeedMbps', speed);
       }
 
-      // Detect power backup
+      // Detect power backup - only if no saved data
       const powerBackup = await detectPowerBackup();
-      if (powerBackup !== null) {
+      if (powerBackup !== null && !hasSavedPowerBackup && currentValues.powerBackup === undefined) {
         newDetectionStatus.powerBackup = { detected: true, value: powerBackup, manual: false };
         form.setFieldValue('powerBackup', powerBackup);
       }
 
-      // Detect media devices
+      // Detect media devices - only if no saved data
       const mediaDevices = await detectMediaDevices();
-      newDetectionStatus.hasWebcam = { detected: true, value: mediaDevices.webcam, manual: false };
-      newDetectionStatus.hasMicrophone = { detected: true, value: mediaDevices.microphone, manual: false };
-      form.setFieldValue('hasWebcam', mediaDevices.webcam);
-      form.setFieldValue('hasMicrophone', mediaDevices.microphone);
+      if (!hasSavedWebcam && currentValues.hasWebcam === undefined) {
+        newDetectionStatus.hasWebcam = { detected: true, value: mediaDevices.webcam, manual: false };
+        form.setFieldValue('hasWebcam', mediaDevices.webcam);
+      }
+      if (!hasSavedMicrophone && currentValues.hasMicrophone === undefined) {
+        newDetectionStatus.hasMicrophone = { detected: true, value: mediaDevices.microphone, manual: false };
+        form.setFieldValue('hasMicrophone', mediaDevices.microphone);
+      }
 
     } catch (error) {
       console.warn('Device detection failed:', error);

@@ -3,19 +3,21 @@ import { Form, Select, InputNumber, Switch, Row, Col } from "antd";
 import { useDeviceDetection } from "./hooks/useDeviceDetection";
 import DetectionStatusAlert from "./DetectionStatusAlert";
 import DetectedFieldLabel from "./DetectedFieldLabel";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 interface SystemInfoFormProps {
   isEditing: boolean;
+  profile?: Profile | null;
 }
 
-const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
+const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing, profile }) => {
   const {
     detecting,
     detectionStatus,
     performDetection,
     toggleManualInput,
     getDetectionMessage
-  } = useDeviceDetection();
+  } = useDeviceDetection(profile?.systemInfo);
 
   useEffect(() => {
     performDetection();

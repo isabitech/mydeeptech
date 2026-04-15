@@ -57,7 +57,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
           padding: "8px",
         },
       }}
-      destroyOnClose
+      destroyOnHidden
     >
       {fileUrl && (
         <div style={{ height: "100%" }}>
