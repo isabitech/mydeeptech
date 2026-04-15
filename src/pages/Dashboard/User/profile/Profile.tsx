@@ -73,13 +73,20 @@ const Profile = () => {
   };
 
 
+  if (!userId) {
+    return <ErrorIndicatorWithRefresh error="Missing user ID" />;
+  }
 
-  if (!userId || isProfileLoading) {
+  if (isProfileLoading) {
     return <LoadingIndicator />;
   }
 
-  if (isProfileError || !profile) {
-    return <ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch} />;
+  if (isProfileError) {
+    return (<ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch}  />);
+  }
+
+  if (!profile) {
+    return <ErrorIndicatorWithRefresh error="Profile not found" />;
   }
 
   return (

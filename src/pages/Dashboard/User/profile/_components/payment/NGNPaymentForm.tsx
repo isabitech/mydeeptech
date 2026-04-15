@@ -9,7 +9,7 @@ interface NGNPaymentFormProps {
   bankCode: string;
   isVerifying: boolean;
   verificationSuccess: boolean;
-  verificationError: any;
+  verificationError: Error | null;
   hasVerifiedAccount: boolean;
   allNGNBanks: Bank[];
   onManualVerification: () => void;
