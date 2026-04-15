@@ -16,43 +16,88 @@ class AdminChatSocketService {
   // Admin connection with proper configuration
   async connect(token: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
-
+      // Try multiple URLs in order of preference
+      const urls = [
+        import.meta.env.VITE_SOCKET_URL,
+        'http://localhost:4000',
+        'https://mydeeptech-be.onrender.com',
+        'https://mydeeptech-be-lmrk.onrender.com'
+      ].filter(Boolean);
+      
+      const url = urls[0] || 'http://localhost:4000';
+      console.log('🔌 [AdminChatSocket] Attempting connection to:', url);
+      
+      // Emit initial connecting status
+      this.emit('connection_status', { connected: false, status: 'connecting' });
       
       this.socket = io(url, {
         auth: { token },
         query: { userType: 'admin' },
-        transports: ['websocket', 'polling'],
-        timeout: 30000,
-        reconnectionDelay: 2000,
-        reconnectionDelayMax: 5000,
+        transports: ['polling', 'websocket'], // Try polling first for better compatibility
+        timeout: 20000, // Increased timeout
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 3000,
         reconnectionAttempts: this.maxReconnectAttempts,
-        randomizationFactor: 0.5,
+        randomizationFactor: 0.3,
         autoConnect: false,
+        forceNew: true, // Force new connection
       });
 
       this.setupEventListeners();
       this.setupReconnectionLogic();
 
+      // Connection timeout fallback - 25 seconds
+      const connectionTimeout = setTimeout(() => {
+        if (!this.isConnected) {
+          console.error('❌ [AdminChatSocket] Connection timeout after 25 seconds');
+          this.emit('connection_status', { 
+            connected: false, 
+            status: 'timeout',
+            error: `Could not connect to ${url}. Please check if the server is running.`
+          });
+          this.socket?.disconnect();
+          reject(new Error(`Admin connection timeout to ${url}`));
+        }
+      }, 25000);
+
       // Connection success
       this.socket.on('connect', () => {
-
+        clearTimeout(connectionTimeout);
+        console.log('✅ [AdminChatSocket] Successfully connected as admin');
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        this.emit('connection_status', { connected: true });
+        this.emit('connection_status', { connected: true, status: 'connected' });
         
-        // Join admin room
+        // Join admin room immediately upon connection
+        console.log('🏠 [AdminChatSocket] Joining admin room...');
         this.socket?.emit('join_admin_room');
         resolve(true);
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on('connect_error', (error: any) => {
         console.error('❌ [AdminChatSocket] Connection failed:', error);
         this.reconnectAttempts++;
+        
+        const isServerDown = error.message?.includes('404') || 
+                           error.message?.includes('502') || 
+                           (error as any).type === 'TransportError';
+        
+        this.emit('connection_status', { 
+          connected: false, 
+          status: isServerDown ? 'server_down' : 'error', 
+          error: isServerDown ? 'Server appears to be offline' : error.message 
+        });
+        
         this.emit('connection_error', { error, attempts: this.reconnectAttempts });
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          reject(new Error('Maximum admin connection attempts reached'));
+          clearTimeout(connectionTimeout);
+          this.emit('connection_status', { 
+            connected: false, 
+            status: 'failed',
+            error: `Failed to connect after ${this.maxReconnectAttempts} attempts` 
+          });
+          reject(new Error(`Maximum admin connection attempts reached. Last error: ${error.message}`));
         }
       });
 
@@ -66,25 +111,29 @@ class AdminChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('disconnect', (reason) => {
-
+      console.warn('⚠️ [AdminChatSocket] Disconnected:', reason);
       this.isConnected = false;
-      this.emit('connection_status', { connected: false, reason });
+      this.emit('connection_status', { connected: false, reason, status: 'disconnected' });
+    });
+
+    this.socket.on('reconnecting', (attemptNumber) => {
+      console.log('🔄 [AdminChatSocket] Reconnecting attempt:', attemptNumber);
+      this.emit('connection_status', { connected: false, status: 'reconnecting', attempt: attemptNumber });
     });
 
     // Admin-specific events
     this.socket.on('new_chat_ticket', (data) => {
-
       this.emit('new_chat_ticket', data);
     });
 
     this.socket.on('user_message', (data) => {
-
+      console.log('📨 [AdminChatSocket] Received user_message:', data);
       this.emit('user_message', data);
     });
 
     // Handle all messages for real-time sync
     this.socket.on('new_message', (data) => {
-
+      console.log('💬 [AdminChatSocket] Received new_message:', data);
       this.emit('new_message', data);
     });
 
@@ -134,15 +183,17 @@ class AdminChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('reconnect', (attemptNumber) => {
-
+      console.log('✅ [AdminChatSocket] Reconnected after', attemptNumber, 'attempts');
       this.isConnected = true;
       // Rejoin admin room after reconnection
       this.socket?.emit('join_admin_room');
+      this.emit('connection_status', { connected: true, status: 'connected' });
       this.emit('reconnected', { attempts: attemptNumber });
     });
 
     this.socket.on('reconnect_failed', () => {
       console.error('❌ [AdminChatSocket] Admin reconnection failed');
+      this.emit('connection_status', { connected: false, status: 'failed' });
       this.emit('reconnection_failed', { attempts: this.maxReconnectAttempts });
     });
   }

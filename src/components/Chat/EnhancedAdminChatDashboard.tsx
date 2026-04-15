@@ -112,8 +112,12 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
         const isFromUser = chatMessage.isAdminReply === false;
         
         
-        // Update messages if it's for selected chat
-        if (selectedChat && chatMessage.ticketId === selectedChat._id) {
+        // Update messages if it's for selected chat (check multiple ID formats)
+        if (selectedChat && (
+          chatMessage.ticketId === selectedChat._id || 
+          chatMessage.ticketId === selectedChat.ticketId ||
+          chatMessage.ticketId?.toString() === selectedChat._id?.toString()
+        )) {
           setMessages(prev => {
             const exists = prev.find(m => m._id === chatMessage._id);
             if (!exists) {
@@ -159,7 +163,11 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     // User typing events
     unsubscribers.push(
       AdminChatSocketService.on('user_typing', (data: any) => {
-        if (selectedChat && data.ticketId === selectedChat._id) {
+        if (selectedChat && (
+          data.ticketId === selectedChat._id || 
+          data.ticketId === selectedChat.ticketId ||
+          data.ticketId?.toString() === selectedChat._id?.toString()
+        )) {
           setUserTyping(data.isTyping);
         }
       })
@@ -177,7 +185,11 @@ const EnhancedAdminChatDashboard: React.FC<EnhancedAdminChatDashboardProps> = ({
     unsubscribers.push(
       AdminChatSocketService.on('ticket_status_updated', (data: any) => {
         updateChatInList(data.ticketId, { status: data.status });
-        if (selectedChat && selectedChat._id === data.ticketId) {
+        if (selectedChat && (
+          selectedChat._id === data.ticketId || 
+          selectedChat.ticketId === data.ticketId ||
+          selectedChat._id?.toString() === data.ticketId?.toString()
+        )) {
           setSelectedChat(prev => prev ? { ...prev, status: data.status } : null);
         }
       })

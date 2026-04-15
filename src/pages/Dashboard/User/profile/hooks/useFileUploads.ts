@@ -1,8 +1,9 @@
-import { notification } from "antd";
+import { notification, FormInstance } from "antd";
 import { useUploadFile } from "../../../../../hooks/useUploadFile";
 import { endpoints } from "../../../../../store/api/endpoints";
+import { getErrorMessage } from "../../../../../service/apiUtils";
 
-export const useFileUploads = (userId: string | undefined, profileRefetch: () => void, form: any) => {
+export const useFileUploads = (userId: string | undefined, profileRefetch: () => void, form: FormInstance) => {
   const { uploadFile, uploading } = useUploadFile();
 
   const handleResumeUpload = async (file: File) => {
@@ -26,15 +27,17 @@ export const useFileUploads = (userId: string | undefined, profileRefetch: () =>
           profileRefetch();
         }
       } else {
+        const errorMsg = getErrorMessage(result.error) || "Failed to upload resume";
         notification.error({
           message: "Upload failed",
-          description: result.error || "Failed to upload resume",
+          description: errorMsg,
         });
       }
     } catch (error) {
+       const errorMsg = getErrorMessage(error) || "An unexpected error occurred while uploading";
       notification.error({
         message: "Upload failed",
-        description: "An unexpected error occurred while uploading",
+        description: errorMsg,
       });
     }
     return false;
@@ -70,9 +73,10 @@ export const useFileUploads = (userId: string | undefined, profileRefetch: () =>
         });
       }
     } catch (error) {
+      const errorMsg = getErrorMessage(error) || "An unexpected error occurred while uploading";
       notification.error({
         message: "Upload failed",
-        description: "An unexpected error occurred while uploading",
+        description: errorMsg,
       });
     }
     return false;

@@ -3,19 +3,21 @@ import { Form, Select, InputNumber, Switch, Row, Col } from "antd";
 import { useDeviceDetection } from "./hooks/useDeviceDetection";
 import DetectionStatusAlert from "./DetectionStatusAlert";
 import DetectedFieldLabel from "./DetectedFieldLabel";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 interface SystemInfoFormProps {
   isEditing: boolean;
+  profile?: Profile | null;
 }
 
-const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
+const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing, profile }) => {
   const {
     detecting,
     detectionStatus,
     performDetection,
     toggleManualInput,
     getDetectionMessage
-  } = useDeviceDetection();
+  } = useDeviceDetection(profile?.systemInfo);
 
   useEffect(() => {
     performDetection();
@@ -44,7 +46,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
               />
             }
             name="deviceType"
-            initialValue=""
           >
             <Select
               disabled={!isEditing || (detectionStatus.deviceType.detected && !detectionStatus.deviceType.manual)}
@@ -70,7 +71,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
               />
             }
             name="operatingSystem"
-            initialValue=""
           >
             <Select
               disabled={!isEditing || (detectionStatus.operatingSystem.detected && !detectionStatus.operatingSystem.manual)}
@@ -99,7 +99,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
               />
             }
             name="internetSpeedMbps"
-            initialValue={0}
           >
             <InputNumber
               disabled={!isEditing || (detectionStatus.internetSpeed.detected && !detectionStatus.internetSpeed.manual)}
@@ -123,7 +122,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
             }
             name="powerBackup"
             valuePropName="checked"
-            initialValue={false}
           >
             <Switch 
               disabled={!isEditing || (detectionStatus.powerBackup.detected && !detectionStatus.powerBackup.manual)}
@@ -147,7 +145,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
             }
             name="hasWebcam"
             valuePropName="checked"
-            initialValue={false}
           >
             <Switch 
               disabled={!isEditing || (detectionStatus.hasWebcam.detected && !detectionStatus.hasWebcam.manual)}
@@ -169,7 +166,6 @@ const SystemInfoForm: React.FC<SystemInfoFormProps> = ({ isEditing }) => {
             }
             name="hasMicrophone"
             valuePropName="checked"
-            initialValue={false}
           >
             <Switch 
               disabled={!isEditing || (detectionStatus.hasMicrophone.detected && !detectionStatus.hasMicrophone.manual)}

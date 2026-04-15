@@ -101,11 +101,30 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
     });
 
     AdminChatSocketService.on('user_message', (data: any) => {
+      console.log('📨 [AdminChatDashboard] Received user_message:', {
+        ticketId: data.ticketId,
+        userName: data.userName,
+        message: data.message.substring(0, 50) + '...',
+        timestamp: data.timestamp
+      });
+      console.log('🎯 [AdminChatDashboard] Current selectedChat:', {
+        _id: selectedChat?._id,
+        ticketId: selectedChat?.ticketId,
+        userName: selectedChat?.userName
+      });
+      
       // Update chat list with latest message
       updateChatInList(data.ticketId, data.message);
       
-      // Only add to current chat if this ticket is selected
-      if (selectedChat?.ticketId === data.ticketId) {
+      // Only add to current chat if this ticket is selected (check multiple possible ID matches)
+      const isCurrentTicket = selectedChat && (
+        selectedChat._id === data.ticketId || 
+        selectedChat.ticketId === data.ticketId ||
+        selectedChat._id.toString() === data.ticketId.toString()
+      );
+      
+      if (isCurrentTicket) {
+        console.log('✅ [AdminChatDashboard] Match found! Adding user message to current chat');
         const newMsg: ChatMessage = {
           _id: data._id || `msg-${Date.now()}`,
           ticketId: data.ticketId,
@@ -134,10 +153,11 @@ const AdminChatDashboard: React.FC<AdminChatDashboardProps> = ({ adminToken }) =
 
     // Listen for all new messages (including user and admin messages) for real-time sync
     AdminChatSocketService.on('new_message', (data: any) => {
-
+      console.log('💬 [AdminChatDashboard] Received new_message:', data);
+      console.log('🎯 [AdminChatDashboard] Selected chat comparison - data.ticketId:', data.ticketId, 'selectedChat?.ticketId:', selectedChat?.ticketId);
       
-      if (selectedChat?.ticketId === data.ticketId || selectedChat?._id === data.ticketId) {
-        // console.log('✅ [AdminChatDashboard] Message is for selected chat, updating UI');
+      if (selectedChat?.ticketId === data.ticketId || selectedChat?._id === data.ticketId || selectedChat?._id?.toString() === data.ticketId?.toString()) {
+        console.log('✅ [AdminChatDashboard] Message is for selected chat, updating UI');
         
         // Use isAdminReply === true to identify admin messages 
         const senderEmail = data.senderEmail || data.userEmail || '';

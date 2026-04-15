@@ -1,6 +1,6 @@
 // Enhanced User Chat Widget with proper syncing
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Collapse, Empty, Divider } from 'antd';
+import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Empty } from 'antd';
 import { 
   MessageOutlined, 
   CloseOutlined, 
@@ -18,7 +18,6 @@ import UserChatSocketService from '../../services/UserChatSocketService';
 import UserChatAPI from '../../services/UserChatAPI';
 import { ChatMessage, ChatTicket } from '../../types/enhanced-chat.types';
 import { 
-  UserChatHistoryResponse, 
   UserChatHistoryResponseDataChat, 
   Message as HistoryMessage 
 } from '../../services/chat-history-type';
@@ -372,23 +371,24 @@ const EnhancedUserChatWidget: React.FC = () => {
 
   // Start new chat
   const startNewChat = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isLoading) return;
     
     setIsLoading(true);
     const messageText = newMessage.trim();
     
     try {
-      // Start via Socket.IO for real-time experience
+      // Use Socket.IO ONLY for real-time experience - no API call needed
       UserChatSocketService.startChat(messageText, 'general_inquiry', 'medium');
       setNewMessage('');
       
-      // Also start via API for consistency
-      await UserChatAPI.startChat(messageText);
+      console.log('🚀 Chat started via Socket.IO only:', messageText);
     } catch (error) {
       console.error('Failed to start chat:', error);
       showNotification('Failed to start chat session', 'error');
       setIsLoading(false);
     }
+    
+    // Don't reset loading here - wait for "chat_started" event
   };
 
   // Send message with real-time sync
@@ -799,30 +799,6 @@ const EnhancedUserChatWidget: React.FC = () => {
           <div className="flex-1 overflow-hidden flex flex-col">
             {currentTicket ? (
               <>
-                {/* Current Ticket Info */}
-                <div className="p-3 bg-gray-50 border-b">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      {getStatusIcon(currentTicket.status)}
-                      <div className="ml-2">
-                        <Text className="text-sm font-medium" style={{ fontFamily: 'Gilroy-Bold' }}>
-                          {currentTicket.ticketNumber}
-                        </Text>
-                        <Tag 
-                          color={getStatusColor(currentTicket.status)} 
-                          className="ml-2"
-                          style={{ fontFamily: 'Gilroy-Regular' }}
-                        >
-                          {currentTicket.status.replace('_', ' ').toUpperCase()}
-                        </Tag>
-                      </div>
-                    </div>
-                    <Text className="text-xs text-gray-500" style={{ fontFamily: 'Gilroy-Regular' }}>
-                      Created {formatDate(currentTicket.createdAt)}
-                    </Text>
-                  </div>
-                </div>
-
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4">
                   {messages.length === 0 ? (

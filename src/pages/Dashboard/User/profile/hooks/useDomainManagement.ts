@@ -2,8 +2,9 @@ import { useState } from "react";
 import { notification } from "antd";
 import domainQueryService from "../../../../../services/domain-service/domain-query";
 import domainMutation from "../../../../../services/domain-service/domain-mutation";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
-export const useDomainManagement = (profile: any) => {
+export const useDomainManagement = (profile: Profile | null | undefined) => {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
 
   const assignDomainsMutation = domainMutation.useAssignDomainsToUser();
@@ -50,10 +51,10 @@ export const useDomainManagement = (profile: any) => {
   });
 
   // Add optional profile domains if not already present
-  profileUserDomains.forEach((d: any) => {
+  profileUserDomains.forEach((d: string | { _id: string; name: string }) => {
     const normId = normalizeDomainId(d);
     if (normId && !assignedDomainsMap.has(normId)) {
-      const fullDomain = mergedDomains.find((m: any) => m._id === normId);
+      const fullDomain = mergedDomains.find((m) => m._id === normId);
       assignedDomainsMap.set(normId, {
         domain: fullDomain || (typeof d === "object" ? d : { _id: normId, name: d }),
         id: null, // Legacy domains don't have assignment IDs

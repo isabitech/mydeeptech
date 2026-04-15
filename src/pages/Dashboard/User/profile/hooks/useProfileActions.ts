@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { notification } from "antd";
+import { notification, FormInstance } from "antd";
 import { useUpdateProfile } from "../../../../../hooks/useUpdateProfile";
 import { formatProfileForForm, formatPayloadForAPI } from "../utils/index.js";
 import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
 } from "../../../../../utils/countryTimezoneMapping";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 export const useProfileActions = (
-  profile: any,
+  profile: Profile | null | undefined,
   userId: string | undefined,
   profileRefetch: () => void,
-  form: any,
+  form: FormInstance,
   handleSaveDomains: () => Promise<void>,
   initializeSelectedDomains: () => void
 ) => {

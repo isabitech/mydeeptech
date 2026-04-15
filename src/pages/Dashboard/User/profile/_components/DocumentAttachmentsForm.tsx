@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Form, Input, Upload, Button, Space } from "antd";
 import { UploadOutlined, EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import { PDFViewerModal } from "../../../../../components/PDFViewer";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 interface DocumentAttachmentsFormProps {
-  profile: any;
+  profile: Profile | null | undefined;
   isEditing: boolean;
   uploading: boolean;
   onResumeUpload: (file: File) => Promise<boolean>;
@@ -60,7 +61,7 @@ const DocumentAttachmentsForm: React.FC<DocumentAttachmentsFormProps> = ({
                   size="small"
                   onClick={() =>
                     handleViewDocument(
-                      profile.attachments.resumeUrl,
+                      profile?.attachments?.resumeUrl || "",
                       "Resume/CV",
                     )
                   }
@@ -132,7 +133,7 @@ const DocumentAttachmentsForm: React.FC<DocumentAttachmentsFormProps> = ({
                   size="small"
                   onClick={() =>
                     handleViewDocument(
-                      profile.attachments.idDocumentUrl,
+                      profile?.attachments?.idDocumentUrl || "",
                       "ID Document",
                     )
                   }
