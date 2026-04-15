@@ -16,6 +16,11 @@ class UserChatSocketService {
   private maxReconnectAttempts: number = 15;
   private eventListeners: Map<string, Set<Function>> = new Map();
   private currentTickets: Map<string, ChatTicket> = new Map();
+  
+  // Add request deduplication
+  private pendingStartChat = false;
+  private lastStartChatTime = 0;
+  private startChatCooldown = 2000; // 2 second cooldown between start_chat requests
 
   constructor() {
     // Initialize any required setup
@@ -264,15 +269,34 @@ class UserChatSocketService {
 
   // Start new chat
   startChat(message: string, category: ChatCategory = 'general_inquiry', priority: ChatPriority = 'medium'): void {
-    if (this.isConnected && this.socket) {
-      this.socket.emit('start_chat', { 
-        message, 
-        category, 
-        priority
-      });
-    } else {
+    if (!this.isConnected || !this.socket) {
       this.emit('connection_error', { message: 'Not connected to chat server' });
+      return;
     }
+
+    // Prevent duplicate requests within cooldown period
+    const now = Date.now();
+    if (this.pendingStartChat || (now - this.lastStartChatTime) < this.startChatCooldown) {
+      console.log('🛑 [UserChatSocket] Preventing duplicate start_chat request');
+      return;
+    }
+
+    // Mark as pending and record timestamp
+    this.pendingStartChat = true;
+    this.lastStartChatTime = now;
+
+    console.log('🚀 [UserChatSocket] Starting chat:', { message, category, priority });
+    
+    this.socket.emit('start_chat', { 
+      message, 
+      category, 
+      priority
+    });
+
+    // Reset pending flag after a short delay
+    setTimeout(() => {
+      this.pendingStartChat = false;
+    }, 1000);
   }
 
   // Rejoin ticket
