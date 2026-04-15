@@ -1,6 +1,6 @@
 // Enhanced User Chat Widget with proper syncing
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Collapse, Empty, Divider } from 'antd';
+import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Empty } from 'antd';
 import { 
   MessageOutlined, 
   CloseOutlined, 
@@ -18,7 +18,6 @@ import UserChatSocketService from '../../services/UserChatSocketService';
 import UserChatAPI from '../../services/UserChatAPI';
 import { ChatMessage, ChatTicket } from '../../types/enhanced-chat.types';
 import { 
-  UserChatHistoryResponse, 
   UserChatHistoryResponseDataChat, 
   Message as HistoryMessage 
 } from '../../services/chat-history-type';

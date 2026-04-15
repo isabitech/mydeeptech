@@ -1,10 +1,12 @@
 // User Chat Socket Service for DTUser real-time communication
 import { io, Socket } from 'socket.io-client';
-import { 
-  ChatMessage, 
+import {
+  ChatMessage,
   ChatTicket, 
   ChatCategory, 
-  ChatPriority
+  ChatPriority,
+  MessageEvent as ChatMessageEvent,
+  ChatAttachment,
 } from '../types/enhanced-chat.types';
 
 class UserChatSocketService {
@@ -22,41 +24,86 @@ class UserChatSocketService {
   // User connection with proper configuration
   async connect(token: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      const url = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      // Try multiple URLs in order of preference
+      const urls = [
+        import.meta.env.VITE_SOCKET_URL,
+        'http://localhost:4000',
+        'https://mydeeptech-be.onrender.com',
+        'https://mydeeptech-be-lmrk.onrender.com'
+      ].filter(Boolean);
+      
+      const url = urls[0] || 'http://localhost:4000';
+      console.log('🔌 [UserChatSocket] Attempting connection to:', url);
+      
+      // Emit initial connecting status
+      this.emit('connection_status', { connected: false, status: 'connecting' });
       
       this.socket = io(url, {
         auth: { token },
-        query: { userType: 'user' },
-        transports: ['websocket', 'polling'],
-        timeout: 30000,
-        reconnectionDelay: 2000,
-        reconnectionDelayMax: 5000,
+        query: { userType: 'dtuser' },
+        transports: ['polling', 'websocket'], // Try polling first for better compatibility
+        timeout: 20000, // Increased timeout
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 3000,
         reconnectionAttempts: this.maxReconnectAttempts,
-        randomizationFactor: 0.5,
+        randomizationFactor: 0.3,
         autoConnect: false,
+        forceNew: true, // Force new connection
       });
 
       this.setupEventListeners();
       this.setupReconnectionLogic();
 
+      // Connection timeout fallback - increased to 25 seconds
+      const connectionTimeout = setTimeout(() => {
+        if (!this.isConnected) {
+          console.error('❌ [UserChatSocket] Connection timeout after 25 seconds');
+          this.emit('connection_status', { 
+            connected: false, 
+            status: 'timeout',
+            error: `Could not connect to ${url}. Please check if the server is running.`
+          });
+          this.socket?.disconnect();
+          reject(new Error(`Connection timeout to ${url}`));
+        }
+      }, 25000); // Increased from 15 to 25 seconds
+
       // Connection success
       this.socket.on('connect', () => {
+        clearTimeout(connectionTimeout);
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        this.emit('connection_status', { connected: true });
+        this.emit('connection_status', { connected: true, status: 'connected' });
         
         // Request active tickets for user
         this.socket?.emit('get_active_tickets');
         resolve(true);
       });
 
-      this.socket.on('connect_error', (error) => {
+      this.socket.on('connect_error', (error: any) => {
         console.error('❌ [UserChatSocket] Connection failed:', error);
         this.reconnectAttempts++;
+        
+        const isServerDown = error.message?.includes('404') || 
+                           error.message?.includes('502') || 
+                           (error as any).type === 'TransportError';
+        
+        this.emit('connection_status', { 
+          connected: false, 
+          status: isServerDown ? 'server_down' : 'error', 
+          error: isServerDown ? 'Server appears to be offline' : error.message 
+        });
+        
         this.emit('connection_error', { error, attempts: this.reconnectAttempts });
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          reject(new Error('Maximum connection attempts reached'));
+          clearTimeout(connectionTimeout);
+          this.emit('connection_status', { 
+            connected: false, 
+            status: 'failed',
+            error: `Failed to connect after ${this.maxReconnectAttempts} attempts` 
+          });
+          reject(new Error(`Maximum connection attempts reached. Last error: ${error.message}`));
         }
       });
 
@@ -70,8 +117,14 @@ class UserChatSocketService {
     if (!this.socket) return;
 
     this.socket.on('disconnect', (reason) => {
+      console.warn('⚠️ [UserChatSocket] Disconnected:', reason);
       this.isConnected = false;
-      this.emit('connection_status', { connected: false, reason });
+      this.emit('connection_status', { connected: false, reason, status: 'disconnected' });
+    });
+
+    this.socket.on('reconnecting', (attemptNumber) => {
+      console.log('🔄 [UserChatSocket] Reconnecting attempt:', attemptNumber);
+      this.emit('connection_status', { connected: false, status: 'reconnecting', attempt: attemptNumber });
     });
 
     // User-specific events
@@ -102,7 +155,7 @@ class UserChatSocketService {
       this.emit('chat_started', ticket);
     });
 
-    this.socket.on('new_message', (message: any) => {
+    this.socket.on('new_message', (message: ChatMessageEvent) => {
       
       // Update local ticket data only for admin messages to avoid duplicates
       const senderEmail = message.senderEmail || message.userEmail || '';
@@ -113,7 +166,17 @@ class UserChatSocketService {
         ticket.messages = ticket.messages || [];
         const existingMessage = ticket.messages.find(m => m._id === message._id);
         if (!existingMessage) {
-          ticket.messages.push(message);
+          // Convert ChatMessageEvent to ChatMessage
+          const chatMessage: ChatMessage = {
+            _id: message._id,
+            ticketId: message.ticketId,
+            message: message.message,
+            isAdminReply: message.isAdminReply,
+            timestamp: new Date(message.timestamp),
+            senderName: message.senderName,
+            attachments: message.attachments
+          };
+          ticket.messages.push(chatMessage);
           ticket.lastUpdated = new Date();
           this.currentTickets.set(message.ticketId, ticket);
         }
@@ -123,12 +186,12 @@ class UserChatSocketService {
     });
 
     // Listen for direct admin messages
-    this.socket.on('admin_message', (message: any) => {
+    this.socket.on('admin_message', (message: ChatMessageEvent) => {
       this.emit('admin_message', message);
     });
 
     // Listen for admin replies specifically  
-    this.socket.on('admin_reply', (message: any) => {
+    this.socket.on('admin_reply', (message: ChatMessageEvent) => {
       this.emit('new_message', { ...message, isAdminReply: true });
     });
 
@@ -184,7 +247,7 @@ class UserChatSocketService {
   }
 
   // User message sending
-  sendMessage(ticketId: string, message: string, attachments: any[] = []): void {
+  sendMessage(ticketId: string, message: string, attachments: ChatAttachment[] = []): void {
     if (this.isConnected && this.socket) {
       this.socket.emit('send_message', {
         ticketId,
@@ -273,7 +336,7 @@ class UserChatSocketService {
     };
   }
 
-  private emit(event: string, data: any): void {
+  private emit(event: string, data: unknown): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
       listeners.forEach(callback => {

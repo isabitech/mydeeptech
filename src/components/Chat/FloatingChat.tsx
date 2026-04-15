@@ -7,7 +7,6 @@ import {
   Tooltip, 
   Badge,
   Select,
-  Spin,
   message,
   Divider 
 } from 'antd';
@@ -17,8 +16,7 @@ import {
   CloseOutlined, 
   CustomerServiceOutlined,
   MinusOutlined,
-  LoadingOutlined,
-  UserOutlined
+  LoadingOutlined
 } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserChat } from '../../hooks/Chat/useUserChat';
