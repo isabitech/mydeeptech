@@ -72,22 +72,10 @@ const Profile = () => {
     );
   };
 
-
-  if (!userId) {
-    return <ErrorIndicatorWithRefresh error="Missing user ID" />;
-  }
-
-  if (isProfileLoading) {
-    return <LoadingIndicator />;
-  }
-
-  if (isProfileError) {
-    return (<ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch}  />);
-  }
-
-  if (!profile) {
-    return <ErrorIndicatorWithRefresh error="Profile not found" />;
-  }
+if (!userId) return <ErrorIndicatorWithRefresh error="Missing user ID" />;
+if (isProfileLoading) return <LoadingIndicator />;
+if (isProfileError) return <ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch} />;
+if (!profile) return <ErrorIndicatorWithRefresh error="Profile not found" />;
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
