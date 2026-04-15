@@ -2,6 +2,7 @@ import { useState } from "react";
 import { endpoints } from "../store/api/endpoints";
 import { retrieveTokenFromStorage } from "../helpers";
 import { getErrorMessage } from "../service/apiUtils";
+import { Profile } from "../utils/types";
 
 export interface UpdateProfilePayload {
   personalInfo?: {
@@ -29,13 +30,27 @@ export interface UpdateProfilePayload {
     otherLanguages?: string[];
     englishFluencyLevel?: string;
   };
+  systemInfo?: {
+    deviceType?: string;
+    operatingSystem?: string;
+    internetSpeedMbps?: number;
+    powerBackup?: boolean;
+    hasWebcam?: boolean;
+    hasMicrophone?: boolean;
+  };
+  annotationSkills?: string[];
+  toolExperience?: string[];
+  attachments?: {
+    resumeUrl?: string;
+    idDocumentUrl?: string;
+  };
   domains?: string[];
 }
 
 export interface UpdateProfileResponse {
   success: boolean;
   message: string;
-  profile?: any;
+  profile?: Profile;
 }
 
 interface UpdateProfileResult {
@@ -97,10 +112,10 @@ export const useUpdateProfile = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = getErrorMessage(err);
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
     }
