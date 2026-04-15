@@ -23,7 +23,7 @@ export const BulkUploadModal: React.FC<Props> = ({
       onCancel={onCancel}
       footer={null}
       width={700}
-      destroyOnClose
+      destroyOnHidden
     >
       <Alert
         type="info"

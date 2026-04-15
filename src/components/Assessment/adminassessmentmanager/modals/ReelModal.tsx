@@ -38,7 +38,7 @@ export const ReelModal: React.FC<Props> = ({
       onCancel={onCancel}
       footer={null}
       width={600}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form form={form} layout="vertical" onFinish={onSubmit}>
         <Form.Item

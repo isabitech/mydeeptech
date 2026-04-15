@@ -167,6 +167,7 @@ const useAssignDomainsToUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserDomains] });
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserProfile] });
     },
   });
 };
@@ -182,6 +183,7 @@ const useRemoveDomainFromUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserDomains] });
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserProfile] });
     },
   });
 };

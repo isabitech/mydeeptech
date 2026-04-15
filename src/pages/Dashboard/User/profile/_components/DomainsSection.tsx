@@ -24,6 +24,8 @@ const DomainsSection: React.FC<DomainsSectionProps> = ({
   selectedDomains,
   onDomainsChange,
 }) => {
+  // console.log("Assigned Domains in DomainsSection:", assignedDomains);
+  // console.log("Merged Domains in DomainsSection:", mergedDomains);
   return (
     <Form.Item label="Domains">
       {!isEditing ? (

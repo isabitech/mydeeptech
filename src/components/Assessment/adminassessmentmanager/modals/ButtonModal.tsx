@@ -20,7 +20,7 @@ export const ButtonModal = ({
       onCancel={onCancel}
       footer={null}
       width={400}
-      destroyOnClose
+      destroyOnHidden
     >
       <Space direction="vertical" style={{ width: "100%" }}>
         <Button

@@ -22,7 +22,8 @@ export type AdminInfo = {
       fullName: string;
       email: string;
       phone: string;
-      domains: string[];
+      domains: string[]; // Legacy domain field
+      userDomains?: UserDomain[]; // New structured domain field
       isEmailVerified: boolean;
       hasSetPassword: boolean;
       annotatorStatus: "approved" | "pending" | "rejected";
@@ -33,12 +34,20 @@ export type AdminInfo = {
       role_permission: RolePermissionSchema;
 };
 
+// Domain interface for structured domains
+interface UserDomain {
+  _id: string;
+  name: string;
+  assignmentId?: string; // ID for domain-to-user relationship removal
+}
+
 export type UserInfo = {
       id: string;
       fullName: string;
       email: string;
       phone: string;
-      domains: string[];
+      domains: string[]; // Legacy domain field
+      userDomains?: UserDomain[]; // New structured domain field
       isEmailVerified: boolean;
       hasSetPassword: boolean;
       annotatorStatus: "approved" | "pending" | "rejected" | "submitted";

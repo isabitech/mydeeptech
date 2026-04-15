@@ -22,7 +22,8 @@ const formatUserInfo = (data: LoginResponse): UserInfoData => {
         fullName: raw.fullName,
         email: raw.email,
         phone: raw.phone,
-        domains: raw.domains,
+        domains: raw.domains || [], // Legacy domain field
+        userDomains: raw.userDomains || [], // New structured domain field
         role: raw.role || (isUser ? 'user' : 'admin'), // Default role based on user type
         isAdmin: !isUser,
         isEmailVerified: raw.isEmailVerified,

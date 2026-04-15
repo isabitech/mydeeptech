@@ -62,15 +62,22 @@ const MicroTasker = () => {
     },
     {
       title: 'Domains',
-      dataIndex: 'domains',
-      key: 'domains',
-      render: (domains: string[]) => (
-        <div>
-          {domains?.map((domain, index) => (
-            <Tag key={index} color="purple">{domain}</Tag>
-          ))}
-        </div>
-      ),
+      dataIndex: 'userDomains',
+      key: 'userDomains',
+      render: (_: any, record: any) => {
+        // Prioritize userDomains over legacy domains
+        const domains = record.userDomains && record.userDomains.length > 0 
+          ? record.userDomains.map((ud: any) => ud.name)
+          : record.domains || [];
+        
+        return (
+          <div>
+            {domains?.map((domain: string, index: number) => (
+              <Tag key={index} color="purple">{domain}</Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'MicroTasker Status',

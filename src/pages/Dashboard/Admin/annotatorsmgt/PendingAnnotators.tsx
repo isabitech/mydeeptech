@@ -114,15 +114,22 @@ const PendingAnnotators = () => {
     },
     {
       title: 'Domains',
-      dataIndex: 'domains',
-      key: 'domains',
-      render: (domains: string[]) => (
-        <div>
-          {domains?.map((domain, index) => (
-            <Tag key={index} color="blue">{domain}</Tag>
-          ))}
-        </div>
-      ),
+      dataIndex: 'userDomains',
+      key: 'userDomains',
+      render: (_: any, record: any) => {
+        // Prioritize userDomains over legacy domains
+        const domains = record.userDomains && record.userDomains.length > 0 
+          ? record.userDomains.map((ud: any) => ud.name)
+          : record.domains || [];
+        
+        return (
+          <div>
+            {domains?.map((domain: string, index: number) => (
+              <Tag key={index} color="blue">{domain}</Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'Status',
@@ -311,7 +318,11 @@ const PendingAnnotators = () => {
               <Descriptions title="Domains & Skills" bordered column={1}>
                 <Descriptions.Item label="Domains">
                   <div>
-                    {selectedAnnotator.domains?.map((domain, index) => (
+                    {/* Prioritize userDomains over legacy domains */}
+                    {(selectedAnnotator.userDomains && selectedAnnotator.userDomains.length > 0 
+                      ? selectedAnnotator.userDomains.map((ud: any) => ud.name)
+                      : selectedAnnotator.domains || []
+                    )?.map((domain: string, index: number) => (
                       <Tag key={index} color="blue">{domain}</Tag>
                     ))}
                   </div>

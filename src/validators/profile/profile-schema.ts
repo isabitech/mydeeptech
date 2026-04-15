@@ -56,12 +56,20 @@ const AccountMetadataSchema = z.object({
   lastProfileUpdate: z.string().optional(),
 });
 
+// Domain object schema for userDomains
+const UserDomainSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  assignmentId: z.string().optional(), // ID for domain-to-user relationship removal
+});
+
 export const ProfileSchema = z.object({
   id: z.string(),
   fullName: z.string().optional(),
   email: z.string().optional(), 
   phone: z.string().optional(),
-  domains: z.array(z.string()).optional(),
+  domains: z.array(z.string()).optional(), // Legacy domain field
+  userDomains: z.array(UserDomainSchema).optional(), // New structured domain field
   consent: z.boolean().optional(),
   annotatorStatus: z.string().optional(),
   microTaskerStatus: z.string().optional(),

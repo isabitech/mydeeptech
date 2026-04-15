@@ -87,7 +87,7 @@ const MultiPDFViewerModal: React.FC<MultiPDFViewerModalProps> = ({
           padding: "8px",
         },
       }}
-      destroyOnClose
+      destroyOnHidden
     >
       {documents.length > 0 && (
         <Tabs

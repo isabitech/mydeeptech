@@ -7,7 +7,8 @@ export interface QAUser {
   email: string;
   phone?: string;
   country?: string;
-  domains?: string[];
+  domains?: string[]; // Legacy domain field
+  userDomains?: { _id: string; name: string; assignmentId?: string }[]; // New structured domain field
   annotatorStatus: string;
   qaStatus: 'approved' | 'pending' | 'rejected';
   qaApprovedAt?: string;

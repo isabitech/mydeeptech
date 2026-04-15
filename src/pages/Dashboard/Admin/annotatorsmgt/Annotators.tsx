@@ -272,7 +272,7 @@ const Annotators = () => {
         onCancel={() => setShowCaModal(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <AnnotatorsDomain />
       </Modal>
