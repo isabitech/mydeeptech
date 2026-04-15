@@ -1,6 +1,13 @@
 
 import { z } from "zod";
 
+// Domain object schema for userDomains
+const UserDomainSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  assignmentId: z.string().optional(), // ID for domain-to-user relationship removal
+});
+
 
 const ActionEnum = z.enum([
   "view",
@@ -38,6 +45,7 @@ const AdminSchema = z.object({
   email: z.email(),
   phone: z.string(),
   domains: z.array(z.string()),
+  userDomains: z.array(UserDomainSchema).optional(), // New structured domain field
   isEmailVerified: z.boolean(),
   hasSetPassword: z.boolean(),
   annotatorStatus: z.enum(["approved", "pending", "rejected"]),

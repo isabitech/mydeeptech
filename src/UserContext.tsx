@@ -1,12 +1,20 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+// Domain interface for structured domains
+interface UserDomain {
+  _id: string;
+  name: string;
+  assignmentId?: string; // ID for domain-to-user relationship removal
+}
+
 // Define the type for the user info - updated to match login response
 export interface UserInfo {
   id: string;
   fullName: string;
   email: string;
   phone: string;
-  domains: string[];
+  domains: string[]; // Legacy domain field
+  userDomains?: UserDomain[]; // New structured domain field
   socialsFollowed: string[];
   consent: boolean;
   isEmailVerified: boolean;
@@ -23,6 +31,7 @@ const defaultUserInfo: UserInfo = {
   email: "",
   phone: "",
   domains: [],
+  userDomains: [],
   socialsFollowed: [],
   consent: false,
   isEmailVerified: false,

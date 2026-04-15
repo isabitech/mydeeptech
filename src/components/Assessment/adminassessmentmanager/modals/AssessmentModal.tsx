@@ -25,7 +25,7 @@ export const AssessmentModal: React.FC<Props> = ({
       onCancel={onCancel}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

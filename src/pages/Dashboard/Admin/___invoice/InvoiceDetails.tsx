@@ -64,7 +64,7 @@ const InvoiceDetails = ({ open, invoiceId, onClose, onEdit, onSend }: InvoiceDet
       onCancel={onClose}
       footer={null}
       width={800}
-      destroyOnClose
+      destroyOnHidden
       className="font-[gilroy-regular]"
       title={
         <div className="flex justify-between items-center pr-8">

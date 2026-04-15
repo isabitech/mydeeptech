@@ -136,15 +136,22 @@ const QAAnnotators = () => {
     },
     {
       title: 'Domains',
-      dataIndex: 'domains',
-      key: 'domains',
-      render: (domains: string[]) => (
-        <div>
-          {domains?.map((domain, index) => (
-            <Tag key={index} color="blue">{domain}</Tag>
-          ))}
-        </div>
-      ),
+      dataIndex: 'userDomains',
+      key: 'userDomains',
+      render: (_: any, record: any) => {
+        // Prioritize userDomains over legacy domains
+        const domains = record.userDomains && record.userDomains.length > 0 
+          ? record.userDomains.map((ud: any) => ud.name)
+          : record.domains || [];
+        
+        return (
+          <div>
+            {domains?.map((domain: string, index: number) => (
+              <Tag key={index} color="blue">{domain}</Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'Annotator Status',
@@ -313,7 +320,11 @@ const QAAnnotators = () => {
               <Descriptions title="Professional Information" bordered column={2}>
                 <Descriptions.Item label="Domains">
                   <div>
-                    {selectedQAUser.domains?.map((domain, index) => (
+                    {/* Prioritize userDomains over legacy domains */}
+                    {(selectedQAUser.userDomains && selectedQAUser.userDomains.length > 0 
+                      ? selectedQAUser.userDomains.map((ud: any) => ud.name)
+                      : selectedQAUser.domains || []
+                    )?.map((domain: string, index: number) => (
                       <Tag key={index} color="blue">{domain}</Tag>
                     ))}
                   </div>

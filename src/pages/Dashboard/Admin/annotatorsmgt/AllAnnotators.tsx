@@ -347,16 +347,23 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
     },
     {
       title: 'Domains',
-      dataIndex: 'domains',
-      key: 'domains',
+      dataIndex: 'userDomains',
+      key: 'userDomains',
       width: 300,
-      render: (domains: string[]) => (
-        <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
-          {domains?.map((domain, index) => (
-            <Tag key={index} color="blue">{domain}</Tag>
-          ))}
-        </div>
-      ),
+      render: (_: any, record: any) => {
+        // Prioritize userDomains over legacy domains
+        const domains = record.userDomains && record.userDomains.length > 0 
+          ? record.userDomains.map((ud: any) => ud.name)
+          : record.domains || [];
+        
+        return (
+          <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
+            {domains?.map((domain: string, index: number) => (
+              <Tag key={index} color="blue">{domain}</Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'Annotator Status',
@@ -592,7 +599,11 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
               <Descriptions title="Domains & Skills" bordered column={1}>
                 <Descriptions.Item label="Domains">
                   <div>
-                    {selectedAnnotator.domains?.map((domain, index) => (
+                    {/* Prioritize userDomains over legacy domains */}
+                    {(selectedAnnotator.userDomains && selectedAnnotator.userDomains.length > 0 
+                      ? selectedAnnotator.userDomains.map((ud: any) => ud.name)
+                      : selectedAnnotator.domains || []
+                    )?.map((domain: string, index: number) => (
                       <Tag key={index} color="blue">{domain}</Tag>
                     ))}
                   </div>

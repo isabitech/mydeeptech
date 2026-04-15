@@ -80,7 +80,7 @@ const SendInvoice = ({ open, invoiceId, onClose }: SendInvoiceProps) => {
       onCancel={onClose}
       footer={null}
       width={500}
-      destroyOnClose
+      destroyOnHidden
       className="font-[gilroy-regular]"
     >
       <div className="mt-4">

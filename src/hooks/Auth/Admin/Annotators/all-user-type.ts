@@ -22,7 +22,8 @@ export interface User {
   fullName: string
   phone: string
   email: string
-  domains: string[]
+  domains: string[] // Legacy domain field
+  userDomains?: { _id: string; name: string; assignmentId?: string }[] // New structured domain field
   socialsFollowed: any[]
   consent: boolean
   hasSetPassword: boolean
