@@ -9,6 +9,7 @@ import { SignUpSchema } from "../../validators/authentication/user-signup-schema
 import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
 import domainQueryService from "../../services/domain-service/domain-query";
+import './styles.css';
 
 type FormState = {
   fullName: string;
@@ -65,7 +66,16 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   const toggleDomain = (domain: { id: string; name: string }) => {
     setForm((s) => {
       const exists = s.domains.some((d) => d.id === domain.id);
-      return { ...s, domains: exists ? s.domains.filter((d) => d.id !== domain.id) : [...s.domains, domain] };
+      // If unchecking, always allow removal
+      if (exists) {
+        return { ...s, domains: s.domains.filter((d) => d.id !== domain.id) };
+      }
+      // If checking and already at limit (5), don't add
+      if (s.domains.length >= 5) {
+        return s;
+      }
+      // Add the new domain
+      return { ...s, domains: [...s.domains, domain] };
     });
   };
 
@@ -87,6 +97,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
     } else if (stage === 2) {
       if (form.domains.length === 0) e.domains = "Select at least one domain";
+      if (form.domains.length > 5) e.domains = "Maximum 5 domains allowed";
     } else if (stage === 3) {
       if (!form.consent) e.consent = "Please choose yes or no";
     }
@@ -193,7 +204,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                 placeholder="Enter phone number"
                 className="phone-input-container"
                 numberInputProps={{
-                  className: "w-full rounded-lg border border-gray-600 bg-gray-700 text-white p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary"
+                  className: "w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 }}
                 countrySelectProps={{
                   className: "country-select"
@@ -229,10 +240,11 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
             className="space-y-4"
           >
             <div>
-              <label className="block text-sm font-medium text-white mb-4">
+              <label className="block text-sm font-medium text-white mb-2">
                 <Briefcase className="inline w-4 h-4 mr-2" />
-                Select Your Domain(s)
+                Select Your Domain(s) ({form.domains.length}/5) <span className="text-red-400">*</span>
               </label>
+              <p className="text-xs text-gray-400 mb-4">Choose at least 1 and up to 5 domains that match your expertise</p>
               {domainsLoading ? (
                 <div className="flex items-center justify-center p-8">
                   <motion.div
@@ -258,7 +270,8 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                         type="checkbox"
                         checked={form.domains.some((d) => d.id === domain._id)}
                         onChange={() => toggleDomain({ id: domain._id, name: domain.name })}
-                        className="rounded border-gray-600 bg-gray-700 text-secondary focus:ring-secondary focus:ring-offset-0"
+                        disabled={!form.domains.some((d) => d.id === domain._id) && form.domains.length >= 5}
+                        className="rounded border-gray-600 bg-gray-700 text-secondary focus:ring-secondary focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-sm font-medium">{domain.name}</span>
                     </motion.label>
@@ -532,79 +545,6 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
       )}
-
-      {/* Custom Scrollbar Styles */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #374151;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6b7280;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-
-        /* Phone Input Dark Theme Styles */
-        .phone-input-container {
-          display: flex;
-          border-radius: 0.5rem;
-          border: 1px solid #4b5563;
-          background-color: #374151;
-          overflow: hidden;
-        }
-        
-        .phone-input-container .PhoneInputCountry {
-          padding: 0.75rem 0.5rem;
-          background-color: #374151;
-          border-right: 1px solid #4b5563;
-        }
-        
-        .phone-input-container .PhoneInputCountrySelect {
-          background-color: transparent;
-          border: none;
-          color: white;
-          cursor: pointer;
-        }
-        
-        .phone-input-container .PhoneInputCountrySelect:focus {
-          outline: 2px solid #f59e0b;
-          outline-offset: -2px;
-        }
-        
-        .phone-input-container .PhoneInputCountryIconImg {
-          width: 1.25rem;
-          height: 1rem;
-          margin-right: 0.5rem;
-        }
-        
-        .phone-input-container input[type="tel"] {
-          background-color: transparent !important;
-          border: none !important;
-          color: white !important;
-          flex: 1;
-          padding: 0.75rem !important;
-          outline: none !important;
-        }
-        
-        .phone-input-container input[type="tel"]::placeholder {
-          color: #9ca3af;
-        }
-        
-        .phone-input-container:focus-within {
-          border-color: #f59e0b;
-          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-        }
-        
-        .PhoneInputCountrySelectArrow {
-          color: #9ca3af !important;
-        }
-      `}</style>
     </div>
   );
 }

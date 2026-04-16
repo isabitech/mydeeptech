@@ -7,7 +7,7 @@ import { worldCountries } from "../../../../../utils/worldCountries";
 import DomainsSection from "./DomainsSection";
 import { Domain } from "../types.js";
 import { Profile } from "../../../../../validators/profile/profile-schema";
-import { UserInfo } from "../../../../../UserContext";
+import { UserInfo } from "../../../../../store/useAuthStore";
 
 // Define the E164Number type locally since it's not exported
 type E164Number = string;
@@ -122,6 +122,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
       </Form.Item>
 
       <DomainsSection
+        profile={profile}
         isEditing={isEditing}
         assignedDomains={assignedDomains}
         mergedDomains={mergedDomains}

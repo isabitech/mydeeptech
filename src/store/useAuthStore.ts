@@ -22,7 +22,7 @@ export type AdminInfo = {
       fullName: string;
       email: string;
       phone: string;
-      domains: string[]; // Legacy domain field
+      domains?: string[]; // Legacy domain field
       userDomains?: UserDomain[]; // New structured domain field
       isEmailVerified: boolean;
       hasSetPassword: boolean;
@@ -46,7 +46,7 @@ export type UserInfo = {
       fullName: string;
       email: string;
       phone: string;
-      domains: string[]; // Legacy domain field
+      domains?: string[]; // Legacy domain field
       userDomains?: UserDomain[]; // New structured domain field
       isEmailVerified: boolean;
       hasSetPassword: boolean;

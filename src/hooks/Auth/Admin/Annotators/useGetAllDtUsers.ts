@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { endpoints } from "../../../../store/api/endpoints";
 import { retrieveTokenFromStorage } from "../../../../helpers";
 import { GetAllDTUsersResult, User } from "./all-user-type";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 // Use the User type from the API response
 export type DTUser = User;
@@ -81,11 +82,11 @@ export const useGetAllDtUsers = () => {
         setUsers([]); // Set empty array on error
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = err.message || "An error occurred while fetching DT users. Please try again.";
-      setError(errorMessage);
+    } catch (error) {
+      const errorMsg = getErrorMessage(error) || "An error occurred while fetching DT users. Please try again.";
+      setError(errorMsg);
       setUsers([]); // Set empty array on error
-      return { success: false, error: errorMessage };
+      return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
     }

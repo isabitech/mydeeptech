@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Card } from "antd";
 import { Domain } from "../types";
 import { Profile } from "../../../../../validators/profile/profile-schema";
-import { UserInfo } from "../../../../../UserContext";
+import { UserInfo } from "../../../../../store/useAuthStore";
 
 // Define the assigned domain structure
 interface AssignedDomain {

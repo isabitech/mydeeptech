@@ -52,7 +52,8 @@ const Profile = () => {
     profileRefetch,
     form,
     domainHooks.handleSaveDomains,
-    domainHooks.initializeSelectedDomains
+    domainHooks.initializeSelectedDomains,
+    domainHooks.selectedDomains
   );
 
   // Account verification hook using isEditing from profile actions

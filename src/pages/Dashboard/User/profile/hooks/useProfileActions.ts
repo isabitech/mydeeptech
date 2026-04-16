@@ -14,7 +14,8 @@ export const useProfileActions = (
   profileRefetch: () => void,
   form: FormInstance,
   handleSaveDomains: () => Promise<void>,
-  initializeSelectedDomains: () => void
+  initializeSelectedDomains: () => void,
+  selectedDomains: string[]
 ) => {
   const [isEditing, setIsEditing] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
@@ -72,6 +73,15 @@ export const useProfileActions = (
         notification.error({
           message: "Error",
           description: "User ID not found. Please try logging in again.",
+        });
+        return;
+      }
+
+      // Validate that at least one domain is selected
+      if (!selectedDomains || selectedDomains.length === 0) {
+        notification.error({
+          message: "Domain Selection Required",
+          description: "Please select at least one domain before saving your profile.",
         });
         return;
       }
