@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Button, message, Spin } from 'antd'
-import { CheckOutlined, BookOutlined, SyncOutlined } from '@ant-design/icons'
+import { Button, message, Spin, Modal } from 'antd'
+import { CheckOutlined, BookOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { MultiPDFViewerModal, useMultiPDFViewer } from '../../../../components'
 import sopQueryService from '../../../../services/sop-service/sop-query';
 import sopMutationService from '../../../../services/sop-service/sop-mutation';
@@ -26,18 +26,50 @@ const SOPNDAViewer = () => {
 
     // Define the documents to show
     const handleAcceptSop = () => {
-        sopMutation.mutate(undefined, {
-            onSuccess: () => {
-                message.success('SOP accepted successfully!');
+        Modal.confirm({
+            title: 'Confirm SOP/NDA Acceptance',
+            icon: <ExclamationCircleOutlined />,
+            width: 600,
+            content: (
+                <div className="py-4">
+                    <p className="mb-3">
+                        By clicking <strong>"I Accept"</strong>, you confirm that you have:
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 text-sm">
+                        <li>Thoroughly read and understood the <strong>Standard Operating Procedure (SOP)</strong> </li>
+                        <li>Carefully reviewed the <strong>Non-Disclosure Agreement (NDA)</strong></li>
+                        <li>Agree to comply with all terms and conditions outlined in both documents</li>
+                        <li>Understand that this acceptance is legally binding</li>
+                    </ul>
+                    <p className="mt-4 text-sm text-red-400">
+                        Please ensure you have fully reviewed both documents before proceeding.
+                    </p>
+                </div>
+            ),
+            okText: 'I Accept',
+            cancelText: 'Cancel',
+            okButtonProps: {
+                className: 'bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700',
+                loading: sopMutation.isPending,
             },
-            onError: (error) => {
-                const errMsg = getErrorMessage(error);
-                console.error('Error accepting SOP:', errMsg);
-                message.error(errMsg);
+            cancelButtonProps: {
+                disabled: sopMutation.isPending,
             },
-            onSettled: () => {
-                sopQuery.refetch();
-                closePDFViewer();
+            onOk() {
+                sopMutation.mutate(undefined, {
+                    onSuccess: () => {
+                        message.success('SOP/NDA accepted successfully! You can now access projects.');
+                    },
+                    onError: (error) => {
+                        const errMsg = getErrorMessage(error);
+                        console.error('Error accepting SOP:', errMsg);
+                        message.error(`Failed to accept SOP/NDA: ${errMsg}`);
+                    },
+                    onSettled: () => {
+                        sopQuery.refetch();
+                        closePDFViewer();
+                    },
+                });
             },
         });
     }
@@ -90,7 +122,7 @@ const SOPNDAViewer = () => {
                 className="bg-green-600 border-green-600 hover:bg-green-700 hover:border-green-700"
                 icon={<CheckOutlined />}
                 >
-                {sopMutation.isPending ? "Accepting..." : "Accept SOP/NDA"}
+                  {sopMutation.isPending ? "Accepting..." : "Accept SOP/NDA"}
                 </Button>
             </div>
           ) : (

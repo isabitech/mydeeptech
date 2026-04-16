@@ -83,6 +83,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
       numberInputProps={{
         className: "ant-input disabled:cursor-not-allowed disabled:bg-gray-100"
       }}
+      
     />
   );
   return (

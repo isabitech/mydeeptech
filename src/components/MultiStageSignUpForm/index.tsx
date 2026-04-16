@@ -9,7 +9,8 @@ import { SignUpSchema } from "../../validators/authentication/user-signup-schema
 import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
 import domainQueryService from "../../services/domain-service/domain-query";
-import './styles.css';
+import './../../pages/Dashboard/User/profile/_components/PhoneInput.css';
+
 
 type FormState = {
   fullName: string;
@@ -204,7 +205,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                 placeholder="Enter phone number"
                 className="phone-input-container"
                 numberInputProps={{
-                  className: "w-full rounded-lg border border-gray-300 bg-white text-gray-900 p-3 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className: "w-full rounded-lg border border-gray-600 bg-gray-700 text-white p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary"
                 }}
                 countrySelectProps={{
                   className: "country-select"
