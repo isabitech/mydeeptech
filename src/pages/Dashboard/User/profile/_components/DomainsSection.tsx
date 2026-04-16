@@ -1,6 +1,7 @@
 import React from "react";
 import { Form, Select, Tag } from "antd";
 import { Domain } from "../types.js";
+import { Profile } from "../../../../../validators/profile/profile-schema.js";
 
 // Define the assigned domain structure
 interface AssignedDomain {
@@ -10,6 +11,7 @@ interface AssignedDomain {
 }
 
 interface DomainsSectionProps {
+  profile: Profile | null | undefined;
   isEditing: boolean;
   assignedDomains: AssignedDomain[];
   mergedDomains: Domain[];
@@ -18,26 +20,23 @@ interface DomainsSectionProps {
 }
 
 const DomainsSection: React.FC<DomainsSectionProps> = ({
+  profile,
   isEditing,
-  assignedDomains,
   mergedDomains,
   selectedDomains,
   onDomainsChange,
 }) => {
-  // console.log("Assigned Domains in DomainsSection:", assignedDomains);
-  // console.log("Merged Domains in DomainsSection:", mergedDomains);
+
+  const userDomains = profile?.userDomains || [];
+
   return (
-    <Form.Item label="Domains">
+    <Form.Item label="Domains:">
       {!isEditing ? (
-        <div className="flex flex-wrap gap-2">
-          {assignedDomains?.map((domainParam) => {
-            const dId = domainParam.domainId;
-            const domainObj = domainParam.domain || {};
-            // Defensive name lookup: check domain object's name, then look up in mergedDomains, finally fallback to ID
-            const domainName = domainObj?.name || mergedDomains.find((m) => m._id === dId)?.name || dId;
+        <div className="flex flex-wrap">
+          {userDomains.map((domain) => {
             return (
-              <Tag key={dId} closable={false} color="blue">
-                {domainName}
+              <Tag key={domain._id} closable={false} color="blue">
+                {domain.name}
               </Tag>
             );
           })}
@@ -46,9 +45,10 @@ const DomainsSection: React.FC<DomainsSectionProps> = ({
         <Select
           mode="multiple"
           showSearch
-          placeholder="Search and select domains"
+          placeholder="Search and select at least 1 domain (max 5)"
           value={selectedDomains}
           onChange={onDomainsChange}
+          maxCount={5}
           options={mergedDomains.map((domain) => ({
             label: domain.name,
             value: domain._id,

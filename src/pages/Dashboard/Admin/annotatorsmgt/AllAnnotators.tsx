@@ -6,6 +6,7 @@ import { useApproveUser } from "../../../../hooks/Auth/Admin/Annotators/useAppro
 import { useQAManagement } from "../../../../hooks/Auth/Admin/Annotators/useQAManagement";
 import PageModal from "../../../../components/Modal/PageModal";
 import errorMessage from "../../../../lib/error-message";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -36,14 +37,12 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
   const {
     approveUser,
     loading: updateLoading,
-    error: updateError
   } = useApproveUser();
 
   const {
     approveQA,
     rejectQA,
     loading: qaLoading,
-    error: qaError
   } = useQAManagement();
 
   useEffect(() => {
@@ -166,7 +165,7 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
       const errorMsg = errorMessage(error) || 'An unexpected error occurred while approving user';
       notification.open({
@@ -202,21 +201,21 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
         fetchUsers(); // Refresh the data
       } else {
         // Use API error message if available, otherwise use custom message
-        const errorMessage = result.error || result.message || 'Failed to reject user';
+        const errorMsg = result.error || result.message || 'Failed to reject user';
         notification.open({
           type: 'error',
           message: 'Rejection Failed',
-          description: errorMessage,
+          description: errorMsg,
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
-      const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while rejecting user';
+      const errorMsg = getErrorMessage(error) || 'An unexpected error occurred while rejecting user';
       notification.open({
         type: 'error',
         message: 'Unexpected Error',
-        description: errorMessage,
+        description: errorMsg,
         placement: 'topRight',
       });
     }
@@ -251,13 +250,13 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
-      const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while elevating user to QA';
+      const errorMsg =  getErrorMessage(error)|| 'An unexpected error occurred while elevating user to QA';
       notification.open({
         type: 'error',
         message: 'Unexpected Error',
-        description: errorMessage,
+        description: errorMsg,
         placement: 'topRight',
       });
     }
@@ -298,13 +297,13 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
               placement: 'topRight',
             });
           }
-        } catch (error: any) {
+        } catch (error) {
           // Handle unexpected errors
-          const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while removing user from QA';
+          const errorMsg = getErrorMessage(error) || 'An unexpected error occurred while removing user from QA';
           notification.open({
             type: 'error',
             message: 'Unexpected Error',
-            description: errorMessage,
+            description: errorMsg,
             placement: 'topRight',
           });
         }
@@ -350,16 +349,12 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
       dataIndex: 'userDomains',
       key: 'userDomains',
       width: 300,
-      render: (_: any, record: any) => {
-        // Prioritize userDomains over legacy domains
-        const domains = record.userDomains && record.userDomains.length > 0 
-          ? record.userDomains.map((ud: any) => ud.name)
-          : record.domains || [];
-        
+      render: (_: unknown, record: DTUser) => {
+        const domains = record.userDomains || [];
         return (
           <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
-            {domains?.map((domain: string, index: number) => (
-              <Tag key={index} color="blue">{domain}</Tag>
+            {domains?.map((domain) => (
+              <Tag key={domain._id} color="blue">{domain.name}</Tag>
             ))}
           </div>
         );
@@ -445,7 +440,7 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: DTUser) => (
+      render: (_: unknown, record: DTUser) => (
         <Space size="middle">
           <Button
             type="primary"
@@ -601,7 +596,7 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
                   <div>
                     {/* Prioritize userDomains over legacy domains */}
                     {(selectedAnnotator.userDomains && selectedAnnotator.userDomains.length > 0 
-                      ? selectedAnnotator.userDomains.map((ud: any) => ud.name)
+                      ? selectedAnnotator.userDomains.map((ud: unknown) => (ud as { name: string }).name)
                       : selectedAnnotator.domains || []
                     )?.map((domain: string, index: number) => (
                       <Tag key={index} color="blue">{domain}</Tag>
