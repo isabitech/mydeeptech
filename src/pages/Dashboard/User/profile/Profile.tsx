@@ -62,7 +62,8 @@ const Profile = () => {
     paymentCurrency,
     accountNumber,
     bankCode,
-    form
+    form,
+    profile
   );
 
   // Create a wrapped handleSave that passes verification data
