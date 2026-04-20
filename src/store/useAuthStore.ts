@@ -12,7 +12,7 @@ export const setAuthStoreNavigate = (navigateCallback: ((path: string, options?:
   globalNavigateCallback = navigateCallback;
 };
 
-type UserRoleType =  "user" | "admin";
+type UserRoleType = "user" | "admin" | (string & {});
 type RoleInfoMap<T extends UserRoleType> = T extends "user" ? UserInfo : AdminInfo;
 
 export type LoginResponse = AdminLoginResponseSchema | LoginResponseSchema;
@@ -29,7 +29,7 @@ export type AdminInfo = {
       annotatorStatus: "approved" | "pending" | "rejected";
       microTaskerStatus: "approved" | "pending" | "rejected";
       qaStatus: "approved" | "pending" | "rejected";
-      role: string;
+      role: UserRoleType;
       isAdmin: boolean;
       role_permission: RolePermissionSchema;
 };
@@ -53,7 +53,7 @@ export type UserInfo = {
       annotatorStatus: "approved" | "pending" | "rejected" | "submitted";
       microTaskerStatus: "approved" | "pending" | "rejected";
       qaStatus: "approved" | "pending" | "rejected";
-      role: string;
+      role: UserRoleType;
       socialsFollowed: string[];
       consent: boolean;
       resultLink: string;
@@ -88,25 +88,15 @@ const useUserInfoStore = create<UserInfoStore>()(
       ...initialStates,
       // --- Actions ---
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
-
         setIsAssessmentSubmitted: async () => {
-          const userInfo = await retrieveUserInfoFromStorage() as UserInfoData;
-          if (userInfo && userInfo.role === "user") {
-            const updatedUserInfo: UserInfoData = {
-              ...userInfo,
-              isAssessmentSubmitted: true,
-            };
-
+          const userInfo: RoleInfoMap<"user"> = await retrieveUserInfoFromStorage() as RoleInfoMap<"user">;
+          if(userInfo  && userInfo.role === "user") {
+             const updatedUserInfo: RoleInfoMap<"user"> = { ...userInfo, isAssessmentSubmitted: true };
             await storeUserInfoToStorage(updatedUserInfo);
-
-            set((state) => ({
-              ...state,
-              userInfo: state.userInfo?.role === "user"
-                ? { ...state.userInfo, isAssessmentSubmitted: true }
-                : state.userInfo,
-            }));
+            set({ userInfo: updatedUserInfo });
           }
         },
+
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
         // Clear session storage
@@ -165,7 +155,6 @@ return  useUserInfoStore(
         userRoleType: state.userRoleType,
     }))
 )}
-
 
 const useGetUserInfo = <T extends UserRoleType>(roleType: T): RoleInfoMap<T> | null => {
   return useUserInfoStore((state) => {
