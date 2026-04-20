@@ -1,53 +1,27 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import authMutationService from "../../services/authentication/auth-mutation";
 import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
 import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
+import domainQueryService from "../../services/domain-service/domain-query";
+import './../../pages/Dashboard/User/profile/_components/PhoneInput.css';
+import { isRestrictedEmail } from "../../services/authentication/_helper";
+
 
 type FormState = {
   fullName: string;
   phone: string;
   email: string;
-  domains: string[];
+  country: string;
+  domains: { id: string; name: string }[];
   socialsFollowed: string[];
   consent: "yes" | "no" | "";
 };
-
-export const DOMAIN_OPTIONS = [
-  "Arts and Entertainment",
-  "Computing",
-  "Consumer Electronics",
-  "Coding",
-  "Code Execution",
-  "Code Interpreter",
-  "Economy",
-  "Education",
-  "Employment",
-  "Entertainment",
-  "Environment",
-  "Food and Drink",
-  "Health",
-  "History",
-  "Home & Garden",
-  "Information Technology",
-  "Law / Legal",
-  "Science",
-  "Sports",
-  "Technology",
-  "Travel",
-  "Other",
-  "Adversarial Prompting",
-  "Aspirational Capability",
-  "STEM",
-  "Finance",
-  "Math",
-  "Retrieval Augmented Generation (RAG)",
-  "News",
-  "Coding - Tool Use",
-];
 
 const SOCIAL_LINKS = [
   { label: "LinkedIn", url: "https://www.linkedin.com/company/mydeeptech" },
@@ -63,6 +37,7 @@ interface MultiStageSignUpFormProps {
 
 export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, className = "" }: MultiStageSignUpFormProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
 
   const [currentStage, setCurrentStage] = useState(1);
@@ -70,6 +45,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
     fullName: "",
     phone: "",
     email: "",
+    country: "Nigeria", // Default to full Nigeria name
     domains: [],
     socialsFollowed: [],
     consent: "",
@@ -80,16 +56,29 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   const { signupMutation, isSignupLoading, isSignupError, signupError } = authMutationService.useUserSignup();
   const error = isSignupError ? errorMessage(signupError) : "";
 
+    // Fetch domains with high limit to get all available options
+    const { data: domainsData, isLoading: domainsLoading } = domainQueryService.useDomains({ limit: 1000 });
+    const allDomains = domainsData?.data?.domain || [];
+
   const stages = [
     { id: 1, title: "Personal Info", icon: User },
     { id: 2, title: "Domain Selection", icon: Briefcase },
     { id: 3, title: "Social & Consent", icon: Users },
   ];
 
-  const toggleDomain = (domain: string) => {
+  const toggleDomain = (domain: { id: string; name: string }) => {
     setForm((s) => {
-      const exists = s.domains.includes(domain);
-      return { ...s, domains: exists ? s.domains.filter((d) => d !== domain) : [...s.domains, domain] };
+      const exists = s.domains.some((d) => d.id === domain.id);
+      // If unchecking, always allow removal
+      if (exists) {
+        return { ...s, domains: s.domains.filter((d) => d.id !== domain.id) };
+      }
+      // If checking and already at limit (5), don't add
+      if (s.domains.length >= 5) {
+        return s;
+      }
+      // Add the new domain
+      return { ...s, domains: [...s.domains, domain] };
     });
   };
 
@@ -105,12 +94,13 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
 
     if (stage === 1) {
       if (!form.fullName.trim()) e.fullName = "Full name is required";
-      if (!form.phone.trim()) e.phone = "Phone number is required";
-      else if (!/^[+0-9()\-\s]{6,20}$/.test(form.phone.trim())) e.phone = "Enter a valid phone number";
+      if (!form.phone) e.phone = "Phone number is required";
+      if (!form.country) e.country = "Country is required";
       if (!form.email.trim()) e.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
     } else if (stage === 2) {
       if (form.domains.length === 0) e.domains = "Select at least one domain";
+      if (form.domains.length > 5) e.domains = "Maximum 5 domains allowed";
     } else if (stage === 3) {
       if (!form.consent) e.consent = "Please choose yes or no";
     }
@@ -138,10 +128,16 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
         fullName: form.fullName,
         phone: form.phone,
         email: form.email,
+        country: form.country,
         domains: form.domains,
         socialsFollowed: form.socialsFollowed,
         consent: form.consent
       });
+
+    if (isRestrictedEmail(payload.email)) {
+      notification.open({ type: "error", message: "Invalid credentials: Restricted email domain", key: "restricted_email" });
+      return navigate("/signup", { replace: true });
+    }
 
       signupMutation.mutate(payload, {
         onSuccess: () => {
@@ -162,7 +158,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   const resetForm = () => {
     setSubmitted(false);
     setCurrentStage(1);
-    setForm({ fullName: "", phone: "", email: "", domains: [], socialsFollowed: [], consent: "" });
+    setForm({ fullName: "", phone: "", email: "", country: "Nigeria", domains: [], socialsFollowed: [], consent: "" });
     setErrors({});
   };
 
@@ -175,7 +171,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4"
+            className="space-y-4 mb-5"
           >
             <div>
               <label className="block text-sm font-medium text-white mb-2">
@@ -196,11 +192,31 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                 <Phone className="inline w-4 h-4 mr-2" />
                 Phone Number
               </label>
-              <input
+              <PhoneInput
+                international
+                defaultCountry="NG"
+                countryCallingCodeEditable={false}
                 value={form.phone}
-                onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
-                className="w-full rounded-lg border border-gray-600 bg-gray-700 text-white p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary"
-                placeholder="+1 (555) 123-4567"
+                onChange={(value) => {
+                  setForm((s) => ({ ...s, phone: value || "" }));
+                  // Parse phone number to get country
+                  if (value) {
+                    const phoneNumber = parsePhoneNumber(value);
+                    if (phoneNumber && phoneNumber.country) {
+                      const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+                      const countryName = regionNames.of(phoneNumber.country);
+                      setForm((s) => ({ ...s, country: countryName || ""}));
+                    }
+                  }
+                }}
+                placeholder="Enter phone number"
+                className="phone-input-container"
+                numberInputProps={{
+                  className: "w-full rounded-lg border border-gray-600 bg-gray-700 text-white p-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-secondary"
+                }}
+                countrySelectProps={{
+                  className: "country-select"
+                }}
               />
               {errors.phone && <p className="text-xs text-red-400 mt-1">{errors.phone}</p>}
             </div>
@@ -232,31 +248,44 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
             className="space-y-4"
           >
             <div>
-              <label className="block text-sm font-medium text-white mb-4">
+              <label className="block text-sm font-medium text-white mb-2">
                 <Briefcase className="inline w-4 h-4 mr-2" />
-                Select Your Domain(s)
+                Select Your Domain(s) ({form.domains.length}/5) <span className="text-red-400">*</span>
               </label>
-              <div className="grid grid-cols-1 gap-2 max-h-[30rem] md:max-h-[18rem] px-2 overflow-y-auto pr-2 custom-scrollbar">
-                {DOMAIN_OPTIONS.map((domain) => (
-                  <motion.label
-                    key={domain}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-200 ${form.domains.includes(domain)
-                        ? 'border-secondary bg-secondary/20 text-white'
-                        : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
-                      }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.domains.includes(domain)}
-                      onChange={() => toggleDomain(domain)}
-                      className="rounded border-gray-600 bg-gray-700 text-secondary focus:ring-secondary focus:ring-offset-0"
-                    />
-                    <span className="text-sm font-medium">{domain}</span>
-                  </motion.label>
-                ))}
-              </div>
+              <p className="text-xs text-gray-400 mb-4">Choose at least 1 and up to 5 domains that match your expertise</p>
+              {domainsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 border-2 border-secondary border-t-transparent rounded-full"
+                  />
+                  <span className="ml-3 text-gray-300">Loading domains...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 max-h-[30rem] md:max-h-[18rem] px-2 overflow-y-auto pr-2 custom-scrollbar">
+                  {allDomains.map((domain) => (
+                    <motion.label
+                      key={domain._id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-200 ${form.domains.some((d) => d.id === domain._id)
+                          ? 'border-secondary bg-secondary/20 text-white'
+                          : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                        }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.domains.some((d) => d.id === domain._id)}
+                        onChange={() => toggleDomain({ id: domain._id, name: domain.name })}
+                        disabled={!form.domains.some((d) => d.id === domain._id) && form.domains.length >= 5}
+                        className="rounded border-gray-600 bg-gray-700 text-secondary focus:ring-secondary focus:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-sm font-medium">{domain.name}</span>
+                    </motion.label>
+                  ))}
+                </div>
+              )}
               {errors.domains && <p className="text-xs text-red-400 mt-2">{errors.domains}</p>}
             </div>
           </motion.div>
@@ -524,24 +553,6 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           <p className="text-red-400 text-sm">{error}</p>
         </motion.div>
       )}
-
-      {/* Custom Scrollbar Styles */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #374151;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #6b7280;
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-      `}</style>
     </div>
   );
 }

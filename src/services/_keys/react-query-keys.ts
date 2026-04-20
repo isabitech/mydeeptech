@@ -59,6 +59,7 @@ const QUERY = {
     getUserProfile: "getUserProfile",
 
     userDashboardData: "userDashboardData",
+    sopAcceptanceStatus: "sopAcceptanceStatus",
 } as const;
 
 const REACT_QUERY_KEYS = {

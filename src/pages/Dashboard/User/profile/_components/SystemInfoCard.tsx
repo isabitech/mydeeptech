@@ -1,8 +1,9 @@
 import React from "react";
 import { Card, Tag } from "antd";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 interface SystemInfoCardProps {
-  profile: any;
+  profile: Profile | null | undefined;
 }
 
 

@@ -1,7 +1,20 @@
 import { SubmitAssessmentReviewPayload } from "../../../../hooks/Auth/User/useSubmitAssessment";
+import { Dayjs } from 'dayjs';
 
-const formSubmitPayload = (values: any) => {
+export interface FormValues {
+    fullName: string;
+    emailAddress: string;
+    dateOfSubmission: Dayjs;
+    timeOfSubmission: Dayjs;
+    englishTestScore: number;
+    problemSolvingScore: number;
+    googleDriveLink: string;
+    encounteredIssues: 'Yes' | 'No';
+    issueDescription?: string;
+    instructionClarityRating: number;
+}
 
+const formSubmitPayload = (values: FormValues) => {
     const payload: SubmitAssessmentReviewPayload = {
             fullName: values.fullName,
             emailAddress: values.emailAddress,
@@ -11,8 +24,8 @@ const formSubmitPayload = (values: any) => {
                 englishTestUploaded: true,
                 problemSolvingTestUploaded: true
             },
-            englishTestScore: values.englishTestScore,
-            problemSolvingScore: values.problemSolvingScore,
+            englishTestScore: values.englishTestScore.toString(),
+            problemSolvingScore: values.problemSolvingScore.toString(),
             googleDriveLink: values.googleDriveLink,
             encounteredIssues: values.encounteredIssues === 'Yes' 
                 ? "Yes, I encountered issues." 
@@ -20,8 +33,7 @@ const formSubmitPayload = (values: any) => {
             issueDescription: values.encounteredIssues === 'Yes' ? values.issueDescription : "",
             instructionClarityRating: values.instructionClarityRating
     };
-
-        return payload;
+    return payload;
 }
 
 export { formSubmitPayload }

@@ -58,21 +58,31 @@ const UserProfileExample = () => {
         </div>
       </div>
       
-      {userInfo.domains.length > 0 && (
+      {(userInfo.userDomains && userInfo.userDomains.length > 0) || (userInfo.domains && userInfo.domains.length > 0) ? (
         <div className="mt-4">
           <label className="font-semibold">Domains:</label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {userInfo.domains.map((domain, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-              >
-                {domain}
-              </span>
-            ))}
+            {/* Prioritize userDomains (new structured format) over legacy domains */}
+            {userInfo.userDomains && userInfo.userDomains.length > 0
+              ? userInfo.userDomains.map((userDomain, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                  >
+                    {userDomain.name}
+                  </span>
+                ))
+              : userInfo.domains?.map((domain, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                  >
+                    {domain}
+                  </span>
+                ))}
           </div>
         </div>
-      )}
+      ) : null}
       
       {userInfo.socialsFollowed.length > 0 && (
         <div className="mt-4">

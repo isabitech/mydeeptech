@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
-import { notification } from "antd";
+import { notification, FormInstance } from "antd";
 import { useUpdateProfile } from "../../../../../hooks/useUpdateProfile";
 import { formatProfileForForm, formatPayloadForAPI } from "../utils/index.js";
 import {
   getTimezoneByCountry,
   getTimezoneDisplayName,
 } from "../../../../../utils/countryTimezoneMapping";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
 export const useProfileActions = (
-  profile: any,
+  profile: Profile | null | undefined,
   userId: string | undefined,
   profileRefetch: () => void,
-  form: any,
+  form: FormInstance,
   handleSaveDomains: () => Promise<void>,
-  initializeSelectedDomains: () => void
+  initializeSelectedDomains: () => void,
+  selectedDomains: string[]
 ) => {
   const [isEditing, setIsEditing] = useState(false);
   const [hasSelectedCountry, setHasSelectedCountry] = useState(false);
@@ -60,7 +62,24 @@ export const useProfileActions = (
 
   const handleEditClick = () => {
     setIsEditing(true);
-    initializeSelectedDomains();
+    
+    // Re-populate form with current profile data when entering edit mode
+    if (profile) {
+      const formattedData = formatProfileForForm(profile);
+      console.log("🔄 Setting form values:", formattedData);
+      form.setFieldsValue(formattedData);
+      
+      // Immediately verify the account name was set
+      setTimeout(() => {
+        const accountNameInForm = form.getFieldValue("accountName");
+        console.log("✅ Account name after form set:", accountNameInForm);
+      }, 50);
+    }
+    
+    // Initialize domains after form is populated
+    setTimeout(() => {
+      initializeSelectedDomains();
+    }, 100);
   };
 
   const handleSave = async (hasVerifiedAccount?: boolean, verificationSuccess?: boolean) => {
@@ -71,6 +90,15 @@ export const useProfileActions = (
         notification.error({
           message: "Error",
           description: "User ID not found. Please try logging in again.",
+        });
+        return;
+      }
+
+      // Validate that at least one domain is selected
+      if (!selectedDomains || selectedDomains.length === 0) {
+        notification.error({
+          message: "Domain Selection Required",
+          description: "Please select at least one domain before saving your profile.",
         });
         return;
       }
@@ -120,18 +148,45 @@ export const useProfileActions = (
             "Failed to update profile. Please try again.",
         });
       }
-    } catch (error: any) {
-      if (error.errorFields && error.errorFields.length > 0) {
+    } catch (error: unknown) {
+      // Type guard for form validation errors
+      const hasValidationErrors = error && 
+        typeof error === 'object' && 
+        'errorFields' in error && 
+        Array.isArray((error as { errorFields: unknown[] }).errorFields) && 
+        (error as { errorFields: unknown[] }).errorFields.length > 0;
+
+      if (hasValidationErrors) {
         notification.error({
           message: "Validation Error",
           description: "Please check all required fields and try again.",
         });
       } else {
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          updateError ||
-          "An unexpected error occurred. Please try again.";
+        // Extract error message with type safety
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error && typeof error === 'object') {
+          const errorObj = error as Record<string, unknown>;
+          // Check for axios-style error structure
+          if (errorObj.response && typeof errorObj.response === 'object') {
+            const response = errorObj.response as Record<string, unknown>;
+            if (response.data && typeof response.data === 'object') {
+              const data = response.data as Record<string, unknown>;
+              if (typeof data.message === 'string') {
+                errorMessage = data.message;
+              }
+            }
+          } else if (typeof errorObj.message === 'string') {
+            errorMessage = errorObj.message;
+          }
+        }
+        
+        // Fallback to updateError if available
+        if (!errorMessage || errorMessage === "An unexpected error occurred. Please try again.") {
+          errorMessage = updateError || errorMessage;
+        }
 
         notification.error({
           message: "Update Failed",

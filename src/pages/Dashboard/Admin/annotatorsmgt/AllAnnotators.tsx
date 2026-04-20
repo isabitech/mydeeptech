@@ -6,11 +6,16 @@ import { useApproveUser } from "../../../../hooks/Auth/Admin/Annotators/useAppro
 import { useQAManagement } from "../../../../hooks/Auth/Admin/Annotators/useQAManagement";
 import PageModal from "../../../../components/Modal/PageModal";
 import errorMessage from "../../../../lib/error-message";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 const { Search } = Input;
 const { Option } = Select;
 
-const AllAnnotators = () => {
+interface AllAnnotatorsProps {
+  countryFilter: string;
+}
+
+const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,26 +37,25 @@ const AllAnnotators = () => {
   const {
     approveUser,
     loading: updateLoading,
-    error: updateError
   } = useApproveUser();
 
   const {
     approveQA,
     rejectQA,
     loading: qaLoading,
-    error: qaError
   } = useQAManagement();
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [countryFilter]); // Re-fetch when country filter changes
 
-  const fetchUsers = async (page = currentPage, limit = pageSize, search = searchTerm, status = statusFilter) => {
+  const fetchUsers = async (page = currentPage, limit = pageSize, search = searchTerm, status = statusFilter, country = countryFilter) => {
     await getAllDTUsers({
       page,
       limit,
       ...(status !== "all" && { status }),
-      ...(search && { search })
+      ...(search && { search }),
+      ...(country !== "all" && { country })
     });
   };
 
@@ -60,14 +64,14 @@ const AllAnnotators = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setCurrentPage(1);
-    fetchUsers(1, pageSize, "", "all");
+    fetchUsers(1, pageSize, "", "all", countryFilter);
   };
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
     // Pass the search value directly to avoid stale state
-    fetchUsers(1, pageSize, value, statusFilter);
+    fetchUsers(1, pageSize, value, statusFilter, countryFilter);
   };
 
   // Debounced search for real-time typing
@@ -82,16 +86,16 @@ const AllAnnotators = () => {
     // If search is cleared, fetch immediately
     if (!value) {
       setCurrentPage(1);
-      fetchUsers(1, pageSize, "", statusFilter);
+      fetchUsers(1, pageSize, "", statusFilter, countryFilter);
       return;
     }
 
     // Set new timeout for debounced search
     searchTimeoutRef.current = setTimeout(() => {
       setCurrentPage(1);
-      fetchUsers(1, pageSize, value, statusFilter);
+      fetchUsers(1, pageSize, value, statusFilter, countryFilter);
     }, 500); // 500ms delay
-  }, [pageSize, statusFilter]);
+  }, [pageSize, statusFilter, countryFilter]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -106,7 +110,7 @@ const AllAnnotators = () => {
     setStatusFilter(value);
     setCurrentPage(1);
     // Pass the filter value directly to avoid stale state
-    fetchUsers(1, pageSize, searchTerm, value);
+    fetchUsers(1, pageSize, searchTerm, value, countryFilter);
   };
 
   const handleViewDetails = (annotator: DTUser) => {
@@ -161,7 +165,7 @@ const AllAnnotators = () => {
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
       const errorMsg = errorMessage(error) || 'An unexpected error occurred while approving user';
       notification.open({
@@ -197,21 +201,21 @@ const AllAnnotators = () => {
         fetchUsers(); // Refresh the data
       } else {
         // Use API error message if available, otherwise use custom message
-        const errorMessage = result.error || result.message || 'Failed to reject user';
+        const errorMsg = result.error || result.message || 'Failed to reject user';
         notification.open({
           type: 'error',
           message: 'Rejection Failed',
-          description: errorMessage,
+          description: errorMsg,
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
-      const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while rejecting user';
+      const errorMsg = getErrorMessage(error) || 'An unexpected error occurred while rejecting user';
       notification.open({
         type: 'error',
         message: 'Unexpected Error',
-        description: errorMessage,
+        description: errorMsg,
         placement: 'topRight',
       });
     }
@@ -246,13 +250,13 @@ const AllAnnotators = () => {
           placement: 'topRight',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       // Handle unexpected errors
-      const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while elevating user to QA';
+      const errorMsg =  getErrorMessage(error)|| 'An unexpected error occurred while elevating user to QA';
       notification.open({
         type: 'error',
         message: 'Unexpected Error',
-        description: errorMessage,
+        description: errorMsg,
         placement: 'topRight',
       });
     }
@@ -293,13 +297,13 @@ const AllAnnotators = () => {
               placement: 'topRight',
             });
           }
-        } catch (error: any) {
+        } catch (error) {
           // Handle unexpected errors
-          const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while removing user from QA';
+          const errorMsg = getErrorMessage(error) || 'An unexpected error occurred while removing user from QA';
           notification.open({
             type: 'error',
             message: 'Unexpected Error',
-            description: errorMessage,
+            description: errorMsg,
             placement: 'topRight',
           });
         }
@@ -342,16 +346,19 @@ const AllAnnotators = () => {
     },
     {
       title: 'Domains',
-      dataIndex: 'domains',
-      key: 'domains',
+      dataIndex: 'userDomains',
+      key: 'userDomains',
       width: 300,
-      render: (domains: string[]) => (
-        <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
-          {domains?.map((domain, index) => (
-            <Tag key={index} color="blue">{domain}</Tag>
-          ))}
-        </div>
-      ),
+      render: (_: unknown, record: DTUser) => {
+        const domains = record.userDomains || [];
+        return (
+          <div className="flex items-center gap-px gap-y-1 w-[300px] flex-wrap">
+            {domains?.map((domain) => (
+              <Tag key={domain._id} color="blue">{domain.name}</Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'Annotator Status',
@@ -433,7 +440,7 @@ const AllAnnotators = () => {
     {
       title: "Action",
       key: "action",
-      render: (_: any, record: DTUser) => (
+      render: (_: unknown, record: DTUser) => (
         <Space size="middle">
           <Button
             type="primary"
@@ -523,7 +530,7 @@ const AllAnnotators = () => {
               setCurrentPage(page);
               setPageSize(size || 10);
               // Fetch new data when pagination changes using updated fetchUsers function
-              fetchUsers(page, size || 10, searchTerm, statusFilter);
+              fetchUsers(page, size || 10, searchTerm, statusFilter, countryFilter);
             }
           }}
           scroll={{ x: "max-content" }}
@@ -587,7 +594,11 @@ const AllAnnotators = () => {
               <Descriptions title="Domains & Skills" bordered column={1}>
                 <Descriptions.Item label="Domains">
                   <div>
-                    {selectedAnnotator.domains?.map((domain, index) => (
+                    {/* Prioritize userDomains over legacy domains */}
+                    {(selectedAnnotator.userDomains && selectedAnnotator.userDomains.length > 0 
+                      ? selectedAnnotator.userDomains.map((ud: unknown) => (ud as { name: string }).name)
+                      : selectedAnnotator.domains || []
+                    )?.map((domain: string, index: number) => (
                       <Tag key={index} color="blue">{domain}</Tag>
                     ))}
                   </div>

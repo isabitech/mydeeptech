@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Select, Card } from "antd";
+import { Form, Select, Card, FormInstance } from "antd";
 import { Bank } from "../../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
 import NGNPaymentForm from "./payment/NGNPaymentForm";
 import USDPaymentForm from "./payment/USDPaymentForm"; 
@@ -10,7 +10,7 @@ import KESPaymentForm from "./payment/KESPaymentForm";
 import OtherCurrencyPaymentForm from "./payment/OtherCurrencyPaymentForm";
 
 interface PaymentInfoFormProps {
-  form: any;
+  form: FormInstance;
   isEditing: boolean;
   paymentCurrency: string;
   paymentMethod: string;
@@ -18,7 +18,7 @@ interface PaymentInfoFormProps {
   bankCode: string;
   isVerifying: boolean;
   verificationSuccess: boolean;
-  verificationError: any;
+  verificationError: Error | null;
   hasVerifiedAccount: boolean;
   allNGNBanks: Bank[];
   onManualVerification: () => void;
@@ -40,13 +40,16 @@ const PaymentInfoForm: React.FC<PaymentInfoFormProps> = ({
   onManualVerification,
   onVerificationRefetch,
 }) => {
-  const handleCurrencyChange = () => {
-    form.setFieldsValue({
-      accountName: undefined,
-      accountNumber: undefined,
-      bankName: undefined,
-      paymentMethod: undefined,
-    });
+  const handleCurrencyChange = (newCurrency: string) => {
+    // Only clear fields if user is actively changing currency (not during form initialization)
+    if (isEditing && newCurrency !== paymentCurrency) {
+      form.setFieldsValue({
+        accountName: undefined,
+        accountNumber: undefined,
+        bankName: undefined,
+        paymentMethod: undefined,
+      });
+    }
   };
 
   return (

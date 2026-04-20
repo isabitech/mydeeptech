@@ -7,7 +7,7 @@ import assessmentMutationService from '../../../../services/assessement-service/
 import errorMessage from '../../../../lib/error-message';
 import { AssessmentType } from './assessments-modal';
 import authService from '../../../../services/authentication/auth-query';
-import { formSubmitPayload } from './formSubmitPayload';
+import { formSubmitPayload, FormValues } from './formSubmitPayload';
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -49,9 +49,9 @@ const AssessmentSubmissionModal: React.FC<AssessmentSubmissionModalProps> = ({
     }
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: unknown) => {
 
-      const payload = formSubmitPayload(values);
+      const payload = formSubmitPayload(values as FormValues);
 
       submitReviewMutation.mutate(payload, {
           onSuccess: async () => {

@@ -2,27 +2,26 @@ import { useState } from "react";
 import { notification } from "antd";
 import domainQueryService from "../../../../../services/domain-service/domain-query";
 import domainMutation from "../../../../../services/domain-service/domain-mutation";
+import { Profile } from "../../../../../validators/profile/profile-schema";
 
-export const useDomainManagement = (profile: any) => {
+export const useDomainManagement = (profile: Profile | null | undefined) => {
   const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
 
   const assignDomainsMutation = domainMutation.useAssignDomainsToUser();
   const removeDomainMutation = domainMutation.useRemoveDomainFromUser();
 
   // Fetch domains with high limit to get all available options
-  const {
-    data: domainsData,
-    isLoading: domainsLoading,
-    error: domainsError,
-  } = domainQueryService.useDomains({ limit: 1000 });
+  const {data: domainsData, isLoading: domainsLoading, error: domainsError} = domainQueryService.useDomains({ limit: 1000 });
 
   const allDomains = domainsData?.data?.domain || [];
   const mergedDomains = allDomains;
 
-  // Fetch user's assigned domains
-  const { data: userDomainsData, refetch: refetchUserDomains } = domainQueryService.useUserDomains();
+  // Use userDomains from profile data instead of separate API call
+  // Fallback to legacy domains field if userDomains is not available
+  const profileUserDomains = profile?.userDomains || [];
+  const legacyDomains = profile?.domains || [];
 
-  // Normalize string domains to ObjectIds if possible
+  // Normalize string domains to ObjectIds if possible (for legacy domains)
   const normalizeDomainId = (d: any) => {
     let rawId = typeof d === "string" ? d : d?.domain_child?._id || d?.domain?._id || d?._id;
     if (typeof rawId === "string" && !/^[0-9a-fA-F]{24}$/.test(rawId)) {
@@ -32,40 +31,35 @@ export const useDomainManagement = (profile: any) => {
     return rawId;
   };
 
-  // Build map of assigned domains, prioritizing real assignments from backendUserDomains
+  // Build map of assigned domains, prioritizing userDomains from profile
   const assignedDomainsMap = new Map();
-  const backendUserDomains = userDomainsData?.data || [];
-  const profileUserDomains = profile?.domains || [];
 
-  // Add backend assignments first (these have assignment IDs)
-  backendUserDomains.forEach((d: any) => {
-    const domainId = d?.domain?._id || d?.domain_child?._id || d?._id;
+  // Add userDomains first (these are the new structured domains)
+  profileUserDomains.forEach((userDomain: any) => {
+    const domainId = userDomain._id;
     if (domainId && !assignedDomainsMap.has(domainId)) {
-      // Find full domain info from mergedDomains for better display
-      const fullDomain = mergedDomains.find((m: any) => m._id === domainId);
-      
       assignedDomainsMap.set(domainId, {
-        ...d,
-        domain: fullDomain || d.domain || d.domain_child || { _id: domainId },
-        id: d._id, // Store assignment ID
-        domainId: domainId // Store domain ID for keying
+        domain: userDomain,
+        id: userDomain.assignmentId, // Use assignment ID for removal
+        domainId: domainId
       });
     }
   });
 
-  // Add optional profile domains if not already present
-  profileUserDomains.forEach((d: any) => {
-    const normId = normalizeDomainId(d);
-    if (normId && !assignedDomainsMap.has(normId)) {
-      const fullDomain = mergedDomains.find((m: any) => m._id === normId);
-      
-      assignedDomainsMap.set(normId, {
-        domain: fullDomain || (typeof d === "object" ? d : { _id: normId, name: d }),
-        id: null, // Legacy domains don't have assignment IDs
-        domainId: normId
-      });
-    }
-  });
+  // Add legacy domains if userDomains is empty (for fallback compatibility)
+  if (profileUserDomains.length === 0) {
+    legacyDomains.forEach((d: string | { _id: string; name: string }) => {
+      const normId = normalizeDomainId(d);
+      if (normId && !assignedDomainsMap.has(normId)) {
+        const fullDomain = mergedDomains.find((m) => m._id === normId);
+        assignedDomainsMap.set(normId, {
+          domain: fullDomain || (typeof d === "object" ? d : { _id: normId, name: d }),
+          id: null, // Legacy domains don't have assignment IDs
+          domainId: normId
+        });
+      }
+    });
+  }
 
   const assignedDomains = Array.from(assignedDomainsMap.values());
 
@@ -83,9 +77,19 @@ export const useDomainManagement = (profile: any) => {
       );
 
       // Domains to add (ones that are in selectedDomains but weren't in assignedDomains)
-      const toAdd = selectedDomains.filter(id =>
-        !initiallySelectedIds.includes(id) && /^[0-9a-fA-F]{24}$/.test(id)
-      );
+      // Remove duplicates and ensure valid ObjectIds
+      const toAdd = [...new Set(selectedDomains)]
+        .filter(id => 
+          !initiallySelectedIds.includes(id) && 
+          /^[0-9a-fA-F]{24}$/.test(id)
+        );
+
+      console.log("🎯 Domain management:", {
+        initiallySelected: initiallySelectedIds,
+        currentlySelected: selectedDomains,
+        toAdd: toAdd,
+        toRemove: toRemove.map(r => ({ id: r.id, domainId: r.domainId }))
+      });
 
       const promises = [];
 
@@ -94,7 +98,7 @@ export const useDomainManagement = (profile: any) => {
         promises.push(removeDomainMutation.mutateAsync(assignment.id));
       }
 
-      // Add newly selected domains
+      // Add newly selected domains (only if there are any to add)
       if (toAdd.length > 0) {
         promises.push(assignDomainsMutation.mutateAsync(toAdd));
       }
@@ -108,8 +112,7 @@ export const useDomainManagement = (profile: any) => {
         description: "Your domain preferences have been successfully updated.",
       });
 
-      // Invaliding queries is already handled by mutation onSuccess, but we can refetch manually too
-      refetchUserDomains();
+      // Domain data will be updated through profile refetch in parent component
     } catch (error) {
       console.error("Failed to update domains:", error);
       throw error;

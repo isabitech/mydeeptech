@@ -223,7 +223,7 @@ const AdminReelAssessmentManager = ({onAssessmentCreated,} : AdminReelAssessment
           onCancel={() => setShowCaModal(false)}
           footer={null}
           width={800}
-          destroyOnClose
+          destroyOnHidden
           >
             <AssesmentDomain/>
           </Modal> */}

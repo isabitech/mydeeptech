@@ -7,7 +7,7 @@ export interface ChatMessage {
   timestamp: Date;
   senderName?: string;
   senderModel?: 'DTUser' | 'Admin';
-  attachments?: any[];
+  attachments?: ChatAttachment[];
   pending?: boolean;
   messageId?: string;
 }
@@ -114,7 +114,7 @@ export interface SocketEventData {
   resolutionSummary?: string;
   category?: string;
   priority?: string;
-  attachments?: any[];
+  attachments?: ChatAttachment[];
   timestamp?: Date;
 }
 
@@ -144,6 +144,74 @@ export type ChatUserType = 'user' | 'admin';
 export type ChatCategory = 'general_inquiry' | 'technical_support' | 'billing' | 'account_issue' | 'feature_request' | 'bug_report';
 export type ChatPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type ChatStatus = 'open' | 'in_progress' | 'waiting_for_user' | 'closed';
+
+// Connection Status Interface
+export interface ConnectionStatusEvent {
+  connected: boolean;
+  reason?: string;
+  status?: 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'failed' | 'timeout' | 'server_down' | 'error';
+  error?: string;
+  attempt?: number;
+}
+
+// Message Event Interface 
+export interface MessageEvent {
+  _id?: string;
+  ticketId: string;
+  message: string;
+  isAdminReply: boolean;
+  timestamp: string | Date;
+  senderName?: string;
+  senderEmail?: string;
+  userEmail?: string;
+  senderModel?: 'DTUser' | 'User' | 'Admin';
+  attachments?: ChatAttachment[];
+  messageId?: string;
+}
+
+// Chat Attachment Interface
+export interface ChatAttachment {
+  id?: string;
+  name: string;
+  url: string;
+  type: string;
+  size?: number;
+}
+
+// Agent Events
+export interface AgentJoinedEvent {
+  ticketId: string;
+  agentName: string;
+  agentId: string;
+  timestamp: Date;
+}
+
+export interface AgentTypingEvent {
+  ticketId: string;
+  isTyping: boolean;
+  agentName: string;
+  timestamp: Date;
+}
+
+export interface ChatClosedEvent {
+  ticketId: string;
+  resolvedBy: string;
+  resolutionSummary?: string;
+  timestamp: Date;
+}
+
+export interface TicketStatusUpdatedEvent {
+  ticketId: string;
+  status: ChatStatus;
+  updatedBy: string;
+  timestamp: Date;
+}
+
+export interface MessageSentEvent {
+  messageId: string;
+  success: boolean;
+  error?: string;
+}
 
 // Socket.IO Events
 export interface SocketEvents {
@@ -185,7 +253,7 @@ export interface SocketEvents {
 export interface IChatSocketService {
   connect(token: string, userType: ChatUserType): Promise<boolean>;
   disconnect(): void;
-  sendMessage(ticketId: string, message: string, attachments?: any[]): void;
+  sendMessage(ticketId: string, message: string, attachments?: ChatAttachment[]): void;
   startChat(message: string, category?: ChatCategory, priority?: ChatPriority): void;
   rejoinTicket(ticketId: string): void;
   getChatHistory(ticketId: string): void;

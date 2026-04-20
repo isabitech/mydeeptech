@@ -1,15 +1,15 @@
 import React from "react";
-import { Form, Input, Select, Button, Spin } from "antd";
+import { Form, Input, Select, Button, Spin, FormInstance } from "antd";
 import { Bank } from "../../../../../../hooks/Auth/User/Paystack/useListAllNGNBanks";
 
 interface NGNPaymentFormProps {
-  form: any;
+  form: FormInstance;
   isEditing: boolean;
   accountNumber: string;
   bankCode: string;
   isVerifying: boolean;
   verificationSuccess: boolean;
-  verificationError: any;
+  verificationError: Error | null;
   hasVerifiedAccount: boolean;
   allNGNBanks: Bank[];
   onManualVerification: () => void;
@@ -29,6 +29,7 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
   onManualVerification,
   onVerificationRefetch,
 }) => {
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full">
       <Form.Item
@@ -61,17 +62,20 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
           },
         ]}
         help={
-          !hasVerifiedAccount && accountNumber && bankCode && accountNumber.length === 10
-            ? "Verifying account details..."
-            : hasVerifiedAccount
-              ? "Account verified with Paystack"
-              : isEditing
-                ? "Enter a 10-digit account number and select your bank for automatic verification"
-                : "Account name from verification"
+          form.getFieldValue("accountName") && !isVerifying
+            ? "Account verified with Paystack"
+            : !hasVerifiedAccount && accountNumber && bankCode && accountNumber.length === 10
+              ? "Verifying account details..."
+              : hasVerifiedAccount
+                ? "Account verified with Paystack"
+                : isEditing
+                  ? "Enter a 10-digit account number and select your bank for verification"
+                  : "Account name from verification"
         }
       >
         <Input
           disabled={true} // Always disabled - populated by verification
+          value={form.getFieldValue("accountName")} // Explicitly set value from form
           className={`!font-[gilroy-regular] ${verificationSuccess
             ? "border-green-500 bg-green-50"
             : verificationError
@@ -83,16 +87,20 @@ const NGNPaymentForm: React.FC<NGNPaymentFormProps> = ({
           placeholder={
             isVerifying
               ? "Verifying account..."
-              : "Account name will appear after verification"
+              : form.getFieldValue("accountName") 
+                ? ""
+                : "Account name will appear after verification"
           }
           suffix={
-            isVerifying ? (
-              <Spin size="small" />
-            ) : verificationSuccess ? (
-              <span className="text-green-500">✓</span>
-            ) : verificationError ? (
-              <span className="text-red-500">✗</span>
-            ) : null
+            <span style={{ minWidth: '20px', display: 'inline-block' }}>
+              {isVerifying ? (
+                <Spin size="small" />
+              ) : verificationSuccess ? (
+                <span className="text-green-500">✓</span>
+              ) : verificationError ? (
+                <span className="text-red-500">✗</span>
+              ) : null}
+            </span>
           }
         />
       </Form.Item>

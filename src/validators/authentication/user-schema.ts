@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+// Domain object schema for userDomains
+const UserDomainSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  assignmentId: z.string().optional(), // ID for domain-to-user relationship removal
+});
+
 
 const UsrInfoSchema = z.object({
   data: z.string(), // JWT token
@@ -12,6 +19,7 @@ const UserSchema = z.object({
   role: z.string(),
   phone: z.string(),
   domains: z.array(z.string()),
+  userDomains: z.array(UserDomainSchema).optional(), // New structured domain field
   socialsFollowed: z.array(z.string()),
   consent: z.boolean(),
   isEmailVerified: z.boolean(),
@@ -31,7 +39,7 @@ const LoginResponseSchema = z.object({
   _usrinfo: UsrInfoSchema,
   token: z.string(),
   user: UserSchema,
-role: z.string().optional(), 
+  role: z.string().optional(), 
 });
 
 type LoginResponseSchema = z.infer<typeof LoginResponseSchema>;

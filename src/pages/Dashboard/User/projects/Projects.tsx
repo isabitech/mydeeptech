@@ -3,9 +3,10 @@ import ActiveProjects from "./ActiveProjects";
 import AvailableProjects from "./AvailableProjects";
 import PendingProjects from "./PendingProjects";
 import RejectedProjects from "./RejectedProjects";
+import SOPNDAViewer from "./SOPNDAViewer";
 
 const Projects = () => {
-  // State to track the currently selected project
+
   const [selectedProject, setSelectedProject] = useState(1); // Default to the first project
 
   // List of projects
@@ -17,7 +18,7 @@ const Projects = () => {
     },
     {
       key: 2,
-      title: "My Active Projects", 
+      title: "My Active Projects",
       component: <ActiveProjects />,
     },
     {
@@ -32,29 +33,35 @@ const Projects = () => {
     },
   ];
 
+
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       {/* Navigation Buttons */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap w-full">
         {list.map((item) => (
           <button
             key={item.key}
-            className={`px-4 py-2 rounded transition-colors ${
-              selectedProject === item.key 
-                ? "bg-secondary text-white" 
+            className={`px-4 h-11 rounded transition-colors ${selectedProject === item.key
+                ? "bg-secondary text-white"
                 : "bg-gray-300 text-black hover:bg-gray-400"
-            }`}
+              }`}
             onClick={() => setSelectedProject(item.key)}
           >
             {item.title}
           </button>
         ))}
+
+        {/* Show SOP and NDA documents in modal */}
+        <SOPNDAViewer />
+       
       </div>
 
       {/* Dynamic Content Area */}
       <div className="flex-1">
         {list.find(item => item.key === selectedProject)?.component}
       </div>
+      
+     
     </div>
   );
 };

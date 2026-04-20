@@ -72,7 +72,7 @@ const EditInvoice = ({ open, invoiceId, onClose }: EditInvoiceProps) => {
       onCancel={onClose}
       footer={null}
       width={700}
-      destroyOnClose
+      destroyOnHidden
       className="font-[gilroy-regular]"
     >
       <div className="mt-6">

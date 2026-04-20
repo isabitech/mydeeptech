@@ -1,6 +1,6 @@
 // Enhanced User Chat Widget with proper syncing
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Collapse, Empty, Divider } from 'antd';
+import { Button, Input, Card, Badge, Typography, Spin, Tag, Avatar, message, Tooltip, Drawer, List, Empty } from 'antd';
 import { 
   MessageOutlined, 
   CloseOutlined, 
@@ -18,12 +18,12 @@ import UserChatSocketService from '../../services/UserChatSocketService';
 import UserChatAPI from '../../services/UserChatAPI';
 import { ChatMessage, ChatTicket } from '../../types/enhanced-chat.types';
 import { 
-  UserChatHistoryResponse, 
   UserChatHistoryResponseDataChat, 
   Message as HistoryMessage 
 } from '../../services/chat-history-type';
 import { retrieveTokenFromStorage } from '../../helpers';
 import dayjs from 'dayjs';
+import { getErrorMessage } from '../../service/apiUtils';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -328,15 +328,14 @@ const EnhancedUserChatWidget: React.FC = () => {
         return;
       }
 
-      const connected = await UserChatSocketService.connect(token);
+      await UserChatSocketService.connect(token);
       // Load existing active chats
       const result = await UserChatAPI.getActiveChats();
       
       if (result.success && result.data.activeChats) {
         setActiveTickets(result.data.activeChats);
-        if (result.data.activeChats.length > 0) {
-          selectTicket(result.data.activeChats[0]);
-        }
+        // Don't automatically select first ticket to avoid "access denied" errors
+        // Let user manually select which ticket they want to join
       }
     } catch (error) {
       console.error('Failed to initialize chat:', error);
@@ -349,19 +348,15 @@ const EnhancedUserChatWidget: React.FC = () => {
     setCurrentTicket(ticket);
     setMessages(ticket.messages || []);
     
-    // Join ticket room for real-time updates - use multiple methods for better compatibility
-    const socket = UserChatSocketService.getSocket();
-    if (socket && UserChatSocketService.isSocketConnected()) {
-      
-      // Method 1: Direct socket emit
-      socket.emit('join_chat_room', { ticketId: ticket._id });
-      
-      // Method 2: Also try with ticketId field for backend compatibility
-      socket.emit('join_room', { ticketId: ticket._id });
-      
-      // Method 3: Use the service method
-      UserChatSocketService.rejoinTicket(ticket._id);
-      
+    // Join ticket room for real-time updates - use user-appropriate events only
+    if (UserChatSocketService.isSocketConnected()) {
+      try {
+        // Use only the user service method that uses proper user events
+        UserChatSocketService.rejoinTicket(ticket._id);
+      } catch (error) {
+        console.warn('⚠️ Failed to rejoin ticket:', ticket._id, error);
+        // Don't throw error - just log warning
+      }
     } else {
       console.warn('⚠️ Socket not connected, cannot join room');
     }
@@ -372,18 +367,15 @@ const EnhancedUserChatWidget: React.FC = () => {
 
   // Start new chat
   const startNewChat = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isLoading) return;
     
     setIsLoading(true);
     const messageText = newMessage.trim();
     
     try {
-      // Start via Socket.IO for real-time experience
+      // Use Socket.IO ONLY for real-time experience - no API call needed
       UserChatSocketService.startChat(messageText, 'general_inquiry', 'medium');
       setNewMessage('');
-      
-      // Also start via API for consistency
-      await UserChatAPI.startChat(messageText);
     } catch (error) {
       console.error('Failed to start chat:', error);
       showNotification('Failed to start chat session', 'error');
@@ -442,7 +434,8 @@ const EnhancedUserChatWidget: React.FC = () => {
         showNotification('No chat history found', 'info');
       }
     } catch (error) {
-      message.error('Failed to load chat history');
+      const errorMsg = getErrorMessage(error) || 'Failed to load chat history';
+      message.error(errorMsg);
     } finally {
       setHistoryLoading(false);
     }
@@ -799,30 +792,6 @@ const EnhancedUserChatWidget: React.FC = () => {
           <div className="flex-1 overflow-hidden flex flex-col">
             {currentTicket ? (
               <>
-                {/* Current Ticket Info */}
-                <div className="p-3 bg-gray-50 border-b">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      {getStatusIcon(currentTicket.status)}
-                      <div className="ml-2">
-                        <Text className="text-sm font-medium" style={{ fontFamily: 'Gilroy-Bold' }}>
-                          {currentTicket.ticketNumber}
-                        </Text>
-                        <Tag 
-                          color={getStatusColor(currentTicket.status)} 
-                          className="ml-2"
-                          style={{ fontFamily: 'Gilroy-Regular' }}
-                        >
-                          {currentTicket.status.replace('_', ' ').toUpperCase()}
-                        </Tag>
-                      </div>
-                    </div>
-                    <Text className="text-xs text-gray-500" style={{ fontFamily: 'Gilroy-Regular' }}>
-                      Created {formatDate(currentTicket.createdAt)}
-                    </Text>
-                  </div>
-                </div>
-
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4">
                   {messages.length === 0 ? (

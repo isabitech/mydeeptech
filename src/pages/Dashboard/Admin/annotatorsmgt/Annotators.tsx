@@ -8,6 +8,7 @@ import SubmittedAnnotators from "./SubmittedAnnotators";
 import QAAnnotators from "./QAAnnotators";
 import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
 import AnnotatorsDomain from "./AnnotatorsDomain";
+import AnnotatorsByCountry from "./AnnotatorsByCountry";
 import DomainModal from "../../../../components/DomainModal/DomainModal";
 import { useDomainActions } from "../../../../store/useDomainStore";
 import DomainTable from "../../../../components/DomainModal/DomainTable";
@@ -15,6 +16,7 @@ import DomainTable from "../../../../components/DomainModal/DomainTable";
 const Annotators = () => {
   const [activeTab, setActiveTab] = useState("1");
   const [showCaModal, setShowCaModal] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [counts, setCounts] = useState({
     total: 0,
     approved: 0,
@@ -30,8 +32,8 @@ const Annotators = () => {
   // Fetch counts when component mounts
   useEffect(() => {
     fetchCounts();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   // Update counts when summary changes
   useEffect(() => {
     if (summary?.statusBreakdown) {
@@ -54,13 +56,16 @@ const Annotators = () => {
     setActiveTab(key);
   };
 
+  const handleCountryChange = (country: string) => {
+    setSelectedCountry(country);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 font-[gilroy-regular]">
       {/* Header Component */}
       {/* <Header title="Annotators Management" /> */}
 
       <div className=" w-full">
-
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
             <div className="flex justify-between flex-wrap gap-3 items-center mb-8">
@@ -101,7 +106,13 @@ const Annotators = () => {
                   ),
                   children: (
                     <div className="pt-4">
-                      <AllAnnotators />
+                      <div className="mb-6">
+                        <AnnotatorsByCountry 
+                          selectedCountry={selectedCountry}
+                          onCountryChange={handleCountryChange}
+                        />
+                      </div>
+                      <AllAnnotators countryFilter={selectedCountry} />
                     </div>
                   )
                 },
@@ -261,7 +272,7 @@ const Annotators = () => {
         onCancel={() => setShowCaModal(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <AnnotatorsDomain />
       </Modal>

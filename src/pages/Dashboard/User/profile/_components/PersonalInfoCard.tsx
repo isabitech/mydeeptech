@@ -1,13 +1,22 @@
 import React from "react";
 import { Button, Card } from "antd";
 import { Domain } from "../types";
+import { Profile } from "../../../../../validators/profile/profile-schema";
+import { UserInfo } from "../../../../../store/useAuthStore";
+
+// Define the assigned domain structure
+interface AssignedDomain {
+  domain: Domain;
+  id: string | null;
+  domainId: string;
+}
 
 interface PersonalInfoCardProps {
-  profile: any;
-  userInfo: any;
+  profile: Profile | null | undefined;
+  userInfo: UserInfo | null;
   isEditing: boolean;
   updateLoading: boolean;
-  assignedDomains: any[];
+  assignedDomains: AssignedDomain[];
   mergedDomains: Domain[];
   onEditClick: () => void;
   onSave: () => void;

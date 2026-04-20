@@ -1,9 +1,11 @@
+import { Profile } from "../../../../../validators/profile/profile-schema";
+
 /**
  * Formats profile data for form field values
  * @param profile - The profile data from API
  * @returns Formatted object for form.setFieldsValue()
  */
-export const formatProfileForForm = (profile: any) => {
+export const formatProfileForForm = (profile: Profile | null | undefined) => {
   if (!profile) return {};
 
   return {
@@ -29,12 +31,12 @@ export const formatProfileForForm = (profile: any) => {
     resumeUrl: profile?.attachments?.resumeUrl,
     idDocumentUrl: profile?.attachments?.idDocumentUrl,
 
-    // System Information
-    deviceType: profile?.systemInfo?.deviceType || "",
-    operatingSystem: profile?.systemInfo?.operatingSystem || "",
-    internetSpeedMbps: profile?.systemInfo?.internetSpeedMbps || 0,
-    powerBackup: profile?.systemInfo?.powerBackup || false,
-    hasWebcam: profile?.systemInfo?.hasWebcam || false,
-    hasMicrophone: profile?.systemInfo?.hasMicrophone || false,
+    // System Information - preserve exact values, only use defaults for null/undefined
+    deviceType: profile?.systemInfo?.deviceType ?? "",
+    operatingSystem: profile?.systemInfo?.operatingSystem ?? "",
+    internetSpeedMbps: profile?.systemInfo?.internetSpeedMbps ?? 0,
+    powerBackup: profile?.systemInfo?.powerBackup ?? false,
+    hasWebcam: profile?.systemInfo?.hasWebcam ?? false,
+    hasMicrophone: profile?.systemInfo?.hasMicrophone ?? false,
   };
 };

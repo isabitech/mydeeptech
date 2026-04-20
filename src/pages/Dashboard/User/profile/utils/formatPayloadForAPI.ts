@@ -1,9 +1,38 @@
+interface ProfileFormValues {
+  country?: string;
+  timeZone?: string;
+  availableHoursPerWeek?: string | number;
+  preferredCommunicationChannel?: string;
+  accountName?: string;
+  accountNumber?: string;
+  bankName?: string;
+  bankCode?: string;
+  bank_slug?: string;
+  paymentMethod?: string;
+  paymentCurrency?: string;
+  educationField?: string;
+  yearsOfExperience?: string | number;
+  annotationSkills?: string[];
+  toolExperience?: string[];
+  primaryLanguage?: string;
+  englishFluencyLevel?: string;
+  resumeUrl?: string;
+  idDocumentUrl?: string;
+  deviceType?: string;
+  operatingSystem?: string;
+  internetSpeedMbps?: string | number;
+  powerBackup?: boolean;
+  hasWebcam?: boolean;
+  hasMicrophone?: boolean;
+}
+
 /**
  * Formats form values into API payload structure
  * @param values - The form values from form.getFieldsValue()
  * @returns Formatted payload object for API submission
  */
-export const formatPayloadForAPI = (values: any) => {
+
+export const formatPayloadForAPI = (values: ProfileFormValues | null | undefined) => {
   if (!values) return {};
 
   return {

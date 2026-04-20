@@ -52,7 +52,8 @@ const Profile = () => {
     profileRefetch,
     form,
     domainHooks.handleSaveDomains,
-    domainHooks.initializeSelectedDomains
+    domainHooks.initializeSelectedDomains,
+    domainHooks.selectedDomains
   );
 
   // Account verification hook using isEditing from profile actions
@@ -61,7 +62,8 @@ const Profile = () => {
     paymentCurrency,
     accountNumber,
     bankCode,
-    form
+    form,
+    profile
   );
 
   // Create a wrapped handleSave that passes verification data
@@ -72,15 +74,10 @@ const Profile = () => {
     );
   };
 
-
-
-  if (!userId || isProfileLoading) {
-    return <LoadingIndicator />;
-  }
-
-  if (isProfileError || !profile) {
-    return <ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch} />;
-  }
+if (!userId) return <ErrorIndicatorWithRefresh error="Missing user ID" />;
+if (isProfileLoading) return <LoadingIndicator />;
+if (isProfileError) return <ErrorIndicatorWithRefresh error={profileError} onRetry={profileRefetch} />;
+if (!profile) return <ErrorIndicatorWithRefresh error="Profile not found" />;
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
@@ -102,7 +99,7 @@ const Profile = () => {
 
         <div className="col-span-12">
           <Form form={form} layout="vertical">
-            <Card title="Personal Information" className="mb-6">
+            <Card title="User Information" className="mb-6">
               <PersonalDetailsForm
                 profile={profile}
                 userInfo={userInfo}
@@ -137,7 +134,7 @@ const Profile = () => {
             </Card>
 
             <Card title="Device Information" className="mb-6">
-              <SystemInfoForm isEditing={profileActions.isEditing} />
+              <SystemInfoForm isEditing={profileActions.isEditing} profile={profile} />
             </Card>
 
             <SkillsExperienceForm isEditing={profileActions.isEditing} />

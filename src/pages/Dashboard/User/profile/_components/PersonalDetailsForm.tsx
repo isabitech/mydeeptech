@@ -1,16 +1,32 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Form, Input, Select, Tag } from "antd";
-import { africanCountries } from "../../../../../utils/africanCountries";
+import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import './PhoneInput.css';
+import { worldCountries } from "../../../../../utils/worldCountries";
 import DomainsSection from "./DomainsSection";
 import { Domain } from "../types.js";
+import { Profile } from "../../../../../validators/profile/profile-schema";
+import { UserInfo } from "../../../../../store/useAuthStore";
+
+// Define the E164Number type locally since it's not exported
+type E164Number = string;
+
+// Define the assigned domain structure
+interface AssignedDomain {
+  domain: Domain;
+  id: string | null;
+  domainId: string;
+}
 
 interface PersonalDetailsFormProps {
-  profile: any;
-  userInfo: any;
+  profile: Profile | null | undefined;
+  userInfo: UserInfo | null;
   isEditing: boolean;
   hasSelectedCountry: boolean;
   onCountryChange: (countryValue: string) => void;
-  assignedDomains: any[];
+  onPhoneChange?: (phone: string, country?: string) => void;
+  assignedDomains: AssignedDomain[];
   mergedDomains: Domain[];
   selectedDomains: string[];
   onDomainsChange: (values: string[]) => void;
@@ -22,11 +38,54 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
   isEditing,
   hasSelectedCountry,
   onCountryChange,
+  onPhoneChange,
   assignedDomains,
   mergedDomains,
   selectedDomains,
   onDomainsChange,
 }) => {
+  const form = Form.useFormInstance();
+  const phoneNumber = Form.useWatch('phoneNumber', form);
+
+  // Extract country from phone number when it changes
+  useEffect(() => {
+    if (phoneNumber && onPhoneChange) {
+      const parsedPhone = parsePhoneNumber(phoneNumber);
+      if (parsedPhone && parsedPhone.country) {
+        const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+        const countryName = regionNames.of(parsedPhone.country);
+        onPhoneChange(phoneNumber, countryName || "");
+      } else {
+        onPhoneChange(phoneNumber);
+      }
+    }
+  }, [phoneNumber, onPhoneChange]);
+
+  // Custom PhoneInput wrapper that works with Ant Design Forms
+  const FormPhoneInput: React.FC<{ 
+    value?: E164Number; 
+    onChange?: (value: E164Number | undefined) => void; 
+    disabled?: boolean 
+  }> = ({ value, onChange, disabled }) => (
+    <PhoneInput
+      international
+      defaultCountry="NG"
+      countryCallingCodeEditable={false}
+      disabled={disabled}
+      value={value}
+      onChange={(phoneValue: E164Number | undefined) => {
+        if (onChange) {
+          onChange(phoneValue);
+        }
+      }}
+      placeholder="Enter phone number"
+      className="phone-input-container h-8 disabled:cursor-not-allowed disabled:bg-gray-100"
+      numberInputProps={{
+        className: "ant-input disabled:cursor-not-allowed disabled:bg-gray-100"
+      }}
+      
+    />
+  );
   return (
     <>
       <Form.Item label="Email">
@@ -64,6 +123,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
       </Form.Item>
 
       <DomainsSection
+        profile={profile}
         isEditing={isEditing}
         assignedDomains={assignedDomains}
         mergedDomains={mergedDomains}
@@ -80,12 +140,11 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
           />
         </Form.Item>
 
-        <Form.Item label="Phone Number" name="phoneNumber">
-          <Input
-            disabled={true}
-            className="!font-[gilroy-regular]"
-            placeholder="System managed"
-          />
+        <Form.Item 
+          label="Phone Number" 
+          name="phoneNumber"
+        >
+          <FormPhoneInput disabled={true} />
         </Form.Item>
 
         <Form.Item label="Country" name="country">
@@ -100,7 +159,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                 .toLowerCase()
                 .includes(input.toLowerCase())
             }
-            options={africanCountries}
+            options={worldCountries}
           />
         </Form.Item>
 

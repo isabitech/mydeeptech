@@ -78,6 +78,7 @@ export const useAdminChat = () => {
       const response: JoinChatResponse = await AdminChatAPI.joinChat(ticketId);
 
       if (response.success && response.data) {
+        console.log('📋 [useAdminChat] joinChat response data:', response.data);
         setSelectedChat(response.data as any);
         
         // Join socket room for real-time updates

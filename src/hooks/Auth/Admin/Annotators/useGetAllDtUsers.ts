@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { endpoints } from "../../../../store/api/endpoints";
 import { retrieveTokenFromStorage } from "../../../../helpers";
 import { GetAllDTUsersResult, User } from "./all-user-type";
+import { getErrorMessage } from "../../../../service/apiUtils";
 
 // Use the User type from the API response
 export type DTUser = User;
@@ -12,8 +13,6 @@ interface HookOperationResult {
   data?: GetAllDTUsersResult;
   error?: string;
 }
-
-
 
 export const useGetAllDtUsers = () => {
   const [loading, setLoading] = useState(false);
@@ -27,6 +26,7 @@ export const useGetAllDtUsers = () => {
     limit?: number;
     status?: string;
     search?: string;
+    country?: string;
   }): Promise<HookOperationResult> => {
     setLoading(true);
     setError(null);
@@ -45,6 +45,7 @@ export const useGetAllDtUsers = () => {
       if (params?.limit) queryParams.append('limit', params.limit.toString());
       if (params?.status) queryParams.append('status', params.status);
       if (params?.search) queryParams.append('search', params.search);
+      if (params?.country) queryParams.append('country', params.country);
 
       const url = `${import.meta.env.VITE_API_URL}${endpoints.adminActions.getAllDTUsers}${
         queryParams.toString() ? `?${queryParams.toString()}` : ''
@@ -81,11 +82,11 @@ export const useGetAllDtUsers = () => {
         setUsers([]); // Set empty array on error
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = err.message || "An error occurred while fetching DT users. Please try again.";
-      setError(errorMessage);
+    } catch (error) {
+      const errorMsg = getErrorMessage(error) || "An error occurred while fetching DT users. Please try again.";
+      setError(errorMsg);
       setUsers([]); // Set empty array on error
-      return { success: false, error: errorMessage };
+      return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
     }
