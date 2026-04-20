@@ -185,7 +185,7 @@ const AssessmentHistory: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: AssessmentRecord) => (
+      render: (_: unknown, record: AssessmentRecord) => (
         <Button
           type="link"
           icon={<EyeOutlined />}
