@@ -197,7 +197,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                 defaultCountry="NG"
                 countryCallingCodeEditable={false}
                 value={form.phone}
-                onChange={(value) => {
+                onChange={(value: string | undefined) => {
                   setForm((s) => ({ ...s, phone: value || "" }));
                   // Parse phone number to get country
                   if (value) {
