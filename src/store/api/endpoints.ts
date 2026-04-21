@@ -165,6 +165,8 @@ export const endpoints = {
     session: "/api/assessments/session",
     submit: "/api/assessments/submit",
     progress: "/api/assessments/progress",
+    history: "/assessments/history",
+    retakeEligibility: "/assessments/retake-eligibility",
     assessmentReview: "/assessment-reviews",
     assessmentReviews: "/assessment-reviews",
     updateReviewAssessment: "/assessment-reviews",

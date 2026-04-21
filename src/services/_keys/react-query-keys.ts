@@ -52,6 +52,8 @@ const QUERY = {
     getUserInvoiceDetails: "getUserInvoiceDetails",
 
     assessmentReviews: "assessmentReviews",
+    assessmentHistory: "assessmentHistory",
+    retakeEligibility: "retakeEligibility",
     userNotifications: "userNotifications",
    
 
