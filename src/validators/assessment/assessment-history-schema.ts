@@ -46,9 +46,9 @@ export const RetakeEligibilitySchema = z.object({
 
 export const AssessmentHistoryPaginationSchema = z.object({
   totalCount: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  page: z.number().optional(),
+  limit: z.number().optional(),
+  totalPages: z.number().optional(),
 });
 
 export const AssessmentHistoryDataSchema = z.object({
