@@ -44,9 +44,9 @@ export interface RetakeEligibility {
 
 export interface AssessmentHistoryPagination {
   totalCount: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
 }
 
 export interface AssessmentHistoryData {

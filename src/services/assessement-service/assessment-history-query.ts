@@ -21,8 +21,12 @@ const useAssessmentHistoryQuery = (page = 1, limit = 10) => {
 
       const result = AssessmentHistoryResponseSchema.safeParse(response.data);
       if (!result.success) {
-        console.error("Assessment history validation error:", result.error);
-        throw new Error("Failed to validate assessment history data");
+        console.error("Assessment history validation error details:", JSON.stringify(result.error.format(), null, 2));
+        console.warn("Raw API Response:", response.data);
+        
+        // Fallback: Return raw data so the UI can attempt to render it instead of showing "No data"
+        // This helps us debug without fully blocking the UI
+        return response.data as any;
       }
 
       return result.data;
