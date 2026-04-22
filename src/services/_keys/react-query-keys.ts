@@ -31,6 +31,10 @@ const MUTATION = {
     resetPassword: "resetPassword",
     forgotPassword: "forgotPassword",
     startAssessment: "startAssessment",
+
+    // Chat Mutations
+    startChat: "startChat",
+    sendMessage: "sendMessage",
 } as const;
 
 const QUERY = {
@@ -64,6 +68,11 @@ const QUERY = {
     userDashboardData: "userDashboardData",
     availableAssessments: "availableAssessments",
     sopAcceptanceStatus: "sopAcceptanceStatus",
+
+    // Chat Queries
+    chatHistory: "chatHistory",
+    activeChats: "activeChats",
+    chatTicket: "chatTicket",
 } as const;
 
 const REACT_QUERY_KEYS = {

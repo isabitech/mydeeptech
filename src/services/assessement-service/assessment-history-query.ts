@@ -27,8 +27,11 @@ const useAssessmentHistoryQuery = (page = 1, limit = 10) => {
         // Fallback: Return raw data so the UI can attempt to render it instead of showing "No data"
         // This helps us debug without fully blocking the UI
         return response.data as any;
+        console.warn("Raw API Response:", response.data);
+        // Fallback: Return raw data so the UI can attempt to render it instead of showing "No data"
+        // This helps us debug without fully blocking the UI
+        return response.data;
       }
-
       return result.data;
     }
   });
@@ -56,7 +59,6 @@ const useRetakeEligibilityQuery = () => {
 
       const result = RetakeEligibilitySchema.safeParse(axiosData);
       if (!result.success) {
-        console.error("Retake eligibility validation error:", result.error);
         throw new Error("Failed to validate retake eligibility data");
       }
 
