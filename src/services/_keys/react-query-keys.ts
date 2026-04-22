@@ -72,6 +72,14 @@ const QUERY = {
     chatHistory: "chatHistory",
     activeChats: "activeChats",
     chatTicket: "chatTicket",
+    
+    // Annotators Queries
+    getAllDTUsers: "getAllDTUsers",
+    getApprovedAnnotators: "getApprovedAnnotators",
+    getPendingAnnotators: "getPendingAnnotators",
+    getSubmittedAnnotators: "getSubmittedAnnotators",
+    getRejectedAnnotators: "getRejectedAnnotators",
+    getQAAnnotators: "getQAAnnotators",
 } as const;
 
 const REACT_QUERY_KEYS = {

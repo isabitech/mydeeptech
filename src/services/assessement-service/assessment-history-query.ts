@@ -21,7 +21,6 @@ const useAssessmentHistoryQuery = (page = 1, limit = 10) => {
 
       const result = AssessmentHistoryResponseSchema.safeParse(response.data);
       if (!result.success) {
-        console.warn("Raw API Response:", response.data);
         // Fallback: Return raw data so the UI can attempt to render it instead of showing "No data"
         // This helps us debug without fully blocking the UI
         return response.data;

@@ -1,46 +1,43 @@
 
-import { useEffect, useState } from "react";
-import { Table, Input, Button, Tag, Space, Spin, Alert, Card } from "antd";
+import { useEffect } from "react";
+import { Table, Input, Button, Space, Spin, Alert, Card, Tag } from "antd";
 import { SearchOutlined, ReloadOutlined, TeamOutlined } from "@ant-design/icons";
-import { useGetAllDtUsers, DTUser } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
+import { annotatorsQueryService } from "../../../../services/annotators-service";
+import { AnnotatorUserSchema } from "../../../../validators/annotators/annotators-schema";
+import { StatusTag } from "./components";
+import { useAnnotatorFilters } from "./hooks";
 
 const { Search } = Input;
 
 const MicroTasker = () => {
-  const [microTaskers, setMicroTaskers] = useState<DTUser[]>([]);
-
+  // Use custom hooks for separation of concerns
+  const filters = useAnnotatorFilters({ countryFilter: "all" });
+  
+  // Use TanStack Query hook for data fetching approved micro-taskers
   const {
-    getMicroTaskers,
-    loading,
-    error,
-    resetState
-  } = useGetAllDtUsers();
+    users: microTaskers,
+    pagination,
+    isLoading: loading,
+    isError,
+    error: queryError,
+    refetch
+  } = annotatorsQueryService.useGetAllDTUsers({
+    ...filters.queryParams,
+    status: 'approved'
+  });
 
+  // Convert query error to string for compatibility
+  const error = queryError ? (queryError.message || 'Failed to fetch micro-taskers') : null;
+
+  // Cleanup timeout on unmount
   useEffect(() => {
-    fetchMicroTaskers();
-  }, []);
+    return () => filters.cleanup();
+  }, [filters]);
 
-  const fetchMicroTaskers = async () => {
-    const taskers = await getMicroTaskers();
-    setMicroTaskers(taskers);
-  };
-
+  // Handle refresh with filter reset
   const handleRefresh = () => {
-    resetState();
-    fetchMicroTaskers();
-  };
-
-  const handleSearch = async (value: string) => {
-    const taskers = await getMicroTaskers();
-    if (value) {
-      const filtered = taskers.filter(user =>
-        user.fullName.toLowerCase().includes(value.toLowerCase()) ||
-        user.email.toLowerCase().includes(value.toLowerCase())
-      );
-      setMicroTaskers(filtered);
-    } else {
-      setMicroTaskers(taskers);
-    }
+    filters.resetFilters();
+    refetch();
   };
 
   const columns = [
@@ -48,7 +45,7 @@ const MicroTasker = () => {
       title: 'Full Name',
       dataIndex: 'fullName',
       key: 'fullName',
-      sorter: (a: DTUser, b: DTUser) => a.fullName.localeCompare(b.fullName),
+      sorter: (a: AnnotatorUserSchema, b: AnnotatorUserSchema) => a.fullName.localeCompare(b.fullName),
     },
     {
       title: 'Email',
@@ -64,14 +61,14 @@ const MicroTasker = () => {
       title: 'Domains',
       dataIndex: 'userDomains',
       key: 'userDomains',
-      render: (_: any, record: any) => {
+      render: (_: unknown, record: AnnotatorUserSchema) => {
         // Prioritize userDomains over legacy domains
         const domains = record.userDomains && record.userDomains.length > 0 
-          ? record.userDomains.map((ud: any) => ud.name)
+          ? record.userDomains.map((ud: { name: string }) => ud.name)
           : record.domains || [];
         
         return (
-          <div>
+          <div className="flex items-center gap-y-1 flex-wrap">
             {domains?.map((domain: string, index: number) => (
               <Tag key={index} color="purple">{domain}</Tag>
             ))}
@@ -94,9 +91,12 @@ const MicroTasker = () => {
       dataIndex: 'isEmailVerified',
       key: 'isEmailVerified',
       render: (verified: boolean) => (
-        <Tag color={verified ? 'green' : 'red'}>
-          {verified ? 'VERIFIED' : 'UNVERIFIED'}
-        </Tag>
+        <StatusTag 
+          status={verified.toString()} 
+          type="boolean" 
+          trueLabel="VERIFIED" 
+          falseLabel="UNVERIFIED" 
+        />
       ),
     },
     {
@@ -104,9 +104,12 @@ const MicroTasker = () => {
       dataIndex: 'hasSetPassword',
       key: 'hasSetPassword',
       render: (hasPassword: boolean) => (
-        <Tag color={hasPassword ? 'green' : 'orange'}>
-          {hasPassword ? 'SET' : 'NOT SET'}
-        </Tag>
+        <StatusTag 
+          status={hasPassword.toString()} 
+          type="boolean" 
+          trueLabel="SET" 
+          falseLabel="NOT SET" 
+        />
       ),
     },
     {
@@ -114,11 +117,12 @@ const MicroTasker = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a: DTUser, b: DTUser) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      sorter: (a: AnnotatorUserSchema, b: AnnotatorUserSchema) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
   ];
 
-  if (error) {
+  // Error state
+  if (isError && error) {
     return (
       <div className="p-4">
         <Alert
@@ -131,7 +135,7 @@ const MicroTasker = () => {
             </Button>
           }
           closable
-          onClose={resetState}
+          onClose={() => refetch()}
         />
       </div>
     );
@@ -148,7 +152,7 @@ const MicroTasker = () => {
                 MicroTaskers
               </h3>
               <p className="text-gray-600">
-                Total: {microTaskers.length} active micro-taskers
+                Total: {microTaskers?.length || 0} active micro-taskers
               </p>
             </div>
             <Button
@@ -166,7 +170,8 @@ const MicroTasker = () => {
           <Search
             placeholder="Search micro-taskers..."
             allowClear
-            onSearch={handleSearch}
+            onSearch={filters.handleSearch}
+            onChange={(e) => filters.handleSearchChange(e.target.value)}
             style={{ width: 300 }}
             prefix={<SearchOutlined />}
           />
@@ -179,11 +184,15 @@ const MicroTasker = () => {
           dataSource={microTaskers || []}
           rowKey="_id"
           pagination={{
+            current: pagination?.currentPage || filters.currentPage,
+            pageSize: pagination?.usersPerPage || filters.pageSize,
+            total: pagination?.totalUsers || 0,
             showSizeChanger: true,
             showQuickJumper: true,
             position: ['bottomCenter'],
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} micro-taskers`,
+            onChange: filters.handlePagination
           }}
           scroll={{ x: 1000 }}
         />

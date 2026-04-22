@@ -1,120 +1,56 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Table, Input, Button, Tag, Space, Spin, Alert, Card, Descriptions, Modal, notification } from "antd";
+import { useEffect } from "react";
+import { Table, Input, Button, Space, Spin, Alert, Card, Descriptions, Tag } from "antd";
 import { SearchOutlined, ReloadOutlined, EyeOutlined, UserDeleteOutlined, FileImageOutlined } from "@ant-design/icons";
-import { useQAUsers, QAUser } from "../../../../hooks/Auth/Admin/Annotators/useQAUsers";
-import { useQAManagement } from "../../../../hooks/Auth/Admin/Annotators/useQAManagement";
+import { annotatorsQueryService } from "../../../../services/annotators-service";
+import {  QAUserSchema } from "../../../../validators/annotators/annotators-schema";
 import PageModal from "../../../../components/Modal/PageModal";
+import { StatusTag } from "./components";
+import { useAnnotatorFilters, useAnnotatorModals, useAnnotatorActions } from "./hooks";
 
 const { Search } = Input;
 
 const QAAnnotators = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedQAUser, setSelectedQAUser] = useState<QAUser | null>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  // Use custom hooks for separation of concerns
+  const filters = useAnnotatorFilters({ countryFilter: "all" });
+  const modals = useAnnotatorModals();
+  
+  // Use TanStack Query hook for data fetching QA annotators
   const {
-    loading,
-    error,
-    qaUsers,
+    users: qaUsers,
     pagination,
-    summary,
-    getApprovedQAUsers,
-    resetState,
-  } = useQAUsers();
+    isLoading: loading,
+    isError,
+    error: queryError,
+    refetch,
+    isRefetching
+  } = annotatorsQueryService.useGetQAAnnotators(filters.queryParams);
 
-  const {
-    rejectQA,
-    loading: qaLoading,
-  } = useQAManagement();
+  // Convert query error to string for compatibility
+  const error = queryError ? (queryError.message || 'Failed to fetch QA annotators') : null;
 
+  // Cleanup timeout on unmount
   useEffect(() => {
-    fetchQAUsers();
-  }, [currentPage, pageSize]);
+    return () => filters.cleanup();
+  }, [filters]);
 
-  const fetchQAUsers = async (search = searchTerm, page = currentPage, limit = pageSize) => {
-    await getApprovedQAUsers({
-      search: search || undefined,
-      page,
-      limit,
-    });
-  };
-
-  const handleSearch = useCallback((value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-
-    // Clear existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+  // Action handlers with auto-refresh and modal closing
+  const actions = useAnnotatorActions({
+    selectedAnnotator: modals.selectedAnnotator,
+    onActionComplete: () => {
+      refetch();
+      modals.closeAllModals();
     }
+  });
 
-    // Set new timeout for debounced search
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchQAUsers(value, 1, pageSize);
-    }, 500);
-  }, [pageSize]);
-
+  // Handle refresh with filter reset
   const handleRefresh = () => {
-    setCurrentPage(1);
-    setSearchTerm("");
-    resetState();
-    fetchQAUsers("", 1, pageSize);
+    filters.resetFilters();
+    refetch();
   };
 
-  const handleViewDetails = (qaUser: QAUser) => {
-    setSelectedQAUser(qaUser);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedQAUser(null);
-  };
-
-  const handleRemoveFromQA = async (userId: string, fullName: string) => {
-    Modal.confirm({
-      title: 'Remove from QA',
-      content: `Are you sure you want to remove ${fullName} from QA status?`,
-      okText: 'Yes, Remove',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          const result = await rejectQA(userId, 'Removed from QA by admin');
-
-          if (result.success) {
-            const successMessage = result.message || `${fullName} has been removed from QA successfully`;
-            notification.open({
-              type: 'success',
-              message: 'QA Removal Successful',
-              description: successMessage,
-              placement: 'topRight',
-            });
-            handleCloseModal();
-            fetchQAUsers(); // Refresh the data
-          } else {
-            const errorMessage = result.error || result.message || 'Failed to remove user from QA';
-            notification.open({
-              type: 'error',
-              message: 'QA Removal Failed',
-              description: errorMessage,
-              placement: 'topRight',
-            });
-          }
-        } catch (error: any) {
-          const errorMessage = error?.response?.data?.message || error?.message || 'An unexpected error occurred while removing user from QA';
-          notification.open({
-            type: 'error',
-            message: 'Unexpected Error',
-            description: errorMessage,
-            placement: 'topRight',
-          });
-        }
-      },
-    });
+  const handleRemoveFromQA = (user: QAUserSchema) => {
+    modals.setSelectedAnnotator(user);
+    actions.handleRemoveFromQA();
   };
 
   const columns = [
@@ -122,7 +58,7 @@ const QAAnnotators = () => {
       title: 'Full Name',
       dataIndex: 'fullName',
       key: 'fullName',
-      sorter: (a: QAUser, b: QAUser) => a.fullName.localeCompare(b.fullName),
+      sorter: (a: QAUserSchema, b: QAUserSchema) => a.fullName.localeCompare(b.fullName),
     },
     {
       title: 'Email',
@@ -133,21 +69,22 @@ const QAAnnotators = () => {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+      render: (phone: string | undefined) => phone || 'N/A',
     },
     {
       title: 'Domains',
       dataIndex: 'userDomains',
       key: 'userDomains',
-      render: (_: any, record: any) => {
+      render: (_: unknown, record: QAUserSchema) => {
         // Prioritize userDomains over legacy domains
         const domains = record.userDomains && record.userDomains.length > 0 
-          ? record.userDomains.map((ud: any) => ud.name)
+          ? record.userDomains.map((ud: { _id: string; name: string; assignmentId?: string }) => ud.name)
           : record.domains || [];
         
         return (
           <div>
             {domains?.map((domain: string, index: number) => (
-              <Tag key={index} color="blue">{domain}</Tag>
+                <Tag key={index} color="blue">{domain}</Tag>
             ))}
           </div>
         );
@@ -173,24 +110,21 @@ const QAAnnotators = () => {
     },
     {
       title: 'QA Approved Date',
-      dataIndex: 'qaApprovedAt',
-      key: 'qaApprovedAt',
-      render: (date: string) => date ? new Date(date).toLocaleDateString() : 'N/A',
-      sorter: (a: QAUser, b: QAUser) => {
-        const dateA = a.qaApprovedAt ? new Date(a.qaApprovedAt).getTime() : 0;
-        const dateB = b.qaApprovedAt ? new Date(b.qaApprovedAt).getTime() : 0;
-        return dateA - dateB;
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
+      render: (date: string) => {
+        return date ? new Date(date).toLocaleDateString() : 'N/A';
       },
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: QAUser) => (
+      render: (_: unknown, record: QAUserSchema) => (
         <Space size="middle">
           <Button
             type="default"
             icon={<EyeOutlined />}
-            onClick={() => handleViewDetails(record)}
+            onClick={() => modals.handleViewDetails(record)}
             size="small"
           >
             View
@@ -198,9 +132,9 @@ const QAAnnotators = () => {
           <Button
             danger
             icon={<UserDeleteOutlined />}
-            onClick={() => handleRemoveFromQA(record._id, record.fullName)}
+            onClick={() => handleRemoveFromQA(record)}
             size="small"
-            loading={qaLoading}
+            loading={actions.qaLoading}
           >
             Remove QA
           </Button>
@@ -209,108 +143,110 @@ const QAAnnotators = () => {
     },
   ];
 
-  const handleTableChange = (pagination: any) => {
-    setCurrentPage(pagination.current);
-    setPageSize(pagination.pageSize);
-  };
-
-  if (error) {
+  // Error state
+  if (isError && error) {
     return (
-      <Alert
-        message="Error Loading QA Annotators"
-        description={error}
-        type="error"
-        showIcon
-        action={
-          <Button size="small" danger onClick={handleRefresh}>
-            Retry
-          </Button>
-        }
-      />
+      <div className="p-4">
+        <Alert
+          message="Error Loading QA Annotators"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <Button size="small" danger onClick={handleRefresh}>
+              Retry
+            </Button>
+          }
+        />
+      </div>
     );
   }
 
   return (
-    <div className="qa-annotators">
+    <div className="p-4">
       {/* Header Controls */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-4">
           <h3 className="text-lg font-semibold text-gray-900">
             QA Annotators ({pagination?.totalUsers || 0})
           </h3>
-          <Tag color="blue" className="text-sm">
+          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
             Quality Assurance Team
-          </Tag>
+          </span>
         </div>
 
         <Space>
           <Button
             icon={<ReloadOutlined />}
             onClick={handleRefresh}
-            disabled={loading}
+            disabled={loading || isRefetching}
+            loading={loading || isRefetching}
           >
             Refresh
           </Button>
           <Search
             placeholder="Search QA annotators..."
             allowClear
-            onSearch={handleSearch}
-            onChange={(e) => handleSearch(e.target.value)}
+            onSearch={filters.handleSearch}
+            onChange={(e) => filters.handleSearchChange(e.target.value)}
             style={{ width: 300 }}
             prefix={<SearchOutlined />}
           />
         </Space>
       </div>
 
-      <Spin spinning={loading}>
-        <Table
+      <Spin spinning={loading || isRefetching}>
+        <Table<QAUserSchema>
           columns={columns}
-          dataSource={qaUsers}
+          dataSource={qaUsers || []}
           rowKey="_id"
           pagination={{
-            current: currentPage,
-            pageSize: pageSize,
+            current: pagination?.currentPage || filters.currentPage,
+            pageSize: pagination?.usersPerPage || filters.pageSize,
             total: pagination?.totalUsers || 0,
             showSizeChanger: true,
             showQuickJumper: true,
             position: ['bottomCenter'],
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} QA annotators`,
+            onChange: filters.handlePagination
           }}
-          onChange={handleTableChange}
           scroll={{ x: 1000 }}
         />
       </Spin>
 
       {/* QA User Details Modal */}
       <PageModal
-        openModal={isModalOpen}
-        onCancel={handleCloseModal}
+        openModal={modals.isModalOpen}
+        onCancel={modals.handleCloseModal}
         closable={true}
         className="qa-user-details-modal"
         modalwidth="800px"
       >
-        {selectedQAUser && (
+        {modals.selectedAnnotator && (
           <div className="p-6">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">QA Annotator Details</h2>
               <div className="flex gap-2">
-                <Tag color="blue">QA {selectedQAUser.qaStatus.toUpperCase()}</Tag>
-                <Tag color="green">{selectedQAUser.annotatorStatus.toUpperCase()}</Tag>
+                <StatusTag status={modals.selectedAnnotator.qaStatus || ''} type="qa" />
+                <StatusTag status={modals.selectedAnnotator.annotatorStatus || ''} type="annotator" />
               </div>
             </div>
 
             {/* Personal Information */}
             <Card className="mb-6">
               <Descriptions title="Personal Information" bordered column={2}>
-                <Descriptions.Item label="Full Name">{selectedQAUser.fullName}</Descriptions.Item>
-                <Descriptions.Item label="Email">{selectedQAUser.email}</Descriptions.Item>
-                <Descriptions.Item label="Phone">{selectedQAUser.phone}</Descriptions.Item>
-                <Descriptions.Item label="Country">{selectedQAUser.country || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="Full Name">{modals.selectedAnnotator.fullName}</Descriptions.Item>
+                <Descriptions.Item label="Email">{modals.selectedAnnotator.email}</Descriptions.Item>
+                <Descriptions.Item label="Phone">{modals.selectedAnnotator.phone}</Descriptions.Item>
+                <Descriptions.Item label="Country">{modals.selectedAnnotator.personal_info?.country || 'N/A'}</Descriptions.Item>
                 <Descriptions.Item label="Email Status">
-                  <Tag color={selectedQAUser.isEmailVerified ? 'green' : 'red'}>
-                    {selectedQAUser.isEmailVerified ? 'VERIFIED' : 'UNVERIFIED'}
-                  </Tag>
+                  <StatusTag 
+                    status={(modals.selectedAnnotator.isEmailVerified ?? false).toString()} 
+                    type="boolean" 
+                    trueLabel="VERIFIED" 
+                    falseLabel="UNVERIFIED" 
+                  />
                 </Descriptions.Item>
               </Descriptions>
             </Card>
@@ -321,17 +257,19 @@ const QAAnnotators = () => {
                 <Descriptions.Item label="Domains">
                   <div>
                     {/* Prioritize userDomains over legacy domains */}
-                    {(selectedQAUser.userDomains && selectedQAUser.userDomains.length > 0 
-                      ? selectedQAUser.userDomains.map((ud: any) => ud.name)
-                      : selectedQAUser.domains || []
+                    {(modals.selectedAnnotator.userDomains && modals.selectedAnnotator.userDomains.length > 0 
+                      ? modals.selectedAnnotator.userDomains.map((ud: { _id: string; name: string; assignmentId?: string }) => ud.name)
+                      : modals.selectedAnnotator.domains || []
                     )?.map((domain: string, index: number) => (
-                      <Tag key={index} color="blue">{domain}</Tag>
+                      <span key={index} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs mr-1 mb-1">
+                        {domain}
+                      </span>
                     ))}
                   </div>
                 </Descriptions.Item>
                 <Descriptions.Item label="Assessment Result">
-                  {selectedQAUser.resultLink ? (
-                    <a href={selectedQAUser.resultLink} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                  {modals.selectedAnnotator.resultLink ? (
+                    <a href={modals.selectedAnnotator.resultLink} target="_blank" rel="noopener noreferrer" className="text-blue-500">
                       View Assessment Result
                     </a>
                   ) : (
@@ -345,27 +283,30 @@ const QAAnnotators = () => {
             <Card className="mb-6">
               <Descriptions title="QA Information" bordered column={2}>
                 <Descriptions.Item label="QA Status">
-                  <Tag color="blue">QA {selectedQAUser.qaStatus.toUpperCase()}</Tag>
+                  <StatusTag status={modals.selectedAnnotator.qaStatus || ''} type="qa" />
                 </Descriptions.Item>
                 <Descriptions.Item label="QA Approved Date">
-                  {selectedQAUser.qaApprovedAt ? new Date(selectedQAUser.qaApprovedAt).toLocaleString() : 'N/A'}
+                  {('qaApprovedAt' in modals.selectedAnnotator && modals.selectedAnnotator.qaApprovedAt) 
+                    ? new Date(modals.selectedAnnotator.qaApprovedAt).toLocaleString() 
+                    : 'N/A'
+                  }
                 </Descriptions.Item>
                 <Descriptions.Item label="Approved By">
-                  {selectedQAUser.qaApprovedBy || 'N/A'}
+                  {('qaApprovedBy' in modals.selectedAnnotator && modals.selectedAnnotator.qaApprovedBy) || 'N/A'}
                 </Descriptions.Item>
                 <Descriptions.Item label="QA Reason">
-                  {selectedQAUser.qaReason || 'Elevated to QA'}
+                  {('qaReason' in modals.selectedAnnotator && modals.selectedAnnotator.qaReason) || 'Elevated to QA'}
                 </Descriptions.Item>
               </Descriptions>
             </Card>
 
             {/* ID Documents */}
-            {selectedQAUser.idDocuments && selectedQAUser.idDocuments.length > 0 && (
+            {('idDocuments' in modals.selectedAnnotator && modals.selectedAnnotator.idDocuments && modals.selectedAnnotator.idDocuments.length > 0) && (
               <Card className="mb-6">
                 <Descriptions title="ID Documents" bordered>
                   <Descriptions.Item label="Documents">
                     <div className="flex flex-wrap gap-2">
-                      {selectedQAUser.idDocuments.map((doc, index) => (
+                      {modals.selectedAnnotator.idDocuments.map((doc: string, index: number) => (
                         <div key={index} className="flex items-center gap-2 p-2 bg-gray-100 rounded">
                           <FileImageOutlined />
                           <a href={doc} target="_blank" rel="noopener noreferrer" className="text-blue-500">
@@ -384,8 +325,8 @@ const QAAnnotators = () => {
               <Button
                 danger
                 icon={<UserDeleteOutlined />}
-                onClick={() => handleRemoveFromQA(selectedQAUser._id, selectedQAUser.fullName)}
-                loading={qaLoading}
+                onClick={() => actions.handleRemoveFromQA()}
+                loading={actions.qaLoading}
                 className="font-[gilroy-regular]"
               >
                 Remove from QA
