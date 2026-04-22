@@ -13,15 +13,15 @@ import {
   Area
 } from 'recharts';
 import {
-  ProjectStatistics,
-  InvoiceStatistics,
-  Trends
-} from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+  ProjectStatisticsSchema,
+  InvoiceStatisticsSchema,
+  TrendsSchema
+} from '../../../../../validators/dashboard/admin-dashboard-schema';
 
 interface ProjectFinancialChartsProps {
-  projectData: ProjectStatistics;
-  invoiceData: InvoiceStatistics;
-  trendsData: Trends;
+  projectData: ProjectStatisticsSchema;
+  invoiceData: InvoiceStatisticsSchema;
+  trendsData: TrendsSchema;
 }
 
 const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
@@ -30,32 +30,32 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
   trendsData
 }) => {
   // Project status data
-  const projectStatusData = [
-    { name: 'Active', value: projectData.activeProjects, color: '#52c41a' },
-    { name: 'Completed', value: projectData.completedProjects, color: '#1890ff' },
-    { name: 'Paused', value: projectData.pausedProjects, color: '#faad14' },
-  ];
+  // const projectStatusData = [
+  //   { name: 'Active', value: projectData.activeProjects ?? 0, color: '#52c41a' },
+  //   { name: 'Completed', value: projectData.completedProjects ?? 0, color: '#1890ff' },
+  //   { name: 'Paused', value: projectData.pausedProjects ?? 0, color: '#faad14' },
+  // ];
 
   // Budget vs Spent
-  const budgetSpent = projectData.totalBudget > 0 ?
-    (projectData.totalSpent / projectData.totalBudget) * 100 : 0;
+  const budgetSpent = (projectData.totalBudget ?? 0) > 0 ?
+    ((projectData.totalSpent ?? 0) / (projectData.totalBudget ?? 0)) * 100 : 0;
 
   // Payment rate
-  const paymentRate = invoiceData.totalAmount > 0 ?
-    (invoiceData.paidAmount / invoiceData.totalAmount) * 100 : 0;
+  const paymentRate = (invoiceData.totalAmount ?? 0) > 0 ?
+    ((invoiceData.paidAmount ?? 0) / (invoiceData.totalAmount ?? 0)) * 100 : 0;
 
   // Registration trends - format for chart
   const registrationTrends = trendsData.recentRegistrations?.map(item => ({
-    date: `${item._id.month}/${item._id.day}`,
-    registrations: item.count
+    date: `${item._id?.month ?? 0}/${item._id?.day ?? 0}`,
+    registrations: item.count ?? 0
   })) || [];
 
   // Invoice activity trends
   const invoiceTrends = trendsData.recentInvoiceActivity?.map(item => ({
-    date: `${item._id.month}/${item._id.day}`,
-    created: item.invoicesCreated,
-    paid: item.invoicesPaid,
-    amount: item.amountPaid
+    date: `${item._id?.month ?? 0}/${item._id?.day ?? 0}`,
+    created: item.invoicesCreated ?? 0,
+    paid: item.invoicesPaid ?? 0,
+    amount: item.amountPaid ?? 0
   })) || [];
 
   return (
@@ -70,13 +70,13 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
           <Card className="text-center">
             <div className="mb-4">
               <div className="text-2xl font-bold text-blue-600">
-                {projectData.activeProjects}
+                {projectData.activeProjects ?? 0}
               </div>
               <div className="text-sm text-gray-500">Active Projects</div>
             </div>
             <Progress
               type="circle"
-              percent={projectData.totalProjects > 0 ? Math.round((projectData.activeProjects / projectData.totalProjects) * 100) : 0}
+              percent={(projectData.totalProjects ?? 0) > 0 ? Math.round(((projectData.activeProjects ?? 0) / (projectData.totalProjects ?? 0)) * 100) : 0}
               size={60}
               strokeColor="#1890ff"
             />
@@ -112,7 +112,7 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
           <Card className="text-center">
             <div className="mb-4">
               <div className="text-2xl font-bold text-purple-600">
-                {invoiceData.paidCount}
+                {invoiceData.paidCount ?? 0}
               </div>
               <div className="text-sm text-gray-500">Paid Invoices</div>
             </div>
@@ -133,13 +133,13 @@ const ProjectFinancialCharts: React.FC<ProjectFinancialChartsProps> = ({
           <Card className="text-center">
             <div className="mb-4">
               <div className="text-2xl font-bold text-red-600">
-                ${invoiceData.unpaidAmount.toLocaleString()}
+                ${(invoiceData.unpaidAmount ?? 0).toLocaleString()}
               </div>
               <div className="text-sm text-gray-500">Unpaid Amount</div>
             </div>
             <Progress
               type="circle"
-              percent={invoiceData.totalAmount > 0 ? Math.round((invoiceData.unpaidAmount / invoiceData.totalAmount) * 100) : 0}
+              percent={(invoiceData.totalAmount ?? 0) > 0 ? Math.round(((invoiceData.unpaidAmount ?? 0) / (invoiceData.totalAmount ?? 0)) * 100) : 0}
               size={60}
               strokeColor="#ff4d4f"
             />

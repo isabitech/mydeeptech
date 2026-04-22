@@ -6,7 +6,7 @@ import MicroTasker from "./MicroTasker";
 import PendingAnnotators from "./PendingAnnotators";
 import SubmittedAnnotators from "./SubmittedAnnotators";
 import QAAnnotators from "./QAAnnotators";
-import { useGetAllDtUsers } from "../../../../hooks/Auth/Admin/Annotators/useGetAllDtUsers";
+import { annotatorsQueryService } from "../../../../services/annotators-service";
 import AnnotatorsDomain from "./AnnotatorsDomain";
 import AnnotatorsByCountry from "./AnnotatorsByCountry";
 import DomainModal from "../../../../components/DomainModal/DomainModal";
@@ -26,14 +26,11 @@ const Annotators = () => {
     qa: 0,
   });
 
-  const { getAllDTUsers, summary } = useGetAllDtUsers();
   const { setOpenDomainModal } = useDomainActions();
+  
+  // Use TanStack Query hook to fetch summary data for counts
+  const { summary, isLoading } = annotatorsQueryService.useGetDTUsersSummary();
 
-  // Fetch counts when component mounts
-  useEffect(() => {
-    fetchCounts();
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   // Update counts when summary changes
   useEffect(() => {
     if (summary?.statusBreakdown) {
@@ -47,10 +44,6 @@ const Annotators = () => {
       });
     }
   }, [summary]);
-
-  const fetchCounts = async () => {
-    await getAllDTUsers({ page: 1, limit: 1 }); // Minimal fetch just to get summary
-  };
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -69,7 +62,10 @@ const Annotators = () => {
         <div className="bg-white rounded-lg shadow-sm w-full">
           <div className="p-6">
             <div className="flex justify-between flex-wrap gap-3 items-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Annotators Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Annotators Management
+                {isLoading && <span className="text-sm text-gray-500 ml-2">(Loading...)</span>}
+              </h1>
 
               <Button
                 type="primary"
