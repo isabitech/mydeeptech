@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Button, Card, Typography, Space, Divider, Alert, Checkbox } from 'antd';
-import { ClockCircleOutlined, FileTextOutlined, CheckCircleOutlined, WarningOutlined } from '@ant-design/icons';
+import { Button, Card, Typography, Space, Divider, Alert, Checkbox, Spin } from 'antd';
+import { ClockCircleOutlined, FileTextOutlined, CheckCircleOutlined, WarningOutlined, LockOutlined } from '@ant-design/icons';
+import { useRetakeEligibilityQuery } from '../../services/assessement-service/assessment-service';
+import moment from 'moment';
 import { assessmentSections } from '../../data/assessmentQuestions';
 
 const { Title, Text, Paragraph } = Typography;
@@ -16,6 +18,12 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const type = searchParams.get('type') || 'english_proficiency';
   const isAkan = type === 'akan_proficiency';
+
+  // Cooldown Check
+  const { data: eligibility, isLoading: checkingEligibility } = useRetakeEligibilityQuery();
+  const canStart = eligibility?.canRetake ?? true;
+  const nextAttemptDate = eligibility?.nextRetakeTime ? moment(eligibility.nextRetakeTime) : null;
+  const isCooldownActive = !canStart && nextAttemptDate && nextAttemptDate.isAfter(moment());
 
   const title = isAkan ? 'Akan (Twi) Proficiency Assessment' : 'English Proficiency Assessment';
   const timeText = isAkan ? '35 Minutes Total' : '15 Minutes Total';
@@ -44,15 +52,44 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
         </div>
 
         <Space direction="vertical" size="large" className="w-full">
-          <Alert
-            message="Important Instructions"
-            description="Please read all instructions carefully before starting the assessment."
-            type="info"
-            icon={<WarningOutlined />}
-            className="border-l-4 border-l-[#F6921E]"
-          />
+          {checkingEligibility ? (
+            <div className="flex items-center justify-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <Spin className="mr-3" />
+              <Text className="font-[gilroy-regular] text-gray-500">Checking eligibility...</Text>
+            </div>
+          ) : isCooldownActive ? (
+            <Alert
+              message={
+                <Text strong className="text-amber-900 font-[gilroy-regular]">
+                  Assessment Cooldown Active
+                </Text>
+              }
+              description={
+                <div className="font-[gilroy-regular] text-amber-800">
+                  <Paragraph className="mb-2">
+                    You recently attempted this assessment. To ensure fair results, there is a mandatory 24-hour waiting period between attempts.
+                  </Paragraph>
+                  <Text strong>
+                    You can try again on: {nextAttemptDate?.format('MMMM Do YYYY, h:mm a')} ({nextAttemptDate?.fromNow()})
+                  </Text>
+                </div>
+              }
+              type="warning"
+              showIcon
+              icon={<LockOutlined className="text-xl" />}
+              className="border-2 border-amber-200 bg-amber-50 rounded-xl"
+            />
+          ) : (
+            <Alert
+              message="Important Instructions"
+              description="Please read all instructions carefully before starting the assessment."
+              type="info"
+              icon={<WarningOutlined />}
+              className="border-l-4 border-l-[#F6921E]"
+            />
+          )}
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 opacity-{!canStart ? '60' : '100'}">
             <Card className="border-2 border-gray-200 rounded-xl">
               <div className="text-center">
                 <ClockCircleOutlined className="text-4xl text-[#F6921E] mb-4" />
@@ -163,9 +200,10 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
               <Checkbox
                 checked={hasAcceptedTerms}
                 onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+                disabled={!canStart || checkingEligibility}
                 className="font-[gilroy-regular]"
               >
-                <Text className="font-[gilroy-regular]">
+                <Text className={`font-[gilroy-regular] ${!canStart ? 'text-gray-400' : ''}`}>
                   I have read and understood all instructions and agree to the assessment terms
                 </Text>
               </Checkbox>
@@ -175,11 +213,11 @@ const AssessmentIntroduction: React.FC<AssessmentIntroductionProps> = ({ onStart
               type="primary"
               size="large"
               onClick={onStartAssessment}
-              disabled={!hasAcceptedTerms}
-              className="bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c] h-12 px-12 text-lg font-[gilroy-regular] font-semibold rounded-lg"
-              icon={<CheckCircleOutlined />}
+              disabled={!hasAcceptedTerms || !canStart || checkingEligibility}
+              className={`${!canStart ? 'bg-gray-400 border-gray-400' : 'bg-[#F6921E] border-[#F6921E] hover:bg-[#e5831c] hover:border-[#e5831c]'} h-12 px-12 text-lg font-[gilroy-regular] font-semibold rounded-lg shadow-lg`}
+              icon={!canStart && !checkingEligibility ? <LockOutlined /> : <CheckCircleOutlined />}
             >
-              Start Assessment
+              {checkingEligibility ? 'Verifying...' : !canStart ? 'Cooldown Active' : 'Start Assessment'}
             </Button>
           </div>
         </Space>

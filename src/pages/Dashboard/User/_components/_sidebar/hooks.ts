@@ -76,10 +76,12 @@ export const useSidebarLogic = (userInfo: UserInfoData | null) => {
 
     let filteredItems = [...menuItems];
 
+    
     // If either status is approved, remove assessment from menu
     if (annotatorStatus === "approved" || microTaskerStatus === "approved") {
       filteredItems = filteredItems.filter(item => item.key !== "assessment");
     }
+  
 
     // Show assessment history only if user has completed at least one assessment
     // (if either status is not "pending", it means they've taken an assessment)

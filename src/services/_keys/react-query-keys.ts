@@ -30,6 +30,7 @@ const MUTATION = {
 
     resetPassword: "resetPassword",
     forgotPassword: "forgotPassword",
+    startAssessment: "startAssessment",
 } as const;
 
 const QUERY = {
@@ -61,6 +62,7 @@ const QUERY = {
     getUserProfile: "getUserProfile",
 
     userDashboardData: "userDashboardData",
+    availableAssessments: "availableAssessments",
     sopAcceptanceStatus: "sopAcceptanceStatus",
 } as const;
 
