@@ -29,7 +29,7 @@ const Annotators = () => {
   const { setOpenDomainModal } = useDomainActions();
   
   // Use TanStack Query hook to fetch summary data for counts
-  const { summary, isLoading } = annotatorsQueryService.useGetDTUsersSummary();
+  const { summary } = annotatorsQueryService.useGetDTUsersSummary();
 
   // Update counts when summary changes
   useEffect(() => {
@@ -64,7 +64,6 @@ const Annotators = () => {
             <div className="flex justify-between flex-wrap gap-3 items-center mb-8">
               <h1 className="text-2xl font-bold text-gray-900">
                 Annotators Management
-                {isLoading && <span className="text-sm text-gray-500 ml-2">(Loading...)</span>}
               </h1>
 
               <Button
