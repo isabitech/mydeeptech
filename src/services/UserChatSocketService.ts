@@ -62,7 +62,6 @@ class UserChatSocketService {
       // Connection timeout fallback - increased to 25 seconds
       const connectionTimeout = setTimeout(() => {
         if (!this.isConnected) {
-          console.error('❌ [UserChatSocket] Connection timeout after 25 seconds');
           this.emit('connection_status', { 
             connected: false, 
             status: 'timeout',
@@ -80,8 +79,7 @@ class UserChatSocketService {
         this.reconnectAttempts = 0;
         this.emit('connection_status', { connected: true, status: 'connected' });
         
-        // Request active tickets for user
-        this.socket?.emit('get_active_tickets');
+        // Don't request active tickets on connection - only rejoin specific tickets when needed
         resolve(true);
       });
 
@@ -241,7 +239,8 @@ class UserChatSocketService {
 
     this.socket.on('reconnect', (attemptNumber) => {
       this.isConnected = true;
-      this.rejoinActiveTickets();
+      // Don't automatically rejoin tickets on reconnect to avoid "access denied" errors
+      // Let the user manually rejoin specific tickets when needed
       this.emit('reconnected', { attempts: attemptNumber });
     });
 
@@ -285,8 +284,6 @@ class UserChatSocketService {
     this.pendingStartChat = true;
     this.lastStartChatTime = now;
 
-    console.log('🚀 [UserChatSocket] Starting chat:', { message, category, priority });
-    
     this.socket.emit('start_chat', { 
       message, 
       category, 
@@ -303,10 +300,8 @@ class UserChatSocketService {
   rejoinTicket(ticketId: string): void {
     if (this.isConnected && this.socket) {
       
-      // Try multiple methods to ensure room joining works
+      // Use user-specific events only
       this.socket.emit('get_chat_history', { ticketId });
-      this.socket.emit('join_chat_room', { ticketId });
-      this.socket.emit('join_room', { ticketId });
       this.socket.emit('rejoin_ticket', { ticketId });
       
     } else {
@@ -317,8 +312,7 @@ class UserChatSocketService {
   // Join specific chat room
   joinChatRoom(ticketId: string): void {
     if (this.isConnected && this.socket) {
-      this.socket.emit('join_chat_room', { ticketId });
-      this.socket.emit('join_room', { ticketId });
+      this.socket.emit('rejoin_ticket', { ticketId }); // Use user event instead of admin-only events
     } else {
       console.warn('⚠️ [UserChatSocket] Cannot join room: Not connected');
     }

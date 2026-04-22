@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import authMutationService from "../../services/authentication/auth-mutation";
@@ -10,6 +10,7 @@ import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
 import domainQueryService from "../../services/domain-service/domain-query";
 import './../../pages/Dashboard/User/profile/_components/PhoneInput.css';
+import { isRestrictedEmail } from "../../services/authentication/_helper";
 
 
 type FormState = {
@@ -36,6 +37,7 @@ interface MultiStageSignUpFormProps {
 
 export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, className = "" }: MultiStageSignUpFormProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
 
   const [currentStage, setCurrentStage] = useState(1);
@@ -132,6 +134,11 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
         consent: form.consent
       });
 
+    if (isRestrictedEmail(payload.email)) {
+      notification.open({ type: "error", message: "Invalid credentials: Restricted email domain", key: "restricted_email" });
+      return navigate("/signup", { replace: true });
+    }
+
       signupMutation.mutate(payload, {
         onSuccess: () => {
           setSubmitted(true);
@@ -190,7 +197,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                 defaultCountry="NG"
                 countryCallingCodeEditable={false}
                 value={form.phone}
-                onChange={(value) => {
+                onChange={(value: string | undefined) => {
                   setForm((s) => ({ ...s, phone: value || "" }));
                   // Parse phone number to get country
                   if (value) {

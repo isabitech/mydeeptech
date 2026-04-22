@@ -39,7 +39,7 @@ const LoginResponseSchema = z.object({
   _usrinfo: UsrInfoSchema,
   token: z.string(),
   user: UserSchema,
-role: z.string().optional(), 
+  role: z.string().optional(), 
 });
 
 type LoginResponseSchema = z.infer<typeof LoginResponseSchema>;
