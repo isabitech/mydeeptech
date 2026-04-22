@@ -52,6 +52,7 @@ const UserRoleAssignment: React.FC = () => {
           delete next[userId];
           return next;
         });
+        message.success("User role updated successfully");
       },
       onError: (error) => {
         // Optionally handle error (e.g., show notification)
@@ -105,10 +106,6 @@ const UserRoleAssignment: React.FC = () => {
             {roles.map((role: Role) => (
               <Option key={role._id} value={role._id}>{role.name}</Option>
             ))}
-            {/* Fallback legacy roles */}
-            {["admin", "user", "annotator", "moderator", "qa_reviewer"].map(role => (
-              <Option key={role} value={role}>{role}</Option>
-            ))}
           </Select>
         );
       }
@@ -117,7 +114,8 @@ const UserRoleAssignment: React.FC = () => {
       title: "Actions",
       key: "actions",
       align: "right" as const,
-      render: (_: unknown, record: RbacUser) => (
+      render: (_: unknown, record: RbacUser) => {
+        return (
         <Button
           type="link"
           onClick={() => handleAssignmentSave(record._id)}
@@ -127,6 +125,7 @@ const UserRoleAssignment: React.FC = () => {
           Save Changes
         </Button>
       )
+      }
     }
   ];
 
@@ -134,7 +133,7 @@ const UserRoleAssignment: React.FC = () => {
     <Space direction="vertical" className="w-full" size="middle">
       <div className="flex justify-end mb-2">
         <Input
-          placeholder="Search users..."
+          placeholder="Search users by name, email and role"
           prefix={<SearchOutlined className="text-gray-400" />}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-xs rounded-lg"

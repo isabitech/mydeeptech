@@ -43,6 +43,11 @@ export const endpoints = {
     login: "/admin/login",
   },
 
+  // Admin dashboard endpoint
+  adminDashboard: {
+    getDashboard: "/admin/dashboard",
+  },
+
   // admin management
   project: {
     createProject: "/auth/createProject",

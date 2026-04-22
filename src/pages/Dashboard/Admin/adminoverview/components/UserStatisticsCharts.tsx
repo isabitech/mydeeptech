@@ -13,34 +13,42 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { DtUserStatistics } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+import { DtUserStatisticsSchema } from '../../../../../validators/dashboard/admin-dashboard-schema';
 
 interface UserStatisticsChartsProps {
-  data: DtUserStatistics;
+  data: DtUserStatisticsSchema;
 }
 
 const UserStatisticsCharts: React.FC<UserStatisticsChartsProps> = ({ data }) => {
+
   // Annotator status data for pie chart
   const annotatorData = [
-    { name: 'Approved', value: data.approvedAnnotators, color: '#52c41a' },
-    { name: 'Pending', value: data.pendingAnnotators, color: '#faad14' },
-    { name: 'Submitted', value: data.submittedAnnotators, color: '#1890ff' },
-    { name: 'Verified', value: data.verifiedAnnotators, color: '#722ed1' },
-    { name: 'Rejected', value: data.rejectedAnnotators, color: '#ff4d4f' },
+    { name: 'Approved', value: data.approvedAnnotators ?? 0, color: '#52c41a' },
+    { name: 'Pending', value: data.pendingAnnotators ?? 0, color: '#faad14' },
+    { name: 'Submitted', value: data.submittedAnnotators ?? 0, color: '#1890ff' },
+    { name: 'Verified', value: data.verifiedAnnotators ?? 0, color: '#722ed1' },
+    { name: 'Rejected', value: data.rejectedAnnotators ?? 0, color: '#ff4d4f' },
   ];
 
   // User engagement data for bar chart
   const engagementData = [
-    { name: 'Total Users', value: data.totalUsers },
-    { name: 'Verified Emails', value: data.verifiedEmails },
-    { name: 'Set Passwords', value: data.usersWithPasswords },
-    { name: 'Fully Onboarded', value: data.fullyOnboardedUsers },
+    { name: 'Total Users', value: data.totalUsers ?? 0 },
+    { name: 'Verified Emails', value: data.verifiedEmails ?? 0 },
+    { name: 'Set Passwords', value: data.usersWithPasswords ?? 0 },
+    { name: 'Fully Onboarded', value: data.fullyOnboardedUsers ?? 0 },
   ];
 
   const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({
     cx, cy, midAngle, innerRadius, outerRadius, percent
-  }: any) => {
+  }: {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percent: number;
+  }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);

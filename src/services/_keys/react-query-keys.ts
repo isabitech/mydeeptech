@@ -65,6 +65,7 @@ const QUERY = {
     getUserProfile: "getUserProfile",
 
     userDashboardData: "userDashboardData",
+    adminDashboardData: "adminDashboardData",
     sopAcceptanceStatus: "sopAcceptanceStatus",
 
     // Chat Queries
