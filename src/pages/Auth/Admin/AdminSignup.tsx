@@ -78,7 +78,6 @@ const AdminSignup: React.FC = () => {
   const { 
     getRegistrationState, 
     saveRegistrationState,
-    loading: stateLoading, 
     resetState: resetStateState 
   } = useAdminRegistrationState();
   const navigate = useNavigate();
@@ -561,48 +560,6 @@ const AdminSignup: React.FC = () => {
                     Sign in here
                   </Link> 
                 </p>
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-gray-600 text-sm mb-2">
-                    Started registration on another device?
-                  </p>
-                  <button
-                    onClick={async () => {
-                      const email = formData.email || prompt("Enter your email to check for existing registration:");
-                      if (email) {
-                        setIsRestoringState(true);
-                        const result = await getRegistrationState(email);
-                        if (result.success && result.data) {
-                          setCurrentStep(result.data.currentStep);
-                          setUserEmail(result.data.formData.email);
-                          setFormData(result.data.formData);
-                          notification.success({
-                            message: "Registration Found!",
-                            description: "Continuing your registration from another device.",
-                            key: "registration-found",
-                          });
-                        } else {
-                          notification.info({
-                            message: "No Registration Found",
-                            description: "No pending registration found for this email.",
-                            key: "no-registration-found",
-                          });
-                        }
-                        setIsRestoringState(false);
-                      }
-                    }}
-                    disabled={stateLoading}
-                    className="text-blue-600 hover:text-blue-700 font-medium text-sm disabled:text-gray-400"
-                  >
-                    {stateLoading ? (
-                      <>
-                        <Spin size="small" className="mr-1" />
-                        Checking...
-                      </>
-                    ) : (
-                      "Continue from another device"
-                    )}
-                  </button>
-                </div>
               </motion.div>
             </>
           ) : (
