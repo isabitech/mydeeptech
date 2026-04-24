@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { DEFAULT_PAGE_SIZE, DEFAULT_CURRENT_PAGE, SEARCH_DEBOUNCE_DELAY } from "../constants";
 
 interface UseAnnotatorFiltersProps {
@@ -11,6 +11,11 @@ export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps)
   const [currentPage, setCurrentPage] = useState(DEFAULT_CURRENT_PAGE);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Reset to page 1 when country filter changes
+  useEffect(() => {
+    setCurrentPage(DEFAULT_CURRENT_PAGE);
+  }, [countryFilter]);
 
   // Memoize query parameters to prevent unnecessary re-renders
   const queryParams = useMemo(() => ({
