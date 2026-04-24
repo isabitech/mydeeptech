@@ -1,5 +1,3 @@
-import { Admin } from "./useAdminSignup"
-
 export interface AdminDashboardResponse {
   success: boolean
   data: AdminDashboardData
@@ -28,7 +26,7 @@ export interface Overview {
 }
 
 export interface DtUserStatistics {
-  _id: any
+  _id: string
   totalUsers: number
   pendingAnnotators: number
   submittedAnnotators: number
@@ -44,7 +42,7 @@ export interface DtUserStatistics {
 }
 
 export interface ProjectStatistics {
-  _id: any
+  _id: string
   totalProjects: number
   activeProjects: number
   completedProjects: number
@@ -54,7 +52,7 @@ export interface ProjectStatistics {
 }
 
 export interface ApplicationStatistics {
-  _id: any
+  _id: string
   totalApplications: number
   pendingApplications: number
   approvedApplications: number
@@ -62,7 +60,7 @@ export interface ApplicationStatistics {
 }
 
 export interface InvoiceStatistics {
-  _id: any
+  _id: string
   totalInvoices: number
   totalAmount: number
   paidAmount: number
