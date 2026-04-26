@@ -30,6 +30,10 @@ const MUTATION = {
 
     resetPassword: "resetPassword",
     forgotPassword: "forgotPassword",
+
+    // Chat Mutations
+    startChat: "startChat",
+    sendMessage: "sendMessage",
 } as const;
 
 const QUERY = {
@@ -52,6 +56,8 @@ const QUERY = {
     getUserInvoiceDetails: "getUserInvoiceDetails",
 
     assessmentReviews: "assessmentReviews",
+    assessmentHistory: "assessmentHistory",
+    retakeEligibility: "retakeEligibility",
     userNotifications: "userNotifications",
    
 
@@ -59,7 +65,21 @@ const QUERY = {
     getUserProfile: "getUserProfile",
 
     userDashboardData: "userDashboardData",
+    adminDashboardData: "adminDashboardData",
     sopAcceptanceStatus: "sopAcceptanceStatus",
+
+    // Chat Queries
+    chatHistory: "chatHistory",
+    activeChats: "activeChats",
+    chatTicket: "chatTicket",
+    
+    // Annotators Queries
+    getAllDTUsers: "getAllDTUsers",
+    getApprovedAnnotators: "getApprovedAnnotators",
+    getPendingAnnotators: "getPendingAnnotators",
+    getSubmittedAnnotators: "getSubmittedAnnotators",
+    getRejectedAnnotators: "getRejectedAnnotators",
+    getQAAnnotators: "getQAAnnotators",
 } as const;
 
 const REACT_QUERY_KEYS = {

@@ -6,7 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from "lucid
 import authMutationService from "../../services/authentication/auth-mutation";
 import errorMessage from "../../lib/error-message";
 import LoginLeftHeroSection from "./_components/LoginLeftHeroSection";
-import { formatUserInfo } from "../../services/authentication/_helper";
+import { formatUserInfo, isRestrictedEmail } from "../../services/authentication/_helper";
 
 const Login = () => {
   const location = useLocation();
@@ -47,26 +47,20 @@ const Login = () => {
 
     if (!validateForm()) return;
 
+    if (isRestrictedEmail(formData.email)) {
+      notification.open({ type: "error", message: "Invalid credentials: Please check your email and password and try again.", key: "restricted_email" });
+      return navigate("/login", { replace: true });
+    }
+
     signinMutation.mutate(formData, {
       onSuccess: (data) => {
-        // console.log("🚀 Login API Response:", data);
-        
         const userData = formatUserInfo(data);
-        // console.log("🔍 Formatted User Data:", userData);
-        // console.log("💡 User Data Type Check:", typeof userData, "Falsy?", !userData);
-
         if(!userData) {
-          // console.error("❌ formatUserInfo returned falsy value!");
-          notification.open({
-            type: "error",
-            message: "Invalid credentials.",
-          });
+          notification.open({ type: "error", message: "Invalid credentials."});
           return navigate("/login", { replace: true });
         }
 
-        // console.log("📧 Email Verification Check - isEmailVerified:", userData.isEmailVerified);
         if (!userData.isEmailVerified) {
-          // console.warn("⚠️ Email not verified");
           notification.open({
             type: "warning",
             message: "Please verify your email before logging in. Check your inbox for verification link.",
@@ -78,38 +72,35 @@ const Login = () => {
           return navigate("/login", { state: { email: formData.email }, replace: true });
       }
 
-      // console.log("🔐 Password Setup Check - hasSetPassword:", userData.hasSetPassword);
       if (!userData.hasSetPassword) {
-        // console.warn("⚠️ Password not set");
         notification.open({
           type: "warning",
           message: "Please complete your account setup by setting a password.",
         });
         return navigate("/login", { state: { email: formData.email }, replace: true });
       }
-  
-      // console.log("🔑 User Role Check - Expected: 'user', Actual:", userData.role);
-      
-      // Since this is the user login endpoint, we know this is a user
-      // Only reject if explicitly marked as non-user (like admin)
-      if(userData.role && userData.role !== "user" && userData.isAdmin) {
-          // console.error("❌ Admin trying to use user login endpoint:", userData.role);
-          notification.open({
-              type: "error",
-              message: "Please use the admin login page.",
-              key: "invalid_credentials",
-          });
-        return navigate("/auth/admin-login", { replace: true });
+
+      if (isRestrictedEmail(userData.email)) {
+        notification.open({ type: "error", message: "Invalid credentials: Please check your email and password and try again.", key: "restricted_email"});
+        return navigate("/login", { replace: true });
       }
-      
-      // console.log("✅ User login validated!");
+
+      // Check for role restrictions - admin users are NOT allowed in user dashboard
+      if (userData.role !== "user") {
+        notification.open({
+          type: "error",
+          message: "Access denied. Admin users cannot access the user dashboard. Please use the admin portal.",
+          key: "admin_restriction",
+        });
+        return navigate("/login", { replace: true });
+      }
 
         notification.open({ type: "success", message: "Login successful!", key: "login_success" });
 
         // Check user status for navigation
         // const hasAnnotatorStatus = userData.annotatorStatus === "approved" || userData.annotatorStatus === "pending" || userData.annotatorStatus === "submitted";
         // const hasMicroTaskerStatus = userData.microTaskerStatus === "approved" || userData.microTaskerStatus === "pending";
-        
+ 
         // if (hasAnnotatorStatus || hasMicroTaskerStatus) {
         //   navigate(from ?? "/dashboard/overview");
         // } else {

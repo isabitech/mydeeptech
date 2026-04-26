@@ -8,17 +8,18 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons';
-import { RecentActivities, TopPerformers } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+import { RecentActivitiesSchema, TopPerformersSchema } from '../../../../../validators/dashboard/admin-dashboard-schema';
 
 interface RecentActivitiesProps {
-  recentData: RecentActivities;
-  topPerformers: TopPerformers;
+  recentData: RecentActivitiesSchema;
+  topPerformers: TopPerformersSchema;
 }
 
 const RecentActivitiesComponent: React.FC<RecentActivitiesProps> = ({
   recentData,
   topPerformers
 }) => {
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'green';

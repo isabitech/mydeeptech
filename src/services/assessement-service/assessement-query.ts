@@ -18,13 +18,7 @@ const useAssessmentReviews = (search?: string, scoreRange?: string) => {
             if (scoreRange && scoreRange !== "all") params.scoreRange = scoreRange;
             
             const response = await axiosInstance.get<GetSubmissionsResponseSchema>(endpoints.assessments.assessmentReviews, { params });
-            const result = GetSubmissionsResponseSchema.safeParse(response.data);
-            if (!result.success) {
-                const errorMessage = result.error.issues[0]?.message || "Failed to parse assessment reviews response";
-                console.error("Assessment reviews parsing error:", result.error);
-                throw new Error(errorMessage);
-            }
-            return result.data;
+            return response.data;
         },
     });
 

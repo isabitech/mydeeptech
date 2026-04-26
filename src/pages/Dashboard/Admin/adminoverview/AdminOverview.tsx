@@ -1,9 +1,9 @@
-import { useEffect } from "react";
 import { Button, Spin, Alert } from "antd";
 import { PlusSquareOutlined, ReloadOutlined } from "@ant-design/icons";
 import { motion } from 'framer-motion';
 import { useNavigate } from "react-router-dom";
-import { useAdminDashboard } from "../../../../hooks/Auth/Admin/useAdminDashboard";
+import useAdminDashboardQuery from "../../../../services/admin-dashboard-service/admin-dashboard-query";
+
 import OverviewCards from "./components/OverviewCards";
 import UserStatisticsCharts from "./components/UserStatisticsCharts";
 import ProjectFinancialCharts from "./components/ProjectFinancialCharts";
@@ -12,30 +12,24 @@ import RecentActivitiesComponent from "./components/RecentActivitiesComponent";
 const AdminOverview = () => {
   const navigate = useNavigate();
   const {
-    loading,
-    error,
-    dashboardData,
-    getDashboardData,
-    refreshDashboard
-  } = useAdminDashboard();
+    isAdminDashboardLoading: loading,
+    isAdminDashboardError: isError,
+    adminDashboardError: error,
+    adminDashboardData: dashboardData,
+    isRefetching,
+    refreshAdminDashboard,
+  } = useAdminDashboardQuery();
 
-  useEffect(() => {
-    getDashboardData();
-  }, [getDashboardData]);
 
-  const handleRefresh = async () => {
-    await refreshDashboard();
-  };
-
-  if (error) {
+  if (isError) {
     return (
       <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
         <Alert
           message="Error Loading Dashboard"
-          description={error}
+          description={error?.message || "An error occurred while loading the dashboard"}
           type="error"
           action={
-            <Button size="small" onClick={handleRefresh}>
+            <Button size="small" onClick={refreshAdminDashboard}>
               Retry
             </Button>
           }
@@ -56,8 +50,8 @@ const AdminOverview = () => {
       <div className="flex flex-wrap gap-2">
         <Button
           icon={<ReloadOutlined />}
-          onClick={handleRefresh}
-          loading={loading}
+          onClick={refreshAdminDashboard}
+          loading={loading || isRefetching}
         >
           Refresh
         </Button>
@@ -146,7 +140,7 @@ const AdminOverview = () => {
                   <div className="space-y-2 text-sm">
                     <div>Payment Rate: {dashboardData.insights.financialHealth?.paymentRate || 0}%</div>
                     <div>Avg Invoice: ${dashboardData.insights.financialHealth?.averageInvoiceAmount || 0}</div>
-                    <div>Outstanding: ${dashboardData.insights.financialHealth?.outstandingBalance?.toLocaleString() || 0}</div>
+                    <div>Outstanding: ${(dashboardData.insights.financialHealth?.outstandingBalance ?? 0).toLocaleString()}</div>
                   </div>
                 </div>
 

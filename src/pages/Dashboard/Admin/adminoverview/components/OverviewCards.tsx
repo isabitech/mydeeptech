@@ -9,11 +9,11 @@ import {
   DollarOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
-import { AdminDashboardData, Overview } from '../../../../../hooks/Auth/Admin/admin-dashboard-type';
+import { AdminDashboardDataSchema } from '../../../../../validators/dashboard/admin-dashboard-schema';
 
 
 interface OverviewCardsProps {
-  data: AdminDashboardData;
+  data: AdminDashboardDataSchema;
 }
 
 const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
@@ -24,31 +24,32 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
   const pendingAppsRef = useRef<HTMLSpanElement>(null);
   const submittedAnnotatorsRef = useRef<HTMLSpanElement>(null);
 
+
   useEffect(() => {
     // Animate numbers when data is loaded
     if (data && totalUsersRef.current) {
-      new CountUp(totalUsersRef.current, data.overview.totalUsers, {
+      new CountUp(totalUsersRef.current, data?.overview?.totalUsers, {
         duration: 2,
         separator: ',',
       }).start();
     }
 
     if (data && totalProjectsRef.current) {
-      new CountUp(totalProjectsRef.current, data.overview.totalProjects, {
+      new CountUp(totalProjectsRef.current, data?.overview?.totalProjects, {
         duration: 2,
         separator: ',',
       }).start();
     }
 
     if (data && totalInvoicesRef.current) {
-      new CountUp(totalInvoicesRef.current, data.overview.totalInvoices, {
+      new CountUp(totalInvoicesRef.current, data?.overview?.totalInvoices, {
         duration: 2,
         separator: ',',
       }).start();
     }
 
     if (data && totalRevenueRef.current) {
-      new CountUp(totalRevenueRef.current, data.overview.totalRevenue, {
+      new CountUp(totalRevenueRef.current, data?.overview?.totalRevenue, {
         duration: 2.5,
         separator: ',',
         decimal: '.',
@@ -58,7 +59,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     }
 
     if (data && pendingAppsRef.current) {
-      new CountUp(pendingAppsRef.current, data.overview.pendingApplications, {
+      new CountUp(pendingAppsRef.current, data?.overview?.pendingApplications, {
         duration: 2,
         separator: ',',
       }).start();
@@ -76,7 +77,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
   const cards = [
     {
       title: 'Total Users',
-      value: data?.overview.totalUsers || 0,
+      value: data?.overview?.totalUsers || 0,
       ref: totalUsersRef,
       icon: <UserOutlined />,
       color: 'bg-blue-500',
@@ -84,7 +85,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Projects',
-      value: data?.overview.totalProjects || 0,
+      value: data?.overview?.totalProjects || 0,
       ref: totalProjectsRef,
       icon: <ProjectOutlined />,
       color: 'bg-green-500',
@@ -92,7 +93,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Invoices',
-      value: data?.overview.totalInvoices || 0,
+      value: data?.overview?.totalInvoices || 0,
       ref: totalInvoicesRef,
       icon: <FileTextOutlined />,
       color: 'bg-purple-500',
@@ -100,7 +101,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Total Paid ',
-      value: data?.overview.totalRevenue || 0,
+      value: data?.overview?.totalRevenue || 0,
       ref: totalRevenueRef,
       icon: <DollarOutlined />,
       color: 'bg-yellow-500',
@@ -108,7 +109,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Pending Applications',
-      value: data?.overview.pendingApplications || 0,
+      value: data?.overview?.pendingApplications || 0,
       ref: pendingAppsRef,
       icon: <ClockCircleOutlined />,
       color: 'bg-red-500',
@@ -116,7 +117,7 @@ const OverviewCards: React.FC<OverviewCardsProps> = ({ data }) => {
     },
     {
       title: 'Submitted Annotators',
-      value: data?.dtUserStatistics.submittedAnnotators || 0,
+      value: data?.dtUserStatistics?.submittedAnnotators || 0,
       ref: submittedAnnotatorsRef,
       icon: <UserOutlined />,
       color: 'bg-indigo-500',

@@ -11,7 +11,7 @@ const Settings = () => {
       
       {/* Privacy & Legal Section */}
       <Card 
-        title={<span className="flex items-center gap-2 pt-10 !mt-auto"><SafetyOutlined className="text-[#F6921E]" />Privacy & Legal</span>}
+        title={<span className="flex items-center gap-2"><SafetyOutlined className="text-[#F6921E]" />Privacy & Legal</span>}
         className="shadow-sm"
       >
         <div className="space-y-4">

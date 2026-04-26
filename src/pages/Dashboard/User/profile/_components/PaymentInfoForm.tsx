@@ -40,13 +40,16 @@ const PaymentInfoForm: React.FC<PaymentInfoFormProps> = ({
   onManualVerification,
   onVerificationRefetch,
 }) => {
-  const handleCurrencyChange = () => {
-    form.setFieldsValue({
-      accountName: undefined,
-      accountNumber: undefined,
-      bankName: undefined,
-      paymentMethod: undefined,
-    });
+  const handleCurrencyChange = (newCurrency: string) => {
+    // Only clear fields if user is actively changing currency (not during form initialization)
+    if (isEditing && newCurrency !== paymentCurrency) {
+      form.setFieldsValue({
+        accountName: undefined,
+        accountNumber: undefined,
+        bankName: undefined,
+        paymentMethod: undefined,
+      });
+    }
   };
 
   return (

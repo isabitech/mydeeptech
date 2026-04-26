@@ -40,7 +40,17 @@ export const endpoints = {
   adminAuth: {
     signup: "/admin/create",
     verifyOTP: "/admin/verify-otp",
+    verifyOTPExisting: "/admin/verify-otp-existing",
+    resendOTP: "/admin/resend-otp",
+    resendOTPExisting: "/admin/resend-otp-existing",
     login: "/admin/login",
+    getRegistrationState: "/admin/registration-state",
+    saveRegistrationState: "/admin/registration-state",
+  },
+
+  // Admin dashboard endpoint
+  adminDashboard: {
+    getDashboard: "/admin/dashboard",
   },
 
   // admin management
@@ -165,6 +175,8 @@ export const endpoints = {
     session: "/api/assessments/session",
     submit: "/api/assessments/submit",
     progress: "/api/assessments/progress",
+    history: "/assessments/history",
+    retakeEligibility: "/assessments/retake-eligibility",
     assessmentReview: "/assessment-reviews",
     assessmentReviews: "/assessment-reviews",
     updateReviewAssessment: "/assessment-reviews",

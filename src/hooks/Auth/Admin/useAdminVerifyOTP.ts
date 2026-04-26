@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { endpoints } from "../../../store/api/endpoints";
+import { AdminAuthResponse, AdminAuthResult } from "../../../types/admin";
 
 interface VerifyOTPPayload {
   verificationCode: string;
@@ -7,25 +8,11 @@ interface VerifyOTPPayload {
   adminKey: string;
 }
 
-interface VerifyOTPResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    verified: boolean;
-  };
-}
-
-interface VerifyOTPResult {
-  success: boolean;
-  data?: VerifyOTPResponse;
-  error?: string;
-}
-
 export const useAdminVerifyOTP = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const verifyOTP = async (payload: VerifyOTPPayload): Promise<VerifyOTPResult> => {
+  const verifyOTP = async (payload: VerifyOTPPayload): Promise<AdminAuthResult> => {
     setLoading(true);
     setError(null);
 
@@ -40,7 +27,7 @@ export const useAdminVerifyOTP = () => {
         throw new Error(`Request failed with status ${response.status}`);
       }
 
-      const data: VerifyOTPResponse = await response.json();
+      const data: AdminAuthResponse = await response.json();
 
       if (data.success) {
         return { success: true, data };
@@ -49,8 +36,8 @@ export const useAdminVerifyOTP = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = err.message || "An error occurred during OTP verification. Please try again.";
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred during OTP verification. Please try again.";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

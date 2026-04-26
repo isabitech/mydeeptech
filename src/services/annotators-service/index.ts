@@ -1,0 +1,1 @@
+export { default as annotatorsQueryService } from './annotators-query';
