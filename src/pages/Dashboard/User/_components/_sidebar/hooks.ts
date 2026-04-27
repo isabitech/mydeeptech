@@ -10,7 +10,7 @@ export const useSidebarLogic = (userInfo: UserInfoData | null) => {
     if (!userInfo) return BASE_MENU_ITEMS;
 
     const { qaStatus, annotatorStatus } = userInfo;
-    let dynamicItems = [...BASE_MENU_ITEMS];
+    const dynamicItems = [...BASE_MENU_ITEMS];
 
     // If qaStatus === "approved", add QA Review Dashboard
     if (qaStatus === "approved") {
