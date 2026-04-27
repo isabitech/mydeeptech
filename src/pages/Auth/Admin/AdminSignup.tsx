@@ -1,15 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, Input, Button, Alert, Spin, notification } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useAdminSignup } from "../../../hooks/Auth/Admin/useAdminSignup";
 import { useAdminVerifyOTP } from "../../../hooks/Auth/Admin/useAdminVerifyOTP";
+import { useAdminVerifyExistingOTP } from "../../../hooks/Auth/Admin/useAdminVerifyExistingOTP";
+import { useAdminResendOTP } from "../../../hooks/Auth/Admin/useAdminResendOTP";
+import { useAdminResendExistingOTP } from "../../../hooks/Auth/Admin/useAdminResendExistingOTP";
+import { useAdminRegistrationState } from "../../../hooks/Auth/Admin/useAdminRegistrationState";
+import { AdminAuthResult } from "../../../types/admin";
 import mydeepTechLogo from '../../../assets/deeptech.png';
 
+interface LocationState {
+  fromLogin?: boolean;
+  email?: string;
+  fullName?: string;
+  message?: string;
+}
+
+type CurrentStep = "signup" | "verify-otp";
+
 const AdminSignup: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<"signup" | "verify-otp">("signup");
+  const [currentStep, setCurrentStep] = useState<CurrentStep>("signup");
   const [userEmail, setUserEmail] = useState<string>("");
+  const [isRestoringState, setIsRestoringState] = useState(true);
+  const [isFromLogin, setIsFromLogin] = useState(false); // Track if user is coming from login
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -21,21 +37,141 @@ const AdminSignup: React.FC = () => {
   });
 
   const [otp, setOtp] = useState("");
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [otpError, setOtpError] = useState("");
 
   const { signup, loading: signupLoading, error: signupError, resetState: resetSignupState } = useAdminSignup();
-  const { verifyOTP, loading: otpLoading, error: otpVerifyError, resetState: resetOtpState } = useAdminVerifyOTP();
+  const { verifyOTP: verifyNewOTP, loading: newOtpLoading, error: newOtpVerifyError, resetState: resetNewOtpState } = useAdminVerifyOTP();
+  const { verifyOTP: verifyExistingOTP, loading: existingOtpLoading, error: existingOtpVerifyError, resetState: resetExistingOtpState } = useAdminVerifyExistingOTP();
+  
+  // Use appropriate verification hook properties based on whether user is coming from login
+  const otpLoading = isFromLogin ? existingOtpLoading : newOtpLoading;
+  const otpVerifyError = isFromLogin ? existingOtpVerifyError : newOtpVerifyError;
+  const resetOtpState = isFromLogin ? resetExistingOtpState : resetNewOtpState;
+  
+  // Hooks for resending OTP - different for new signups vs existing users from login
+  const { 
+    resendOTP: resendNewOTP, 
+    loading: resendNewLoading, 
+    error: resendNewError, 
+    canResend: canResendNew, 
+    timeRemaining: timeRemainingNew, 
+    resetState: resetResendNewState 
+  } = useAdminResendOTP();
+  
+  const { 
+    resendOTP: resendExistingOTP, 
+    loading: resendExistingLoading, 
+    error: resendExistingError, 
+    canResend: canResendExisting, 
+    timeRemaining: timeRemainingExisting, 
+    resetState: resetResendExistingState 
+  } = useAdminResendExistingOTP();
+  
+  // Use appropriate resend hook properties based on whether user is coming from login
+  const resendLoading = isFromLogin ? resendExistingLoading : resendNewLoading;
+  const resendError = isFromLogin ? resendExistingError : resendNewError;
+  const canResend = isFromLogin ? canResendExisting : canResendNew;
+  const timeRemaining = isFromLogin ? timeRemainingExisting : timeRemainingNew;
+  const resetResendState = isFromLogin ? resetResendExistingState : resetResendNewState;
+  
+  const { 
+    getRegistrationState, 
+    saveRegistrationState,
+    resetState: resetStateState 
+  } = useAdminRegistrationState();
   const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as LocationState | null;
 
+  // Load saved state from database on component mount
   useEffect(() => {
-    // Reset states when component mounts
+    const checkForExistingRegistration = async () => {
+      // Check if redirected from login due to unverified email
+      if (locationState?.fromLogin && locationState?.email) {
+        setCurrentStep("verify-otp");
+        setUserEmail(locationState.email);
+        setIsFromLogin(true); // Mark that user is coming from login
+        
+        // For users coming from login, we don't need a registration state
+        // They already have an admin account, just need email verification
+        setFormData(prev => ({
+          ...prev,
+          email: locationState.email || "",
+          fullName: locationState.fullName || ""
+          // No adminKey needed for existing users
+        }));
+        
+        // notification.warning({
+        //   message: location.state.message || "Email verification required",
+        //   description: "Please verify your email to complete the login process. Click 'Resend OTP' to get a new verification code.",
+        //   duration: 6,
+        //   key: "email-verification-required",
+        // });
+        
+        setIsRestoringState(false);
+        return;
+      }
+      
+      // Check if there's a URL parameter for email (cross-device continuation)
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailParam = urlParams.get('email');
+      
+      let emailToCheck = emailParam;
+      
+      // If no email in URL, try to use any email they might start typing
+      if (!emailToCheck && formData.email) {
+        emailToCheck = formData.email;
+      }
+      
+      if (emailToCheck) {
+        const result = await getRegistrationState(emailToCheck);
+        
+        if (result.success && result.data) {
+          setCurrentStep(result.data.currentStep);
+          setUserEmail(result.data.formData.email);
+          setFormData(result.data.formData);
+          
+          // Show helpful message that state was restored
+          const deviceInfo = result.data.deviceInfo;
+          const lastDevice = deviceInfo?.lastDeviceType || 'another device';
+          const lastUpdated = new Date(result.data.lastUpdated).toLocaleString();
+          
+          notification.info({
+            message: "Registration Progress Found",
+            description: `Continuing your admin registration from ${lastDevice} (last updated: ${lastUpdated})`,
+            duration: 5,
+            key: "registration-restored",
+          });
+        }
+      }
+      
+      setIsRestoringState(false);
+    };
+
+    // Reset hook states
     resetSignupState();
-    resetOtpState();
-  }, []); // Remove dependencies to avoid infinite loop
+    resetNewOtpState();
+    resetExistingOtpState();
+    resetResendNewState();
+    resetResendExistingState();
+    resetStateState();
+    
+    checkForExistingRegistration();
+  }, []);
+
+  // Helper function to save state to database for cross-device access
+  const saveStateToDatabase = async (step: CurrentStep, email: string, data: typeof formData, adminId?: string): Promise<void> => {
+    await saveRegistrationState({
+      email,
+      currentStep: step,
+      formData: data,
+      adminId,
+    });
+  };
 
   const validateForm = (): boolean => {
-    const errors: { [key: string]: string } = {};
+    const errors: Record<string, string> = {};
 
     if (!formData.fullName.trim()) {
       errors.fullName = "Full name is required";
@@ -73,7 +209,7 @@ const AdminSignup: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof typeof formData, value: string): void => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -88,7 +224,7 @@ const AdminSignup: React.FC = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (currentStep === "signup") {
       if (!validateForm()) {
         return;
@@ -99,30 +235,60 @@ const AdminSignup: React.FC = () => {
       if (result.success && result.data) {
         notification.success({
           message: `${result.data.message || "Signup successful! Please verify your email."}`,
-
+          key: "signup-success",
         })
         setUserEmail(formData.email);
         setCurrentStep("verify-otp");
+        
+        // Save state to database for cross-device access
+        await saveStateToDatabase("verify-otp", formData.email, formData, result.data.admin?.id);
       }
     } else if (currentStep === "verify-otp") {
       if (!validateOtp()) {
         return;
       }
 
-      const result = await verifyOTP({
-        verificationCode: otp,
-        email: userEmail,
-        adminKey: formData.adminKey,
-      });
+      let result: AdminAuthResult;
+      if (isFromLogin) {
+        // For existing users from login, only send verification code and email
+        result = await verifyExistingOTP({
+          verificationCode: otp,
+          email: userEmail,
+        });
+      } else {
+        // For new signups, send verification code, email, and admin key
+        result = await verifyNewOTP({
+          verificationCode: otp,
+          email: userEmail,
+          adminKey: formData.adminKey,
+        });
+      }
 
       if (result.success) {
-        // Navigate to admin login with success message
-        navigate("/auth/admin-login", {
-          state: {
-            message: "Admin account created and verified successfully! You can now log in.",
-            email: userEmail
+        if (isFromLogin) {
+          // For existing users, they are now verified and logged in
+          // Store the token and redirect to admin dashboard
+          if (result.data?.token) {
+            // Store authentication token
+            localStorage.setItem('adminToken', result.data.token);
+            
+            // Navigate to admin dashboard
+            navigate("/admin/dashboard", {
+              state: {
+                message: "Email verified successfully! Welcome back.",
+              }
+            });
           }
-        });
+        } else {
+          // For new signups, registration completed successfully - redirect to login
+          // Navigate to admin login with success message
+          navigate("/auth/admin-login", {
+            state: {
+              message: "Admin account created and verified successfully! You can now log in.",
+              email: userEmail
+            }
+          });
+        }
       }
     }
   };
@@ -147,7 +313,7 @@ const AdminSignup: React.FC = () => {
     return true;
   };
 
-  const handleOtpChange = (value: string) => {
+  const handleOtpChange = (value: string): void => {
     // Allow only numbers and limit to 6 digits
     const numericValue = value.replace(/\D/g, "").slice(0, 6);
     setOtp(numericValue);
@@ -155,6 +321,40 @@ const AdminSignup: React.FC = () => {
     // Clear error when user starts typing
     if (otpError) {
       setOtpError("");
+    }
+  };
+
+  const handleResendOTP = async (): Promise<void> => {
+    if (!canResend) {
+      return;
+    }
+
+    let result;
+    if (isFromLogin) {
+      // For existing users from login, only send email
+      result = await resendExistingOTP({
+        email: userEmail,
+      });
+    } else {
+      // For new signups, send email and admin key
+      result = await resendNewOTP({
+        email: userEmail,
+        adminKey: formData.adminKey,
+      });
+    }
+
+    if (result.success) {
+      notification.success({
+        message: "New verification code sent!",
+        description: "Please check your email for the new verification code.",
+        key: "otp-resent",
+      });
+    } else {
+      notification.error({
+        message: "Failed to resend code",
+        description: result.error || "Please try again later.",
+        key: "otp-resend-error",
+      });
     }
   };
 
@@ -169,7 +369,17 @@ const AdminSignup: React.FC = () => {
         <div className="flex justify-center items-center w-28 mx-auto">
           <img src={mydeepTechLogo} alt="Logo" className="h-full w-full mb-6 rounded-md" />
         </div>
-        <Card className="shadow-2xl border-0 font-[gilroy-regular]">
+        
+        {/* Loading state while checking for existing registration */}
+        {isRestoringState ? (
+          <Card className="shadow-2xl border-0 font-[gilroy-regular]">
+            <div className="text-center py-8">
+              <Spin size="large" />
+              <p className="mt-4 text-gray-600">Checking for existing registration...</p>
+            </div>
+          </Card>
+        ) : (
+          <Card className="shadow-2xl border-0 font-[gilroy-regular]">
           {currentStep === "signup" ? (
             <>
               <div className="text-center mb-6 font-[gilroy-regular]">
@@ -390,6 +600,23 @@ const AdminSignup: React.FC = () => {
                 </motion.div>
               )}
 
+              {resendError && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="mb-4"
+                >
+                  <Alert
+                    message="Resend Error"
+                    description={resendError}
+                    type="error"
+                    showIcon
+                    closable
+                    onClose={resetResendState}
+                  />
+                </motion.div>
+              )}
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -426,7 +653,7 @@ const AdminSignup: React.FC = () => {
                     block
                     onClick={handleSubmit}
                     disabled={otpLoading || !otp}
-                    className="bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 hover:text-white border-blue-600 hover:border-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 transition-colors duration-500"
                   >
                     {otpLoading ? (
                       <>
@@ -449,14 +676,20 @@ const AdminSignup: React.FC = () => {
                     Didn't receive the code?
                   </p>
                   <button
-                    onClick={() => {
-                      // You can implement resend OTP functionality here
-                      console.log("Resend OTP functionality to be implemented");
-                    }}
-                    disabled={otpLoading}
-                    className="text-blue-600 hover:text-blue-700 font-medium text-sm disabled:text-gray-400"
+                    onClick={handleResendOTP}
+                    disabled={otpLoading || resendLoading || !canResend}
+                    className="text-blue-600 hover:text-blue-700 font-medium text-sm disabled:text-gray-400 transition-colors"
                   >
-                    Resend verification code
+                    {resendLoading ? (
+                      <>
+                        <Spin size="small" className="mr-1" />
+                        Sending...
+                      </>
+                    ) : !canResend ? (
+                      `Resend in ${timeRemaining}s`
+                    ) : (
+                      "Resend verification code"
+                    )}
                   </button>
                 </motion.div>
               </motion.div>
@@ -470,7 +703,11 @@ const AdminSignup: React.FC = () => {
                 <p className="text-gray-600 text-sm">
                   Want to change your email?{" "}
                   <button
-                    onClick={() => setCurrentStep("signup")}
+                    onClick={() => {
+                      setCurrentStep("signup");
+                      // Note: We keep the saved state in case user wants to continue later
+                      // They can clear it by completing signup again or it will expire automatically
+                    }}
                     className="text-blue-600 hover:text-blue-700 font-medium"
                   >
                     Back to signup
@@ -480,6 +717,7 @@ const AdminSignup: React.FC = () => {
             </>
           )}
         </Card>
+        )}
       </motion.div>
     </div>
   );

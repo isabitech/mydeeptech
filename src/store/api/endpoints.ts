@@ -40,7 +40,12 @@ export const endpoints = {
   adminAuth: {
     signup: "/admin/create",
     verifyOTP: "/admin/verify-otp",
+    verifyOTPExisting: "/admin/verify-otp-existing",
+    resendOTP: "/admin/resend-otp",
+    resendOTPExisting: "/admin/resend-otp-existing",
     login: "/admin/login",
+    getRegistrationState: "/admin/registration-state",
+    saveRegistrationState: "/admin/registration-state",
   },
 
   // Admin dashboard endpoint

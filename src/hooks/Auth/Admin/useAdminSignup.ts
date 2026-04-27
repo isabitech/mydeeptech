@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
 import { endpoints } from "../../../store/api/endpoints";
+import { getErrorMessage } from "../../../service/apiUtils";
+import { Admin } from "../../../types/admin";
 
 interface AdminSignupPayload {
   fullName: string;
@@ -10,28 +12,12 @@ interface AdminSignupPayload {
   adminKey: string;
 }
 
-
 export interface AdminSignupResponse {
-  success: boolean
-  message: string
-  otpVerificationRequired: boolean
-  admin: Admin
+  success: boolean;
+  message: string;
+  otpVerificationRequired: boolean;
+  admin: Admin;
 }
-
-export interface Admin {
-  id: string
-  fullName: string
-  email: string
-  phone: string
-  domains: string[]
-  isEmailVerified: boolean
-  hasSetPassword: boolean
-  annotatorStatus: string
-  microTaskerStatus: string
-  createdAt: string
-  isAdmin: boolean
-}
-
 
 interface AdminSignupResult {
   success: boolean;
@@ -54,10 +40,6 @@ export const useAdminSignup = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
       const data: AdminSignupResponse = await response.json();
 
       if (data.success) {
@@ -67,8 +49,8 @@ export const useAdminSignup = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
-      const errorMessage = err.message || "An error occurred during admin signup. Please try again.";
+    } catch (err) {
+      const errorMessage = getErrorMessage(err) || "An error occurred during admin signup. Please try again.";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

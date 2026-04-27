@@ -140,7 +140,7 @@ const AnimatedRoutes = () => {
                 <Route path="invoices" element={<PageGuard resource="invoice"><InvoiceManagement /></PageGuard>} />
                 <Route path="payments" element={<PageGuard resource="payments"><PaymentManagement /></PageGuard>} />
                 <Route path="notifications" element={<PageGuard resource="notifications"><NotificationManagement /></PageGuard>} />
-                <Route path="chat" element={<PageGuard resource="chat"><ChatManagement /></PageGuard>} />
+                <Route path="chat" element={<PageGuard resource="support_chat"><ChatManagement /></PageGuard>} />
                 <Route path="rbac" element={<PageGuard resource="rbac"><RBACPage /></PageGuard>} />
                 <Route path="settings" element={<PageGuard resource="settings"><SettingsMgt /></PageGuard>} />
                 <Route path="invoice-page/*" element={<PageGuard resource="invoice"><InvoiceRoutes /></PageGuard>} />
