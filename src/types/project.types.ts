@@ -10,6 +10,7 @@ export interface Project {
   maxAnnotators: number | null;
   deadline: string;
   estimatedDuration: string;
+  applicationDuration?: number; // Duration in weeks (1, 2, 3, 4)
   difficultyLevel: DifficultyLevel;
   requiredSkills: string[];
   minimumExperience: ExperienceLevel;
@@ -268,6 +269,7 @@ export interface CreateProjectForm {
   maxAnnotators?: number;
   deadline: string;
   estimatedDuration: string;
+  applicationDuration?: number; // Duration in weeks (1, 2, 3, 4)
   difficultyLevel: DifficultyLevel;
   requiredSkills: string[];
   minimumExperience: ExperienceLevel;
