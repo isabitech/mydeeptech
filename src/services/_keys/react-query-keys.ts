@@ -34,6 +34,9 @@ const MUTATION = {
     // Chat Mutations
     startChat: "startChat",
     sendMessage: "sendMessage",
+
+    //Project
+    approveRejectedProjectApplicant: "approveRejectedProjectApplicant"
 } as const;
 
 const QUERY = {

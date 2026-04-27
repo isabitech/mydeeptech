@@ -38,18 +38,20 @@ import {
   DeleteOutlined,
   ExclamationCircleOutlined,
   SearchOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
 import {
   AnnotatorProjectResponseData,
+  ApplicationRecord,
   RecentApplication,
   RemoveApplicantRequest,
 } from "../../../../types/project.types";
 import errorMessage from "../../../../lib/error-message";
+import projectService from "../../../../services/project-service/project-mutation";
 
 const { Text } = Typography;
-const { TabPane } = Tabs;
 const { Option } = Select;
 const { useBreakpoint } = Grid;
 
@@ -81,6 +83,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { getProjectAnnotators, removeApplicant, loading, error } = useAdminProjects();
+
+  const projectMutation = projectService.useApprovedProject();
 
   const screens = useBreakpoint();
 
@@ -161,6 +165,57 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     removalForm.resetFields();
   };
 
+  const handleApproveApplication = async (application: ApplicationRecord) => {
+
+    const applicantId = application.annotator.id;
+
+    if (!projectId) {
+      message.error('Project ID not found');
+      return;
+    }
+
+    if (!applicantId) {
+      message.error('Applicant ID not found');
+      return;
+    }
+
+    projectMutation.mutate({ projectId, applicantId }, {
+      onSuccess: () => {
+        message.success('Application approved successfully');
+        fetchProjectAnnotators();
+      },
+      onError: (error) => {
+        const errMsg = errorMessage(error);
+        message.error(errMsg || 'Failed to approve application');
+      }
+    });
+  };
+
+  const handleApproveRemovedApplication = async (application: ApplicationRecord) => {
+    const applicantId = application.annotator.id;
+
+    if (!projectId) {
+      message.error('Project ID not found');
+      return;
+    }
+
+    if (!applicantId) {
+      message.error('Applicant ID not found');
+      return;
+    }
+
+    projectMutation.mutate({ projectId, applicantId }, {
+      onSuccess: () => {
+        message.success('Removed applicant re-approved successfully');
+        fetchProjectAnnotators();
+      },
+      onError: (error) => {
+        const errMsg = errorMessage(error);
+        message.error(errMsg || 'Failed to re-approve removed applicant');
+      }
+    });
+  };
+
   const handleConfirmRemoval = async () => {
     if (!selectedForRemoval) return;
 
@@ -171,7 +226,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
         removalNotes: values.notes || '',
       };
 
-      const result = await removeApplicant(selectedForRemoval.applicantId?._id, removalData);
+      const result = await removeApplicant(selectedForRemoval._id, removalData);
 
       if (result.success) {
         message.success('Annotator removed successfully');
@@ -219,6 +274,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const approvedAnnotators = data?.annotators?.approved || [];
   const rejectedAnnotators = data?.annotators?.rejected || [];
   const pendingAnnotators = data?.annotators?.pending || [];
+  const removedAnnotators = data?.annotators?.removed || [];
 
   // Columns for recentApplications (lightweight records)
   // const applicationColumns = [
@@ -356,17 +412,22 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
       key: "actions",
       render: (record: Record<string, string>) => {
         const isApproved = record.applicationStatus === 'approved';
+        const isRejected = record.applicationStatus === 'rejected';
+        const isRemoved = record.applicationStatus === 'removed';
         const onView = () => handleViewApplication(record as unknown as RecentApplication);
         const onRemove = () => handleRemoveAnnotator(record as unknown as RecentApplication);
+        const onApprove = () => handleApproveApplication(record as unknown as ApplicationRecord);
+        const onApproveRemoved = () => handleApproveRemovedApplication(record as unknown as ApplicationRecord);
         
         const items: MenuItem[] = [
           {
             key: 'view',
             icon: <EyeOutlined />,
             label: 'View Details',
-            onClick: onView
+            onClick: onView,
           }
         ];
+        
         if (isApproved) {
           items.push({
             key: 'remove',
@@ -375,9 +436,29 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             onClick: onRemove
           });
         }
+        
+        if (isRejected) {
+          items.push({
+            key: 'approve',
+            label: 'Approve Application',
+            onClick: onApprove,
+            disabled: projectMutation.isPending,
+            icon: projectMutation.isPending ? <Spin size="small" /> : <CheckOutlined />,
+          });
+        }
+        
+        if (isRemoved) {
+          items.push({
+            key: 'approve-removed',
+            label: 'Re-approve Applicant',
+            onClick: onApproveRemoved,
+            disabled: projectMutation.isPending,
+            icon: projectMutation.isPending ? <Spin size="small" /> : <CheckOutlined />,
+          });
+        }
 
         return (
-          <Dropdown menu={{ items }} trigger={['click']} >
+          <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" >
             <Button type="text" icon={<MoreOutlined />} onClick={(e) => e.preventDefault()} />
           </Dropdown>
         );
@@ -447,7 +528,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
           <div className="space-y-6">
             {/* Statistics Overview */}
             <Row gutter={16}>
-              <Col span={8}>
+              <Col span={6}>
                 <Card>
                   <Statistic
                     title="Total Applications"
@@ -456,7 +537,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   />
                 </Card>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Card>
                   <Statistic
                     title="Approved"
@@ -466,13 +547,23 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                   />
                 </Card>
               </Col>
-              <Col span={8}>
+              <Col span={6}>
                 <Card>
                   <Statistic
                     title="Rejected"
                     value={data.applicationStats.rejected}
                     valueStyle={{ color: "#cf1322" }}
                     prefix={<CloseCircleOutlined />}
+                  />
+                </Card>
+              </Col>
+              <Col span={6}>
+                <Card>
+                  <Statistic
+                    title="Removed"
+                    value={removedAnnotators.length}
+                    valueStyle={{ color: "#ff7875" }}
+                    prefix={<DeleteOutlined />}
                   />
                 </Card>
               </Col>
@@ -501,7 +592,8 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
                         <span>
                           ({(data.annotators?.approved?.length || 0) + 
                             (data.annotators?.pending?.length || 0) + 
-                            (data.annotators?.rejected?.length || 0)} total)
+                            (data.annotators?.rejected?.length || 0) +
+                            (data.annotators?.removed?.length || 0)} total)
                         </span>
                       )}
                     </Space>
@@ -511,91 +603,116 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             </div>
 
             {/* Applications Tabs */}
-            <Tabs activeKey={activeTab} onChange={setActiveTab}>
-              <TabPane
-                tab={
-                  <span className="flex items-center gap-1">
-                    <CheckCircleOutlined />
-                    Approved ({approvedAnnotators.length})
-                  </span>
-                }
-                key="1"
-              >
-                {approvedAnnotators.length > 0 ? (
-                  <Table
-                    columns={annotatorColumns}
-                    dataSource={approvedAnnotators}
-                    rowKey={(record) => record._id || record.applicationId}
-                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
-                    loading={isSearching}
-                  />
-                ) : (
-                  isSearching ? (
-                    <div className="flex justify-center items-center h-32">
-                      <Spin size="large" />
-                    </div>
+            <Tabs 
+              activeKey={activeTab} 
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "1",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <CheckCircleOutlined />
+                      Approved ({approvedAnnotators.length})
+                    </span>
+                  ),
+                  children: approvedAnnotators.length > 0 ? (
+                    <Table
+                      columns={annotatorColumns}
+                      dataSource={approvedAnnotators}
+                      rowKey={(record) => record._id || record.applicationId || `${record.applicantId?._id}-${record.applicationStatus}`}
+                      pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                      loading={isSearching}
+                    />
                   ) : (
-                    <Empty description="No approved applications yet" />
+                    isSearching ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Spin size="large" />
+                      </div>
+                    ) : (
+                      <Empty description="No approved applications yet" />
+                    )
                   )
-                )}
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <span className="flex items-center gap-1">
-                    <ClockCircleOutlined />
-                    Pending ({pendingAnnotators.length})
-                  </span>
-                }
-                key="2"
-              >
-                {pendingAnnotators.length > 0 ? (
-                  <Table
-                    columns={annotatorColumns}
-                    dataSource={pendingAnnotators}
-                    rowKey={(record) => record._id || record.applicationId}
-                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
-                    loading={isSearching}
-                  />
-                ) : (
-                  isSearching ? (
-                    <div className="flex justify-center items-center h-32">
-                      <Spin size="large" />
-                    </div>
+                },
+                {
+                  key: "2",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <ClockCircleOutlined />
+                      Pending ({pendingAnnotators.length})
+                    </span>
+                  ),
+                  children: pendingAnnotators.length > 0 ? (
+                    <Table
+                      columns={annotatorColumns}
+                      dataSource={pendingAnnotators}
+                      rowKey={(record) => record._id || record.applicationId || `${record.applicantId?._id}-${record.applicationStatus}`}
+                      pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                      loading={isSearching}
+                    />
                   ) : (
-                    <Empty description="No pending applications" />
+                    isSearching ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Spin size="large" />
+                      </div>
+                    ) : (
+                      <Empty description="No pending applications" />
+                    )
                   )
-                )}
-              </TabPane>
-
-              <TabPane
-                tab={
-                  <span className="flex items-center gap-1">
-                    <CloseCircleOutlined />
-                    Rejected ({rejectedAnnotators.length})
-                  </span>
-                }
-                key="3"
-              >
-                {rejectedAnnotators.length > 0 ? (
-                  <Table
-                    columns={annotatorColumns}
-                    dataSource={rejectedAnnotators}
-                    rowKey={(record) => record._id || record.applicationId}
-                    pagination={{ pageSize: 10, position: ["bottomCenter"], }}
-                    loading={isSearching}
-                  />
-                ) : (
-                  isSearching ? (
-                    <div className="flex justify-center items-center h-32">
-                      <Spin size="large" />
-                    </div>
+                },
+                {
+                  key: "3",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <CloseCircleOutlined />
+                      Rejected ({rejectedAnnotators.length})
+                    </span>
+                  ),
+                  children: rejectedAnnotators.length > 0 ? (
+                    <Table
+                      columns={annotatorColumns}
+                      dataSource={rejectedAnnotators}
+                      rowKey={(record) => record._id || record.applicationId || `${record.applicantId?._id}-${record.applicationStatus}`}
+                      pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                      loading={isSearching}
+                    />
                   ) : (
-                    <Empty description="No rejected applications" />
+                    isSearching ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Spin size="large" />
+                      </div>
+                    ) : (
+                      <Empty description="No rejected applications" />
+                    )
                   )
-                )}
-              </TabPane>
-            </Tabs>
+                },
+                {
+                  key: "4",
+                  label: (
+                    <span className="flex items-center gap-1">
+                      <DeleteOutlined />
+                      Removed ({removedAnnotators.length})
+                    </span>
+                  ),
+                  children: removedAnnotators.length > 0 ? (
+                    <Table
+                      columns={annotatorColumns}
+                      dataSource={removedAnnotators}
+                      rowKey={(record) => record._id || record.applicationId || `${record.applicantId?._id}-${record.applicationStatus}`}
+                      pagination={{ pageSize: 10, position: ["bottomCenter"], }}
+                      loading={isSearching}
+                    />
+                  ) : (
+                    isSearching ? (
+                      <div className="flex justify-center items-center h-32">
+                        <Spin size="large" />
+                      </div>
+                    ) : (
+                      <Empty description="No removed applicants" />
+                    )
+                  )
+                }
+              ]}
+            />
           </div>
         ) : (
           <Empty description="No data available" />

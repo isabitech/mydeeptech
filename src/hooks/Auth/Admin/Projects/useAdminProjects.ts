@@ -12,6 +12,7 @@ import {
   RemoveApplicantRequest,
   RemoveApplicantResponse,
   RemovableApplicantsResponse,
+  ApproveApplicationForm,
 } from "../../../../types/project.types";
 
 export const useAdminProjects = () => {
@@ -35,7 +36,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -79,7 +80,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -103,7 +104,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -133,7 +134,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -160,7 +161,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -184,7 +185,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -208,7 +209,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -236,7 +237,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -265,7 +266,34 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const approveApplication = useCallback(async (
+    applicationId: string,
+    approvalData: ApproveApplicationForm
+  ): Promise<HookOperationResult> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const url = createApiUrl(endpoints.adminProject.approveApplication, applicationId) + "/approve";
+      const data = await apiPatch(url, approvalData);
+
+      if (data.success) {
+        return { success: true, data: data.data };
+      } else {
+        const errorMessage = data.message || "Failed to approve application";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -289,7 +317,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -322,7 +350,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -353,7 +381,7 @@ export const useAdminProjects = () => {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
-    } catch (err: any) {
+    } catch (err) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -377,6 +405,7 @@ export const useAdminProjects = () => {
     requestDeletionOtp,
     verifyDeletionOtp,
     removeApplicant,
+    approveApplication,
     getRemovableApplicants,
     loading,
     error,

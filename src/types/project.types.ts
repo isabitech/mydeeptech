@@ -63,7 +63,8 @@ export interface Project {
 export interface Application {
   _id: string;
   applicationId: string;
-  status: "approved" | "rejected" | "pending";
+  status: "approved" | "rejected" | "pending" | "removed";
+  applicationStatus: "approved" | "rejected" | "pending" | "removed";
   appliedAt: string;
   reviewedAt: string | null;
   reviewedBy: {
@@ -317,6 +318,7 @@ export interface ApplicationsResponse {
   approved: Application[];
   rejected: Application[];
   pending: Application[];
+  removed: Application[];
 };
 
 
@@ -372,6 +374,7 @@ export interface ApplicantId {
 
 export interface RecentApplication {
   _id: string;
+  applicationId?: string; // Alternative key for consistency
   projectId: string;
   applicantId: ApplicantId;
   status: string;
@@ -398,6 +401,7 @@ export interface RecentApplication {
 
 
 export interface ApplicationRecord {
+  _id?: string;
   applicationId: string;
   applicationStatus: "approved" | "rejected" | "pending";
   appliedAt: string;
