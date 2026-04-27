@@ -23,7 +23,6 @@ const Projects = React.lazy(() => import("./pages/Dashboard/User/projects/Projec
 const Profile = React.lazy(() => import("./pages/Dashboard/User/profile/Profile"));
 const Settings = React.lazy(() => import("./pages/Dashboard/User/settings/Settings"));
 const AdminOverview = React.lazy(() => import("./pages/Dashboard/Admin/adminoverview/AdminOverview"));
-const UserManagement = React.lazy(() => import("./pages/Dashboard/Admin/usermgt/UserManagement"));
 const ProjectManagement = React.lazy(() => import("./pages/Dashboard/Admin/projectmgt/NewProjectManagement"));
 const ApplicationManagement = React.lazy(() => import("./pages/Dashboard/Admin/projectmgt/ApplicationManagement"));
 const JobManagement = React.lazy(() => import("./pages/Dashboard/Admin/jobmgt/JobManagement"));
@@ -124,7 +123,6 @@ const AnimatedRoutes = () => {
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Navigate to="overview" replace />} />
                 <Route path="overview" element={<PageGuard resource="overview"><AdminOverview /></PageGuard>} />
-                <Route path="users" element={<PageGuard resource="users"><UserManagement /></PageGuard>} />
                 <Route path="annotators" element={<PageGuard resource="annotators"><Annotators /></PageGuard>} />
                 <Route path="assessments">
                   <Route index element={<PageGuard resource="assessments"><AssessmentManagementList /></PageGuard>} />
