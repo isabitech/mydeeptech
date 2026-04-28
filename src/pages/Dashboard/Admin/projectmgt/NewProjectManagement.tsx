@@ -220,6 +220,7 @@ const ProjectManagement: React.FC = () => {
         ...formValues,
         deadline: dayjs(formValues.deadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
         applicationDeadline: dayjs(formValues.applicationDeadline).format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
+        aiInterviewRequired: Boolean(formValues.aiInterviewRequired),
         requiredSkills: formValues.requiredSkills || [],
         languageRequirements: formValues.languageRequirements || [],
         tags: formValues.tags || [],
@@ -505,6 +506,7 @@ const ProjectManagement: React.FC = () => {
         languageRequirements: project.languageRequirements,
         tags: project.tags,
         applicationDeadline: project.applicationDeadline ? dayjs(project.applicationDeadline) : null,
+        aiInterviewRequired: Boolean(project.aiInterviewRequired),
         projectGuidelineLink: project.projectGuidelineLink,
         projectGuidelineVideo: project.projectGuidelineVideo,
         projectCommunityLink: project.projectCommunityLink,
@@ -512,6 +514,7 @@ const ProjectManagement: React.FC = () => {
       });
     } else {
       form.resetFields();
+      form.setFieldsValue({ aiInterviewRequired: false });
       setIsEditMode(false);
     }
     setIsModalVisible(true);
@@ -590,6 +593,16 @@ const ProjectManagement: React.FC = () => {
         };
         return <Tag color={colors[openCloseStatus as keyof typeof colors]}>{openCloseStatus?.toUpperCase()}</Tag>;
       },
+    },
+    {
+      title: "AI Interview",
+      dataIndex: "aiInterviewRequired",
+      key: "aiInterviewRequired",
+      render: (aiInterviewRequired: boolean | undefined) => (
+        <Tag color={aiInterviewRequired ? "volcano" : "default"}>
+          {aiInterviewRequired ? "REQUIRED" : "DIRECT APPLY"}
+        </Tag>
+      ),
     },
     {
       title: "Applications",
@@ -888,6 +901,28 @@ const ProjectManagement: React.FC = () => {
             />
           </Form.Item>
 
+          <div className="mb-4 rounded-xl border border-orange-100 bg-orange-50 px-4 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="font-semibold text-gray-900">AI interview gate</div>
+                <p className="mb-0 text-sm text-gray-600">
+                  When enabled, candidates must pass a project-specific AI interview before
+                  their application moves into admin review.
+                </p>
+              </div>
+              <Form.Item
+                name="aiInterviewRequired"
+                valuePropName="checked"
+                className="mb-0"
+              >
+                <Switch
+                  checkedChildren="Required"
+                  unCheckedChildren="Direct Apply"
+                />
+              </Form.Item>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Form.Item
               name="projectCategory"
@@ -1101,6 +1136,9 @@ const ProjectManagement: React.FC = () => {
                   {selectedProject.status.toUpperCase()}
                 </Tag>
                 <Tag color="purple">{selectedProject.difficultyLevel.toUpperCase()}</Tag>
+                <Tag color={selectedProject.aiInterviewRequired ? "volcano" : "default"}>
+                  {selectedProject.aiInterviewRequired ? "AI INTERVIEW REQUIRED" : "DIRECT APPLY"}
+                </Tag>
               </div>
             </div>
 
@@ -1121,6 +1159,9 @@ const ProjectManagement: React.FC = () => {
                 <Descriptions.Item label="Approved">{selectedProject.approvedAnnotators}</Descriptions.Item>
                 <Descriptions.Item label="Estimated Duration">{selectedProject.estimatedDuration}</Descriptions.Item>
                 <Descriptions.Item label="Minimum Experience">{selectedProject.minimumExperience}</Descriptions.Item>
+                <Descriptions.Item label="AI Interview Gate">
+                  {selectedProject.aiInterviewRequired ? "Required before review" : "Not required"}
+                </Descriptions.Item>
                 <Descriptions.Item label="Project Deadline">
                   {moment(selectedProject.deadline).format("MMMM DD, YYYY HH:mm")}
                 </Descriptions.Item>

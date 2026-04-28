@@ -54,12 +54,12 @@ export const useSidebarLogic = (userInfo: UserInfoData | null) => {
 
     // If both statuses are pending, lock everything except overview, assessment, and settings
     if (annotatorStatus === "pending" && microTaskerStatus === "pending" && qaStatus === "pending") {
-      return !["overview", "assessment", "settings"].includes(itemKey);
+      return !["overview", "assessment", "ai-interview", "settings"].includes(itemKey);
     }
 
     // If annotator is submitted and microTasker is pending, lock everything except overview and settings
     if (annotatorStatus === "submitted" && microTaskerStatus === "pending" && qaStatus === "pending") {
-      return !["overview", "settings"].includes(itemKey);
+      return !["overview", "ai-interview", "settings"].includes(itemKey);
     }
 
     // Default: don't lock anything

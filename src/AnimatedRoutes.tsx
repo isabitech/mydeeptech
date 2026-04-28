@@ -66,6 +66,13 @@ const RBACPage = React.lazy(() => import("./pages/Dashboard/Admin/rbcmgt/RBACPag
 const ApplicationsPage = React.lazy(() => import("./pages/admin/ApplicationsPage"));
 const UserAssessments = React.lazy(() => import("./pages/Dashboard/Admin/assessmentmgt/UserAssessments"));
 const EmployeeMgt = React.lazy(() => import("./pages/Dashboard/Admin/employeemgt/EmployeeMgt"));
+const AnnotatorInterviewHubPage = React.lazy(() => import("./features/aiInterview/pages/AnnotatorInterviewHubPage"));
+const AnnotatorInterviewSetupPage = React.lazy(() => import("./features/aiInterview/pages/AnnotatorInterviewSetupPage"));
+const AnnotatorInterviewSessionPage = React.lazy(() => import("./features/aiInterview/pages/AnnotatorInterviewSessionPage"));
+const AnnotatorInterviewResultPage = React.lazy(() => import("./features/aiInterview/pages/AnnotatorInterviewResultPage"));
+const AdminInterviewOverviewPage = React.lazy(() => import("./features/aiInterview/pages/AdminInterviewOverviewPage"));
+const AdminInterviewManagementPage = React.lazy(() => import("./features/aiInterview/pages/AdminInterviewManagementPage"));
+const AdminInterviewReportPage = React.lazy(() => import("./features/aiInterview/pages/AdminInterviewReportPage"));
 
 
 const AnimatedRoutes = () => {
@@ -112,6 +119,10 @@ const AnimatedRoutes = () => {
                 <Route path="support" element={<SupportCenter />} />
                 <Route path="assessment" element={<Assessment />} />
                 <Route path="notifications" element={<UserNotifications />} />
+                <Route path="ai-interview" element={<AnnotatorInterviewHubPage />} />
+                <Route path="ai-interview/setup/:trackId" element={<AnnotatorInterviewSetupPage />} />
+                <Route path="ai-interview/session/:sessionId" element={<AnnotatorInterviewSessionPage />} />
+                <Route path="ai-interview/results/:sessionId" element={<AnnotatorInterviewResultPage />} />
                 <Route path="assessment/multimedia/:assessmentId" element={<AssessmentSession />} />
                 <Route path="qa-review" element={<QAReviewDashboard />} />
                 <Route path="assessments" element={<AssessmentList />} />
@@ -146,6 +157,9 @@ const AnimatedRoutes = () => {
                 <Route path="invoice-page/*" element={<PageGuard resource="invoice"><InvoiceRoutes /></PageGuard>} />
                 <Route path="partner-invoices/*" element={<PageGuard resource="invoice"><InvoiceRoutes /></PageGuard>} />
                 <Route path="employees/*" element={<EmployeeMgt />} />
+                <Route path="interviews" element={<AdminInterviewOverviewPage />} />
+                <Route path="interviews/candidates" element={<AdminInterviewManagementPage />} />
+                <Route path="interviews/:sessionId" element={<AdminInterviewReportPage />} />
               </Route>
             </Route>
 

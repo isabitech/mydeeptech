@@ -181,6 +181,20 @@ export const endpoints = {
     assessmentReviews: "/assessment-reviews",
     updateReviewAssessment: "/assessment-reviews",
   },
+  aiInterview: {
+    candidateOverview: "/ai-interviews/overview",
+    tracks: "/ai-interviews/tracks",
+    startSession: "/ai-interviews/sessions",
+    session: "/ai-interviews/sessions",
+    focusEvents: "/ai-interviews/sessions",
+    result: "/ai-interviews/results",
+    adminOverview: "/admin/ai-interviews/overview",
+    adminSessions: "/admin/ai-interviews",
+    report: "/admin/ai-interviews",
+    schedule: "/admin/ai-interviews/schedule",
+    decision: "/admin/ai-interviews",
+    note: "/admin/ai-interviews",
+  },
 
   // Enhanced Chat support endpoints following the documentation
   chat: {

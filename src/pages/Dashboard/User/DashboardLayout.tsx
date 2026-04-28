@@ -19,7 +19,8 @@ const DashboardLayout = () => {
   //  🔒 Uncomment the below code to enforce assessment submission after it has been reviewed by the team and we are ready to enforce it for all users.
   if (!userInfo?.isAssessmentSubmitted &&
     location.pathname !== '/dashboard/overview' &&
-    location.pathname !== '/dashboard/assessment') {
+    location.pathname !== '/dashboard/assessment' &&
+    !location.pathname.startsWith('/dashboard/ai-interview')) {
     notification.warning({
       key: 'assessment-required',
       message: "Assessment Required",
