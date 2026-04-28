@@ -10,6 +10,7 @@ export interface Project {
   maxAnnotators: number | null;
   deadline: string;
   estimatedDuration: string;
+  applicationDuration?: number; // Duration in weeks (1, 2, 3, 4)
   difficultyLevel: DifficultyLevel;
   requiredSkills: string[];
   minimumExperience: ExperienceLevel;
@@ -108,6 +109,7 @@ export interface Application {
   _id: string;
   applicationId: string;
   status: ApplicationStatus;
+  applicationStatus?: ApplicationStatus;
   appliedAt: string;
   reviewedAt: string | null;
   reviewedBy: {
@@ -199,7 +201,12 @@ export type ExperienceLevel = "none" | "beginner" | "intermediate" | "advanced";
 
 export type ProjectStatus = "active" | "inactive" | "completed" | "paused" | "cancelled" | "open" | "close";
 
-export type ApplicationStatus = "pending" | "approved" | "rejected" | "ai_interview_required";
+export type ApplicationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "ai_interview_required"
+  | "removed";
 
 export type Availability = "full_time" | "part_time" | "flexible";
 
@@ -314,6 +321,7 @@ export interface CreateProjectForm {
   maxAnnotators?: number;
   deadline: string;
   estimatedDuration: string;
+  applicationDuration?: number; // Duration in weeks (1, 2, 3, 4)
   difficultyLevel: DifficultyLevel;
   requiredSkills: string[];
   minimumExperience: ExperienceLevel;
@@ -366,6 +374,7 @@ export interface ApplicationsResponse {
   approved: Application[];
   rejected: Application[];
   pending: Application[];
+  removed: Application[];
 };
 
 
@@ -421,6 +430,7 @@ export interface ApplicantId {
 
 export interface RecentApplication {
   _id: string;
+  applicationId?: string; // Alternative key for consistency
   projectId: string;
   applicantId: ApplicantId;
   status: string;
@@ -447,8 +457,9 @@ export interface RecentApplication {
 
 
 export interface ApplicationRecord {
+  _id?: string;
   applicationId: string;
-  applicationStatus: "approved" | "rejected" | "pending";
+  applicationStatus: ApplicationStatus;
   appliedAt: string;
   reviewedAt: string;
   reviewedBy: {

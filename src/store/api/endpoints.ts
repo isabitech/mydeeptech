@@ -59,6 +59,7 @@ export const endpoints = {
     getProject: "/auth/getProject",
     updateProject: "/auth/updateProject",
     deleteProject: "/auth/deleteProject",
+   
   },
 
   // Admin project management endpoints
@@ -79,6 +80,7 @@ export const endpoints = {
     rejectApplication: "/admin/applications",
     removeApplicant: "/admin/applications", // /:applicationId/remove
     getRemovableApplicants: "/admin/projects", // /:projectId/removable-applicants
+     approveRejectedProjectApplicant: "/admin/applications/approve-rejected-project-applicant",
   },
 
   // User project endpoints

@@ -500,6 +500,7 @@ const ProjectManagement: React.FC = () => {
         maxAnnotators: project.maxAnnotators,
         deadline: project.deadline ? dayjs(project.deadline) : null,
         estimatedDuration: project.estimatedDuration,
+        applicationDuration: project.applicationDuration,
         difficultyLevel: project.difficultyLevel,
         requiredSkills: project.requiredSkills,
         minimumExperience: project.minimumExperience,
@@ -1021,6 +1022,19 @@ const ProjectManagement: React.FC = () => {
             rules={[{ required: true, message: "Please input estimated duration!" }]}
           >
             <Input placeholder="e.g., 4-6 weeks, 2 months" />
+          </Form.Item>
+
+          <Form.Item
+            name="applicationDuration"
+            label="Application Duration (Auto-Rejection)"
+            help="Set how many weeks applications remain valid before auto-rejection. Leave empty for no auto-expiry."
+          >
+            <Select placeholder="Select duration (optional)" allowClear>
+              <Option value={1}>1 Week</Option>
+              <Option value={2}>2 Weeks</Option>
+              <Option value={3}>3 Weeks</Option>
+              <Option value={4}>4 Weeks (1 Month)</Option>
+            </Select>
           </Form.Item>
 
           <Form.Item
