@@ -18,6 +18,9 @@ dist-ssr
 .env.test.local
 .env.production.local
 .env.*.local
+out
+stitch_mydeeptech_ai_interviewer
+docs
 
 # Editor directories and files
 .vscode/*

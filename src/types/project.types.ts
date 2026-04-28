@@ -17,6 +17,7 @@ export interface Project {
   languageRequirements: string[];
   tags: string[];
   applicationDeadline: string;
+  aiInterviewRequired?: boolean;
   projectGuidelineLink?: string;
   projectGuidelineVideo?: string;
   projectCommunityLink?: string;
@@ -33,9 +34,52 @@ export interface Project {
   totalApplications: number;
   approvedAnnotators: number;
   availableSlots?: number;
+  currentApplications?: number;
   hasApplied?: boolean;
+  applicationStatus?: ApplicationStatus | null;
+  userApplication?: UserProjectApplication | null;
+  canApply?: boolean;
+  applicationOpen?: boolean;
+  daysUntilDeadline?: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UserProjectApplication {
+  applicationId: string;
+  status: ApplicationStatus | string;
+  appliedAt?: string;
+  rejectionReason?: string | null;
+  reviewNotes?: string | null;
+  coverLetter?: string;
+  availability?: string;
+  proposedRate?: number;
+  estimatedCompletionTime?: string;
+  aiInterviewSessionId?: string | null;
+  aiInterviewTrackId?: string | null;
+  aiInterviewStatus?: string | null;
+  aiInterviewScore?: number | null;
+  aiInterviewSummary?: string | null;
+  aiInterviewCompletedAt?: string | null;
+}
+
+export interface ProjectAiInterviewSessionSummary {
+  id: string;
+  sessionSource?: string;
+  projectId?: string;
+  projectName?: string;
+  projectApplicationId?: string;
+  trackId?: string;
+  trackTitle?: string;
+  status?: string;
+  currentQuestionIndex?: number;
+  totalQuestions?: number;
+}
+
+export interface ProjectAiInterviewSummary {
+  required: boolean;
+  trackId?: string;
+  session?: ProjectAiInterviewSessionSummary | null;
 }
 
 
@@ -64,8 +108,8 @@ export interface Project {
 export interface Application {
   _id: string;
   applicationId: string;
-  status: "approved" | "rejected" | "pending" | "removed";
-  applicationStatus: "approved" | "rejected" | "pending" | "removed";
+  status: ApplicationStatus;
+  applicationStatus?: ApplicationStatus;
   appliedAt: string;
   reviewedAt: string | null;
   reviewedBy: {
@@ -157,7 +201,12 @@ export type ExperienceLevel = "none" | "beginner" | "intermediate" | "advanced";
 
 export type ProjectStatus = "active" | "inactive" | "completed" | "paused" | "cancelled" | "open" | "close";
 
-export type ApplicationStatus = "pending" | "approved" | "rejected";
+export type ApplicationStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "ai_interview_required"
+  | "removed";
 
 export type Availability = "full_time" | "part_time" | "flexible";
 
@@ -233,12 +282,15 @@ export interface ApplicationResponse {
   success: boolean;
   message: string;
   data: {
-    application?: Application;
+    application?: Application | UserProjectApplication;
     applicationId?: string;
     applicantName?: string;
     projectName?: string;
     rejectionReason?: string;
     emailNotificationSent?: boolean;
+    aiInterviewRequired?: boolean;
+    applicationStatus?: ApplicationStatus;
+    aiInterview?: ProjectAiInterviewSummary;
   };
 }
 
@@ -276,6 +328,7 @@ export interface CreateProjectForm {
   languageRequirements: string[];
   tags: string[];
   applicationDeadline: string;
+  aiInterviewRequired?: boolean;
   projectGuidelineLink?: string;
   projectGuidelineVideo?: string;
   projectCommunityLink?: string;
@@ -291,6 +344,7 @@ export interface ApplyToProjectForm {
   availability: Availability;
   proposedRate?: number;
   estimatedCompletionTime?: string;
+  languageCode?: string;
 }
 
 export interface ApproveApplicationForm {
@@ -405,7 +459,7 @@ export interface RecentApplication {
 export interface ApplicationRecord {
   _id?: string;
   applicationId: string;
-  applicationStatus: "approved" | "rejected" | "pending";
+  applicationStatus: ApplicationStatus;
   appliedAt: string;
   reviewedAt: string;
   reviewedBy: {

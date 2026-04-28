@@ -10,6 +10,7 @@ import {
   PlayCircleOutlined,
   UnorderedListOutlined as AssessmentListOutlined,
   BellOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import { MenuItem } from "./types";
 
@@ -17,6 +18,7 @@ export const BASE_MENU_ITEMS: MenuItem[] = [
   { key: "overview", label: "Overview", icon: <HomeOutlined />, path: "/dashboard/overview" },
   { key: "assessment", label: "Assessment", icon: <BookOutlined />, path: "/dashboard/assessment" },
   { key: "assessment-history", label: "Assessment History", icon: <HistoryOutlined />, path: "/dashboard/assessment-history" },
+  { key: "ai-interview", label: "AI Interview", icon: <RobotOutlined />, path: "/dashboard/ai-interview" },
   { key: "projects", label: "Projects", icon: <CodeSandboxOutlined />, path: "/dashboard/projects" },
   { key: "notifications", label: "Notifications", icon: <BellOutlined />, path: "/dashboard/notifications" },
   { key: "payment", label: "Payment", icon: <WalletOutlined />, path: "/dashboard/payment" },

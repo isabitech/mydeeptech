@@ -15,6 +15,22 @@ const UserHeader = () => {
        return `Welcome back, ${userInfo?.fullName ?? ""}`;
      }
 
+     if (location.pathname.startsWith('/dashboard/ai-interview/results/')) {
+       return "AI Interview Results";
+     }
+
+     if (location.pathname.startsWith('/dashboard/ai-interview/session/')) {
+       return "AI Interview Session";
+     }
+
+     if (location.pathname.startsWith('/dashboard/ai-interview/setup/')) {
+       return "AI Interview Setup";
+     }
+
+     if (location.pathname === '/dashboard/ai-interview') {
+       return "AI Interview";
+     }
+
      // For other pages, extract the page name from the URL
      const pathSegments = location.pathname.split('/').filter(Boolean);
      const lastSegment = pathSegments[pathSegments.length - 1];

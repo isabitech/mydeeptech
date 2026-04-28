@@ -3,7 +3,8 @@ import { NavLink } from "react-router-dom";
 import {
   LogoutOutlined,
   DownOutlined,
-  RightOutlined
+  RightOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import Logo from "../../../assets/deeptech.png";
 import PageModal from "../../../components/Modal/PageModal";
@@ -18,6 +19,15 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
   const { handleCloseSidebar } = useSidebarContext();
   const { resources, loading, error } = useSidebarResources();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  const hasInterviewsResource = (nodes: ResourceNode[]): boolean => {
+    return nodes.some((node) => {
+      if (node.link?.includes("/interviews")) {
+        return true;
+      }
+      return node.children ? hasInterviewsResource(node.children) : false;
+    });
+  };
 
   const toggleExpand = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -116,6 +126,27 @@ const SidebarMenus = ({ openModal, handleLogOutModal }: { openModal: boolean; ha
           ) : (
             resources.map((item) => renderNavNode(item))
           )}
+          {!loading && !hasInterviewsResource(resources) ? (
+            <li className="w-full">
+              <NavLink
+                to="/admin/interviews"
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    handleCloseSidebar();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 py-3 pr-4 text-sm font-medium transition-colors ${
+                    isActive ? "bg-secondary rounded-md" : "hover:bg-gray-800"
+                  }`
+                }
+                style={{ paddingLeft: "1rem" }}
+              >
+                <RobotOutlined />
+                <span>AI Interview</span>
+              </NavLink>
+            </li>
+          ) : null}
         </ul>
 
         {/* Global actions at bottom */}

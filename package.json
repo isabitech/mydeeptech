@@ -7,12 +7,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "video:studio": "remotion studio src/remotion/index.ts",
+    "video:render": "remotion render src/remotion/index.ts MyDeepTechPromo out/mydeeptech-promo.mp4",
+    "video:still": "remotion still src/remotion/index.ts MyDeepTechPromo out/mydeeptech-poster.png"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
+    "@remotion/cli": "4.0.450",
+    "@remotion/player": "4.0.450",
     "@tanstack/react-query": "^5.90.21",
     "@types/countup.js": "^1.9.0",
     "@types/html2canvas": "^0.5.35",
@@ -40,6 +45,7 @@
     "react-player": "^2.16.0",
     "react-router-dom": "^6.28.0",
     "recharts": "^2.15.4",
+    "remotion": "4.0.450",
     "socket.io-client": "^4.8.1",
     "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
@@ -67,5 +73,21 @@
     "typescript-eslint": "^8.11.0",
     "vite": "^5.0.0",
     "vite-plugin-pwa": "^0.19.8"
+  },
+  "overrides": {
+    "@remotion/bundler": "4.0.450",
+    "@remotion/compositor-win32-x64-msvc": "4.0.450",
+    "@remotion/licensing": "4.0.450",
+    "@remotion/media-parser": "4.0.450",
+    "@remotion/media-utils": "4.0.450",
+    "@remotion/player": "4.0.450",
+    "@remotion/renderer": "4.0.450",
+    "@remotion/streaming": "4.0.450",
+    "@remotion/studio": "4.0.450",
+    "@remotion/studio-server": "4.0.450",
+    "@remotion/studio-shared": "4.0.450",
+    "@remotion/web-renderer": "4.0.450",
+    "@remotion/zod-types": "4.0.450",
+    "remotion": "4.0.450"
   }
 }

@@ -33,6 +33,7 @@ export interface Project {
   tags: any[]
   isPublic: boolean
   applicationDeadline: any
+  aiInterviewRequired?: boolean
   projectGuidelineLink?: string
   projectGuidelineVideo?: string
   projectCommunityLink?: string
@@ -45,6 +46,7 @@ export interface Project {
   canApply: boolean
   userApplication: UserApplication
   hasApplied: boolean
+  applicationStatus?: string | null
   applicationOpen: boolean
   daysUntilDeadline: any
 }
@@ -63,6 +65,12 @@ export interface UserApplication {
   reviewNotes: string
   coverLetter: string
   availability: string
+  aiInterviewSessionId?: string | null
+  aiInterviewTrackId?: string | null
+  aiInterviewStatus?: string | null
+  aiInterviewScore?: number | null
+  aiInterviewSummary?: string | null
+  aiInterviewCompletedAt?: string | null
 }
 
 export interface Pagination {

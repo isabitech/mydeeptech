@@ -21,8 +21,10 @@ import {
   DollarOutlined,
   UserOutlined,
   CheckCircleOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
 import {
   Project,
@@ -69,6 +71,7 @@ const statusMap = {
 };
 
 const AvailableProjects = () => {
+  const navigate = useNavigate();
   const [isApplicationModalVisible, setIsApplicationModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -102,6 +105,27 @@ const AvailableProjects = () => {
       minPayRate: minPayRate || undefined,
       maxPayRate: maxPayRate || undefined,
     });
+  };
+
+  const getProjectApplicationStatus = (project?: Project | null) =>
+    project?.userApplication?.status ?? project?.applicationStatus ?? null;
+
+  const getProjectInterviewSessionId = (project?: Project | null) => {
+    const status = getProjectApplicationStatus(project);
+    if (status !== "ai_interview_required") {
+      return null;
+    }
+    return project?.userApplication?.aiInterviewSessionId ?? null;
+  };
+
+  const resumeProjectInterview = (project: Project) => {
+    const sessionId = getProjectInterviewSessionId(project);
+    if (!sessionId) {
+      message.error("No AI interview session is available for this project application yet.");
+      return;
+    }
+
+    navigate(`/dashboard/ai-interview/session/${sessionId}`);
   };
 
   const handleSearch = (value: string) => {
@@ -161,22 +185,52 @@ const AvailableProjects = () => {
         availability: values.availability,
         proposedRate: values.proposedRate,
         estimatedCompletionTime: values.estimatedCompletionTime,
+        languageCode:
+          typeof navigator !== "undefined" && navigator.language
+            ? navigator.language
+            : "en-US",
       };
 
       const result = await applyToProject(selectedProject._id, applicationData);
 
       if (result.success) {
+        const returnedStatus =
+          result.data?.applicationStatus ?? result.data?.application?.status ?? null;
+        const interviewRequired = Boolean(
+          result.data?.aiInterviewRequired ??
+            selectedProject.aiInterviewRequired ??
+            returnedStatus === "ai_interview_required",
+        );
+        const interviewSessionId = result.data?.aiInterview?.session?.id ?? null;
+
+        if (interviewRequired) {
+          if (!interviewSessionId) {
+            message.error(
+              "The project requires an AI interview, but no interview session was returned.",
+            );
+            return;
+          }
+
+          message.info(
+            "AI interview required. Complete the interview before your application can move into review.",
+          );
+          setIsApplicationModalVisible(false);
+          applicationForm.resetFields();
+          navigate(`/dashboard/ai-interview/session/${interviewSessionId}`);
+          return;
+        }
+
         message.success("Application submitted successfully!");
         setIsApplicationModalVisible(false);
         applicationForm.resetFields();
-        fetchProjects(); // Refresh to update hasApplied status
+        fetchProjects();
       } else {
         message.error(result.error || "Failed to submit application");
       }
     } catch (error) {
       const errMsg = getErrorMessage(error);
       console.error("Application error:", errMsg);
-      message.error("errMsg");
+      message.error(errMsg || "Failed to submit application");
     }
   };
 
@@ -303,6 +357,8 @@ const AvailableProjects = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProjects.map((project) => {
+              const interviewSessionId = getProjectInterviewSessionId(project);
+
               return (
                 <Card
                   key={project._id}
@@ -318,8 +374,28 @@ const AvailableProjects = () => {
                     </Button>,
 
                     project.openCloseStatus === 'close' ? (
+                      interviewSessionId ? (
+                        <Button
+                          type="primary"
+                          icon={<RobotOutlined />}
+                          onClick={() => resumeProjectInterview(project)}
+                          className="!bg-secondary !border-secondary"
+                        >
+                          Continue AI Interview
+                        </Button>
+                      ) : (
                       <Button type="text" disabled>
                         Closed
+                      </Button>
+                      )
+                    ) : interviewSessionId ? (
+                      <Button
+                        type="primary"
+                        icon={<RobotOutlined />}
+                        onClick={() => resumeProjectInterview(project)}
+                        className="!bg-secondary !border-secondary"
+                      >
+                        Continue AI Interview
                       </Button>
                     ) : project.hasApplied ? (
                       <Button type="text" disabled>
@@ -349,13 +425,18 @@ const AvailableProjects = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <Tag color="blue">{project.projectCategory}</Tag>
-                      <Tag color={
-                        project.difficultyLevel === 'beginner' ? 'green' :
-                        project.difficultyLevel === 'intermediate' ? 'orange' :
-                        project.difficultyLevel === 'advanced' ? 'red' : 'purple'
-                      }>
-                        {project.difficultyLevel.toUpperCase()}
-                      </Tag>
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Tag color={
+                          project.difficultyLevel === 'beginner' ? 'green' :
+                          project.difficultyLevel === 'intermediate' ? 'orange' :
+                          project.difficultyLevel === 'advanced' ? 'red' : 'purple'
+                        }>
+                          {project.difficultyLevel.toUpperCase()}
+                        </Tag>
+                        <Tag color={project.aiInterviewRequired ? "volcano" : "green"}>
+                          {project.aiInterviewRequired ? "AI Interview Required" : "Direct Review"}
+                        </Tag>
+                      </div>
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -384,6 +465,11 @@ const AvailableProjects = () => {
                           <span className="text-gray-500 text-sm">
                             <CheckCircleOutlined /> Application Status: {statusMap[project.openCloseStatus]}
                           </span>
+                          {getProjectApplicationStatus(project) === "ai_interview_required" && (
+                            <span className="text-xs font-medium text-orange-600">
+                              Interview in progress
+                            </span>
+                          )}
                         </div>
                       )
                     }
@@ -418,6 +504,20 @@ const AvailableProjects = () => {
           <Button key="close" onClick={() => setIsDetailModalVisible(false)}>
             Close
           </Button>,
+          selectedProject && getProjectInterviewSessionId(selectedProject) ? (
+            <Button
+              key="resume-interview"
+              type="primary"
+              icon={<RobotOutlined />}
+              onClick={() => {
+                setIsDetailModalVisible(false);
+                resumeProjectInterview(selectedProject);
+              }}
+              className="!bg-secondary !border-secondary"
+            >
+              Continue AI Interview
+            </Button>
+          ) : (
           selectedProject && !selectedProject.hasApplied && (
             <Button
               key="apply"
@@ -428,9 +528,9 @@ const AvailableProjects = () => {
               }}
               className="!bg-secondary !border-secondary"
             >
-              Apply to Project
+              {selectedProject.aiInterviewRequired ? "Apply and Start AI Interview" : "Apply to Project"}
             </Button>
-          ),
+          )),
         ]}
         width={800}
       >
@@ -442,6 +542,9 @@ const AvailableProjects = () => {
                 <Tag color="blue">{selectedProject.projectCategory}</Tag>
                 <Tag color="green">{selectedProject.difficultyLevel}</Tag>
                 <Tag color="orange">{selectedProject.status}</Tag>
+                <Tag color={selectedProject.aiInterviewRequired ? "volcano" : "green"}>
+                  {selectedProject.aiInterviewRequired ? "AI Interview Required" : "Direct Review"}
+                </Tag>
               </div>
               <p className="text-gray-600">{selectedProject.projectDescription}</p>
             </div>
@@ -455,6 +558,12 @@ const AvailableProjects = () => {
                   <li><strong>Max Annotators:</strong> {selectedProject.maxAnnotators || 'Unlimited'}</li>
                   <li><strong>Applications:</strong> {selectedProject.totalApplications}</li>
                   <li><strong>Min Experience:</strong> {selectedProject.minimumExperience}</li>
+                  <li>
+                    <strong>Application Path:</strong>{" "}
+                    {selectedProject.aiInterviewRequired
+                      ? "AI interview required before admin review"
+                      : "Direct admin review after application"}
+                  </li>
                 </ul>
               </div>
 
@@ -509,7 +618,7 @@ const AvailableProjects = () => {
         open={isApplicationModalVisible}
         onOk={handleApply}
         onCancel={() => setIsApplicationModalVisible(false)}
-        okText="Submit Application"
+        okText={selectedProject?.aiInterviewRequired ? "Start AI Interview" : "Submit Application"}
         cancelText="Cancel"
         okButtonProps={{ loading }}
         width={600}
@@ -521,7 +630,20 @@ const AvailableProjects = () => {
               <p className="text-sm text-gray-600">
                 {selectedProject.payRateCurrency} {selectedProject.payRate} per {selectedProject.payRateType.replace('_', ' ')}
               </p>
+              <Tag color={selectedProject.aiInterviewRequired ? "volcano" : "green"} className="mt-2">
+                {selectedProject.aiInterviewRequired ? "AI Interview Required" : "Direct Admin Review"}
+              </Tag>
             </div>
+
+            {selectedProject.aiInterviewRequired && (
+              <Alert
+                type="warning"
+                showIcon
+                className="mb-4"
+                message="This project requires an AI interview"
+                description="After you apply, you will be routed into a project-specific AI interview. Your application only moves into admin review if the interview is passed."
+              />
+            )}
 
             <Form form={applicationForm} layout="vertical">
               <Form.Item
