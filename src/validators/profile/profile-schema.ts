@@ -26,6 +26,8 @@ const ProfessionalBackgroundSchema = z.object({
 });
 
 const LanguageProficiencySchema = z.object({
+  nativeLanguages: z.array(z.string()).optional(),
+  otherLanguages: z.array(z.string()).optional(),
   primaryLanguage: z.string().optional(),
   englishFluencyLevel: z.string().optional(),
 });

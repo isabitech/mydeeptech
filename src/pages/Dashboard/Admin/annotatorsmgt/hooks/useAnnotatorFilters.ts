@@ -3,19 +3,21 @@ import { DEFAULT_PAGE_SIZE, DEFAULT_CURRENT_PAGE, SEARCH_DEBOUNCE_DELAY } from "
 
 interface UseAnnotatorFiltersProps {
   countryFilter: string;
+  languageFilter?: string;
 }
 
-export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps) => {
+export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnotatorFiltersProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [inputValue, setInputValue] = useState(""); // Immediate input value for UI
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(DEFAULT_CURRENT_PAGE);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Reset to page 1 when country filter changes
+  // Reset to page 1 when country or language filter changes
   useEffect(() => {
     setCurrentPage(DEFAULT_CURRENT_PAGE);
-  }, [countryFilter]);
+  }, [countryFilter, languageFilter]);
 
   // Memoize query parameters to prevent unnecessary re-renders
   const queryParams = useMemo(() => ({
@@ -23,16 +25,21 @@ export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps)
     limit: pageSize,
     ...(statusFilter !== "all" && { status: statusFilter }),
     ...(searchTerm && { search: searchTerm }),
-    ...(countryFilter !== "all" && { country: countryFilter })
-  }), [currentPage, pageSize, statusFilter, searchTerm, countryFilter]);
+    ...(countryFilter !== "all" && { country: countryFilter }),
+    ...(languageFilter && languageFilter !== "all" && { language: languageFilter })
+  }), [currentPage, pageSize, statusFilter, searchTerm, countryFilter, languageFilter]);
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
+    setInputValue(value);
     setCurrentPage(DEFAULT_CURRENT_PAGE);
   }, []);
 
   // Debounced search for real-time typing
   const handleSearchChange = useCallback((value: string) => {
+    // Update input value immediately for responsive UI
+    setInputValue(value);
+    
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -64,6 +71,7 @@ export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps)
 
   const resetFilters = useCallback(() => {
     setSearchTerm("");
+    setInputValue("");
     setStatusFilter("all");
     setCurrentPage(DEFAULT_CURRENT_PAGE);
   }, []);
@@ -77,7 +85,7 @@ export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps)
 
   return {
     // State
-    searchTerm,
+    searchTerm: inputValue, // Use inputValue for immediate UI updates
     statusFilter,
     currentPage,
     pageSize,
@@ -92,7 +100,10 @@ export const useAnnotatorFilters = ({ countryFilter }: UseAnnotatorFiltersProps)
     cleanup,
 
     // Direct setters for external control
-    setSearchTerm,
+    setSearchTerm: (value: string) => {
+      setSearchTerm(value);
+      setInputValue(value);
+    },
     setStatusFilter,
     setCurrentPage,
     setPageSize

@@ -32,7 +32,7 @@ const TrackCard = ({
   const isGeneralist = variant === "generalist";
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[#E7DED5] bg-[linear-gradient(180deg,_#FFFFFF_0%,_#FFFCF8_100%)] shadow-[0_20px_44px_rgba(51,51,51,0.06)] transition-all duration-300 hover:-translate-y-1">
+    <div className="group flex h-full flex-col overflow-hidden rounded-[28px] bg-[linear-gradient(180deg,_#FFFFFF_0%,_#FFFCF8_100%)] shadow-[0_20px_44px_rgba(51,51,51,0.06)] transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-56 overflow-hidden">
         {isGeneralist ? (
           <>
@@ -69,11 +69,11 @@ const TrackCard = ({
 
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/95 to-transparent" />
 
-        <div className="absolute left-6 top-6 rounded-full border border-[#E8D8C8] bg-white/95 px-3 py-1 text-[11px] font-[gilroy-semibold] uppercase tracking-[0.14em] text-[#6B5A4A] backdrop-blur-sm">
+        <div className="absolute left-0 top-0 rounded-full border border-[#E8D8C8] bg-white/95 px-3 py-1 text-[11px] font-[gilroy-semibold] uppercase tracking-[0.14em] text-[#6B5A4A] backdrop-blur-sm">
           {badge}
         </div>
 
-        <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-4 rounded-[22px] border border-[#E8DED4] bg-white/95 px-4 py-3 backdrop-blur-sm">
+        <div className="absolute inset-x-6 bottom-6 flex items-end justify-between gap-4 rounded-md border border-[#E8DED4] bg-white/95 px-4 py-3 backdrop-blur-sm">
           <div className="min-w-0">
             <p className="text-[11px] uppercase tracking-[0.16em] text-[#8A7C70]">
               {isGeneralist ? "Platform qualification" : "Priority queue access"}
@@ -88,17 +88,17 @@ const TrackCard = ({
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col gap-3">
         <div>
           <h3 className="text-2xl font-[gilroy-bold] text-[#231A12]">{title}</h3>
-          <p className="mt-3 text-sm leading-7 text-[#5B4C40]">{description}</p>
+          <p className="text-sm leading-7 text-[#5B4C40]">{description}</p>
         </div>
 
         <div className="mt-5 grid gap-3 text-sm text-[#7B6B5D] sm:grid-cols-2 xl:grid-cols-3">
           {meta.map((item) => (
             <div
               key={item}
-              className="rounded-2xl border border-[#F2E5D7] bg-[#FFFBF7] px-4 py-3 font-[gilroy-medium]"
+              className="rounded-md border border-[#F2E5D7] bg-[#FFFBF7] px-4 py-3 font-[gilroy-medium]"
             >
               {item}
             </div>

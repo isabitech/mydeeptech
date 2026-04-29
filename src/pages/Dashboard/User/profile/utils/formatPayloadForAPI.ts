@@ -14,6 +14,8 @@ interface ProfileFormValues {
   yearsOfExperience?: string | number;
   annotationSkills?: string[];
   toolExperience?: string[];
+  nativeLanguages?: string[];
+  otherLanguages?: string[];
   primaryLanguage?: string;
   englishFluencyLevel?: string;
   resumeUrl?: string;
@@ -62,6 +64,8 @@ export const formatPayloadForAPI = (values: ProfileFormValues | null | undefined
     annotationSkills: values.annotationSkills || [],
     toolExperience: values.toolExperience || [],
     languageProficiency: {
+      nativeLanguages: values.nativeLanguages,
+      otherLanguages: values.otherLanguages,
       primaryLanguage: values.primaryLanguage,
       englishFluencyLevel: values.englishFluencyLevel,
     },

@@ -49,8 +49,10 @@ export const setGlobalNavigate = (navigateCallback: ((path: string, options?: { 
  * ```
  */
 
+console.log("🚀 Axios API initialized with baseURL:", baseURL);
+
   export const axiosInstance = axios.create({
-      baseURL: baseURL,
+      baseURL,
       headers: {
         "Content-Type": "application/json",
       },
@@ -264,7 +266,7 @@ export const useAxiosApi = () => {
         message: response.data?.message,
         status: response.status,
       };
-    } catch (error: any) {
+    } catch (error) {
       throw error; // Re-throw the enhanced error from interceptor
     }
   }, [axiosInstance]);

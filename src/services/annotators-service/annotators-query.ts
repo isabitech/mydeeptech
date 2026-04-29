@@ -20,6 +20,7 @@ const buildQueryParams = (params?: AnnotatorsQueryParamsSchema): string => {
   if (params.status) queryParams.append('status', params.status);
   if (params.search) queryParams.append('search', params.search);
   if (params.country && params.country !== 'all') queryParams.append('country', params.country);
+  if (params.language && params.language !== 'all') queryParams.append('language', params.language);
   if (params.qaStatus) queryParams.append('qaStatus', params.qaStatus);
   
   return queryParams.toString();

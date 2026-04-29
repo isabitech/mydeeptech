@@ -26,6 +26,8 @@ export const formatProfileForForm = (profile: Profile | null | undefined) => {
     yearsOfExperience: profile?.professionalBackground?.yearsOfExperience,
     annotationSkills: profile?.annotationSkills || [],
     toolExperience: profile?.toolExperience || [],
+    nativeLanguages: profile?.languageProficiency?.nativeLanguages || [],
+    otherLanguages: profile?.languageProficiency?.otherLanguages || [],
     primaryLanguage: profile?.languageProficiency?.primaryLanguage,
     englishFluencyLevel: profile?.languageProficiency?.englishFluencyLevel,
     resumeUrl: profile?.attachments?.resumeUrl,

@@ -61,8 +61,9 @@ export interface ProfessionalBackground {
 }
 
 export interface LanguageProficiency {
+  native_languages: string[]
+  other_languages: string[]
   primary_language: string
-  other_languages: any[]
   english_fluency_level: string
 }
 

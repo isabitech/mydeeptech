@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check } from "lucide-react";
+import { ChevronRight, ChevronLeft, User, Mail, Phone, Briefcase, Users, Check, Globe } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { Select } from "antd";
 import authMutationService from "../../services/authentication/auth-mutation";
 import { SignUpSchema } from "../../validators/authentication/user-signup-schema";
 import errorMessage from "../../lib/error-message";
 import { notification } from "antd";
 import domainQueryService from "../../services/domain-service/domain-query";
 import './../../pages/Dashboard/User/profile/_components/PhoneInput.css';
+import './../../components/LanguageSelect/LanguageSelect.css';
 import { isRestrictedEmail } from "../../services/authentication/_helper";
+import languagesData from "../../data/languages.json";
 
 
 type FormState = {
@@ -21,6 +24,8 @@ type FormState = {
   domains: { id: string; name: string }[];
   socialsFollowed: string[];
   consent: "yes" | "no" | "";
+  nativeLanguages: string[];
+  otherLanguages: string[];
 };
 
 const SOCIAL_LINKS = [
@@ -49,6 +54,8 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
     domains: [],
     socialsFollowed: [],
     consent: "",
+    nativeLanguages: [],
+    otherLanguages: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,8 +69,9 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
 
   const stages = [
     { id: 1, title: "Personal Info", icon: User },
-    { id: 2, title: "Domain Selection", icon: Briefcase },
-    { id: 3, title: "Social & Consent", icon: Users },
+    { id: 2, title: "Languages", icon: Globe },
+    { id: 3, title: "Domain Selection", icon: Briefcase },
+    { id: 4, title: "Social & Consent", icon: Check },
   ];
 
   const toggleDomain = (domain: { id: string; name: string }) => {
@@ -99,9 +107,11 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
       if (!form.email.trim()) e.email = "Email is required";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
     } else if (stage === 2) {
+      if (form.nativeLanguages.length === 0) e.nativeLanguages = "Select at least one native language";
+    } else if (stage === 3) {
       if (form.domains.length === 0) e.domains = "Select at least one domain";
       if (form.domains.length > 5) e.domains = "Maximum 5 domains allowed";
-    } else if (stage === 3) {
+    } else if (stage === 4) {
       if (!form.consent) e.consent = "Please choose yes or no";
     }
 
@@ -111,7 +121,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
 
   const handleNext = () => {
     if (validateStage(currentStage)) {
-      setCurrentStage(prev => Math.min(prev + 1, 3));
+      setCurrentStage(prev => Math.min(prev + 1, 4));
     }
   };
 
@@ -121,7 +131,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   };
 
   const handleSubmit = async () => {
-    if (!validateStage(3)) return;
+    if (!validateStage(4)) return;
     
       // Use schema.parse() to validate and transform the data
       const payload = SignUpSchema.parse({
@@ -131,7 +141,9 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
         country: form.country,
         domains: form.domains,
         socialsFollowed: form.socialsFollowed,
-        consent: form.consent
+        consent: form.consent,
+        nativeLanguages: form.nativeLanguages,
+        otherLanguages: form.otherLanguages
       });
 
     if (isRestrictedEmail(payload.email)) {
@@ -158,7 +170,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
   const resetForm = () => {
     setSubmitted(false);
     setCurrentStage(1);
-    setForm({ fullName: "", phone: "", email: "", country: "Nigeria", domains: [], socialsFollowed: [], consent: "" });
+    setForm({ fullName: "", phone: "", email: "", country: "Nigeria", domains: [], socialsFollowed: [], consent: "", nativeLanguages: [], otherLanguages: [] });
     setErrors({});
   };
 
@@ -249,6 +261,74 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           >
             <div>
               <label className="block text-sm font-medium text-white mb-2">
+                <Globe className="inline w-4 h-4 mr-2" />
+                Native Languages <span className="text-red-400">*</span>
+              </label>
+              <p className="text-xs text-gray-400 mb-3">Select your native language(s) - languages you learned as a child</p>
+              <Select
+                mode="multiple"
+                placeholder="Select your native languages"
+                value={form.nativeLanguages}
+                onChange={(values) => setForm((s) => ({ ...s, nativeLanguages: values }))}
+                className="w-full language-select"
+                classNames={{
+                  popup: { root: 'dark-dropdown' }
+                }}
+                style={{ minHeight: '40px' }}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={languagesData.languages.map(lang => ({
+                  value: lang.code,
+                  label: `${lang.name} (${lang.native})`,
+                  searchValue: `${lang.name} ${lang.native} ${lang.region}`
+                }))}
+              />
+              {errors.nativeLanguages && <p className="text-xs text-red-400 mt-1">{errors.nativeLanguages}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
+                <Globe className="inline w-4 h-4 mr-2" />
+                Other Languages (Optional)
+              </label>
+              <p className="text-xs text-gray-400 mb-3">Select other languages you can speak, read, or write</p>
+              <Select
+                mode="multiple"
+                placeholder="Select other languages"
+                value={form.otherLanguages}
+                onChange={(values) => setForm((s) => ({ ...s, otherLanguages: values }))}
+                className="w-full language-select"
+                classNames={{
+                  popup: { root: 'dark-dropdown' }
+                }}
+                style={{ minHeight: '40px' }}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                }
+                options={languagesData.languages.map(lang => ({
+                  value: lang.code,
+                  label: `${lang.name} (${lang.native})`,
+                  searchValue: `${lang.name} ${lang.native} ${lang.region}`
+                }))}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium text-white mb-2">
                 <Briefcase className="inline w-4 h-4 mr-2" />
                 Select Your Domain(s) ({form.domains.length}/5) <span className="text-red-400">*</span>
               </label>
@@ -291,7 +371,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           </motion.div>
         );
 
-      case 3:
+      case 4:
         return (
           <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -459,7 +539,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
                     <Icon className="w-5 h-5" />
                   )}
                 </motion.div>
-                {stage.id < 3 && (
+                {stage.id < 4 && (
                   <motion.div
                     initial={false}
                     animate={{
@@ -506,7 +586,7 @@ export default function MultiStageSignUpForm({ onSuccess: onHandleSuccess, class
           Previous
         </motion.button>
 
-        {currentStage < 3 ? (
+        {currentStage < 4 ? (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

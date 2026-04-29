@@ -12,9 +12,11 @@ const SignUpSchema = z.object({
     name: z.string().min(1, "Domain name cannot be empty")
   })).min(1, "Select at least one domain"),
   socialsFollowed: z.array(z.string().min(1)).optional().default([]),
-    consent: z.enum(["yes", "no"], {
+  nativeLanguages: z.array(z.string()).min(1, "Select at least one native language"),
+  otherLanguages: z.array(z.string()).optional().default([]),
+  consent: z.enum(["yes", "no"], {
     error: () => ({ message: "Please select yes or no" }),
-    }),
+  }),
 });
 
 
