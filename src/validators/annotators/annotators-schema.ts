@@ -33,8 +33,9 @@ const ProfessionalBackgroundSchema = z.object({
 
 // Language Proficiency nested schema
 const LanguageProficiencySchema = z.object({
+  native_languages: z.array(z.string()).optional(),
+  other_languages: z.array(z.string()).optional(),
   primary_language: z.string(),
-  other_languages: z.array(z.any()),
   english_fluency_level: z.string(),
 });
 
@@ -155,6 +156,7 @@ const AnnotatorsQueryParamsSchema = z.object({
   status: z.string().optional(),
   search: z.string().optional(),
   country: z.string().optional(),
+  language: z.string().optional(),
   qaStatus: z.string().optional(),
 }).optional();
 

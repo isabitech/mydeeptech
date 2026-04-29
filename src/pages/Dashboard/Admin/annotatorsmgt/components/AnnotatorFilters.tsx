@@ -1,6 +1,8 @@
 import { Space, Input, Select, Button } from "antd";
-import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
+import { SearchOutlined, ReloadOutlined, GlobalOutlined } from "@ant-design/icons";
 import { STATUS_FILTER_OPTIONS } from "../constants";
+import languagesData from "../../../../../data/languages.json";
+import "../../../../../components/LanguageSelect/LanguageSelect.css";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -8,22 +10,35 @@ const { Option } = Select;
 interface AnnotatorFiltersProps {
   searchTerm: string;
   statusFilter: string;
+  languageFilter?: string;
   loading: boolean;
   onSearchChange: (value: string) => void;
   onSearch: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
+  onLanguageFilterChange?: (value: string) => void;
   onRefresh: () => void;
 }
 
 const AnnotatorFilters = ({
   searchTerm,
   statusFilter,
+  languageFilter,
   loading,
   onSearchChange,
   onSearch,
   onStatusFilterChange,
+  onLanguageFilterChange,
   onRefresh
 }: AnnotatorFiltersProps) => {
+  // Create language options for filtering
+  const languageOptions = [
+    { value: "all", label: "All Languages" },
+    ...languagesData.languages.map(lang => ({
+      value: lang.code,
+      label: `${lang.name} (${lang.native})`
+    }))
+  ];
+
   return (
     <div className="mb-4">
       <Space size="middle" wrap>
@@ -48,6 +63,31 @@ const AnnotatorFilters = ({
             </Option>
           ))}
         </Select>
+
+        {onLanguageFilterChange && (
+          <Select
+            value={languageFilter || "all"}
+            onChange={onLanguageFilterChange}
+            style={{ width: 200 }}
+            placeholder="Filter by language"
+            showSearch
+            filterOption={(input, option) =>
+              (option?.children ?? '').toString().toLowerCase().includes(input.toLowerCase())
+            }
+          >
+            {languageOptions.map(option => (
+              <Option key={option.value} value={option.value}>
+                {option.value === "all" ? (
+                  <>
+                    <GlobalOutlined /> {option.label}
+                  </>
+                ) : (
+                  option.label
+                )}
+              </Option>
+            ))}
+          </Select>
+        )}
 
         <Button
           icon={<ReloadOutlined />}

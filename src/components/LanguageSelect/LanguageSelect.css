@@ -1,0 +1,138 @@
+/* Language Select Component Styles - Scoped to avoid conflicts */
+
+/* Dark dropdown styling - only for language selects */
+.language-select .ant-select-dropdown,
+.language-select.dark-dropdown {
+  background-color: #1f1f1f !important;
+  border-radius: 8px;
+  border: 1px solid #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.language-select .ant-select-item,
+.language-select.dark-dropdown .ant-select-item {
+  color: #e5e5e5 !important;
+  padding: 8px 12px;
+}
+
+.language-select .ant-select-item:hover,
+.language-select.dark-dropdown .ant-select-item:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+
+.language-select .ant-select-item-option-selected,
+.language-select.dark-dropdown .ant-select-item-option-selected {
+  background-color: #1890ff !important;
+  color: #fff !important;
+}
+
+.language-select .ant-select-item-option-active,
+.language-select.dark-dropdown .ant-select-item-option-active {
+  background-color: #444 !important;
+  color: #fff !important;
+}
+
+.language-select .ant-empty,
+.language-select.dark-dropdown .ant-empty {
+  color: #999 !important;
+}
+
+/* Multi-select tags styling - scoped */
+.language-select .ant-select-selector {
+  background-color: #1f1f1f !important;
+  border-color: #444 !important;
+  color: #e5e5e5 !important;
+}
+
+.language-select .ant-select-selector:hover {
+  border-color: #1890ff !important;
+}
+
+.language-select.ant-select-focused .ant-select-selector {
+  border-color: #1890ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.language-select .ant-select-selection-placeholder {
+  color: #999 !important;
+}
+
+.language-select .ant-select-selection-item {
+  background-color: #333 !important;
+  border-color: #555 !important;
+  color: #e5e5e5 !important;
+}
+
+.language-select.ant-select-multiple .ant-select-selection-item {
+  background-color: #333 !important;
+  border-color: #555 !important;
+  color: #e5e5e5 !important;
+  border-radius: 4px;
+}
+
+.language-select .ant-select-multiple .ant-select-selection-item-remove {
+  color: #999 !important;
+}
+
+.language-select .ant-select-multiple .ant-select-selection-item-remove:hover {
+  color: #ff4d4f !important;
+}
+
+/* Search input styling - scoped */
+.language-select .ant-select-selection-search-input {
+  color: #e5e5e5 !important;
+}
+
+/* Arrow styling - scoped */
+.language-select .ant-select-arrow {
+  color: #999 !important;
+}
+
+.language-select .ant-select-arrow:hover {
+  color: #e5e5e5 !important;
+}
+
+/* Clear button styling - scoped */
+.language-select .ant-select-clear {
+  color: #999 !important;
+}
+
+.language-select .ant-select-clear:hover {
+  color: #e5e5e5 !important;
+}
+
+/* Loading state - scoped */
+.language-select .ant-select-selection-overflow {
+  color: #e5e5e5 !important;
+}
+
+/* Responsive breakpoints for language selection */
+@media (max-width: 768px) {
+  .language-select .ant-select-dropdown,
+  .language-select.dark-dropdown .ant-select-dropdown {
+    max-height: 200px;
+  }
+}
+
+/* Language code badge styling - scoped */
+.language-select .language-code {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-left: 4px;
+  padding: 1px 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Native language indicator - scoped */
+.language-select .native-language-indicator {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+/* Other language indicator - scoped */
+.language-select .other-language-indicator {
+  color: #1890ff;
+  font-weight: 400;
+}

@@ -1,5 +1,7 @@
 import React from "react";
 import { Form, Input, Select } from "antd";
+import languagesData from "../../../../../data/languages.json";
+import "../../../../../components/LanguageSelect/LanguageSelect.css";
 
 interface ProfessionalBackgroundFormProps {
   isEditing: boolean;
@@ -8,6 +10,13 @@ interface ProfessionalBackgroundFormProps {
 const ProfessionalBackgroundForm: React.FC<ProfessionalBackgroundFormProps> = ({
   isEditing,
 }) => {
+  // Create language options from our comprehensive language data
+  const languageOptions = languagesData.languages.map(lang => ({
+    value: lang.code,
+    label: `${lang.name} (${lang.native})`,
+    searchValue: `${lang.name} ${lang.native} ${lang.region}`
+  }));
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -26,24 +35,46 @@ const ProfessionalBackgroundForm: React.FC<ProfessionalBackgroundFormProps> = ({
             placeholder="Enter years of experience"
           />
         </Form.Item>
-        <Form.Item label="Primary Language" name="primaryLanguage">
+      </div>
+      
+      <div className="grid grid-cols-1 gap-4 mt-4">
+        <Form.Item label="Native Languages" name="nativeLanguages">
           <Select
+            mode="multiple"
             disabled={!isEditing}
             className="!font-[gilroy-regular]"
-            placeholder="Select your primary language"
-            options={[
-              { value: "english", label: "English" },
-              { value: "french", label: "French" },
-              { value: "spanish", label: "Spanish" },
-            ]}
+            placeholder="Select your native languages"
+            showSearch
+            filterOption={(input, option) =>
+              (option?.searchValue ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={languageOptions}
+            maxTagCount="responsive"
           />
         </Form.Item>
+        
+        <Form.Item label="Other Languages" name="otherLanguages">
+          <Select
+            mode="multiple"
+            disabled={!isEditing}
+            className="!font-[gilroy-regular]"
+            placeholder="Select other languages you can speak"
+            showSearch
+            filterOption={(input, option) =>
+              (option?.searchValue ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={languageOptions}
+            maxTagCount="responsive"
+          />
+        </Form.Item>
+        
         <Form.Item
           label="English Fluency Level"
           name="englishFluencyLevel"
         >
           <Select
             disabled={!isEditing}
+            className="!font-[gilroy-regular]"
             placeholder="Select English fluency level"
             options={[
               { value: "native", label: "Native" },
@@ -52,6 +83,19 @@ const ProfessionalBackgroundForm: React.FC<ProfessionalBackgroundFormProps> = ({
               { value: "intermediate", label: "Intermediate" },
               { value: "basic", label: "Basic" },
             ]}
+          />
+        </Form.Item>
+        
+        <Form.Item label="Primary Language (Legacy)" name="primaryLanguage">
+          <Select
+            disabled={!isEditing}
+            className="!font-[gilroy-regular]"
+            placeholder="Select your primary language"
+            showSearch
+            filterOption={(input, option) =>
+              (option?.searchValue ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            options={languageOptions}
           />
         </Form.Item>
       </div>

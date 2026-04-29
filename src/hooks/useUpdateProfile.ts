@@ -26,8 +26,9 @@ export interface UpdateProfilePayload {
     annotationExperienceTypes?: string[];
   };
   languageProficiency?: {
-    primaryLanguage?: string;
+    nativeLanguages?: string[];
     otherLanguages?: string[];
+    primaryLanguage?: string;
     englishFluencyLevel?: string;
   };
   systemInfo?: {

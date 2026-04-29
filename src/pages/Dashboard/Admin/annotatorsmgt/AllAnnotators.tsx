@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Table, Spin, Alert, Descriptions, Card, Modal, Image, Tag, Button } from "antd";
 import { annotatorsQueryService } from "../../../../services/annotators-service";
 import PageModal from "../../../../components/Modal/PageModal";
@@ -20,8 +20,11 @@ interface AllAnnotatorsProps {
 }
 
 const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
+  // Language filter state
+  const [languageFilter, setLanguageFilter] = useState<string>("all");
+
   // Use custom hooks for separation of concerns
-  const filters = useAnnotatorFilters({ countryFilter });
+  const filters = useAnnotatorFilters({ countryFilter, languageFilter });
   const modals = useAnnotatorModals();
   
   // Use TanStack Query hook for data fetching
@@ -53,6 +56,7 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
 
   // Handle refresh with filter reset
   const handleRefresh = () => {
+    setLanguageFilter("all");
     filters.resetFilters();
     refetch();
   };
@@ -88,10 +92,12 @@ const AllAnnotators = ({ countryFilter }: AllAnnotatorsProps) => {
       <AnnotatorFilters
         searchTerm={filters.searchTerm}
         statusFilter={filters.statusFilter}
+        languageFilter={languageFilter}
         loading={loading}
         onSearchChange={filters.handleSearchChange}
         onSearch={filters.handleSearch}
         onStatusFilterChange={filters.handleStatusFilter}
+        onLanguageFilterChange={setLanguageFilter}
         onRefresh={handleRefresh}
       />
 

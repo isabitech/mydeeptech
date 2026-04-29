@@ -1,0 +1,736 @@
+{
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "native": "English",
+      "region": "Global"
+    },
+    {
+      "code": "es",
+      "name": "Spanish",
+      "native": "Español",
+      "region": "Europe/Americas"
+    },
+    {
+      "code": "fr",
+      "name": "French",
+      "native": "Français",
+      "region": "Europe/Africa"
+    },
+    {
+      "code": "de",
+      "name": "German",
+      "native": "Deutsch",
+      "region": "Europe"
+    },
+    {
+      "code": "it",
+      "name": "Italian",
+      "native": "Italiano",
+      "region": "Europe"
+    },
+    {
+      "code": "pt",
+      "name": "Portuguese",
+      "native": "Português",
+      "region": "Europe/Americas/Africa"
+    },
+    {
+      "code": "ru",
+      "name": "Russian",
+      "native": "Русский",
+      "region": "Europe/Asia"
+    },
+    {
+      "code": "zh-cn",
+      "name": "Chinese (Simplified)",
+      "native": "简体中文",
+      "region": "Asia"
+    },
+    {
+      "code": "zh-tw",
+      "name": "Chinese (Traditional)",
+      "native": "繁體中文",
+      "region": "Asia"
+    },
+    {
+      "code": "ja",
+      "name": "Japanese",
+      "native": "日本語",
+      "region": "Asia"
+    },
+    {
+      "code": "ko",
+      "name": "Korean",
+      "native": "한국어",
+      "region": "Asia"
+    },
+    {
+      "code": "ar",
+      "name": "Arabic",
+      "native": "العربية",
+      "region": "Middle East/North Africa"
+    },
+    {
+      "code": "hi",
+      "name": "Hindi",
+      "native": "हिन्दी",
+      "region": "Asia"
+    },
+    {
+      "code": "sw",
+      "name": "Swahili",
+      "native": "Kiswahili",
+      "region": "Africa"
+    },
+    {
+      "code": "ha",
+      "name": "Hausa",
+      "native": "Hausa",
+      "region": "Africa"
+    },
+    {
+      "code": "ig",
+      "name": "Igbo",
+      "native": "Igbo",
+      "region": "Africa"
+    },
+    {
+      "code": "yo",
+      "name": "Yoruba",
+      "native": "Yorùbá",
+      "region": "Africa"
+    },
+    {
+      "code": "zu",
+      "name": "Zulu",
+      "native": "isiZulu",
+      "region": "Africa"
+    },
+    {
+      "code": "xh",
+      "name": "Xhosa",
+      "native": "isiXhosa",
+      "region": "Africa"
+    },
+    {
+      "code": "af",
+      "name": "Afrikaans",
+      "native": "Afrikaans",
+      "region": "Africa"
+    },
+    {
+      "code": "am",
+      "name": "Amharic",
+      "native": "አማርኛ",
+      "region": "Africa"
+    },
+    {
+      "code": "ti",
+      "name": "Tigrinya",
+      "native": "ትግርኛ",
+      "region": "Africa"
+    },
+    {
+      "code": "om",
+      "name": "Oromo",
+      "native": "Oromoo",
+      "region": "Africa"
+    },
+    {
+      "code": "so",
+      "name": "Somali",
+      "native": "Soomaali",
+      "region": "Africa"
+    },
+    {
+      "code": "mg",
+      "name": "Malagasy",
+      "native": "Malagasy",
+      "region": "Africa"
+    },
+    {
+      "code": "rw",
+      "name": "Kinyarwanda",
+      "native": "Ikinyarwanda",
+      "region": "Africa"
+    },
+    {
+      "code": "rn",
+      "name": "Kirundi",
+      "native": "Ikirundi",
+      "region": "Africa"
+    },
+    {
+      "code": "lg",
+      "name": "Luganda",
+      "native": "Luganda",
+      "region": "Africa"
+    },
+    {
+      "code": "ak",
+      "name": "Akan",
+      "native": "Akan",
+      "region": "Africa"
+    },
+    {
+      "code": "tw",
+      "name": "Twi",
+      "native": "Twi",
+      "region": "Africa"
+    },
+    {
+      "code": "ee",
+      "name": "Ewe",
+      "native": "Eʋegbe",
+      "region": "Africa"
+    },
+    {
+      "code": "ga",
+      "name": "Ga",
+      "native": "Ga",
+      "region": "Africa"
+    },
+    {
+      "code": "dag",
+      "name": "Dagbani",
+      "native": "Dagbani",
+      "region": "Africa"
+    },
+    {
+      "code": "ff",
+      "name": "Fulah",
+      "native": "Fulfulde",
+      "region": "Africa"
+    },
+    {
+      "code": "wo",
+      "name": "Wolof",
+      "native": "Wolof",
+      "region": "Africa"
+    },
+    {
+      "code": "sn",
+      "name": "Shona",
+      "native": "chiShona",
+      "region": "Africa"
+    },
+    {
+      "code": "nd",
+      "name": "Ndebele",
+      "native": "isiNdebele",
+      "region": "Africa"
+    },
+    {
+      "code": "st",
+      "name": "Sotho",
+      "native": "Sesotho",
+      "region": "Africa"
+    },
+    {
+      "code": "tn",
+      "name": "Tswana",
+      "native": "Setswana",
+      "region": "Africa"
+    },
+    {
+      "code": "ts",
+      "name": "Tsonga",
+      "native": "Xitsonga",
+      "region": "Africa"
+    },
+    {
+      "code": "ss",
+      "name": "Swati",
+      "native": "siSwati",
+      "region": "Africa"
+    },
+    {
+      "code": "ve",
+      "name": "Venda",
+      "native": "Tshivenda",
+      "region": "Africa"
+    },
+    {
+      "code": "nr",
+      "name": "South Ndebele",
+      "native": "isiNdebele",
+      "region": "Africa"
+    },
+    {
+      "code": "nso",
+      "name": "Northern Sotho",
+      "native": "Sepedi",
+      "region": "Africa"
+    },
+    {
+      "code": "nl",
+      "name": "Dutch",
+      "native": "Nederlands",
+      "region": "Europe"
+    },
+    {
+      "code": "sv",
+      "name": "Swedish",
+      "native": "Svenska",
+      "region": "Europe"
+    },
+    {
+      "code": "no",
+      "name": "Norwegian",
+      "native": "Norsk",
+      "region": "Europe"
+    },
+    {
+      "code": "da",
+      "name": "Danish",
+      "native": "Dansk",
+      "region": "Europe"
+    },
+    {
+      "code": "fi",
+      "name": "Finnish",
+      "native": "Suomi",
+      "region": "Europe"
+    },
+    {
+      "code": "is",
+      "name": "Icelandic",
+      "native": "Íslenska",
+      "region": "Europe"
+    },
+    {
+      "code": "pl",
+      "name": "Polish",
+      "native": "Polski",
+      "region": "Europe"
+    },
+    {
+      "code": "cs",
+      "name": "Czech",
+      "native": "Čeština",
+      "region": "Europe"
+    },
+    {
+      "code": "sk",
+      "name": "Slovak",
+      "native": "Slovenčina",
+      "region": "Europe"
+    },
+    {
+      "code": "hu",
+      "name": "Hungarian",
+      "native": "Magyar",
+      "region": "Europe"
+    },
+    {
+      "code": "ro",
+      "name": "Romanian",
+      "native": "Română",
+      "region": "Europe"
+    },
+    {
+      "code": "bg",
+      "name": "Bulgarian",
+      "native": "Български",
+      "region": "Europe"
+    },
+    {
+      "code": "hr",
+      "name": "Croatian",
+      "native": "Hrvatski",
+      "region": "Europe"
+    },
+    {
+      "code": "sr",
+      "name": "Serbian",
+      "native": "Српски",
+      "region": "Europe"
+    },
+    {
+      "code": "bs",
+      "name": "Bosnian",
+      "native": "Bosanski",
+      "region": "Europe"
+    },
+    {
+      "code": "mk",
+      "name": "Macedonian",
+      "native": "Македонски",
+      "region": "Europe"
+    },
+    {
+      "code": "sl",
+      "name": "Slovenian",
+      "native": "Slovenščina",
+      "region": "Europe"
+    },
+    {
+      "code": "sq",
+      "name": "Albanian",
+      "native": "Shqip",
+      "region": "Europe"
+    },
+    {
+      "code": "el",
+      "name": "Greek",
+      "native": "Ελληνικά",
+      "region": "Europe"
+    },
+    {
+      "code": "tr",
+      "name": "Turkish",
+      "native": "Türkçe",
+      "region": "Europe/Asia"
+    },
+    {
+      "code": "he",
+      "name": "Hebrew",
+      "native": "עברית",
+      "region": "Middle East"
+    },
+    {
+      "code": "fa",
+      "name": "Persian",
+      "native": "فارسی",
+      "region": "Middle East/Asia"
+    },
+    {
+      "code": "ku",
+      "name": "Kurdish",
+      "native": "Kurdî",
+      "region": "Middle East"
+    },
+    {
+      "code": "ur",
+      "name": "Urdu",
+      "native": "اردو",
+      "region": "Asia"
+    },
+    {
+      "code": "bn",
+      "name": "Bengali",
+      "native": "বাংলা",
+      "region": "Asia"
+    },
+    {
+      "code": "pa",
+      "name": "Punjabi",
+      "native": "ਪੰਜਾਬੀ",
+      "region": "Asia"
+    },
+    {
+      "code": "gu",
+      "name": "Gujarati",
+      "native": "ગુજરાતી",
+      "region": "Asia"
+    },
+    {
+      "code": "or",
+      "name": "Odia",
+      "native": "ଓଡିଆ",
+      "region": "Asia"
+    },
+    {
+      "code": "ta",
+      "name": "Tamil",
+      "native": "தமிழ்",
+      "region": "Asia"
+    },
+    {
+      "code": "te",
+      "name": "Telugu",
+      "native": "తెలుగు",
+      "region": "Asia"
+    },
+    {
+      "code": "kn",
+      "name": "Kannada",
+      "native": "ಕನ್ನಡ",
+      "region": "Asia"
+    },
+    {
+      "code": "ml",
+      "name": "Malayalam",
+      "native": "മലയാളം",
+      "region": "Asia"
+    },
+    {
+      "code": "si",
+      "name": "Sinhala",
+      "native": "සිංහල",
+      "region": "Asia"
+    },
+    {
+      "code": "my",
+      "name": "Burmese",
+      "native": "မြန်မာ",
+      "region": "Asia"
+    },
+    {
+      "code": "th",
+      "name": "Thai",
+      "native": "ไทย",
+      "region": "Asia"
+    },
+    {
+      "code": "lo",
+      "name": "Lao",
+      "native": "ລາວ",
+      "region": "Asia"
+    },
+    {
+      "code": "km",
+      "name": "Khmer",
+      "native": "ខ្មែរ",
+      "region": "Asia"
+    },
+    {
+      "code": "vi",
+      "name": "Vietnamese",
+      "native": "Tiếng Việt",
+      "region": "Asia"
+    },
+    {
+      "code": "id",
+      "name": "Indonesian",
+      "native": "Bahasa Indonesia",
+      "region": "Asia"
+    },
+    {
+      "code": "ms",
+      "name": "Malay",
+      "native": "Bahasa Melayu",
+      "region": "Asia"
+    },
+    {
+      "code": "tl",
+      "name": "Filipino",
+      "native": "Filipino",
+      "region": "Asia"
+    },
+    {
+      "code": "ceb",
+      "name": "Cebuano",
+      "native": "Cebuano",
+      "region": "Asia"
+    },
+    {
+      "code": "ilo",
+      "name": "Ilocano",
+      "native": "Ilocano",
+      "region": "Asia"
+    },
+    {
+      "code": "hil",
+      "name": "Hiligaynon",
+      "native": "Hiligaynon",
+      "region": "Asia"
+    },
+    {
+      "code": "war",
+      "name": "Waray",
+      "native": "Waray",
+      "region": "Asia"
+    },
+    {
+      "code": "pam",
+      "name": "Kapampangan",
+      "native": "Kapampangan",
+      "region": "Asia"
+    },
+    {
+      "code": "mn",
+      "name": "Mongolian",
+      "native": "Монгол",
+      "region": "Asia"
+    },
+    {
+      "code": "kk",
+      "name": "Kazakh",
+      "native": "Қазақ тілі",
+      "region": "Asia"
+    },
+    {
+      "code": "ky",
+      "name": "Kyrgyz",
+      "native": "Кыргызча",
+      "region": "Asia"
+    },
+    {
+      "code": "uz",
+      "name": "Uzbek",
+      "native": "Oʻzbek",
+      "region": "Asia"
+    },
+    {
+      "code": "tk",
+      "name": "Turkmen",
+      "native": "Türkmen",
+      "region": "Asia"
+    },
+    {
+      "code": "tg",
+      "name": "Tajik",
+      "native": "Тоҷикӣ",
+      "region": "Asia"
+    },
+    {
+      "code": "ps",
+      "name": "Pashto",
+      "native": "پښتو",
+      "region": "Asia"
+    },
+    {
+      "code": "sd",
+      "name": "Sindhi",
+      "native": "سنڌي",
+      "region": "Asia"
+    },
+    {
+      "code": "ne",
+      "name": "Nepali",
+      "native": "नेपाली",
+      "region": "Asia"
+    },
+    {
+      "code": "dz",
+      "name": "Dzongkha",
+      "native": "རྫོང་ཁ",
+      "region": "Asia"
+    },
+    {
+      "code": "bo",
+      "name": "Tibetan",
+      "native": "བོད་ཡིག",
+      "region": "Asia"
+    },
+    {
+      "code": "as",
+      "name": "Assamese",
+      "native": "অসমীয়া",
+      "region": "Asia"
+    },
+    {
+      "code": "mni",
+      "name": "Manipuri",
+      "native": "ꯃꯤꯇꯩ ꯂꯣꯟ",
+      "region": "Asia"
+    },
+    {
+      "code": "sat",
+      "name": "Santali",
+      "native": "ᱥᱟᱱᱛᱟᱲᱤ",
+      "region": "Asia"
+    },
+    {
+      "code": "ks",
+      "name": "Kashmiri",
+      "native": "कॉशुर",
+      "region": "Asia"
+    },
+    {
+      "code": "doi",
+      "name": "Dogri",
+      "native": "डोगरी",
+      "region": "Asia"
+    },
+    {
+      "code": "brx",
+      "name": "Bodo",
+      "native": "बर'",
+      "region": "Asia"
+    },
+    {
+      "code": "mai",
+      "name": "Maithili",
+      "native": "मैथिली",
+      "region": "Asia"
+    },
+    {
+      "code": "kok",
+      "name": "Konkani",
+      "native": "कोंकणी",
+      "region": "Asia"
+    },
+    {
+      "code": "mr",
+      "name": "Marathi",
+      "native": "मराठी",
+      "region": "Asia"
+    },
+    {
+      "code": "bh",
+      "name": "Bihari",
+      "native": "बिहारी",
+      "region": "Asia"
+    },
+    {
+      "code": "raj",
+      "name": "Rajasthani",
+      "native": "राजस्थानी",
+      "region": "Asia"
+    },
+    {
+      "code": "bho",
+      "name": "Bhojpuri",
+      "native": "भोजपुरी",
+      "region": "Asia"
+    },
+    {
+      "code": "mag",
+      "name": "Magahi",
+      "native": "मगही",
+      "region": "Asia"
+    },
+    {
+      "code": "awa",
+      "name": "Awadhi",
+      "native": "अवधी",
+      "region": "Asia"
+    },
+    {
+      "code": "gom",
+      "name": "Goan Konkani",
+      "native": "गोंयची कोंकणी",
+      "region": "Asia"
+    },
+    {
+      "code": "hne",
+      "name": "Chhattisgarhi",
+      "native": "छत्तीसगढ़ी",
+      "region": "Asia"
+    },
+    {
+      "code": "new",
+      "name": "Newari",
+      "native": "नेवारी",
+      "region": "Asia"
+    },
+    {
+      "code": "bpy",
+      "name": "Bishnupriya",
+      "native": "বিষ্ণুপ্রিয়া মণিপুরী",
+      "region": "Asia"
+    },
+    {
+      "code": "syl",
+      "name": "Sylheti",
+      "native": "ꠍꠤꠟꠐꠤ",
+      "region": "Asia"
+    },
+    {
+      "code": "ctg",
+      "name": "Chittagonian",
+      "native": "চাঁটগাঁইয়া",
+      "region": "Asia"
+    },
+    {
+      "code": "rkt",
+      "name": "Rangpuri",
+      "native": "রংপুরী",
+      "region": "Asia"
+    }
+  ]
+}
