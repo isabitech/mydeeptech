@@ -17,10 +17,12 @@ const DashboardLayout = () => {
 
   // If user hasn't submitted assessment, only allow access to overview and assessment pages
   //  🔒 Uncomment the below code to enforce assessment submission after it has been reviewed by the team and we are ready to enforce it for all users.
+  /*
   if (!userInfo?.isAssessmentSubmitted &&
     location.pathname !== '/dashboard/overview' &&
     location.pathname !== '/dashboard/assessment' &&
-    !location.pathname.startsWith('/dashboard/ai-interview')) {
+    !location.pathname.startsWith('/dashboard/ai-interview') &&
+    !location.pathname.startsWith('/dashboard/projects')) {
     notification.warning({
       key: 'assessment-required',
       message: "Assessment Required",
@@ -29,6 +31,7 @@ const DashboardLayout = () => {
     });
     return <Navigate to="/dashboard/overview" />;
   }
+  */
 
 
   return (

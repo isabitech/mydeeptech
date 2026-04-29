@@ -99,17 +99,10 @@ const useUserInfoStore = create<UserInfoStore>()(
 
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
-        // Clear session storage
-        sessionStorage.removeItem('ACCESS_TOKEN');
-        sessionStorage.removeItem('userInfo');
-
         // Clear local storage
         localStorage.removeItem('ACCESS_TOKEN');
         localStorage.removeItem('userInfo');
         
-        // Clear all session storage to ensure complete logout
-        sessionStorage.clear();
-
         // Clear all local storage to ensure complete logout
         localStorage.clear();
         
@@ -127,8 +120,8 @@ const useUserInfoStore = create<UserInfoStore>()(
       },
     }),
     {
-      name: 'user-info-storage', // unique name for sessionStorage key
-      storage: createJSONStorage(() => sessionStorage), // use sessionStorage
+      name: 'user-info-storage', // unique name for localStorage key
+      storage: createJSONStorage(() => localStorage), // use localStorage for cross-tab persistence
       partialize: (state) => ({
         userInfo: state.userInfo, // only persist userInfo
         userRoleType: state.userRoleType, // persist userRoleType

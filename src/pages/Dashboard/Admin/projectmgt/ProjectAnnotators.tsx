@@ -39,6 +39,7 @@ import {
   ExclamationCircleOutlined,
   SearchOutlined,
   CheckOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
@@ -50,6 +51,7 @@ import {
 } from "../../../../types/project.types";
 import errorMessage from "../../../../lib/error-message";
 import projectService from "../../../../services/project-service/project-mutation";
+import AiRecommendationModal from "../../../../components/AiRecommendationModal";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -78,6 +80,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
   const [removalForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState("1");
   const [searchText, setSearchText] = useState<string>("");
+  const [aiRecommendationVisible, setAiRecommendationVisible] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -572,17 +575,31 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
             {/* Search Annotators */}
             <div className="mb-4">
               <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                <Input
-                  placeholder="Search annotators by name, email, or status..."
-                  prefix={<SearchOutlined />}
-                  value={searchText}
-                  onChange={handleSearchChange}
-                  allowClear
-                  onClear={handleSearchClear}
-                  style={{ maxWidth: 400 }}
-                  className="mb-2"
-                  suffix={isSearching ? <Spin size="small" /> : null}
-                />
+                <div className="flex justify-between items-start">
+                  <Input
+                    placeholder="Search annotators by name, email, or status..."
+                    prefix={<SearchOutlined />}
+                    value={searchText}
+                    onChange={handleSearchChange}
+                    allowClear
+                    onClear={handleSearchClear}
+                    style={{ maxWidth: 400 }}
+                    className="mb-2"
+                    suffix={isSearching ? <Spin size="small" /> : null}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<RobotOutlined />}
+                    onClick={() => setAiRecommendationVisible(true)}
+                    style={{ 
+                      background: 'linear-gradient(45deg, #1890ff, #52c41a)',
+                      borderColor: 'transparent',
+                      boxShadow: '0 2px 4px rgba(24, 144, 255, 0.3)'
+                    }}
+                  >
+                    AI Recommendations
+                  </Button>
+                </div>
                 {searchText && (
                   <div className="text-sm text-gray-500">
                     <Space>
@@ -920,6 +937,14 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
           </div>
         )}
       </Modal>
+
+      {/* AI Recommendation Modal */}
+      <AiRecommendationModal
+        visible={aiRecommendationVisible}
+        onCancel={() => setAiRecommendationVisible(false)}
+        projectId={projectId}
+        projectName={projectName}
+      />
     </>
   );
 };

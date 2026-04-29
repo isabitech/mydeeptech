@@ -377,6 +377,37 @@ export const useUserProjects = () => {
     []
   );
 
+  // Get a single project by ID
+  const getProjectById = useCallback(
+    async (projectId: string): Promise<HookOperationResult> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const url = createApiUrl(endpoints.userProject.projectById, projectId);
+        const data: any = await apiGet(url);
+
+        if (data.success) {
+          return { 
+            success: true, 
+            data: data.data.project 
+          };
+        } else {
+          const errorMessage = data.message || "Failed to fetch project";
+          setError(errorMessage);
+          return { success: false, error: errorMessage };
+        }
+      } catch (err: any) {
+        const errorMessage = getErrorMessage(err);
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   const resetState = useCallback(() => {
     setLoading(false);
     setError(null);
@@ -398,6 +429,9 @@ export const useUserProjects = () => {
     getRejectedApplications,
     getAllProjectsWithStatus,
     getAllUserApplications,
+
+    // Get single project by ID
+    getProjectById,
 
     // Legacy methods for backward compatibility
     browseProjects,

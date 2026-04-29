@@ -4,7 +4,7 @@ import { useGetUserInfo } from '../../store/useAuthStore';
 
 const ProtectDashboardLayout: React.FC = () => {
 
-    const userInfo = useGetUserInfo("admin");
+    const userInfo = useGetUserInfo("user");
     const location = useLocation();
 
     if (!userInfo) {

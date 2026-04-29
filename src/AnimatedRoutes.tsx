@@ -20,6 +20,7 @@ const Tasks = React.lazy(() => import("./pages/Dashboard/User/tasks/Tasks"));
 const Payment = React.lazy(() => import("./pages/Dashboard/User/payment/Payment"));
 const Jobs = React.lazy(() => import("./pages/Dashboard/User/jobs/Jobs"));
 const Projects = React.lazy(() => import("./pages/Dashboard/User/projects/Projects"));
+const SingleProjectPage = React.lazy(() => import("./pages/Dashboard/User/projects/SingleProjectPage"));
 const Profile = React.lazy(() => import("./pages/Dashboard/User/profile/Profile"));
 const Settings = React.lazy(() => import("./pages/Dashboard/User/settings/Settings"));
 const AdminOverview = React.lazy(() => import("./pages/Dashboard/Admin/adminoverview/AdminOverview"));
@@ -110,6 +111,7 @@ const AnimatedRoutes = () => {
                 <Route path="uploadEmail" element={<UploadEmail />} />
                 <Route path="apply" element={<AdsLandingPage />} />
                 <Route path="projects" element={<Projects />} />
+                <Route path="projects/:projectId" element={<SingleProjectPage />} />
                 <Route path="jobs" element={<Jobs />} />
                 <Route path="tasks" element={<Tasks />} />
                 <Route path="payment" element={<Payment />} />

@@ -29,8 +29,10 @@ import {
   UserOutlined,
   MoreOutlined,
   DownloadOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import ProjectAnnotators from "./ProjectAnnotators";
+import AiRecommendationModal from "../../../../components/AiRecommendationModal";
 import moment from "moment";
 import dayjs from "dayjs";
 import { useAdminProjects } from "../../../../hooks/Auth/Admin/Projects/useAdminProjects";
@@ -89,8 +91,10 @@ const ProjectManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isAnnotatorsModalVisible, setIsAnnotatorsModalVisible] = useState(false);
+  const [isAiRecommendationModalVisible, setIsAiRecommendationModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedProjectForAnnotators, setSelectedProjectForAnnotators] = useState<Project | null>(null);
+  const [selectedProjectForAiRecommendation, setSelectedProjectForAiRecommendation] = useState<Project | null>(null);
   const [form] = Form.useForm();
   const [deletionForm] = Form.useForm();
   const [projectId, setProjectId] = useState("");
@@ -533,6 +537,12 @@ const ProjectManagement: React.FC = () => {
     setIsAnnotatorsModalVisible(true);
   };
 
+  // Show AI recommendations for project
+  const showAiRecommendations = (project: Project) => {
+    setSelectedProjectForAiRecommendation(project);
+    setIsAiRecommendationModalVisible(true);
+  };
+
   // Table columns
   const columns = [
     {
@@ -671,6 +681,19 @@ const ProjectManagement: React.FC = () => {
             label: 'View Annotators',
             onClick: () => showProjectAnnotators(record),
             disabled: record.totalApplications === 0,
+          },
+          {
+            key: 'ai-recommendations',
+            icon: <RobotOutlined />,
+            label: 'AI Recommend Annotators',
+            onClick: () => showAiRecommendations(record),
+            style: { 
+              color: '#1890ff',
+              fontWeight: 500
+            }
+          },
+          {
+            type: 'divider' as const,
           },
           {
             key: 'export',
@@ -1412,6 +1435,19 @@ const ProjectManagement: React.FC = () => {
             setIsAnnotatorsModalVisible(false);
             setSelectedProjectForAnnotators(null);
           }}
+        />
+      )}
+
+      {/* AI Recommendation Modal */}
+      {selectedProjectForAiRecommendation && (
+        <AiRecommendationModal
+          visible={isAiRecommendationModalVisible}
+          onCancel={() => {
+            setIsAiRecommendationModalVisible(false);
+            setSelectedProjectForAiRecommendation(null);
+          }}
+          projectId={selectedProjectForAiRecommendation._id}
+          projectName={selectedProjectForAiRecommendation.projectName}
         />
       )}
     </div>

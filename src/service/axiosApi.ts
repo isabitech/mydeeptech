@@ -66,7 +66,7 @@ export const useAxiosApi = () => {
   // Create logout function that uses React Router navigation
   const logoutUser = useCallback((errorMessage?: string) => {
     localStorage.removeItem("token");
-    sessionStorage.clear();
+    localStorage.clear(); // Clear localStorage instead of sessionStorage
 
     // Store error message in localStorage if provided
     if (errorMessage) {

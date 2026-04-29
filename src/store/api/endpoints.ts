@@ -86,6 +86,7 @@ export const endpoints = {
   // User project endpoints
   userProject: {
     projects: "/auth/projects", // New unified endpoint that supports view and status parameters
+    projectById: "/auth/projects", // Get single project by ID: /auth/projects/:projectId
     browseProjects: "/auth/projects", // Legacy endpoint for backward compatibility
     applyToProject: "/auth/projects",
     getActiveProjects: "/auth/activeProjects", // Legacy endpoint
@@ -196,6 +197,13 @@ export const endpoints = {
     schedule: "/admin/ai-interviews/schedule",
     decision: "/admin/ai-interviews",
     note: "/admin/ai-interviews",
+  },
+  
+  // AI Recommendation endpoints
+  aiRecommendations: {
+    getRecommendations: "/ai-recommendations/projects",
+    sendInvitations: "/ai-recommendations/projects",
+    getStatus: "/ai-recommendations/status",
   },
 
   // Enhanced Chat support endpoints following the documentation

@@ -21,7 +21,7 @@ export const storeUserInfoToStorage = async (user: UserInfoData) => {
   try {
     const encrypted = await Encryption.encrypt(JSON.stringify(user));
     // Save as string
-    sessionStorage.setItem(USER_INFORMATION, JSON.stringify(encrypted));
+    localStorage.setItem(USER_INFORMATION, JSON.stringify(encrypted));
   } catch (error: unknown) {
     const errMsg = errorMessage(error);
     console.error(errMsg);
@@ -32,7 +32,7 @@ export const storeUserInfoToStorage = async (user: UserInfoData) => {
 export const retrieveUserInfoFromStorage = async () => {
   if (typeof window === "undefined") return null;
 
-  const stored = sessionStorage.getItem(USER_INFORMATION);
+  const stored = localStorage.getItem(USER_INFORMATION);
   if (!stored) return null;
 
   try {
@@ -46,8 +46,8 @@ export const retrieveUserInfoFromStorage = async () => {
     // If decryption fails, clear the invalid stored data
     if (error instanceof Error && error.message.includes('Decryption failed')) {
       console.warn("Clearing corrupted encrypted data");
-      sessionStorage.removeItem(USER_INFORMATION);
-      sessionStorage.removeItem(ACCESS_TOKEN_KEYWORD);
+      localStorage.removeItem(USER_INFORMATION);
+      localStorage.removeItem(ACCESS_TOKEN_KEYWORD);
     }
     
     return null;
@@ -58,7 +58,7 @@ export const retrieveUserInfoFromStorage = async () => {
 export const storeTokenToStorage = async (token: string) => {
   try {
     const encrypted = await Encryption.encrypt(token);
-    sessionStorage.setItem(ACCESS_TOKEN_KEYWORD, JSON.stringify(encrypted));
+    localStorage.setItem(ACCESS_TOKEN_KEYWORD, JSON.stringify(encrypted));
   } catch (error: Error | unknown) {
     const errMsg = errorMessage(error);
     console.error(errMsg);
@@ -69,7 +69,7 @@ export const storeTokenToStorage = async (token: string) => {
 export const retrieveTokenFromStorage = async () => {
   if (typeof window === "undefined") return null;
 
-  const stored = sessionStorage.getItem(ACCESS_TOKEN_KEYWORD);
+  const stored = localStorage.getItem(ACCESS_TOKEN_KEYWORD);
   if (!stored) return null;
 
   try {
@@ -82,7 +82,7 @@ export const retrieveTokenFromStorage = async () => {
     // If decryption fails, clear the invalid stored data
     if (error instanceof Error && error.message.includes('Decryption failed')) {
       console.warn("Clearing corrupted token data");
-      sessionStorage.removeItem(ACCESS_TOKEN_KEYWORD);
+      localStorage.removeItem(ACCESS_TOKEN_KEYWORD);
     }
     
     return null;

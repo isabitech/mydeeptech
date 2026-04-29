@@ -36,7 +36,10 @@ const MUTATION = {
     sendMessage: "sendMessage",
 
     //Project
-    approveRejectedProjectApplicant: "approveRejectedProjectApplicant"
+    approveRejectedProjectApplicant: "approveRejectedProjectApplicant",
+    
+    // AI Recommendations
+    sendBulkInvitations: "sendBulkInvitations",
 } as const;
 
 const QUERY = {
@@ -83,6 +86,10 @@ const QUERY = {
     getSubmittedAnnotators: "getSubmittedAnnotators",
     getRejectedAnnotators: "getRejectedAnnotators",
     getQAAnnotators: "getQAAnnotators",
+    
+    // AI Recommendations
+    getAiRecommendations: "getAiRecommendations",
+    getAiRecommendationStatus: "getAiRecommendationStatus",
 } as const;
 
 const REACT_QUERY_KEYS = {

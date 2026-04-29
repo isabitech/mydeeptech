@@ -11,8 +11,7 @@ import {
   Input,
   InputNumber,
   message,
-  Empty, 
-  Pagination,
+  Empty,
 } from "antd";
 import {
   ArrowsAltOutlined,
@@ -71,11 +70,7 @@ const statusMap = {
   close: "Closed",
 };
 
-interface AvailableProjectsProps {
-  highlightProjectId?: string | null;
-}
-
-const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
+const AvailableProjects = () => {
   const navigate = useNavigate();
   const [isApplicationModalVisible, setIsApplicationModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
@@ -102,32 +97,7 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
 
   useEffect(() => {
     fetchProjects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
-  // Scroll to highlighted project when highlightProjectId is provided
-  useEffect(() => {
-    if (highlightProjectId && projects.length > 0) {
-      const project = projects.find(p => p._id === highlightProjectId);
-      
-      if (project) {
-        // Show welcome message
-        message.info(
-          `Welcome! We've found a project that matches your skills: "${project.projectName}". It's highlighted below.`,
-          5
-        );
-        
-        // Scroll to highlighted project
-        setTimeout(() => {
-          const element = document.getElementById(`project-${highlightProjectId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }
-    }
-  }, [highlightProjectId, projects]);
 
   const fetchProjects = async (page: number = currentPage) => {
     await browseProjects({
@@ -179,19 +149,31 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
 
   const handleCategoryFilter = (value: string) => {
     setCategoryFilter(value);
-    setCurrentPage(1); // Reset to first page when filters change
-    fetchProjects(1);
+    browseProjects({
+      category: value || undefined,
+      difficultyLevel: difficultyFilter || undefined,
+      minPayRate: minPayRate || undefined,
+      maxPayRate: maxPayRate || undefined,
+    });
   };
 
   const handleDifficultyFilter = (value: string) => {
     setDifficultyFilter(value);
-    setCurrentPage(1); // Reset to first page when filters change
-    fetchProjects(1);
+    browseProjects({
+      category: categoryFilter || undefined,
+      difficultyLevel: value || undefined,
+      minPayRate: minPayRate || undefined,
+      maxPayRate: maxPayRate || undefined,
+    });
   };
 
   const handlePayRateFilter = () => {
-    setCurrentPage(1); // Reset to first page when filters change
-    fetchProjects(1);
+    browseProjects({
+      category: categoryFilter || undefined,
+      difficultyLevel: difficultyFilter || undefined,
+      minPayRate: minPayRate || undefined,
+      maxPayRate: maxPayRate || undefined,
+    });
   };
 
   const showProjectDetails = (project: Project) => {
@@ -233,10 +215,6 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
         );
         const interviewSessionId = result.data?.aiInterview?.session?.id ?? null;
 
-        // Always close modal and reset form on success
-        setIsApplicationModalVisible(false);
-        applicationForm.resetFields();
-
         if (interviewRequired) {
           if (!interviewSessionId) {
             message.error(
@@ -248,11 +226,15 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
           message.info(
             "AI interview required. Complete the interview before your application can move into review.",
           );
+          setIsApplicationModalVisible(false);
+          applicationForm.resetFields();
           navigate(`/dashboard/ai-interview/session/${interviewSessionId}`);
           return;
         }
 
         message.success("Application submitted successfully!");
+        setIsApplicationModalVisible(false);
+        applicationForm.resetFields();
         fetchProjects();
       } else {
         message.error(result.error || "Failed to submit application");
@@ -388,17 +370,11 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProjects.map((project) => {
               const interviewSessionId = getProjectInterviewSessionId(project);
-              const isHighlighted = highlightProjectId === project._id;
 
               return (
                 <Card
                   key={project._id}
-                  id={`project-${project._id}`}
-                  className={`project-card hover:shadow-lg transition-all flex flex-col gap-5 justify-between w-full ${
-                    isHighlighted 
-                      ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50 border-blue-300' 
-                      : ''
-                  }`}
+                  className="project-card hover:shadow-lg transition-shadow flex flex-col gap-5 justify-between w-full"
                   classNames={{ actions: "flex items-center justify-between w-full" }}
                   actions={[
                     <Button
@@ -530,24 +506,6 @@ const AvailableProjects = ({ highlightProjectId }: AvailableProjectsProps) => {
           </div>
         )}
       </Spin>
-
-      {/* Pagination */}
-      {pagination && pagination.totalProjects > 0 && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={pagination.totalProjects}
-            onChange={handlePageChange}
-            onShowSizeChange={handlePageChange}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total: number, range: [number, number]) => range[0] + "-" + range[1] + " of " + total + " projects"}
-            pageSizeOptions={["12", "24", "48", "96"]}
-          />
-        </div>
-      )}
-
 
       {/* Project Details Modal */}
       <Modal

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import ActiveProjects from "./ActiveProjects";
 import AvailableProjects from "./AvailableProjects";
 import PendingProjects from "./PendingProjects";
@@ -6,15 +7,32 @@ import RejectedProjects from "./RejectedProjects";
 import SOPNDAViewer from "./SOPNDAViewer";
 
 const Projects = () => {
-
+  const [searchParams] = useSearchParams();
   const [selectedProject, setSelectedProject] = useState(1); // Default to the first project
+
+  // Handle URL query parameters
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'available') {
+      setSelectedProject(1);
+    } else if (tab === 'active') {
+      setSelectedProject(2);
+    } else if (tab === 'pending') {
+      setSelectedProject(3);
+    } else if (tab === 'rejected') {
+      setSelectedProject(4);
+    }
+  }, [searchParams]);
+
+  // Get projectId from URL to pass to AvailableProjects for highlighting
+  const highlightProjectId = searchParams.get('projectId');
 
   // List of projects
   const list = [
     {
       key: 1,
       title: "Available Projects",
-      component: <AvailableProjects />,
+      component: <AvailableProjects highlightProjectId={highlightProjectId} />,
     },
     {
       key: 2,
