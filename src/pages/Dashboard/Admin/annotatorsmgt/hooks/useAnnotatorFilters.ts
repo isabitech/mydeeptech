@@ -8,6 +8,7 @@ interface UseAnnotatorFiltersProps {
 
 export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnotatorFiltersProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [inputValue, setInputValue] = useState(""); // Immediate input value for UI
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(DEFAULT_CURRENT_PAGE);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -30,11 +31,15 @@ export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnota
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
+    setInputValue(value);
     setCurrentPage(DEFAULT_CURRENT_PAGE);
   }, []);
 
   // Debounced search for real-time typing
   const handleSearchChange = useCallback((value: string) => {
+    // Update input value immediately for responsive UI
+    setInputValue(value);
+    
     // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -66,6 +71,7 @@ export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnota
 
   const resetFilters = useCallback(() => {
     setSearchTerm("");
+    setInputValue("");
     setStatusFilter("all");
     setCurrentPage(DEFAULT_CURRENT_PAGE);
   }, []);
@@ -79,7 +85,7 @@ export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnota
 
   return {
     // State
-    searchTerm,
+    searchTerm: inputValue, // Use inputValue for immediate UI updates
     statusFilter,
     currentPage,
     pageSize,
@@ -94,7 +100,10 @@ export const useAnnotatorFilters = ({ countryFilter, languageFilter }: UseAnnota
     cleanup,
 
     // Direct setters for external control
-    setSearchTerm,
+    setSearchTerm: (value: string) => {
+      setSearchTerm(value);
+      setInputValue(value);
+    },
     setStatusFilter,
     setCurrentPage,
     setPageSize
