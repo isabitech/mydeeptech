@@ -178,7 +178,7 @@ const AnnotatorInterviewSetupPage = () => {
       </div>
 
       {isProjectCollection ? (
-        <div className="rounded-[28px] border border-[#E7DED5] bg-[linear-gradient(135deg,_#FFFCF8,_#FFF5EB)] p-6 shadow-[0_14px_34px_rgba(51,51,51,0.04)]">
+        <div className="rounded-md border border-[#E7DED5] bg-[linear-gradient(135deg,_#FFFCF8,_#FFF5EB)] p-6 shadow-[0_14px_34px_rgba(51,51,51,0.04)]">
           <p className="text-xs font-[gilroy-semibold] uppercase tracking-[0.18em] text-[#946232]">
             Specialized Tracks
           </p>
@@ -220,10 +220,9 @@ const AnnotatorInterviewSetupPage = () => {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_380px]">
-        <div className="rounded-[28px] border border-[#E7DED5] bg-white p-8 shadow-[0_18px_40px_rgba(51,51,51,0.05)]">
-          <div
-            className={cn(
-              "overflow-hidden rounded-[28px] border border-[#E7DED5] bg-gradient-to-br p-7 text-[#231A12] shadow-[0_18px_40px_rgba(51,51,51,0.05)]",
+        <div className="rounded-md border border-[#E7DED5] bg-white p-6 shadow-[0_18px_40px_rgba(51,51,51,0.05)]">
+          <div className={cn(
+              "overflow-hidden flex flex-col gap-2 rounded-md border border-[#E7DED5] bg-gradient-to-br p-6 text-[#231A12] shadow-[0_18px_40px_rgba(51,51,51,0.05)]",
               heroVariantClassMap[activeTrack.heroVariant],
             )}
           >
@@ -241,20 +240,20 @@ const AnnotatorInterviewSetupPage = () => {
               {activeTrack.description}
             </p>
 
-            <div className="mt-7 grid gap-4 md:grid-cols-3">
-              <div className="rounded-[22px] border border-[#E7DED5] bg-white px-4 py-4">
+            <div className="mt-7 grid gap-5 md:grid-cols-3">
+              <div className="rounded-md border border-[#E7DED5] bg-white px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Type</p>
                 <p className="mt-2 text-lg font-[gilroy-semibold] capitalize text-[#231A12]">
                   {activeTrack.type}
                 </p>
               </div>
-              <div className="rounded-[22px] border border-[#E7DED5] bg-white px-4 py-4">
+              <div className="rounded-md border border-[#E7DED5] bg-white px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Est. Time</p>
                 <p className="mt-2 text-lg font-[gilroy-semibold] text-[#231A12]">
                   {activeTrack.durationMinutes - 3}-{activeTrack.durationMinutes} mins
                 </p>
               </div>
-              <div className="rounded-[22px] border border-[#E7DED5] bg-white px-4 py-4">
+              <div className="rounded-md border border-[#E7DED5] bg-white px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Sections</p>
                 <p className="mt-2 text-lg font-[gilroy-semibold] text-[#231A12]">
                   {activeTrack.sectionLabels.length} sections
@@ -264,8 +263,8 @@ const AnnotatorInterviewSetupPage = () => {
           </div>
 
           <div className="mt-6 max-w-xl">
-            <div className="rounded-[24px] border border-[#E8DED4] bg-[#FFFDFB] p-5">
-              <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Target role</p>
+            <div className="rounded-md border border-[#E8DED4] bg-[#FFFDFB] p-5 flex flex-col gap-2">
+              <label className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Target role</label>
               <Select
                 value={selectedRole}
                 onChange={setSelectedRole}
@@ -279,10 +278,8 @@ const AnnotatorInterviewSetupPage = () => {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-[24px] border border-[#F0E0D0] bg-[#FFF8F0] px-5 py-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#F6921E]">
-              <Globe2 size={18} />
-            </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-[#F0E0D0] bg-[#FFF8F0] p-5">
+             <Globe2 size={18} className="text-[#F6921E]" />
             <div className="flex-1">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">
                 Interview language
@@ -293,7 +290,8 @@ const AnnotatorInterviewSetupPage = () => {
             </div>
             <Button
               onClick={() => setLanguageModalOpen(true)}
-              className="!h-11 !rounded-xl !border-[#F0CFAE] !font-[gilroy-semibold] !text-[#8E5507]"
+              className="!rounded-xl !border-[#F0CFAE] !font-[gilroy-semibold] !text-[#8E5507]"
+              size="middle"
             >
               Change
             </Button>
@@ -301,9 +299,7 @@ const AnnotatorInterviewSetupPage = () => {
 
           <div className="mt-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF3E5] text-[#F6921E]">
-                <CheckCircle2 size={18} />
-              </div>
+               <CheckCircle2 size={18} className="text-[#F6921E]" />
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-[#946232]">
                   Readiness Checklist
@@ -315,14 +311,12 @@ const AnnotatorInterviewSetupPage = () => {
               {activeTrack.readinessChecklist.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 rounded-[22px] border border-[#EFD8C1] bg-[#FFFDFB] px-5 py-4"
+                  className="flex gap-4 rounded-md border border-[#EFD8C1] bg-[#FFFDFB] p-5"
                 >
-                  <div className="mt-1 text-emerald-600">
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <div>
+                  <CheckCircle2 size={18}  className="text-emerald-600 self-center" />
+                  <div className="flex flex-col gap-px">
                     <p className="font-[gilroy-semibold] text-[#231A12]">{item.title}</p>
-                    <p className="mt-1 text-sm leading-6 text-[#645647]">
+                    <p className="text-sm leading-6 text-[#645647]">
                       {item.description}
                     </p>
                   </div>
@@ -352,10 +346,10 @@ const AnnotatorInterviewSetupPage = () => {
           </div>
         </div>
 
-        <div className="space-y-5">
+        <div className="flex flex-col gap-6">
           <div
             className={cn(
-              "overflow-hidden rounded-[28px] border border-[#E7DED5] bg-gradient-to-br p-7 text-[#231A12] shadow-[0_18px_40px_rgba(51,51,51,0.05)]",
+              "overflow-hidden rounded-md border border-[#E7DED5] bg-gradient-to-br p-8 text-[#231A12] shadow-[0_18px_40px_rgba(51,51,51,0.05)]",
               heroVariantClassMap[activeTrack.heroVariant],
             )}
           >
@@ -368,7 +362,7 @@ const AnnotatorInterviewSetupPage = () => {
             <p className="mt-4 text-sm leading-7 text-[#5D5147]">{activeTrack.subtitle}</p>
           </div>
 
-          <div className="rounded-[24px] border border-[#E7DED5] bg-[#FFF8F0] p-6 shadow-[0_14px_30px_rgba(246,146,30,0.06)]">
+          <div className="rounded-md border border-[#E7DED5] bg-[#FFF8F0] p-8 shadow-[0_14px_30px_rgba(246,146,30,0.06)]">
             <div className="flex items-center gap-3 text-[#A15A03]">
               <Sparkles size={18} />
               <div>
@@ -390,7 +384,7 @@ const AnnotatorInterviewSetupPage = () => {
             </ul>
           </div>
 
-          <div className="rounded-[24px] border border-[#E7DED5] bg-white p-6 shadow-[0_14px_30px_rgba(51,51,51,0.04)]">
+          <div className="rounded-md border border-[#E7DED5] bg-white p-8 shadow-[0_14px_30px_rgba(51,51,51,0.04)]">
             <p className="text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#8A7C70]">
               Preparation Tip
             </p>
