@@ -72,14 +72,12 @@ const MetricCard = ({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-[28px] border border-[#E7DED5] bg-[linear-gradient(180deg,_#FFFFFF_0%,_#FFFDFB_100%)] p-5 shadow-[0_16px_38px_rgba(51,51,51,0.05)] transition-transform duration-300 hover:-translate-y-0.5",
+        "group relative overflow-hidden rounded-xl bg-white border border-[#E7DED5] bg-[linear-gradient(180deg,_#FFFFFF_0%,_#FFFDFB_100%)] p-5 shadow-[0_16px_38px_rgba(51,51,51,0.05)] transition-transform duration-300 hover:-translate-y-0.5",
         className,
       )}
     >
       <div className={cn("absolute inset-x-0 top-0 h-1 rounded-t-[28px]", toneStyle.accent)} />
-      <div
-        className={cn("absolute right-0 top-0 h-24 w-24 rounded-full blur-3xl", toneStyle.glow)}
-      />
+      <div className={cn("absolute right-0 top-0 h-24 w-24 rounded-full blur-3xl", toneStyle.glow)} />
 
       <div className="relative">
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -94,7 +92,7 @@ const MetricCard = ({
           {delta ? (
             <span
               className={cn(
-                "rounded-full px-3 py-1 text-[11px] font-[gilroy-semibold] uppercase tracking-[0.14em]",
+                "rounded-full px-3 py-1 text-xs font-[gilroy-semibold] uppercase tracking-[0.14em]",
                 toneStyle.badge,
               )}
             >

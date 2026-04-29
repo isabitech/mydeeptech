@@ -87,24 +87,24 @@ const AnnotatorInterviewHubPage = () => {
   }
 
   return (
-    <div className="space-y-8 font-[gilroy-regular] text-[#231A12]">
-      <div className="overflow-hidden rounded-[32px] border border-[#E7DED5] bg-[radial-gradient(circle_at_top_left,_rgba(246,146,30,0.16),_transparent_30%),linear-gradient(135deg,_#FFFCF8,_#FFF5EB_55%,_#FFFDFB)] p-8 text-[#231A12] shadow-[0_20px_48px_rgba(51,51,51,0.06)]">
+    <div className="flex flex-col gap-y-10 font-[gilroy-regular] text-[#231A12] mb-10">
+      <div className="overflow-hidden rounded-md border border-[#E7DED5] bg-[radial-gradient(circle_at_top_left,_rgba(246,146,30,0.16),_transparent_30%),linear-gradient(135deg,_#FFFCF8,_#FFF5EB_55%,_#FFFDFB)] p-6 text-[#231A12] shadow-[0_20px_48px_rgba(51,51,51,0.06)]">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.35fr)_340px]">
-          <div>
-            <span className="rounded-full border border-[#ECD9C7] bg-white px-3 py-1 text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#8D5609]">
+          <div className="flex flex-col gap-3">
+            <span className="rounded-full border border-[#ECD9C7] self-start bg-white px-3 py-2 text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#8D5609]">
               Annotator Qualification
             </span>
-            <h2 className="mt-5 text-4xl font-[gilroy-bold] tracking-tight">
+            <h2 className="text-4xl font-[gilroy-bold] tracking-tight">
               AI Interview
             </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#5D5147]">
+            <p className="max-w-3xl text-sm leading-7 text-[#5D5147]">
               Evaluate your readiness, unlock higher-trust queues, and move into
               more specialized project lanes through guided interview sessions
               built around real delivery expectations.
             </p>
 
             <div className="mt-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[24px] border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+              <div className="rounded-md border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
                 <div className="flex items-center gap-2 text-[#8A7C70]">
                   <BadgeCheck size={16} />
                   <p className="text-xs uppercase tracking-[0.16em]">Generalist track</p>
@@ -113,7 +113,7 @@ const AnnotatorInterviewHubPage = () => {
                   {generalistTrack?.title ?? "Platform qualification interview"}
                 </p>
               </div>
-              <div className="rounded-[24px] border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+              <div className="rounded-md border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
                 <div className="flex items-center gap-2 text-[#8A7C70]">
                   <Layers3 size={16} />
                   <p className="text-xs uppercase tracking-[0.16em]">Project interviews</p>
@@ -122,7 +122,7 @@ const AnnotatorInterviewHubPage = () => {
                   {projectTracks.length} specialized queues available now
                 </p>
               </div>
-              <div className="rounded-[24px] border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+              <div className="rounded-md border border-[#E7DED5] bg-white p-4 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
                 <div className="flex items-center gap-2 text-[#8A7C70]">
                   <Sparkles size={16} />
                   <p className="text-xs uppercase tracking-[0.16em]">Reward signal</p>
@@ -135,21 +135,21 @@ const AnnotatorInterviewHubPage = () => {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-            <div className="rounded-[24px] border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+            <div className="rounded-md border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Completed</p>
               <p className="mt-3 text-3xl font-[gilroy-bold] text-[#231A12]">
                 {data.stats.completed}
               </p>
               <p className="mt-2 text-sm text-[#5D5147]">Interview history on your account</p>
             </div>
-            <div className="rounded-[24px] border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+            <div className="rounded-md border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Pending</p>
               <p className="mt-3 text-3xl font-[gilroy-bold] text-[#231A12]">
                 {data.stats.pending}
               </p>
               <p className="mt-2 text-sm text-[#5D5147]">Sessions still awaiting review</p>
             </div>
-            <div className="rounded-[24px] border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
+            <div className="rounded-md border border-[#E7DED5] bg-white p-5 shadow-[0_10px_24px_rgba(51,51,51,0.04)]">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">Passed</p>
               <p className="mt-3 text-3xl font-[gilroy-bold] text-[#231A12]">
                 {data.stats.passed}
@@ -168,11 +168,12 @@ const AnnotatorInterviewHubPage = () => {
           <h3 className="mt-2 text-2xl font-[gilroy-bold] tracking-tight">
             Current interview standing
           </h3>
-        </div>
-        <p className="max-w-2xl text-sm leading-7 text-[#6B5C4F]">
+          <p className="max-w-2xl text-sm leading-7 mt-2 text-[#6B5C4F]">
           These signals summarize completed assessments, pending reviews, passed
           tracks, and any integrity or retry states that still need attention.
         </p>
+        </div>
+        
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -215,15 +216,9 @@ const AnnotatorInterviewHubPage = () => {
             Choose your next qualification path
           </h3>
         </div>
-        <Button
-          onClick={() => navigate("/dashboard/ai-interview/setup/project")}
-          className="!h-11 !rounded-xl !border-[#F0D0AE] !px-5 !font-[gilroy-semibold] !text-[#8E5507]"
-        >
-          Explore Project Tracks
-        </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2 p-6 bg-white border border-gray-200 rounded-md">
         {generalistTrack ? (
           <TrackCard
             title={generalistTrack.title}
@@ -238,7 +233,7 @@ const AnnotatorInterviewHubPage = () => {
             onClick={() => navigate(`/dashboard/ai-interview/setup/${generalistTrack.id}`)}
             variant="generalist"
             footer={
-              <div className="flex items-center justify-between rounded-[22px] border border-[#F2E4D6] bg-[#FFFBF7] px-4 py-4">
+              <div className="flex items-center justify-between rounded-md border border-[#F2E4D6] bg-[#FFFBF7] px-4 py-4">
                 <div>
                   <p className="text-xs uppercase tracking-[0.14em] text-[#946232]">
                     Best first step
@@ -252,36 +247,9 @@ const AnnotatorInterviewHubPage = () => {
             }
           />
         ) : null}
-
-        {/* <TrackCard
-          title="Project-Based Interviews"
-          description="Tailored interviews for specific high-value queues like Python reasoning, medical extraction, and multilingual RLHF quality evaluation."
-          badge={`${projectTracks.length} Available`}
-          meta={["Specialized tracks", "2x multiplier", "Higher budget queues"]}
-          ctaLabel="View Project Interviews"
-          onClick={() => navigate("/dashboard/ai-interview/setup/project")}
-          variant="project"
-          footer={
-            <div className="rounded-[22px] border border-[#F2E4D6] bg-[#FFFBF7] px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.14em] text-[#946232]">
-                Live queue map
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {projectTracks.map((track) => (
-                  <span
-                    key={track.id}
-                    className="rounded-full border border-[#F1E3D4] bg-[#FFF8F0] px-3 py-1.5 text-xs font-[gilroy-medium] text-[#6C5A49]"
-                  >
-                    {track.title}
-                  </span>
-                ))}
-              </div>
-            </div>
-          }
-        /> */}
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-[#E7DED5] bg-white shadow-[0_18px_40px_rgba(51,51,51,0.05)]">
+      <div className="overflow-hidden rounded-md border border-[#E7DED5] bg-white shadow-[0_18px_40px_rgba(51,51,51,0.05)]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#F0E5DA] bg-[linear-gradient(135deg,_#FFFCF8,_#FFF5EB)] px-6 py-5">
           <div>
             <p className="text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#946232]">

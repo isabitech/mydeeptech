@@ -21,6 +21,7 @@ const LanguageSelectionModal = ({
 }: LanguageSelectionModalProps) => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(value);
+const [hoveredCode, setHoveredCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -56,11 +57,11 @@ const LanguageSelectionModal = ({
       title={null}
       className="[&_.ant-modal-content]:overflow-hidden [&_.ant-modal-content]:rounded-[32px] [&_.ant-modal-content]:p-0 [&_.ant-modal-body]:p-0"
     >
-      <div className="font-[gilroy-regular]">
-        <div className="overflow-hidden border-b border-[#E7DED5] bg-[radial-gradient(circle_at_top_left,_rgba(246,146,30,0.16),_transparent_30%),linear-gradient(135deg,_#FFFCF8,_#FFF5EB_55%,_#FFFDFB)] px-8 pb-8 pt-8 text-[#231A12]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#ECD9C7] bg-white px-3 py-1 text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#8D5609]">
+      <div className="font-[gilroy-regular] flex flex-col gap-5">
+        <div className="overflow-hidden flex flex-col gap-3 border-[#E7DED5] bg-[radial-gradient(circle_at_top_left,_rgba(246,146,30,0.16),_transparent_30%),linear-gradient(135deg,_#FFFCF8,_#FFF5EB_55%,_#FFFDFB)] px-8 pb-8 pt-8 text-[#231A12]">
+          <div className="flex flex-col gap-4">
+            <div className="max-w-xl flex flex-col gap-1.5">
+              <div className="inline-flex self-start items-center gap-2 rounded-full border border-[#ECD9C7] bg-white px-3 py-1 text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#8D5609]">
                 <Globe2 size={14} />
                 Language Selection
               </div>
@@ -75,12 +76,12 @@ const LanguageSelectionModal = ({
             </div>
 
             {selectedOption ? (
-              <div className="rounded-[24px] border border-[#E7DED5] bg-white px-5 py-4 shadow-[0_12px_24px_rgba(51,51,51,0.04)]">
+              <div className="rounded-md self-start border border-[#E7DED5] bg-white p-5 shadow-[0_12px_24px_rgba(51,51,51,0.04)]">
                 <p className="text-xs uppercase tracking-[0.16em] text-[#8A7C70]">
                   Current selection
                 </p>
                 <div className="mt-3 flex items-center gap-3">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF3E5] text-sm font-[gilroy-semibold] text-[#231A12]">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-[#FFF3E5] text-sm font-[gilroy-semibold] text-[#231A12]">
                     {selectedOption.flag}
                   </span>
                   <div>
@@ -96,7 +97,7 @@ const LanguageSelectionModal = ({
         </div>
 
         <div className="px-8 py-7">
-          <div className="rounded-[24px] border border-[#E7DED5] bg-[linear-gradient(135deg,_#FFFCF8,_#FFF5EB)] p-5 shadow-[0_14px_34px_rgba(51,51,51,0.04)]">
+          <div className="rounded-md border border-[#E7DED5] bg-[linear-gradient(135deg,_#FFFCF8,_#FFF5EB)] p-5 shadow-[0_14px_34px_rgba(51,51,51,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-[gilroy-semibold] uppercase tracking-[0.16em] text-[#946232]">
@@ -129,20 +130,30 @@ const LanguageSelectionModal = ({
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredOptions.map((option) => {
               const active = option.code === selected;
+              const hovered = hoveredCode === option.code;
               return (
                 <button
                   key={option.code}
                   type="button"
-                  onClick={() => setSelected(option.code)}
-                  className={cn(
-                    "rounded-[24px] border p-4 text-left transition-all",
-                    active
-                      ? "border-[#F6921E] bg-[#FFF5EB] shadow-[0_12px_24px_rgba(246,146,30,0.12)]"
-                      : "border-[#E7DED5] bg-white hover:border-[#F0C79D] hover:bg-[#FFFCF8]",
-                  )}
+                    onClick={() => setSelected(option.code)}
+                      onMouseEnter={() => setHoveredCode(option.code)}
+                      onMouseLeave={() => setHoveredCode(null)}
+                      className={cn(
+                        "rounded-md border p-4 text-left transition-all duration-200",
+                        active
+                          ? "border-[#F6921E] shadow-[0_12px_24px_rgba(246,146,30,0.12)]"
+                          : "border-[#E7DED5]",
+                      )}
+                      style={{
+                        backgroundColor: active
+                          ? hovered ? "#FFFBF7" : "#f1e0d0"
+                          : hovered ? "#FFFBF7" : "#ffffff",
+                        borderColor: !active && hovered ? "#F0C79D" : undefined,
+                        boxShadow: !active && hovered ? "0 1px 2px rgba(0,0,0,0.05)" : undefined,
+                      }}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF3E5] text-sm font-[gilroy-semibold] text-[#231A12]">
+                    <span className="flex size-11 items-center justify-center rounded-full bg-[#FFF3E5] text-sm font-[gilroy-semibold] text-[#231A12]">
                       {option.flag}
                     </span>
                     <span
