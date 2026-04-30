@@ -1,8 +1,9 @@
-import axiosInstance from "./axiosApi";
+import axiosInstance from "./axiosApi"; // This imports defaultAxiosInstance with admin token detection
 import { AxiosRequestConfig } from "axios";
 
 /**
  * Enhanced API utility functions to replace fetch calls
+ * Uses defaultAxiosInstance which has admin token detection
  */
 
 // GET request

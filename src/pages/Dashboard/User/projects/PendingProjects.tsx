@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -8,6 +9,7 @@ import {
   Modal,
   Descriptions,
   Empty,
+  message,
 } from "antd";
 import {
   ClockCircleOutlined,
@@ -15,6 +17,7 @@ import {
   EyeOutlined,
   CalendarOutlined,
   DollarOutlined,
+  RobotOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useUserProjects } from "../../../../hooks/Auth/User/Projects/useUserProjects";
@@ -24,6 +27,7 @@ import {
 } from "../../../../hooks/Auth/User/Projects/project-status-type";
 
 const PendingProjects = () => {
+  const navigate = useNavigate();
   const [selectedProject, setSelectedProject] = useState<ProjectWithStatus | null>(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
@@ -38,7 +42,10 @@ const PendingProjects = () => {
 
   // Filter projects that have pending applications - cast to proper type
   const pendingProjects: ProjectWithStatus[] = (projects as unknown as ProjectWithStatus[]).filter(project => 
-    project.userApplication && project.userApplication.status === 'pending'
+    project.userApplication && (
+      project.userApplication.status === 'pending' || 
+      project.userApplication.status === 'ai_interview_required'
+    )
   );
 
   useEffect(() => {
@@ -61,6 +68,24 @@ const PendingProjects = () => {
   const showProjectDetails = (project: ProjectWithStatus) => {
     setSelectedProject(project);
     setIsDetailModalVisible(true);
+  };
+
+  const getProjectInterviewSessionId = (project?: ProjectWithStatus | null) => {
+    const status = project?.userApplication?.status;
+    if (status !== "ai_interview_required") {
+      return null;
+    }
+    return project?.userApplication?.aiInterviewSessionId ?? null;
+  };
+
+  const resumeProjectInterview = (project: ProjectWithStatus) => {
+    const sessionId = getProjectInterviewSessionId(project);
+    if (!sessionId) {
+      message.error("No AI interview session is available for this project application yet.");
+      return;
+    }
+
+    navigate(`/dashboard/ai-interview/session/${sessionId}`);
   };
 
   if (error) {
@@ -97,13 +122,13 @@ const PendingProjects = () => {
             <div className="text-2xl font-bold text-orange-600">
               {pendingProjects.length || 0}
             </div>
-            <div className="text-gray-600">Pending Applications</div>
+            <div className="text-gray-600">Pending & Incomplete Applications</div>
           </div>
         </Card>
       )}
 
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Pending Applications</h3>
+        <h3 className="text-lg font-semibold">Pending & Incomplete Applications</h3>
         <Button
           icon={<ReloadOutlined />}
           onClick={handleRefresh}
@@ -115,7 +140,7 @@ const PendingProjects = () => {
 
       <Spin spinning={loading}>
         {pendingProjects.length === 0 ? (
-          <Empty description="No pending applications" />
+          <Empty description="No pending or incomplete applications" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingProjects.map((project) => (
@@ -130,6 +155,16 @@ const PendingProjects = () => {
                   >
                     View Details
                   </Button>,
+                  ...(project.userApplication?.status === 'ai_interview_required' && getProjectInterviewSessionId(project) ? [
+                    <Button
+                      type="text"
+                      icon={<RobotOutlined />}
+                      onClick={() => resumeProjectInterview(project)}
+                      className="text-orange-600 hover:text-orange-700"
+                    >
+                      Continue Interview
+                    </Button>
+                  ] : [])
                 ]}
               >
                 <div className="mb-3">
@@ -143,9 +178,15 @@ const PendingProjects = () => {
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <Tag color="orange">
-                      <ClockCircleOutlined /> PENDING
-                    </Tag>
+                    {project.userApplication?.status === 'ai_interview_required' ? (
+                      <Tag color="volcano">
+                        <ClockCircleOutlined /> AI INTERVIEW REQUIRED
+                      </Tag>
+                    ) : (
+                      <Tag color="orange">
+                        <ClockCircleOutlined /> PENDING
+                      </Tag>
+                    )}
                     <Tag color="blue">{project.projectCategory}</Tag>
                   </div>
 

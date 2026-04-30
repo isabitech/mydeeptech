@@ -53,14 +53,7 @@ export const useAdminDashboard = () => {
 
   const getDashboardData = useCallback(async (): Promise<HookOperationResult> => {
     return handleApiCall(async () => {
-
-      
-      // Verify token exists before making the call
-      const token = await retrieveTokenFromStorage();
-
-      
       const response = await apiUtils.get<AdminDashboardResponse>("/admin/dashboard");
-
 
       if (response.data.success && response.data.data) {
         setDashboardData(response.data.data);

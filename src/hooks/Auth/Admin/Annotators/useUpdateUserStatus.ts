@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { endpoints } from "../../../../store/api/endpoints";
-import { retrieveTokenFromStorage } from "../../../../helpers";
+import axios from "axios";
 
 interface UpdateStatusPayload {
   userId: string;
@@ -29,38 +29,20 @@ export const useUpdateUserStatus = () => {
     setError(null);
 
     try {
-      const token = await retrieveTokenFromStorage();
-      if (!token) {
-        const errorMessage = "Authentication token not found. Please log in again.";
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      }
-
-      const url = `${import.meta.env.VITE_API_URL}${endpoints.adminActions.approveAnnotator}/${payload.userId}/approve`;
+      const url = `${endpoints.adminActions.approveAnnotator}/${payload.userId}/approve`;
 
       const requestBody = {
         newStatus: payload.annotatorStatus || payload.microTaskerStatus
       };
 
-      console.log(`🔄 Updating user status for ${payload.userId}:`, requestBody);
-
-      const response = await fetch(url, {
-        method: "PATCH",
+      const response = await axios.patch(url, requestBody, {
+        baseURL: import.meta.env.VITE_API_URL,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Unauthorized. Please log in again.");
-        }
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      const data: UpdateStatusResponse = await response.json();
+      const data: UpdateStatusResponse = response.data;
 
       if (data.success) {
         return { success: true, data };

@@ -10,6 +10,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Select,
   message,
   Empty,
   Typography,
@@ -40,6 +41,7 @@ import { getErrorMessage } from "../../../../service/apiUtils";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
+const { Option } = Select;
 
 const AVAILABILITY_OPTIONS: Availability[] = ["full_time", "part_time", "flexible"];
 
@@ -445,81 +447,88 @@ const SingleProjectPage: React.FC = () => {
         open={isApplicationModalVisible}
         onOk={handleApply}
         onCancel={() => setIsApplicationModalVisible(false)}
+        okText={selectedProject?.aiInterviewRequired ? "Start AI Interview" : "Submit Application"}
+        cancelText="Cancel"
+        okButtonProps={{ loading }}
         width={600}
-        confirmLoading={loading}
       >
-        {selectedProject.aiInterviewRequired && (
-          <Alert
-            message="AI Interview Required"
-            description="After you apply, you will be routed into a project-specific AI interview. Your application only moves into admin review if the interview is passed."
-            type="info"
-            showIcon
-            className="mb-4"
-          />
-        )}
+        {selectedProject && (
+          <div>
+            <div className="mb-4 p-3 bg-gray-50 rounded">
+              <h4 className="font-semibold">{selectedProject.projectName}</h4>
+              <p className="text-sm text-gray-600">
+                {selectedProject.payRateCurrency} {selectedProject.payRate} per {selectedProject.payRateType.replace('_', ' ')}
+              </p>
+              <Tag color={selectedProject.aiInterviewRequired ? "volcano" : "green"} className="mt-2">
+                {selectedProject.aiInterviewRequired ? "AI Interview Required" : "Direct Admin Review"}
+              </Tag>
+            </div>
+
+            {selectedProject.aiInterviewRequired && (
+              <Alert
+                type="warning"
+                showIcon
+                className="mb-4"
+                message="This project requires an AI interview"
+                description="After you apply, you will be routed into a project-specific AI interview. Your application only moves into admin review if the interview is passed."
+              />
+            )}
 
         <Form form={applicationForm} layout="vertical">
           <Form.Item
-            label="Cover Letter"
             name="coverLetter"
+            label="Cover Letter"
             rules={[
-              { required: true, message: "Please enter your cover letter" },
-              { min: 50, message: "Cover letter must be at least 50 characters" },
-              { max: 1000, message: "Cover letter must not exceed 1000 characters" }
+              { required: true, message: "Please write a cover letter" },
+              { max: 1000, message: "Cover letter cannot exceed 1000 characters" }
             ]}
           >
             <TextArea
-              rows={4}
-              placeholder="Explain why you're perfect for this project and highlight relevant experience..."
+              placeholder="Explain why you're interested in this project and what makes you a good fit..."
+              rows={6}
               showCount
               maxLength={1000}
             />
           </Form.Item>
 
-          <Form.Item
-            label="Availability"
-            name="availability"
-            rules={[{ required: true, message: "Please select your availability" }]}
-          >
-            <select className="w-full border border-gray-300 rounded px-3 py-2">
-              <option value="">Select availability...</option>
-              {AVAILABILITY_OPTIONS.map(option => (
-                <option key={option} value={option}>
-                  {option.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </option>
-              ))}
-            </select>
-          </Form.Item>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="availability"
+              label="Availability"
+              rules={[{ required: true, message: "Please select your availability" }]}
+            >
+              <Select placeholder="Select availability">
+                {AVAILABILITY_OPTIONS.map(option => (
+                  <Option key={option} value={option}>
+                    {option.replace('_', ' ').toUpperCase()}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="proposedRate"
+              label="Proposed Rate (Optional)"
+              help="Leave empty to accept listed rate"
+            >
+              <InputNumber
+                placeholder={`Default: ${selectedProject.payRateCurrency} ${selectedProject.payRate}`}
+                min={0}
+                precision={2}
+                style={{ width: "100%" }}
+              />
+            </Form.Item>
+          </div>
 
           <Form.Item
-            label="Proposed Rate (Optional)"
-            name="proposedRate"
-            extra="Leave blank to accept the posted rate"
-          >
-            <InputNumber
-              min={0}
-              placeholder="Your proposed rate"
-              style={{ width: '100%' }}
-              addonAfter={`${selectedProject.payRateCurrency} ${selectedProject.payRateType}`}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="Estimated Completion Time"
             name="estimatedCompletionTime"
-            rules={[
-              { required: true, message: "Please enter estimated completion time" },
-              { min: 1, message: "Completion time must be at least 1 day" }
-            ]}
+            label="Estimated Completion Time (Optional)"
           >
-            <InputNumber
-              min={1}
-              placeholder="Number of days"
-              style={{ width: '100%' }}
-              addonAfter="days"
-            />
+            <Input placeholder="e.g., 2 weeks, 1 month" />
           </Form.Item>
         </Form>
+          </div>
+        )}
       </Modal>
     </div>
   );

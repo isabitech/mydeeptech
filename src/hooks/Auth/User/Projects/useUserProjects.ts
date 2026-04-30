@@ -201,9 +201,50 @@ export const useUserProjects = () => {
       page?: number;
       limit?: number;
     }): Promise<HookOperationResult> => {
-      return getApplicationsByStatus("pending", params);
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Get all applications and filter for pending + ai_interview_required on frontend
+        const endpoint = `${endpoints.userProject.projects}?view=applied`;
+        const queryParams: Record<string, string> = {};
+        
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.limit) queryParams.limit = params.limit.toString();
+
+        const data: any = await apiGet(
+          endpoint,
+          Object.keys(queryParams).length ? { params: queryParams } : {}
+        );
+
+        if (data.success) {
+          const allApplications = data.data.projects || [];
+          
+          // Filter for pending and ai_interview_required applications
+          const pendingApplications = allApplications.filter((project: any) => 
+            project.userApplication && (
+              project.userApplication.status === 'pending' || 
+              project.userApplication.status === 'ai_interview_required'
+            )
+          );
+
+          setProjects(pendingApplications);
+          setUserStats(data.data.userInfo || {});
+          return { success: true, data: { projects: pendingApplications } };
+        } else {
+          const errorMessage = data.message || "Failed to fetch pending applications";
+          setError(errorMessage);
+          return { success: false, error: errorMessage };
+        }
+      } catch (err: any) {
+        const errorMessage = getErrorMessage(err);
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setLoading(false);
+      }
     },
-    [getApplicationsByStatus]
+    []
   );
 
   const getRejectedApplications = useCallback(

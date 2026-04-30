@@ -104,8 +104,8 @@ export const useLogin = () => {
         setUserInfo(userInfo);
 
         // Store user information and token using encrypted storage
-        await storeUserInfoToStorage(userInfo as UserInfoData);
-        await storeTokenToStorage(data.token);
+        await storeUserInfoToStorage(userInfo as UserInfoData, 'user');
+        await storeTokenToStorage(data.token, 'user');
 
         // Navigate based on user status or role
         // You can customize this navigation logic based on your needs

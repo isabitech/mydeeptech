@@ -89,20 +89,27 @@ const useUserInfoStore = create<UserInfoStore>()(
       // --- Actions ---
       setUserInfo: (userInfo) => set({ userInfo, userRoleType: (userInfo?.role as UserRoleType) || null }),
         setIsAssessmentSubmitted: async () => {
-          const userInfo: RoleInfoMap<"user"> = await retrieveUserInfoFromStorage() as RoleInfoMap<"user">;
+          const userInfo: RoleInfoMap<"user"> = await retrieveUserInfoFromStorage('user') as RoleInfoMap<"user">;
           if(userInfo  && userInfo.role === "user") {
              const updatedUserInfo: RoleInfoMap<"user"> = { ...userInfo, isAssessmentSubmitted: true };
-            await storeUserInfoToStorage(updatedUserInfo);
+            await storeUserInfoToStorage(updatedUserInfo, 'user');
             set({ userInfo: updatedUserInfo });
           }
         },
 
       clearUserInfo: () => set({ userInfo: null }),
       handleLogout: () => {
+        // Clear session storage
+        sessionStorage.removeItem('ACCESS_TOKEN');
+        sessionStorage.removeItem('userInfo');
+
         // Clear local storage
         localStorage.removeItem('ACCESS_TOKEN');
         localStorage.removeItem('userInfo');
         
+        // Clear all session storage to ensure complete logout
+        sessionStorage.clear();
+
         // Clear all local storage to ensure complete logout
         localStorage.clear();
         
@@ -120,8 +127,8 @@ const useUserInfoStore = create<UserInfoStore>()(
       },
     }),
     {
-      name: 'user-info-storage', // unique name for localStorage key
-      storage: createJSONStorage(() => localStorage), // use localStorage for cross-tab persistence
+      name: 'user-info-storage', // unique name for sessionStorage key
+      storage: createJSONStorage(() => sessionStorage), // use sessionStorage
       partialize: (state) => ({
         userInfo: state.userInfo, // only persist userInfo
         userRoleType: state.userRoleType, // persist userRoleType
@@ -152,6 +159,11 @@ return  useUserInfoStore(
 const useGetUserInfo = <T extends UserRoleType>(roleType: T): RoleInfoMap<T> | null => {
   return useUserInfoStore((state) => {
     if (!state.userInfo || !roleType) return null;
+    
+    // Check if the stored user info matches the requested role type
+    if (roleType === 'admin' && !state.userInfo.isAdmin) return null;
+    if (roleType === 'user' && state.userInfo.isAdmin) return null;
+    
     return state.userInfo as RoleInfoMap<T>;
   });
 };

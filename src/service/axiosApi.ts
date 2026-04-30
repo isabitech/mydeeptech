@@ -49,9 +49,7 @@ export const setGlobalNavigate = (navigateCallback: ((path: string, options?: { 
  * ```
  */
 
-console.log("🚀 Axios API initialized with baseURL:", baseURL);
-
-  export const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
       baseURL,
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +64,7 @@ export const useAxiosApi = () => {
   // Create logout function that uses React Router navigation
   const logoutUser = useCallback((errorMessage?: string) => {
     localStorage.removeItem("token");
-    localStorage.clear(); // Clear localStorage instead of sessionStorage
+    sessionStorage.clear();
 
     // Store error message in localStorage if provided
     if (errorMessage) {
@@ -104,11 +102,39 @@ export const useAxiosApi = () => {
     axiosInstance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
         try {
-          const token = await retrieveTokenFromStorage();
+          // Check if user is admin from stored user info
+          let isAdminUser = false;
+          
+          try {
+            const storedAdminInfo = localStorage.getItem('_adm_usrinfo');
+            const storedUserInfo = localStorage.getItem('_usrinfo');
+            const sessionStorageInfo = sessionStorage.getItem('user-info-storage');
+            
+            // Check Zustand session storage FIRST (most reliable)
+            if (sessionStorageInfo) {
+              const sessionData = JSON.parse(sessionStorageInfo);
+              const userInfo = sessionData?.state?.userInfo;
+              // Check isAdmin flag first, then domains as backup
+              isAdminUser = userInfo?.isAdmin;
+            } else if (storedAdminInfo) {
+              // Check admin storage as fallback
+              const adminData = JSON.parse(storedAdminInfo);
+              isAdminUser = adminData?.isAdmin || false;
+            } else if (storedUserInfo) {
+              // Check regular user storage as last resort
+              const userData = JSON.parse(storedUserInfo);
+              isAdminUser = userData?.isAdmin || false;
+            }
+          } catch {
+            // If parsing fails, default to false
+            isAdminUser = false;
+          }
+              
+          const roleType = isAdminUser ? 'admin' : 'user';
+          const token = await retrieveTokenFromStorage(roleType);
+          
           if (token && config.headers) {
             config.headers.Authorization = `Bearer ${token}`;
-          } else {
-            console.warn(`⚠️ API Request: ${config.method?.toUpperCase()} ${config.url} - No token found`);
           }
         } catch (error) {
           console.error("❌ Error retrieving token:", error);
@@ -151,13 +177,6 @@ export const useAxiosApi = () => {
             // For login endpoints, just pass the error through without redirecting
             console.log('Login endpoint 401 - skipping redirect, letting component handle error');
           } else {
-            // For other endpoints, extract error message and logout user
-            // const errorData = error.response?.data as any;
-            // if (errorData?.message) {
-            //   authErrorMessage = errorData.message;
-            // } else if (errorData?.error) {
-            //   authErrorMessage = typeof errorData.error === "string" ? errorData.error : errorData.error.message;
-            // }
             // Use the hook's logout function for non-login endpoints
             logoutUser(authErrorMessage);
           }
@@ -178,29 +197,6 @@ export const useAxiosApi = () => {
           // Extract error message from various possible API response formats
           const errorMsg = errorMessage(error ?? "An error occurred");
           const errorData = data as any;
-
-          // if (errorData) {
-          //   // Common API error formats
-          //   if (errorData.message) {
-          //     errorMessage = errorData.message;
-          //   } else if (errorData.error) {
-          //     errorMessage =
-          //       typeof errorData.error === "string"
-          //         ? errorData.error
-          //         : errorData.error.message;
-          //   } else if (errorData.errors) {
-          //     // Handle validation errors
-          //     if (Array.isArray(errorData.errors)) {
-          //       errorMessage = errorData.errors
-          //         .map((err: any) => err.message || err)
-          //         .join(", ");
-          //     } else if (typeof errorData.errors === "object") {
-          //       errorMessage = Object.values(errorData.errors).flat().join(", ");
-          //     }
-          //   } else if (typeof errorData === "string") {
-          //     errorMessage = errorData;
-          //   }
-          // }
 
           errorResponse.message = errorMsg;
           errorResponse.status = status;
@@ -294,11 +290,40 @@ const defaultAxiosInstance = axios.create({
 defaultAxiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
-      const token = await retrieveTokenFromStorage();
+      // Check if user is admin from stored user info
+      let isAdminUser = false;
+      
+      try {
+        const storedAdminInfo = localStorage.getItem('_adm_usrinfo');
+        const storedUserInfo = localStorage.getItem('_usrinfo');
+        const sessionStorageInfo = sessionStorage.getItem('user-info-storage');
+        
+        // Check Zustand session storage FIRST (most reliable)
+        if (sessionStorageInfo) {
+          const sessionData = JSON.parse(sessionStorageInfo);
+          const userInfo = sessionData?.state?.userInfo;
+          // Check isAdmin flag first, then domains as backup
+          isAdminUser = userInfo?.isAdmin;
+
+        } else if (storedAdminInfo) {
+          // Check admin storage as fallback
+          const adminData = JSON.parse(storedAdminInfo);
+          isAdminUser = adminData?.isAdmin || false;
+        } else if (storedUserInfo) {
+          // Check regular user storage as last resort
+          const userData = JSON.parse(storedUserInfo);
+          isAdminUser = userData?.isAdmin || false;
+        }
+      } catch {
+        // If parsing fails, default to false
+        isAdminUser = false;
+      }
+      
+      const roleType = isAdminUser ? 'admin' : 'user';
+      const token = await retrieveTokenFromStorage(roleType);
+      
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
-      } else {
-        console.warn(`⚠️ API Request: ${config.method?.toUpperCase()} ${config.url} - No token found`);
       }
     } catch (error) {
       console.error("❌ Error retrieving token:", error);

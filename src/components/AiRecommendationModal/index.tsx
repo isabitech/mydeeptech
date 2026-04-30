@@ -327,7 +327,7 @@ const AiRecommendationModal: React.FC<AiRecommendationModalProps> = ({
       footer={null}
       width="90%"
       style={{ maxWidth: 1400 }}
-      bodyStyle={{ padding: '20px' }}
+      styles={{ body: { padding: '20px' } }}
     >
       <div>
         {/* Header Info */}

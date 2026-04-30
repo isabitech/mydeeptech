@@ -73,8 +73,13 @@ const formatUserInfo = (data: LoginResponse): UserInfoData => {
 const persistUserInfo = async (rawUser: LoginResponse): Promise<UserInfoData | null> => {
     if (!rawUser) return null;
     const userInfo: UserInfoData = formatUserInfo(rawUser);
-    await storeUserInfoToStorage(userInfo);
-    await storeTokenToStorage(rawUser.token);
+    
+    // Determine role for token storage
+    const isUser = isUserData(rawUser);
+    const roleType = isUser ? 'user' : 'admin';
+    
+    await storeUserInfoToStorage(userInfo, roleType);
+    await storeTokenToStorage(rawUser.token, roleType);
     return userInfo;
 };
 

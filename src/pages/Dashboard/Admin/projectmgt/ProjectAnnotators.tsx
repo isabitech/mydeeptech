@@ -257,116 +257,31 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
     const colors: { [key: string]: string } = {
       approved: "green",
       rejected: "red",
-      pending: "orange",
+      pending: "orange", 
+      ai_interview_required: "blue",
       reviewing: "blue",
+      removed: "gray",
     };
     return colors[status] || "default";
   };
 
-  // const getAnnotatorStatusColor = (status: string) => {
-  //   const colors: { [key: string]: string } = {
-  //     approved: "green",
-  //     verified: "blue",
-  //     pending: "orange",
-  //     rejected: "red",
-  //   };
-  //   return colors[status] || "default";
-  // };
+  const getStatusText = (status: string) => {
+    const statusTexts: { [key: string]: string } = {
+      approved: "Approved",
+      rejected: "Rejected",
+      pending: "Pending",
+      ai_interview_required: "AI Interview Required",
+      reviewing: "Reviewing",
+      removed: "Removed",
+    };
+    return statusTexts[status] || status;
+  };
 
   // Use backend-filtered data directly
   const approvedAnnotators = data?.annotators?.approved || [];
   const rejectedAnnotators = data?.annotators?.rejected || [];
   const pendingAnnotators = data?.annotators?.pending || [];
   const removedAnnotators = data?.annotators?.removed || [];
-
-  // Columns for recentApplications (lightweight records)
-  // const applicationColumns = [
-  //   {
-  //     title: "Applicant",
-  //     key: "applicant",
-  //     render: (record: RecentApplication) => (
-  //       <div className="flex items-center space-x-3">
-  //         <Avatar size={40} icon={<UserOutlined />} />
-  //         <div>
-  //           <div className="font-semibold">{record.applicantId.fullName}</div>
-  //           <div className="text-gray-500 text-sm">{record.applicantId.email}</div>
-  //         </div>
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     title: "Status",
-  //     key: "status",
-  //     render: (record: RecentApplication) => (
-  //       <div className="space-y-1">
-  //         <Tag color={getStatusColor(record.status)}>
-  //           {record.status.toUpperCase()}
-  //         </Tag>
-  //         {/* <Tag color={getAnnotatorStatusColor(record.applicantId.annotatorStatus)}>
-  //           {record.applicantId.annotatorStatus.toUpperCase()}
-  //         </Tag> */}
-  //       </div>
-  //     ),
-  //   },
-  //   {
-  //     title: "Proposed Rate",
-  //     key: "proposedRate",
-  //     render: (record: RecentApplication) => (
-  //       <span>
-  //         <DollarOutlined /> {record.proposedRate || "Not specified"}
-  //       </span>
-  //     ),
-  //   },
-  //   {
-  //     title: "Availability",
-  //     dataIndex: "availability",
-  //     key: "availability",
-  //   },
-  //   {
-  //     title: "Applied",
-  //     key: "appliedAt",
-  //     render: (record: RecentApplication) => moment(record.appliedAt).format("MMM DD, YYYY"),
-  //   },
-  //   {
-  //     title: "Actions",
-  //     key: "actions",
-  //     render: (record: RecentApplication) => {
-  //       // Create dropdown menu based on the current tab
-  //       const getDropdownMenu = () => {
-  //         const items = [
-  //           {
-  //             key: 'view',
-  //             icon: <EyeOutlined />,
-  //             label: 'View Details',
-  //             onClick: () => handleViewApplication(record)
-  //           }
-  //         ];
-
-  //         // Only show remove option for approved applications
-  //         if (record.status === 'approved') {
-  //           items.push({
-  //             key: 'remove',
-  //             icon: <DeleteOutlined />,
-  //             label: 'Remove Annotator',
-  //             onClick: () => handleRemoveAnnotator(record)
-  //           });
-  //         }
-
-  //         return { items };
-  //       };
-
-  //       return (
-  //         <Dropdown menu={getDropdownMenu()} trigger={['click']}>
-  //           <Button
-  //             type="text"
-  //             icon={<MoreOutlined />}
-  //             onClick={(e) => e.preventDefault()}
-  //           />
-  //         </Dropdown>
-  //       );
-  //     },
-  //   },
-  // ];
 
   // Columns for detailed annotator applications (approved/rejected/pending lists)
   const annotatorColumns = [
@@ -395,7 +310,7 @@ const ProjectAnnotators: React.FC<ProjectAnnotatorsProps> = ({
       render: (record: Record<string, string>) => (
         <div className="space-y-1">
           <Tag color={getStatusColor(record?.applicationStatus)}>
-            {String(record.applicationStatus || '').toUpperCase()}
+            {getStatusText(record?.applicationStatus)}
           </Tag>
         </div>
       ),
