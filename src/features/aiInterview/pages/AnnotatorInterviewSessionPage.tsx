@@ -28,6 +28,7 @@ import {
   useSubmitAiInterviewAnswer,
   useSubmitAiInterviewFocusEvents,
 } from "../hooks/useAiInterviewQueries";
+import { formatAiServiceError } from "../utils/errorHandler";
 import {
   clearInterviewFocusEvents,
   useInterviewFocusTracking,
@@ -250,8 +251,9 @@ const AnnotatorInterviewSessionPage = () => {
         draftAnswer: answer,
       });
       toast.success("Progress saved.");
-    } catch (mutationError) {
-      toast.error((mutationError as Error).message ?? "Unable to save progress.");
+    } catch (mutationError: unknown) {
+      const errorInfo = formatAiServiceError(mutationError);
+      toast.error(errorInfo.message);
     }
   };
 
@@ -331,8 +333,9 @@ const AnnotatorInterviewSessionPage = () => {
       }
 
       toast.success("Answer submitted. Moving to the next question.");
-    } catch (mutationError) {
-      toast.error((mutationError as Error).message ?? "Unable to submit answer.");
+    } catch (mutationError: unknown) {
+      const errorInfo = formatAiServiceError(mutationError);
+      toast.error(errorInfo.message);
     }
   };
 
