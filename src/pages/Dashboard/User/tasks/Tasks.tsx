@@ -1,33 +1,37 @@
-import Header from "../Header";
 import { useState } from "react";
 import Image from "./Image";
 import Text from "./Text";
 import Audio from "./Audio";
 import Video from "./Video";
+import AssignedTasks from "./AssignedTasks";
 
 const Tasks = () => {
-  // State to track the currently selected project
-  const [selectedProject, setSelectedProject] = useState(1); // Default to the first project
+  const [selectedProject, setSelectedProject] = useState(1);
 
   // List of projects
   const list = [
     {
       key: 1,
+      title: "Assigned Tasks",
+      component: <AssignedTasks />,
+    },
+    {
+      key: 2,
       title: "Image Annotation",
       component: <Image />,
     },
     {
-      key: 2,
+      key: 3,
       title: "Text Annotation",
       component: <Text />,
     },
     {
-      key: 3,
+      key: 4,
       title: "Audio Annotation",
       component: <Audio />,
     },
     {
-      key: 4,
+      key: 5,
       title: "Video Annotation",
       component: <Video />,
     },
@@ -36,8 +40,6 @@ const Tasks = () => {
 
   return (
     <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
-      <Header title="Tasks" />
-
       {/* Navigation Buttons */}
       <div className="flex gap-2">
         {list.map((item) => (

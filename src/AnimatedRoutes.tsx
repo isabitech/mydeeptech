@@ -64,6 +64,11 @@ const InvoiceRoutes = React.lazy(() => import("./pages/Dashboard/Admin/___invoic
 const UserNotifications = React.lazy(() => import("./pages/Dashboard/User/user-notifications/UserNotifications"));
 const RBACPage = React.lazy(() => import("./pages/Dashboard/Admin/rbcmgt/RBACPage"));
 const ApplicationsPage = React.lazy(() => import("./pages/admin/ApplicationsPage"));
+const MicroTaskDashboard = React.lazy(() => import("./pages/Dashboard/User/microtasks/MicroTaskDashboard"));
+const SubmissionImageUpload = React.lazy(() => import("./pages/Dashboard/User/microtasks/SubmissionImageUpload"));
+const SubmissionView = React.lazy(() => import("./pages/Dashboard/User/microtasks/SubmissionView"));
+const MicroTaskManagement = React.lazy(() => import("./pages/Dashboard/Admin/microtaskmgt/MicroTaskManagement"));
+const MicroTaskQAReview = React.lazy(() => import("./pages/Dashboard/Admin/microtaskmgt/MicroTaskQAReview"));
 const UserAssessments = React.lazy(() => import("./pages/Dashboard/Admin/assessmentmgt/UserAssessments"));
 const EmployeeMgt = React.lazy(() => import("./pages/Dashboard/Admin/employeemgt/EmployeeMgt"));
 const AnnotatorInterviewHubPage = React.lazy(() => import("./features/aiInterview/pages/AnnotatorInterviewHubPage"));
@@ -120,6 +125,9 @@ const AnimatedRoutes = () => {
                 <Route path="support" element={<SupportCenter />} />
                 <Route path="assessment" element={<Assessment />} />
                 <Route path="notifications" element={<UserNotifications />} />
+                <Route path="microtasks" element={<MicroTaskDashboard />} />
+                <Route path="microtasks/submission/:submissionId" element={<SubmissionImageUpload />} />
+                <Route path="microtasks/submission/:submissionId/view" element={<SubmissionView />} />
                 <Route path="ai-interview" element={<AnnotatorInterviewHubPage />} />
                 <Route path="ai-interview/setup/:trackId" element={<AnnotatorInterviewSetupPage />} />
                 <Route path="ai-interview/session/:sessionId" element={<AnnotatorInterviewSessionPage />} />
@@ -148,6 +156,8 @@ const AnimatedRoutes = () => {
                 <Route path="applications-demo" element={<PageGuard resource="applications"><ApplicationsPage /></PageGuard>} />
                 <Route path="jobs" element={<PageGuard resource="jobs"><JobManagement /></PageGuard>} />
                 <Route path="tasks" element={<PageGuard resource="tasks"><TaskManagement /></PageGuard>} />
+                <Route path="microtasks" element={<PageGuard resource="microtasks"><MicroTaskManagement /></PageGuard>} />
+                <Route path="microtasks/qa-review" element={<PageGuard resource="microtasks"><MicroTaskQAReview /></PageGuard>} />
                 <Route path="invoices" element={<PageGuard resource="invoice"><InvoiceManagement /></PageGuard>} />
                 <Route path="payments" element={<PageGuard resource="payments"><PaymentManagement /></PageGuard>} />
                 <Route path="notifications" element={<PageGuard resource="notifications"><NotificationManagement /></PageGuard>} />

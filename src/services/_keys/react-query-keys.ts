@@ -40,6 +40,26 @@ const MUTATION = {
     
     // AI Recommendations
     sendBulkInvitations: "sendBulkInvitations",
+
+    // Task Mutations
+    createTask: "createTask",
+    assignTask: "assignTask",
+    deleteTask: "deleteTask",
+    updateTask: "updateTask",
+
+    // Micro Task Mutations
+    createMicroTask: "createMicroTask",
+    updateMicroTask: "updateMicroTask",
+    deleteMicroTask: "deleteMicroTask",
+    duplicateMicroTask: "duplicateMicroTask",
+    updateMicroTaskStatus: "updateMicroTaskStatus",
+    startMicroTaskSubmission: "startMicroTaskSubmission",
+    uploadSubmissionImage: "uploadSubmissionImage",
+    deleteSubmissionImage: "deleteSubmissionImage",
+    submitForReview: "submitForReview",
+    reviewSubmissionImage: "reviewSubmissionImage",
+    completeMicroTaskReview: "completeMicroTaskReview",
+    bulkApproveMicroTasks: "bulkApproveMicroTasks",
 } as const;
 
 const QUERY = {
@@ -90,6 +110,24 @@ const QUERY = {
     // AI Recommendations
     getAiRecommendations: "getAiRecommendations",
     getAiRecommendationStatus: "getAiRecommendationStatus",
+
+    // Task Queries
+    getAllTasks: "getAllTasks",
+    getAssignedTasks: "getAssignedTasks",
+
+    // Micro Task Queries
+    getAllMicroTasks: "getAllMicroTasks",
+    getMicroTaskById: "getMicroTaskById",
+    getMicroTaskStatistics: "getMicroTaskStatistics",
+    getAvailableMicroTasks: "getAvailableMicroTasks",
+    getMicroTaskSlots: "getMicroTaskSlots",
+    getUserMicroTaskSubmissions: "getUserMicroTaskSubmissions",
+    getMicroTaskSubmissionDetails: "getMicroTaskSubmissionDetails",
+    checkMicroTaskEligibility: "checkMicroTaskEligibility",
+    getPendingMicroTaskReviews: "getPendingMicroTaskReviews",
+    getMicroTaskReviewStatistics: "getMicroTaskReviewStatistics",
+    getMicroTaskReviewQueue: "getMicroTaskReviewQueue",
+    getMicroTaskSubmissionForReview: "getMicroTaskSubmissionForReview",
 } as const;
 
 const REACT_QUERY_KEYS = {

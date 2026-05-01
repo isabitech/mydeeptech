@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { endpoints } from '../../../../store/api/endpoints';
+import { getErrorMessage } from '../../../../service/apiUtils';
+import axiosInstance from '../../../../service/axiosApi';
 
 export interface User {
-    role: string
+ role: string
   _id: string
   firstname: string
   lastname: string
   username: string
+  fullName: string
   email: string
   password: string
   phone: string
-  __v: number
 }
 
 const useGetUsers = () => {
@@ -21,15 +23,11 @@ const useGetUsers = () => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch(endpoints.users.getAllUsers);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const data = await response.json();
+                const response = await axiosInstance.get(endpoints.users.getAllUsers);
+                const data = response.data
                 setUsers(data.data);
-
-            } catch (err:any) {
-                setError(err.message);
+            } catch (err) {
+                setError(getErrorMessage(err));
             } finally {
                 setLoading(false);
             }

@@ -1,36 +1,38 @@
 import { useEffect, useState } from "react";
-import { Button, Modal, Form, Input, DatePicker, notification } from "antd";
+import { Button, Modal, Form, Input, DatePicker, notification, Select, Table, Dropdown } from "antd";
 import { UserPlus } from "lucide-react";
 import { useUserContext } from "../../../UserContext";
-import { baseURL, endpoints } from "../../../store/api/endpoints";
-import { PlusCircleFilled } from "@ant-design/icons";
-import useGetUsers from "../../../hooks/Auth/Admin/Users/useGetUsers";
+import { PlusCircleFilled, LinkOutlined, DeleteOutlined, ExclamationCircleOutlined, EditOutlined, MoreOutlined } from "@ant-design/icons";
 import Loader from "../../../components/Loader";
 import { getErrorMessage } from "../../../service/apiUtils";
+import taskQueryService, { TaskType } from "../../../services/task-service/task-query";
+import taskMutationService, { CreateTaskPayload, AssignTaskPayload, UpdateTaskPayload } from "../../../services/task-service/task-mutation";
+import type { ColumnsType } from 'antd/es/table';
+import dayjs from "dayjs";
+import userQueryService from "../../../services/user-service/user-query";
+const { Option } = Select;
 
 export type ResponseType = TaskType[];
 
-export interface TaskType {
-  _id: string;
-  taskLink: string;
-  taskGuidelineLink: string;
-  taskName: string;
-  createdBy: string;
-  dateCreated: string;
-  dueDate: string;
-  __v: number;
+type CreatedBy = {
+  id: string;
+  fullName: string;
+  email: string;
 }
+
 
 const TaskTable = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [totalTask, settotalTask] = useState<number>(0);
-  const [allTask, setAllTask] = useState<ResponseType>();
-  const [isAssignTaskModalVisibile, setIsAssignTaskModalVisibile] =
-    useState<boolean>(false);
+  const [editForm] = Form.useForm();
+  const [assignForm] = Form.useForm();
+  const [isAssignTaskModalVisible, setIsAssignTaskModalVisible] = useState<boolean>(false);
   const [selectedTask, setSelectedTask] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<string>("");
+  const [editingTask, setEditingTask] = useState<TaskType | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
 
   // Show Modal
   const showModal = () => {
@@ -38,133 +40,303 @@ const TaskTable = () => {
   };
 
   const { userInfo } = useUserContext();
-  const getAllUsers = useGetUsers();
+
+  // React Query hooks
+  const { tasks, isTasksLoading, tasksError } = taskQueryService.useGetAllTasks();
+  const { createTaskMutation } = taskMutationService.useCreateTask();
+  const { assignTaskMutation } = taskMutationService.useAssignTask();
+  const { deleteTaskMutation } = taskMutationService.useDeleteTask();
+  const { updateTaskMutation } = taskMutationService.useUpdateTask();
+  const { allUsers: getAllUsers, isUsersLoading, isUsersFetching } = userQueryService.useGetAllUsers(submittedQuery.trim());
 
   // Handle Form Submission
   const handleOk = async () => {
-    try {
-      const values = await form.validateFields();
-      const payload = {
-        ...values,
-        dueDate: values.dueDate.format("YYYY-MM-DD"),
-      };
-
-      const response = await fetch(`${baseURL}${endpoints.tasks.createTask}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create project");
-      }
-
-      const data = await response.json();
-      console.log(data);
-      setAllTask((prev) => prev?.map((task)=>( task._id === data._id ? {...task, ...payload}: task)));
-
-      notification.success({ message: "Task created successfully!" });
-
-      // setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
-      form.resetFields();
-      setIsModalVisible(false);
-    } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      notification.error({
-        message: "Error Creating Project",
-        description: errorMessage,
-      });
-    }
+    const values = await form.validateFields();
+    const payload: CreateTaskPayload = {
+      ...values,
+      dueDate: values.dueDate && dayjs.isDayjs(values.dueDate) 
+        ? values.dueDate.format("YYYY-MM-DD") 
+        : values.dueDate,
+    };
+    createTaskMutation.mutate(payload, {
+      onSuccess: () => {
+        form.resetFields();
+        setIsModalVisible(false);
+        notification.success({ message: "Task created successfully!" });
+      },
+      onError: (error) => {
+        notification.error({ message: getErrorMessage(error) || "Failed to create task" });
+      },
+    });
   };
 
-  const handleAssingTask = async (
-    selectedUser: string,
-    selectedTask: string
-  ) => {
-    try {
-      const payload = {
-        taskId: selectedTask,
-        userId: selectedUser,
-      };
-
-      const response = await fetch(`${baseURL}${endpoints.tasks.assignTask}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.responseMessage || "Failed to assign task");
-      }
-
-      const data = await response.json();
-      console.log(data);
-
-      notification.success({ message: "Task assigned successfully!" });
-
-      // setProjects((prevProjects) => [...prevProjects, data]); // Add new project to the list
-      form.resetFields();
-      setIsAssignTaskModalVisibile(false);
-    } catch (error: any) {
-      const errorMessage = getErrorMessage(error);
-      notification.error({
-        message: "Error Assigning Task",
-        description: errorMessage,
-      });
+  const handleAssignTask = async () => {
+    if (!selectedUser) {
+      notification.error({ message: "Please select a user to assign the task to." });
+      return;
     }
+    if (!selectedTask) {
+      notification.error({ message: "No task selected for assignment." });
+      return;
+    }
+  
+    const payload: AssignTaskPayload = {
+      taskId: selectedTask,
+      userId: selectedUser,
+    };
+
+    assignTaskMutation.mutate(payload, {
+      onSuccess: () => {
+        assignForm.resetFields();
+        setIsAssignTaskModalVisible(false);
+        setSelectedUser("");
+        notification.success({ message: "Task assigned successfully!" });
+      },
+      onError: (error) => {
+        notification.error({ message: getErrorMessage(error) || "Failed to assign task" });
+      },
+    })
   };
+
+  const handleDeleteTask = (taskId: string, taskName: string) => {
+    Modal.confirm({
+      title: 'Delete Task',
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to delete the task "${taskName}"? This action cannot be undone.`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => {
+        deleteTaskMutation.mutate(taskId, {
+          onSuccess: () => {
+            notification.success({ message: 'Task deleted successfully!' });
+          },
+          onError: (error) => {
+            notification.error({ message: 'Failed to delete task', description: getErrorMessage(error) });
+          },
+        });
+      },
+    });
+  };
+
+  const handleEditTask = (task: TaskType) => {
+    setEditingTask(task);
+    editForm.setFieldsValue({
+      taskName: task.taskName,
+      taskLink: task.taskLink,
+      taskGuidelineLink: task.taskGuidelineLink,
+      dueDate: task.dueDate ? dayjs(task.dueDate) : null,
+    });
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateTask = async () => {
+  try {
+    const values = await editForm.validateFields();
+    const payload: UpdateTaskPayload = {
+      ...values,
+      dueDate: values.dueDate && dayjs.isDayjs(values.dueDate)
+        ? values.dueDate.format("YYYY-MM-DD")
+        : values.dueDate,
+    };
+
+    if (editingTask) {
+      updateTaskMutation.mutate(
+        { taskId: editingTask._id, payload },
+        {
+          onSuccess: () => {
+            editForm.resetFields();
+            setIsEditModalVisible(false);
+            setEditingTask(null);
+            notification.success({ message: "Task updated successfully!" });
+          },
+          onError: (error) => {
+            notification.error({ message: getErrorMessage(error) || "Failed to update task" });
+          },
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Validation failed:", error);
+  }
+};
+
+const onSelectUser = (value: string) => {
+  setSelectedUser(value);
+};
+
+const onSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  setSearchQuery(e.target.value);
+};
+
+const onSearch = () => {
+  setSubmittedQuery(searchQuery); 
+};
+
+const handleMenuClick = ({ key }: { key: string }, record: TaskType) => {
+  switch (key) {
+    case 'edit':
+      handleEditTask(record);
+      break;
+    case 'assign':
+      assignForm.setFieldsValue({
+        taskLink: record.taskLink,
+        taskGuidelineLink: record.taskGuidelineLink,
+        taskName: record.taskName,
+        dueDate: record.dueDate,
+        userInfo: userInfo.fullName,
+      });
+      setIsAssignTaskModalVisible(true);
+      setSelectedTask(record._id);
+      break;
+    case 'delete':
+      handleDeleteTask(record._id, record.taskName);
+      break;
+  }
+};
 
   // Handle Cancel
   const handleCancel = () => {
     form.resetFields();
+    editForm.resetFields();
+    assignForm.resetFields();
     setIsModalVisible(false);
-    setIsAssignTaskModalVisibile(false);
+    setIsEditModalVisible(false);
+    setIsAssignTaskModalVisible(false);
+    setEditingTask(null);
+    setSearchQuery("");
+    setSelectedUser("");
   };
 
+  // Show error notification if there's a query error
   useEffect(() => {
-    setIsLoading(!isLoading);
-    const fetchAllTasks = async () => {
-      try {
-        const response = await fetch(`${baseURL}${endpoints.tasks.getAllTasks}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch tasks");
-        }
-        const data = await response.json();
-        setIsLoading(false);
-        const result: ResponseType = data.data;
-        console.log(result);
-        setAllTask(result);
-        // const totalTask = result.length;
+    if (tasksError) {
+      notification.error({
+        message: "Error fetching tasks",
+        description: getErrorMessage(tasksError),
+      });
+    }
+  }, [tasksError]);
 
-        settotalTask(totalTask);
-      } catch (error) {
-        console.error("An error occurred:", error);
-        const errorMessage = getErrorMessage(error);
-        notification.error({
-          message: "Error fetching tasks",
-          description: errorMessage,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAllTasks();
-  }, []);
+  // Define table columns
+  const columns: ColumnsType<TaskType> = [
+    {
+      title: 'S/N',
+      key: 'index',
+      width: 60,
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'Task Link',
+      dataIndex: 'taskLink',
+      key: 'taskLink',
+      render: (link: string) => (
+        <Button 
+          type="link" 
+          icon={<LinkOutlined />}
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View Task
+        </Button>
+      ),
+    },
+    {
+      title: 'Guidelines',
+      dataIndex: 'taskGuidelineLink',
+      key: 'taskGuidelineLink',
+      render: (link: string) => (
+        <Button 
+          type="link" 
+          icon={<LinkOutlined />}
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View Guidelines
+        </Button>
+      ),
+    },
+    {
+      title: 'Task Name',
+      dataIndex: 'taskName',
+      key: 'taskName',
+      ellipsis: true,
+    },
+    {
+      title: 'Deadline',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
+      render: (date: string) => {
+        if (!date) return 'No deadline';
+        return (
+          <span>
+             {dayjs(date).format("MMM D, YYYY")}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Created By',
+      dataIndex: 'createdBy',
+      key: 'createdBy',
+      render: (createdBy: CreatedBy) =>  typeof createdBy === 'object' ? createdBy.fullName : createdBy,
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 80,
+      render: (_, record: TaskType) => {
+        const menuItems = [
+          {
+            key: 'edit',
+            label: 'Edit Task',
+            icon: <EditOutlined />,
+          },
+          {
+            key: 'assign',
+            label: 'Assign Task',
+            icon: <PlusCircleFilled />,
+          },
+          {
+            type: 'divider' as const,
+          },
+          {
+            key: 'delete',
+            label: 'Delete Task',
+            icon: <DeleteOutlined />,
+            danger: true,
+          },
+        ];
+
+        return (
+          <Dropdown
+            menu={{ 
+              items: menuItems, 
+              onClick: (menuInfo) => handleMenuClick(menuInfo, record)
+            }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
+              style={{
+                border: 'none',
+                boxShadow: 'none',
+                background: 'transparent'
+              }}
+            />
+          </Dropdown>
+        );
+      },
+    },
+  ];
 
   return (
     <div className="p-4">
-      {isLoading && (
+      {isTasksLoading && (
         <div className="h-screen flex items-center justify-center">
           <Loader />
         </div>
@@ -178,153 +350,146 @@ const TaskTable = () => {
           Create a Task <UserPlus />
         </Button>
       </div>
-      <table className="min-w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">S/N</th>
-            {/* <th className="border p-2">Annotator First Name</th>
-            <th className="border p-2">Email</th> */}
-            <th className="border p-2">Task Link</th>
-            <th className="border p-2">Task Guideline Link</th>
-            <th className="border p-2">Task Name</th>
-            <th className="border p-2">Deadline</th>
-            <th className="border p-2">Created By</th>
-            <th className="border p-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allTask?.map((task, index) => (
-            <tr key={task._id}>
-              <td className="border p-2">{index + 1}</td>
-              <td className="border p-2">
-                <a
-                  href={task.taskLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Task
-                </a>
-              </td>
-              <td className="border p-2">
-                <a
-                  href={task.taskGuidelineLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View Guidelines
-                </a>
-              </td>
-              <td className="border p-2">{task.taskName}</td>
-              <td className="border p-2">{task.dueDate}</td>
-              <td className="border p-2">{task.createdBy}</td>
-              <td>
-                <button
-                  onClick={() => {
-                    form.setFieldsValue({
-                      taskLink: task.taskLink,
-                      taskGuidelineLink: task.taskGuidelineLink,
-                      taskName: task.taskName,
-                      dueDate: task.dueDate,
-                      userInfo: userInfo.fullName,
-                    });
-                    setIsAssignTaskModalVisibile(true);
-                    setSelectedTask(task._id); // Track the selected task
-                  }}
-                  className="!bg-primary !text-white !border-none !mr-3 !font-[gilroy-regular] rounded-md p-1 !hover:bg-secondary"
-                >
-                  Assign Task <PlusCircleFilled />
-                </button>
-              </td>
-            </tr>
-          ))}
+      <Table
+        columns={columns}
+        dataSource={tasks}
+        loading={isTasksLoading}
+        rowKey="_id"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          position: ['bottomCenter'],
+          showTotal: (total, range) => 
+            `${range[0]}-${range[1]} of ${total} tasks`,
+        }}
+        scroll={{ x: 800 }}
+      />
 
-          {/* Assign Task Modal */}
-          <Modal
-            title="Assign Task"
-            visible={isAssignTaskModalVisibile}
-            onOk={() => handleAssingTask(selectedUser, selectedTask)}
-            onCancel={() => setIsAssignTaskModalVisibile(false)}
-            okText="Assign"
-            cancelText="Cancel"
+      {/* Assign Task Modal */}
+      <Modal
+        title="Assign Task"
+        open={isAssignTaskModalVisible}
+        onOk={handleAssignTask}
+        onCancel={() => setIsAssignTaskModalVisible(false)}
+        okText="Assign"
+        cancelText="Cancel"
+        confirmLoading={assignTaskMutation.isPending}
+      >
+        <Form form={assignForm} layout="vertical">
+          <Form.Item
+            name="taskLink"
+            label="Task Link"
+            rules={[
+              { required: true, message: "Please enter the task link!" },
+            ]}
           >
-            <Form form={form} layout="vertical">
-              <Form.Item
-                name="taskLink"
-                label="Task Link"
-                rules={[
-                  { required: true, message: "Please enter the task link!" },
-                ]}
-              >
-                <Input disabled />
-              </Form.Item>
-              <Form.Item
-                name="taskGuidelineLink"
-                label="Task Guideline Link"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter the guideline link!",
-                  },
-                ]}
-              >
-                <Input disabled />
-              </Form.Item>
-              <Form.Item
-                name="taskName"
-                label="Task Name"
-                rules={[
-                  { required: true, message: "Please select the task name!" },
-                ]}
-              >
-                <Input disabled />
-              </Form.Item>
-              <Form.Item
-                name="dueDate"
-                label="Deadline"
-                rules={[
-                  { required: true, message: "Please select a deadline!" },
-                ]}
-              >
-                <Input disabled />
-              </Form.Item>
-              <Form.Item
-                name="userInfo"
-                label="Assign to"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select the username of the user!",
-                  },
-                ]}
-              >
-                <select
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  onChange={(e: any) => setSelectedUser(e.target.value)} // Ensure setSelectedUser is defined
-                >
-                  {/* Check if getAllUsers and getAllUsers.users exist before mapping */}
-                  <option value="">Select A User</option>
-                  {getAllUsers?.users?.map((user) => (
-                    <option key={user._id} value={user._id}>
-                      {user.username} ({user.email}){" "}
-                    </option>
-                  ))}
-                </select>
-              </Form.Item>
-            </Form>
-          </Modal>
-        </tbody>
-      </table>
+            <Input disabled />
+          </Form.Item>
+          <Form.Item
+            name="taskGuidelineLink"
+            label="Task Guideline Link"
+            rules={[
+              {
+                required: true,
+                message: "Please enter the guideline link!",
+              },
+            ]}
+          >
+            <Input disabled />
+          </Form.Item>
+          <Form.Item
+            name="taskName"
+            label="Task Name"
+            rules={[
+              { required: true, message: "Please select the task name!" },
+            ]}
+          >
+            <Input disabled />
+          </Form.Item>
+          <Form.Item
+            name="dueDate"
+            label="Deadline"
+            rules={[
+              { required: true, message: "Please select a deadline!" },
+            ]}
+          >
+            <Input disabled />
+          </Form.Item>
+          <Form.Item
+            name="userInfo"
+            label="Assign to"
+            rules={[
+              {
+                required: true,
+                message: "Please select the username of the user!",
+              },
+            ]}
+          >
+            <Select
+              placeholder="Select A User"
+              onChange={onSelectUser}
+              className="w-full"
+              value={selectedUser || undefined}
+              notFoundContent={getAllUsers?.length === 0 ? "No users found" : null}
+              popupRender={(menu) => {
+                return (
+                <>
+                  <div className="p-2">
+                    <Input.Search
+                      placeholder="Search by username or email"
+                      value={searchQuery}
+                      onChange={onSearchQueryChange}
+                      onSearch={onSearch}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      loading={isUsersLoading || isUsersFetching}
+                      enterButton="Search"
+                      allowClear
+                      onClear={() => {
+                        setSearchQuery("");
+                        setSubmittedQuery("");
+                      }}
+                    />
+                  </div>
+                  {menu}
+                </>
+              )
+              }}
+            >
+              {
+                getAllUsers?.map((user) =>  {
+                return (
+                <Option key={user._id} value={user._id} className="truncate">
+                  {user.fullName}: {user.email}
+                </Option>
+              )
+              })}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {/* Modal for Creating New Task */}
       <Modal
         title="Create New Task"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         okText="Create"
         cancelText="Cancel"
+        confirmLoading={createTaskMutation.isPending}
       >
         <Form form={form} layout="vertical">
+           <Form.Item
+            name="taskName"
+            label="Task Name"
+            rules={[
+              { required: true, message: "Please select the task name!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
           <Form.Item
             name="taskLink"
             label="Task Link"
@@ -341,30 +506,70 @@ const TaskTable = () => {
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            name="taskName"
-            label="Task Name"
-            rules={[
-              { required: true, message: "Please select the task name!" },
-            ]}
-          >
-            <Input />
-          </Form.Item>
+         
           <Form.Item
             name="dueDate"
             label="Deadline"
             rules={[{ required: true, message: "Please select a deadline!" }]}
+            className="w-full"
           >
-            <DatePicker />
+            <DatePicker 
+              className="w-full create-task-datepicker"
+              placeholder="Select deadline"
+            />
           </Form.Item>
-          <Form.Item
-            name="createdBy"
-            label="Created By"
+        </Form>
+      </Modal>
+
+      {/* Modal for Editing Task */}
+      <Modal
+        title="Edit Task"
+        open={isEditModalVisible}
+        onOk={handleUpdateTask}
+        onCancel={handleCancel}
+        okText="Update"
+        cancelText="Cancel"
+        confirmLoading={updateTaskMutation.isPending}
+      >
+        <Form form={editForm} layout="vertical">
+           <Form.Item
+            name="taskName"
+            label="Task Name"
             rules={[
-              { required: true, message: "Please select the task name!" },
+              { required: true, message: "Please enter the task name!" },
             ]}
           >
-            <Input value={userInfo.fullName} />
+            <Input />
+          </Form.Item>
+
+          <Form.Item
+            name="taskLink"
+            label="Task Link"
+            rules={[{ required: true, message: "Please enter the task link!" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="taskGuidelineLink"
+            label="Task Guideline Link"
+            rules={[
+              { required: true, message: "Please enter the guideline link!" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+ 
+          <Form.Item
+            name="dueDate"
+            label="Deadline"
+            rules={[{ required: true, message: "Please select a deadline!" }]}
+            className="w-full"
+          >
+            <DatePicker 
+              className="w-full"
+              placeholder="Select deadline"
+              classNames={{ popup: { root: "edit-task-datepicker-popup"  } }}
+            />
           </Form.Item>
         </Form>
       </Modal>

@@ -140,6 +140,49 @@ export const endpoints = {
     createTask: "/auth/createTasks",
     assignTask: "/auth/assignTask",
     getAllTasks: "/auth/getAllTasks",
+    deleteTask: "/auth/deleteTask",
+    updateTask: "/auth/updateTask",
+    getAssignedTasks: "/auth/assigned-tasks", // New endpoint for user assigned tasks
+  },
+
+  // Micro Task endpoints
+  microTasks: {
+    // Admin endpoints
+    createTask: "/micro-tasks",
+    getAllTasks: "/micro-tasks",
+    getTaskById: "/micro-tasks",
+    updateTask: "/micro-tasks",
+    deleteTask: "/micro-tasks",
+    updateTaskStatus: "/micro-tasks",
+    duplicateTask: "/micro-tasks",
+    getStatistics: "/micro-tasks/statistics",
+    getTaskSlots: "/micro-tasks",
+    // User endpoints
+    getAvailableTasks: "/micro-tasks/available/me",
+  },
+
+  // Micro Task Submissions endpoints
+  microTaskSubmissions: {
+    getUserSubmissions: "/micro-task-submissions/me",
+    checkEligibility: "/micro-task-submissions/tasks",
+    startSubmission: "/micro-task-submissions/tasks",
+    getSubmissionDetails: "/micro-task-submissions",
+    uploadImage: "/micro-task-submissions",
+    deleteImage: "/micro-task-submissions",
+    submitForReview: "/micro-task-submissions",
+  },
+
+  // Micro Task QA endpoints
+  microTaskQA: {
+    getPendingReviews: "/micro-task-qa/pending",
+    getReviewQueue: "/micro-task-qa/queue",
+    getReviewStatistics: "/micro-task-qa/statistics",
+    getSubmissionForReview: "/micro-task-qa/submission",
+    reviewImage: "/micro-task-qa/review",
+    completeReview: "/micro-task-qa/complete",
+    bulkApprove: "/micro-task-qa/bulk-approve",
+    assignReviewer: "/micro-task-qa/assign",
+    getReviewerSubmissions: "/micro-task-qa/reviewer",
   },
   users: {
     getAllUsers: "/auth/getAllUsers",
