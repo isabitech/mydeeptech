@@ -55,12 +55,14 @@ const MUTATION = {
     updateMicroTaskStatus: "updateMicroTaskStatus",
     startMicroTaskSubmission: "startMicroTaskSubmission",
     uploadSubmissionImage: "uploadSubmissionImage",
+    applyForTask: "uploadSubmissionImage",
     deleteSubmissionImage: "deleteSubmissionImage",
     submitForReview: "submitForReview",
     createTaskSlots: "createTaskSlots",
     reviewSubmissionImage: "reviewSubmissionImage",
     completeMicroTaskReview: "completeMicroTaskReview",
     bulkApproveMicroTasks: "bulkApproveMicroTasks",
+    approveOrRejectApplication: "approveOrRejectApplication",
 } as const;
 
 const QUERY = {
@@ -126,6 +128,7 @@ const QUERY = {
     getAvailableMicroTasks: "getAvailableMicroTasks",
     getMicroTaskSlots: "getMicroTaskSlots",
     getUserMicroTaskSubmissions: "getUserMicroTaskSubmissions",
+    getUserMicroTaskEarningStatistics: "getUserMicroTaskEarningStatistics",
     getSingleTask: "getSingleTask",
     getMicroTaskSubmissionDetails: "getMicroTaskSubmissionDetails",
     checkMicroTaskEligibility: "checkMicroTaskEligibility",
@@ -133,6 +136,7 @@ const QUERY = {
     getMicroTaskReviewStatistics: "getMicroTaskReviewStatistics",
     getMicroTaskReviewQueue: "getMicroTaskReviewQueue",
     getMicroTaskSubmissionForReview: "getMicroTaskSubmissionForReview",
+    getTasksByFilter: "getTasksByFilter",
 
 } as const;
 

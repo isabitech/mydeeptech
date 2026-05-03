@@ -36,11 +36,13 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import axiosInstance from "../../../../service/axiosApi";
 import { endpoints } from "../../../../store/api/endpoints";
-import { microTaskAdminQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
+import { microTaskAdminQueryService, microTaskMutationService, microTaskQueryService } from "../../../../services/micro-task-service";
 import { getErrorMessage } from "../../../../service/apiUtils";
 import { BaseTaskSchema, TaskSchema } from "../../../../validators/task/task-schema";
 import { UserSchema } from "../../../../validators/users/users-schema";
 import { TaskAssignmentSchema } from "../../../../validators/task/assigned-task-schema";
+import { TaskStatus } from "../../../../services/micro-task-service/micro-task-query";
+import { TaskApplicationSchema } from "../../../../validators/task/task-filters";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -57,7 +59,9 @@ const CURRENCIES = ["USD", "EUR", "GBP", "NGN", "KES", "GHS"];
 
 const TASK_STATUSES = [
   { value: "draft", label: "Draft", color: "default" },
+  { value: "pending", label: "Pending", color: "default" },
   { value: "active", label: "Active", color: "success" },
+  { value: "ongoing", label: "Ongoing", color: "success" },
   { value: "paused", label: "Paused", color: "warning" },
   { value: "completed", label: "Completed", color: "blue" },
   { value: "cancelled", label: "Cancelled", color: "error" }
@@ -69,6 +73,8 @@ interface MicroTaskStatistics {
     total: number;
     active: number;
     draft: number;
+    pending: number;
+    ongoing: number;
     paused: number;
     completed: number;
     cancelled: number;
@@ -89,7 +95,6 @@ const MicroTaskManagement: React.FC = () => {
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Partial<BaseTaskSchema> | null>(null);
   const [taskToAssign, setTaskToAssign] = useState<Partial<BaseTaskSchema> | null>(null);
-  const [tableLoading] = useState(false);
   const [statistics, setStatistics] = useState<MicroTaskStatistics | null>(null);
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
@@ -102,6 +107,7 @@ const MicroTaskManagement: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [selectedAssignUserIds, setSelectedAssignUserIds] = useState<string[]>([]);
+  const [taskStatus, setTaskStatus] = useState<TaskStatus>("all");
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -113,7 +119,9 @@ const MicroTaskManagement: React.FC = () => {
 
   const {
     tasks: tasksData,
-    tasksRefetch
+    tasksRefetch,
+    isTasksLoading,
+    isTasksFetching
   } = microTaskAdminQueryService.useGetAllMicroTasksAdmin(
     pagination.current, 
     pagination.pageSize, 
@@ -127,6 +135,8 @@ const MicroTaskManagement: React.FC = () => {
   const { createTaskMutation, isCreateTaskLoading } = microTaskMutationService.useCreateMicroTask();
   const { updateTaskMutation, isUpdateTaskLoading } = microTaskMutationService.useUpdateMicroTask();
   const { assignTaskToUsersMutation, isAssignTaskToUsersLoading } = microTaskMutationService.useAssignTaskToUsers();
+  const { approveOrRejectApplicationMutation } = microTaskMutationService.useApproveOrRejectApplication();
+
   const { 
     assignedTasks, 
     isAssignedTasksLoading,
@@ -134,11 +144,15 @@ const MicroTaskManagement: React.FC = () => {
      pagination: taskUsersPagination
   }  = microTaskAdminQueryService.useGetAssignedTaskToUsers(taskToAssign?._id || "", pagination.current, pagination.pageSize);
   const { 
-    paginatedUsers, 
+    paginatedUsers,
     pagination: usersPagination,
     isPaginatedUsersLoading,
     isPaginatedUsersFetching,
   }  = microTaskAdminQueryService.useGetPaginatedUsers(pagination.current, pagination.pageSize, searchQuery);
+
+  const { allFilters, allFiltersRefetch, isAllFiltersLoading, isAllFiltersFetching } = microTaskQueryService.useGetTasksByFilter({ 
+    page: 1, limit: 10, status: taskStatus, search: search || undefined
+  });
 
   useEffect(() => {
     fetchStatistics();
@@ -232,6 +246,25 @@ const MicroTaskManagement: React.FC = () => {
         }
       });
   };
+
+  const handleApproveOrRejectApplication = async (applicationId: string, action: "approve" | "reject") => {
+    try {
+         await approveOrRejectApplicationMutation.mutateAsync({ applicationId, action });
+          notification.success({
+            message: "Success",
+            description: action === "approve" ? "Application approved successfully" : "Application rejected successfully",
+            key: "updateApplicationStatusSuccess"
+        });
+        allFiltersRefetch();
+    } catch (error) {
+        const errMsg = getErrorMessage(error);
+        notification.error({
+          message: "Error",
+          description: errMsg || "Failed to update application status",
+          key: "updateApplicationStatusError"
+        });
+    }
+  }
 
 
   const handleDeleteTask = (taskId: string) => {
@@ -328,61 +361,8 @@ const MicroTaskManagement: React.FC = () => {
     );
   };
 
-  const handleRemoveUserFromTask = async (userId: string) => {
-    if (!taskToAssign) return;
-    console.log("userId", userId)
-    // try {
-    //   const response = await axiosInstance.delete(
-    //     `${endpoints.microTasks.removeUserFromTask}/${taskToAssign._id}/users/${userId}`
-    //   );
-      
-    //   if (response.data.success) {
-    //     notification.success({
-    //       message: "Success",
-    //       description: "User removed from task successfully"
-    //     });
-    //     assignedTasksRefetch();
-    //   }
-    // } catch (error) {
-    //   console.error("Error removing user from task:", error);
-    //   notification.error({
-    //     message: "Error",
-    //     description: "Failed to remove user from task"
-    //   });
-    // }
-  };
-
   const handleBulkRemoveUsers = async () => {
     if (!taskToAssign || selectedUserIds.length === 0) return;
-
-    // Modal.confirm({
-    //   title: 'Remove Selected Users',
-    //   content: `Are you sure you want to remove ${selectedUserIds.length} selected user(s) from this task?`,
-    //   onOk: async () => {
-    //     try {
-    //       // Remove users one by one (you might want to create a bulk endpoint)
-    //       const promises = selectedUserIds.map(userId => 
-    //         axiosInstance.delete(`${endpoints.microTasks.removeUserFromTask}/${taskToAssign._id}/users/${userId}`)
-    //       );
-          
-    //       await Promise.all(promises);
-          
-    //       notification.success({
-    //         message: "Success",
-    //         description: `${selectedUserIds.length} user(s) removed successfully`
-    //       });
-          
-    //       setSelectedUserIds([]);
-    //       assignedTasksRefetch();
-    //     } catch (error) {
-    //       console.error("Error removing users:", error);
-    //       notification.error({
-    //         message: "Error",
-    //         description: "Failed to remove some users"
-    //       });
-    //     }
-    //   }
-    // });
   };
 
 
@@ -551,96 +531,310 @@ const MicroTaskManagement: React.FC = () => {
         </Row>
       )}
 
-      {/* Controls */}
-      <Card style={{ marginBottom: 20 }}>
-        <Row gutter={16} align="middle">
-          <Col span={8}>
-            <Search
-              placeholder="Search tasks..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-            />
-          </Col>
-          <Col span={4}>
-            <Select
-              style={{ width: "100%" }}
-              value={filterStatus}
-              onChange={setFilterStatus}
-              placeholder="Filter by status"
-            >
-              <Option value="all">All Status</Option>
-              {TASK_STATUSES.map(status => (
-                <Option key={status.value} value={status.value}>
-                  {status.label}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col span={4}>
-            <Select
-              style={{ width: "100%" }}
-              value={filterCategory}
-              onChange={setFilterCategory}
-              placeholder="Filter by category"
-            >
-              <Option value="all">All Categories</Option>
-              {MICRO_TASK_CATEGORIES.map(category => (
-                <Option key={category.value} value={category.value}>
-                  {category.label}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col span={4}>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={tasksRefetch}
-            >
-              Refresh
-            </Button>
-          </Col>
-          <Col span={4}>
-            <Button
-              type="primary"
-              icon={<PlusSquareOutlined />}
-              onClick={() => {
-                setIsEditMode(false);
-                setEditingTask(null);
-                form.resetFields();
-                setIsModalVisible(true);
-              }}
-            >
-              Create Task
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Tasks Table */}
+      {/* Main Content Tabs */}
       <Card>
-        <Table
-          dataSource={tasksData}
-          columns={columns}
-          loading={tableLoading}
-          rowKey="_id"
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            position: ["bottomCenter"],
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} of ${total} tasks`,
-            onChange: (page, pageSize) => {
-              setPagination(prev => ({
-                ...prev,
-                current: page,
-                pageSize: pageSize || 10
-              }));
-            }
-          }}
+        <Tabs
+          defaultActiveKey="tasks"
+          items={[
+            {
+              key: 'tasks',
+              label: 'Tasks',
+              children: (
+                <div>
+                  {/* Tasks Controls */}
+                  <Card style={{ marginBottom: 20 }}>
+                    <Row gutter={16} align="middle">
+                      <Col span={8}>
+                        <Search
+                          placeholder="Search tasks..."
+                          value={searchText}
+                          onChange={(e) => setSearchText(e.target.value)}
+                          allowClear
+                        />
+                      </Col>
+                      <Col span={4}>
+                        <Select
+                          style={{ width: "100%" }}
+                          value={filterStatus}
+                          onChange={setFilterStatus}
+                          placeholder="Filter by status"
+                        >
+                          <Option value="all">All Status</Option>
+                          {TASK_STATUSES.map(status => (
+                            <Option key={status.value} value={status.value}>
+                              {status.label}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Col>
+                      <Col span={4}>
+                        <Select
+                          style={{ width: "100%" }}
+                          value={filterCategory}
+                          onChange={setFilterCategory}
+                          placeholder="Filter by category"
+                        >
+                          <Option value="all">All Categories</Option>
+                          {MICRO_TASK_CATEGORIES.map(category => (
+                            <Option key={category.value} value={category.value}>
+                              {category.label}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Col>
+                      <Col span={4}>
+                        <Button
+                          icon={<ReloadOutlined />}
+                          loading={isTasksFetching || isTasksLoading}
+                          onClick={tasksRefetch}
+                        >
+                          Refresh
+                        </Button>
+                      </Col>
+                      <Col span={4}>
+                        <Button
+                          type="primary"
+                          icon={<PlusSquareOutlined />}
+                          onClick={() => {
+                            setIsEditMode(false);
+                            setEditingTask(null);
+                            form.resetFields();
+                            setIsModalVisible(true);
+                          }}
+                        >
+                          Create Task
+                        </Button>
+                      </Col>
+                    </Row>
+                  </Card>
+
+                  {/* Tasks Table */}
+                  <Table
+                    dataSource={tasksData}
+                    columns={columns}
+                    loading={isTasksLoading || isTasksFetching}
+                    rowKey="_id"
+                    pagination={{
+                      current: pagination.current,
+                      pageSize: pagination.pageSize,
+                      total: pagination.total,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      position: ["bottomCenter"],
+                      showTotal: (total, range) => 
+                        `${range[0]}-${range[1]} of ${total} tasks`,
+                      onChange: (page, pageSize) => {
+                        setPagination(prev => ({
+                          ...prev,
+                          current: page,
+                          pageSize: pageSize || 10
+                        }));
+                      }
+                    }}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: 'applications',
+              label: 'Applications',
+              children: (
+                <div>
+                  {/* Applications Content */}
+                  <Row gutter={16} align="middle" style={{ marginBottom: 20 }}>
+                    <Col span={8}>
+                      <Search
+                        placeholder="Search applications..."
+                        allowClear
+                      />
+                    </Col>
+                    <Col span={4}>
+                      <Select
+                        style={{ width: "100%" }}
+                        placeholder="Filter by status"
+                        defaultValue="all"
+                        onChange={(value) => setTaskStatus(value.trim() as TaskStatus)}
+                      >
+                        <Option value="all">All Status</Option>
+                        <Option value="pending">Pending</Option>
+                        <Option value="completed">Completed</Option>
+                        <Option value="ongoing">Ongoing</Option>
+                        <Option value="approved">Approved</Option>
+                        <Option value="processing">Processing</Option>
+                        <Option value="active">Active</Option>
+                        <Option value="paused">Paused</Option>
+                        <Option value="cancelled">Cancelled</Option>
+                      </Select>
+                    </Col>
+                    <Col span={4}>
+                      <Button
+                        icon={<ReloadOutlined />}
+                        loading={isAllFiltersLoading || isAllFiltersFetching}
+                        onClick={allFiltersRefetch}
+                      >
+                        Refresh
+                      </Button>
+                    </Col>
+                    <Col span={4}>
+                      {/* Additional actions can be added here */}
+                    </Col>
+                  </Row>
+
+                  {/* Applications Table */}
+                  <Table
+                    dataSource={Array.isArray(allFilters) ? allFilters : []}
+                    loading={isAllFiltersLoading || isAllFiltersFetching}
+                    rowKey="_id"
+                    pagination={{
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      position: ["bottomCenter"],
+                      showTotal: (total, range) => 
+                        `${range[0]}-${range[1]} of ${total} applications`,
+                    }}
+                    columns={[
+                      {
+                        title: "Applicant",
+                        dataIndex: "applicant",
+                        key: "applicant",
+                        render: (applicant) => {
+                          return (
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar size="small" style={{ marginRight: 8 }}>
+                              {applicant?.fullName?.charAt(0).toUpperCase() || 'U'}
+                            </Avatar>
+                            <div>
+                              <div style={{ fontWeight: 'bold' }}>{applicant?.fullName || 'Unknown'}</div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {applicant?.email || 'No email'}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                        },
+                      },
+                      {
+                        title: "Task",
+                        dataIndex: "task",
+                        key: "task",
+                        render: (task: TaskSchema) => (
+                          <div>
+                            <div style={{ fontWeight: 'bold' }}>{task?.taskTitle || 'Unknown Task'}</div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                              {task?.category || 'No category'}
+                            </div>
+                          </div>
+                        ),
+                      },
+                      {
+                        title: "Status",
+                        dataIndex: "status",
+                        key: "status",
+                        render: (status: string) => {
+                          const statusColors: Record<string, string> = {
+                            in_progress: 'processing',
+                            completed: 'success',
+                            under_review: 'warning',
+                            approved: 'success',
+                            rejected: 'error',
+                          };
+                          return <Tag color={statusColors[status] || 'default'}>{status?.replace('_', ' ').toUpperCase()}</Tag>;
+                        },
+                      },
+                      {
+                        title: "Submitted",
+                        dataIndex: "submittedAt",
+                        key: "submittedAt",
+                        render: (date: string) => date ? dayjs(date).format("MMM DD, YYYY") : 'Not submitted',
+                      },
+                      {
+                        title: "Actions",
+                        key: "actions",
+                        render: (_: unknown, record: TaskApplicationSchema) => {
+                          const menuItems = [
+                            {
+                              key: 'view',
+                              icon: <EyeOutlined />,
+                              label: 'View Submission',
+                            },
+                            {
+                              key: 'approve',
+                              icon: <EditOutlined />,
+                              label: 'Approve',
+                            },
+                            {
+                              key: 'reject',
+                              icon: <DeleteOutlined />,
+                              label: 'Reject',
+                            }
+                          ];
+
+                          const handleMenuClick = ({ key }: { key: string }) => {
+                            switch (key) {
+                              case "view":
+                                console.log("View submission for:", record._id);
+                                break;
+                              case "approve":
+                                Modal.confirm({
+                                  title: "Approve Application",
+                                  content: `Are you sure you want to approve this application from ${record.applicant?.fullName || 'this user'}?`,
+                                  icon: <ExclamationCircleOutlined />,
+                                  okText: "Approve",
+                                  okType: "primary",
+                                  cancelText: "Cancel",
+                                  onOk: () => {
+                                    return handleApproveOrRejectApplication(record._id, "approve");
+                                  }
+                                });
+                                break;
+                              case "reject":
+                                Modal.confirm({
+                                  title: "Reject Application",
+                                  content: `Are you sure you want to reject this application from ${record.applicant?.fullName || 'this user'}? This action cannot be undone.`,
+                                  icon: <ExclamationCircleOutlined />,
+                                  okText: "Reject",
+                                  okType: "danger",
+                                  cancelText: "Cancel",
+                                  onOk: () => {
+                                    return handleApproveOrRejectApplication(record._id, "reject");
+                                  }
+                                });
+                                break;
+                              default:
+                                break;
+                            }
+                          };
+
+                          return (
+                            <Dropdown
+                              menu={{ 
+                                items: menuItems,
+                                onClick: handleMenuClick
+                              }}
+                              trigger={['click']}
+                              placement="bottomRight"
+                            >
+                              <Button
+                                type="text"
+                                icon={<MoreOutlined />}
+                              />
+                            </Dropdown>
+                          );
+                        },
+                      },
+                    ]}
+                    locale={{
+                      emptyText: (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
+                          <Text type="secondary">No applications found</Text>
+                        </div>
+                      ),
+                    }}
+                  />
+                </div>
+              ),
+            },
+          ]}
         />
       </Card>
 
@@ -982,7 +1176,7 @@ const MicroTaskManagement: React.FC = () => {
                           Modal.confirm({
                             title: 'Remove User',
                             content: `Are you sure you want to remove ${record.assignedTo?.fullName || 'this user'} from this task?`,
-                            onOk: () => handleRemoveUserFromTask(record.assignedTo?._id),
+                            onOk: () => {},
                           });
                         }}
                       >

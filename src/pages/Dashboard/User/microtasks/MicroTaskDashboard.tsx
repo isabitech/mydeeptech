@@ -14,33 +14,39 @@ import {
   Spin,
   Table,
   Tabs,
+  Pagination,
+  Divider,
+  notification,
 } from "antd";
 import {
   EyeOutlined,
   DollarOutlined,
+  LoadingOutlined,
+  TrophyOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { microTaskQueryService, microTaskAdminQueryService } from "../../../../services/micro-task-service";
-import { TaskAssignmentSchema } from "../../../../validators/task/single-task-schema";
+import { microTaskQueryService, microTaskAdminQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
+import { TaskSchema } from "../../../../validators/task/all-task-schema";
+import { TaskStatus } from "../../../../services/micro-task-service/micro-task-query";
 
 const { Title, Text, Paragraph } = Typography;
 
 const MicroTaskDashboard: React.FC = () => {
-  const [selectedTask, setSelectedTask] = useState<TaskAssignmentSchema | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskSchema | null>(null);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<TaskStatus>("active");
 
   const navigate = useNavigate();
 
-  const { 
-      myTasks,
-      isMyTasksLoading,
-  } = microTaskAdminQueryService.useGetMyTasks();
-
-  // TanStack Query hooks
-  const {
-    availableTasks,
-  } = microTaskQueryService.useGetAvailableMicroTasks();
+  const { isMyTasksLoading } = microTaskAdminQueryService.useGetMyTasks();
+  const { allTasks, allTaskPagination } = microTaskQueryService.useGetAllTasks();
+  const { applyForTaskMutation, isApplyForTaskLoading } = microTaskMutationService.useApplyForTask();
+  const { allFilters: allFiltersPending } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "pending" });
+  const { allFilters: allFiltersApproved } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "approved" });
+  const { earningStats, isEarningStatsLoading, earningStatsError } = microTaskQueryService.useGetUserEarningStatistics();
 
   const handleStartTask = async (submissionId: string, taskId: string) => {
     navigate(`/dashboard/microtasks/submission/${submissionId}?task=${taskId}`);
@@ -67,6 +73,37 @@ const MicroTaskDashboard: React.FC = () => {
     }
   };
 
+  const handleApplyTask = (taskId: string) => {
+
+    if(!taskId) {
+      notification.error({
+        message: "Application Failed",
+        description: "Invalid task ID. Please try again.",
+        key: "applyTaskError"
+      });
+      return;
+    }
+  
+    applyForTaskMutation.mutate(taskId, {
+      onSuccess: () => {
+        notification.success({
+          message: "Application Successful",
+          description: "You have successfully applied for the task. It will now appear in your 'My Tasks' tab.",
+          key: "applyTaskSuccess"
+        });
+      },
+      onError: (error) => {
+        // Optionally show an error message or notification
+        console.error("Error applying for task:", error);
+        notification.error({
+          message: "Application Failed",
+          description: "There was an error applying for the task. Please try again.",
+          key: "applyTaskError"
+        });
+      } 
+    });
+  };
+
 
   // Show loading state
   if (isMyTasksLoading) {
@@ -80,7 +117,7 @@ const MicroTaskDashboard: React.FC = () => {
 
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="h-full flex flex-col gap-4 font-[gilroy-regular]">
       <div style={{ marginBottom: 24 }}>
         <Title level={2}>Micro Tasks</Title>
         <Text type="secondary">
@@ -88,49 +125,243 @@ const MicroTaskDashboard: React.FC = () => {
         </Text>
       </div>
 
-      {/* Task Management Tabs */}
-      <Tabs
-        defaultActiveKey="1"
-        items={[
-          {
-            key: '1',
+      {/* Earnings Statistics Section */}
+      {earningStatsError ? (
+        <Alert
+          message="Unable to load earnings data"
+          description="Please try refreshing the page"
+          type="error"
+          showIcon
+        />
+      ) : earningStats ? (
+        <Row gutter={[16, 16]}>
+          <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
+            <Card>
+              <Statistic
+                title="Total Tasks Available"
+                value={earningStats.summary.totalTasksAvailable}
+                prefix={<DollarOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
+            <Card>
+              <Statistic
+                title="Total Tasks I Submitted"
+                value={earningStats.summary.totalTasksSubmitted}
+                prefix={<ClockCircleOutlined />}
+                valueStyle={{ color: '#fa8c16' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
+            <Card>
+              <Statistic
+                title="Total Tasks Completed"
+                value={earningStats.summary.totalTasksCompleted}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6} xs={24} sm={12} md={6} lg={6} xl={6}>
+            <Card>
+              <Statistic
+                title="My Earnings"
+                value={earningStats.summary.myEarnings.toFixed(2)}
+                precision={2}
+                prefix={<TrophyOutlined />}
+                suffix="USD"
+                valueStyle={{ color: '#722ed1' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+      ) : (
+        <Card loading={isEarningStatsLoading}>
+          <div style={{ textAlign: 'center', padding: 20 }}>
+            <Text type="secondary">No earning data available yet. Complete your first task to start earning!</Text>
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab as (key: string) => void}
+          items={[
+            {
+              key: 'active',
+              label: (<span>All Tasks ({allTasks.length})</span>),
+              children: (
+          <div>
+            {allTasks.length === 0 ? (
+              <Empty description="No available tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <>
+                <Row gutter={[16, 16]}>
+                  {allTasks.map((record) => (
+                    <Col xs={24} sm={24} md={12} lg={8} xl={8} key={record._id}>
+                      <Card
+                        style={{ height: '300px', display: 'flex', flexDirection: 'column', width: '100%' }}
+                        styles={{ body: { flex: 1, overflow: 'hidden' } }}
+                        actions={[
+                          <Button
+                            key="details"
+                            type="link"
+                            icon={<EyeOutlined />}
+                            onClick={() => {
+                              setSelectedTask(record);
+                              setIsTaskModalVisible(true);
+                            }}
+                          >
+                            Details
+                          </Button>,
+                          // <Button
+                          //   key="start"
+                          //   type="primary"
+                          //   onClick={() => handleStartTask(record?._id ?? "", record?.task?._id ?? "")}
+                          // >
+                          //   Start Task
+                          // </Button>,
+                          <Button
+                            key="apply"
+                            type="default"
+                            loading={isApplyForTaskLoading}
+                            icon={isApplyForTaskLoading ? <LoadingOutlined /> : undefined}
+                            onClick={() => handleApplyTask(record?._id ?? "")}
+                          >
+                            Apply
+                          </Button>,
+                        ]}
+                      >
+                        <Card.Meta
+                          title={
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              <span>{record.taskTitle}</span>
+                              <Tag color={getCategoryInfo(record.category).color} style={{ width: 'fit-content' }}>
+                                {getCategoryInfo(record.category).name}
+                              </Tag>
+                            </div>
+                          }
+                        />
+                        <Divider style={{ margin: '12px 0' }} />
+                        <Space direction="vertical" size={8} style={{ width: '100%' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Text type="secondary">Status</Text>
+                            <Tag color={record.isActive ? 'green' : 'red'}>
+                              {record.isActive ? 'Active' : 'Inactive'}
+                            </Tag>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Text type="secondary">Pay Rate</Text>
+                            <Text strong>{record.currency} {record.payRate}</Text>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <Text type="secondary">Assigned Date</Text>
+                            <Text>{record.createdAt ? moment(record.createdAt).format('MMM DD, YYYY') : 'N/A'}</Text>
+                          </div>
+                        </Space>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+                <div className="mt-6 flex justify-center">
+                  <Pagination
+                    current={allTaskPagination?.current_page || 1}
+                    pageSize={allTaskPagination?.per_page || 10}
+                    total={allTaskPagination?.total_items || 0}
+                    showSizeChanger
+                    showQuickJumper
+                    showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} tasks`}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: 'pending',
             label: (
               <span>
-                My Tasks ({Array.isArray(myTasks) ? myTasks.length : 0})
+                Pending ({Array.isArray(allFiltersPending) ? allFiltersPending.length : 0})
               </span>
             ),
             children: (
               <Card>
                 <Table
-                  dataSource={Array.isArray(myTasks) ? myTasks : []}
+                  dataSource={Array.isArray(allFiltersPending) ? allFiltersPending : []}
                   rowKey="_id"
                   pagination={{ pageSize: 10, position: ['bottomCenter'] }}
-                  loading={isMyTasksLoading}
                   columns={[
                     {
                       title: 'Task Name',
-                      key: 'taskName',
-                      render: (record) => (
+                      dataIndex: 'taskTitle',
+                      key: 'taskTitle',
+                      render: (text, record) => (
                         <div className="flex flex-col">
-                          <strong>{record.task?.taskTitle || record.task?.title || 'Untitled Task'}</strong>
-                           <span>{record.task?.category && (<span className="text-xs text-gray-400">{record.task.category}</span>)}</span>
+                          <strong>{record.task.taskTitle || 'Untitled Task'}</strong>
+                           <span>{record.task.category && (<span className="text-xs text-gray-400">{record.task.category}</span>)}</span>
                         </div>
                       ),
-                    },
-                    {
-                      title: 'Description',
-                      dataIndex: ['task', 'description'],
-                      key: 'description',
                     },
                     {
                       title: 'Pay Rate',
                       key: 'payRate',
                       render: (record) => (
-                        <Text strong>{record.task?.currency || 'USD'} {record.task?.payRate || 0}</Text>
+                        <Text strong>{record.task.currency || 'USD'} {record.task.payRate || 0}</Text>
                       ),
                     },
                     {
-                      title: 'Assigned Date',
+                      title: 'Created Date',
+                      dataIndex: 'createdAt',
+                      key: 'createdAt',
+                      render: (date) => date ? moment(date).format('MMM DD, YYYY') : 'N/A',
+                    },
+                  ]}
+                  locale={{
+                    emptyText: <Empty description="No pending tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                  }}
+                />
+              </Card>
+            ),
+          },
+            {
+            key: 'approved',
+            label: (
+              <span>
+                Approved ({Array.isArray(allFiltersApproved) ? allFiltersApproved.length : 0})
+              </span>
+            ),
+            children: (
+              <Card>
+                <Table
+                  dataSource={Array.isArray(allFiltersApproved) ? allFiltersApproved : []}
+                  rowKey="_id"
+                  pagination={{ pageSize: 10, position: ['bottomCenter'] }}
+                  columns={[
+                    {
+                      title: 'Task Name',
+                      dataIndex: 'taskTitle',
+                      key: 'taskTitle',
+                      render: (text, record) => (
+                        <div className="flex flex-col">
+                          <strong>{record.task.taskTitle || 'Untitled Task'}</strong>
+                           <span>{record.task.category && (<span className="text-xs text-gray-400">{record.task.category}</span>)}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      title: 'Pay Rate',
+                      key: 'payRate',
+                      render: (record) => (
+                        <Text strong>{record.task.currency || 'USD'} {record.task.payRate || 0}</Text>
+                      ),
+                    },
+                    {
+                      title: 'Created Date',
                       dataIndex: 'createdAt',
                       key: 'createdAt',
                       render: (date) => date ? moment(date).format('MMM DD, YYYY') : 'N/A',
@@ -144,13 +375,14 @@ const MicroTaskDashboard: React.FC = () => {
                             type="link"
                             icon={<EyeOutlined />}
                             onClick={() => {
-                              setSelectedTask(record);
+                              setSelectedTask(record.task);
                               setIsTaskModalVisible(true);
                             }}
                           >
                             Details
                           </Button>
                           <Button
+                            key="start"
                             type="primary"
                             onClick={() => handleStartTask(record?._id ?? "", record?.task?._id ?? "")}
                           >
@@ -161,98 +393,7 @@ const MicroTaskDashboard: React.FC = () => {
                     },
                   ]}
                   locale={{
-                    emptyText: <Empty description="No tasks assigned to you" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-                  }}
-                />
-              </Card>
-            ),
-          },
-          {
-            key: '2',
-            label: (
-              <span>
-                All Tasks ({availableTasks.length})
-              </span>
-            ),
-            children: (
-              <Card>
-                <Table
-                  dataSource={availableTasks}
-                  rowKey="_id"
-                  pagination={{ pageSize: 10 }}
-                  columns={[
-                    {
-                      title: 'Task Name',
-                      dataIndex: 'title',
-                      key: 'title',
-                      render: (text, record) => (
-                        <div>
-                          <Space>
-                            <span>{getCategoryInfo(record.category).icon}</span>
-                            <strong>{text}</strong>
-                            <Tag color={getCategoryInfo(record.category).color}>
-                              {getCategoryInfo(record.category).name}
-                            </Tag>
-                          </Space>
-                        </div>
-                      ),
-                    },
-                    {
-                      title: 'Description',
-                      dataIndex: 'description',
-                      key: 'description',
-                      ellipsis: true,
-                      // width: '30%',
-                    },
-                    {
-                      title: 'Pay Rate',
-                      key: 'payRate',
-                      render: (record) => (
-                        <Text strong>{record.payRateCurrency} {record.payRate}</Text>
-                      ),
-                    },
-                    {
-                      title: 'Details',
-                      key: 'details',
-                      render: (record) => (
-                        <div>
-                          <div>{record.estimated_time}</div>
-                          <Text type="secondary">{record.required_count} images</Text>
-                          {record.deadline && (
-                            <div>
-                              <Text type="secondary">Due {moment(record.deadline).fromNow()}</Text>
-                            </div>
-                          )}
-                        </div>
-                      ),
-                    },
-                    {
-                      title: 'Actions',
-                      key: 'actions',
-                      render: (record) => (
-                        <Space>
-                          <Button
-                            type="link"
-                            icon={<EyeOutlined />}
-                            onClick={() => {
-                              setSelectedTask(record);
-                              setIsTaskModalVisible(true);
-                            }}
-                          >
-                            Details
-                          </Button>
-                          <Button
-                            type="primary"
-                            onClick={() => handleStartTask(record?._id ?? "", record?.task?._id ?? "")}
-                          >
-                            Start Task
-                          </Button>
-                        </Space>
-                      ),
-                    },
-                  ]}
-                  locale={{
-                    emptyText: <Empty description="No available tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                    emptyText: <Empty description="No pending tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                   }}
                 />
               </Card>
@@ -260,11 +401,12 @@ const MicroTaskDashboard: React.FC = () => {
           },
         ]}
       />
+      </Card>
 
       {/* Task Details Modal */}
       {selectedTask && (
         <Modal
-          title={`Task Details: ${selectedTask.task?.taskTitle || 'Task Details'}`}
+          title={`${selectedTask.taskTitle || 'Task Details'}`}
           open={isTaskModalVisible}
           onCancel={() => {
             setIsTaskModalVisible(false);
@@ -285,35 +427,42 @@ const MicroTaskDashboard: React.FC = () => {
               type="primary"
               onClick={() => {
                 setIsTaskModalVisible(false);
-                handleStartTask(selectedTask._id, selectedTask.task?._id || "");
+                handleStartTask(selectedTask._id, selectedTask._id || "");
               }}
             >
               Start Task
             </Button>
           ]}
-         
         >
           <div style={{ marginBottom: 16 }}>
-            <Tag color={getCategoryInfo(selectedTask?.task?.category || selectedTask.task?.category).color} style={{ marginBottom: 8 }}>
-              {getCategoryInfo(selectedTask?.task?.category || selectedTask.task.category).name}
+            <Tag color={getCategoryInfo(selectedTask?.category || "default").color} style={{ marginBottom: 8 }}>
+              {getCategoryInfo(selectedTask?.category || "default").name}
             </Tag>
-            <Paragraph>{selectedTask.task?.description || 'No description available'}</Paragraph>
+            <Tag color={selectedTask?.isActive ? 'green' : 'red'}>
+              {selectedTask?.isActive ? 'Active' : 'Inactive'}
+            </Tag>
+            <Paragraph>{selectedTask?.description || 'No description available'}</Paragraph>
+            {
+              selectedTask?.instructions 
+              ? <Paragraph>{selectedTask.instructions}</Paragraph>
+              : null
+            }
+            <span> Total Images Required: <strong>{selectedTask?.totalImagesRequired ?? "N/A"}</strong> </span>
           </div>
 
           <Row gutter={16} style={{ marginBottom: 16 }}>
             <Col span={8}>
               <Statistic
                 title="Pay Rate"
-                value={`${selectedTask.task?.currency || selectedTask.task?.currency || 'USD'} ${selectedTask.task?.payRate || selectedTask.task?.payRate || 0}`}
+                value={`${selectedTask?.currency || 'USD'} ${selectedTask?.payRate || selectedTask?.payRate || 0}`}
                 prefix={<DollarOutlined />}
               />
             </Col>
-         
           </Row>
 
-          {(selectedTask.task?.dueDate) && (
+          {(selectedTask?.dueDate || selectedTask?.dueDate) && (
             <Alert
-              message={`Due Date: ${moment(selectedTask.task?.dueDate).format("MMM DD, YYYY HH:mm")}`}
+              message={`Due Date: ${moment(selectedTask?.dueDate || selectedTask?.dueDate).format("MMM DD, YYYY HH:mm")}`}
               type="info"
               style={{ marginBottom: 16 }}
             />

@@ -89,7 +89,8 @@ const taskId = searchParams.get("task"); // string | null
     if (!taskId) {
       notification.error({
         message: "Delete Failed",
-        description: "Task ID not found. Please refresh the page and try again."
+        description: "Task ID not found. Please refresh the page and try again.",
+        key: "delete-error"
       });
       return;
     }
@@ -102,7 +103,8 @@ const taskId = searchParams.get("task"); // string | null
       onSuccess: () => {
         notification.success({
           message: "Image Deleted",
-          description: "Image removed successfully"
+          description: "Image removed successfully",
+          key: "delete-success"
         });
         submissionDetailsRefetch();
       },
@@ -110,7 +112,8 @@ const taskId = searchParams.get("task"); // string | null
         const errorMsg = getErrorMessage(error);
         notification.error({
           message: "Delete Failed",
-          description: errorMsg || "Failed to delete image"
+          description: errorMsg || "Failed to delete image",
+          key: "delete-error"
         });
       }
     });
@@ -272,8 +275,6 @@ const taskId = searchParams.get("task"); // string | null
           });
           return Upload.LIST_IGNORE;
         }
-        
-        console.log("File validation passed, adding to local state");
         
         // For better UX with multiple files, add all files at once when the last file in the batch is processed
         const currentFileIndex = fileList.findIndex(f => f.uid === file.uid);

@@ -167,6 +167,9 @@ export const endpoints = {
     getTaskSlots: "/micro-tasks",
     // User endpoints
     getAvailableTasks: "/micro-tasks/available/me",
+    allTasks: "/micro-tasks/all",
+    filters: "/micro-tasks/filters",
+    approveOrRejectApplication: "/micro-tasks/approve_or_reject_application", // Approve or reject task applications
      
   },
 
@@ -179,6 +182,7 @@ export const endpoints = {
     uploadImage: "/micro-task-submissions",
     deleteImage: "/micro-task-submissions",
     submitForReview: "/micro-task-submissions",
+    getEarningStatistics: "/micro-task-submissions/earnings",
   },
 
   // Micro Task QA endpoints

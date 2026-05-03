@@ -89,6 +89,28 @@ const useUploadSubmissionImage = () => {
   };
 };
 
+const useApplyForTask = () => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.applyForTask],
+    mutationFn: async (taskId: string) => {
+      const response = await axiosInstance.post("/micro-tasks/apply",{ taskId });
+      console.log("Apply for Task API Response:", response.data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks] });
+    },
+  });
+
+  return {
+    applyForTaskMutation: mutation,
+    isApplyForTaskLoading: mutation.isPending,
+    isApplyForTaskError: mutation.isError,
+    applyForTaskError: mutation.error,
+  };
+};
+
 const useDeleteSubmissionImage = () => {
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.deleteSubmissionImage],
@@ -224,6 +246,30 @@ const useUpdateMicroTask = () => {
   };
 };
 
+const useApproveOrRejectApplication = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.approveOrRejectApplication],
+    mutationFn: async ({ applicationId, action }: { applicationId: string; action: 'approve' | 'reject' }) => {
+      const response = await axiosInstance.post(`${endpoints.microTasks.approveOrRejectApplication}`, { applicationId, action });
+
+      console.log("Approve/Reject Application API Response:", response.data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllMicroTasks] });
+    },
+  });
+
+  return {
+    approveOrRejectApplicationMutation: mutation,
+    isApproveOrRejectApplicationLoading: mutation.isPending,
+    isApproveOrRejectApplicationError: mutation.isError,
+    approveOrRejectApplicationError: mutation.error,
+  };
+};
+
 const useDeleteMicroTask = () => {
   const queryClient = useQueryClient();
 
@@ -284,6 +330,8 @@ const microTaskMutationService = {
   useUpdateMicroTask,
   useDeleteMicroTask,
   useAssignTaskToUsers,
+  useApplyForTask,
+  useApproveOrRejectApplication,
 };
 
 export default microTaskMutationService;

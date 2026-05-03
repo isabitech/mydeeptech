@@ -4,6 +4,8 @@ import axiosInstance from "../../service/axiosApi";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
 import { GetSingleTaskResponseSchema } from "../../validators/task/single-task-schema";
 import { GetSubmissionStatisticsResponseSchema } from "../../validators/task/task-submission-schema";
+import { MicroTasksResponseSchema } from "../../validators/task/all-task-schema";
+import { GetTasksFilterResponseSchema } from "../../validators/task/task-filters";
 
 interface MicroTaskSubmission {
   _id: string;
@@ -179,6 +181,76 @@ const useGetAvailableMicroTasks = () => {
   };
 };
 
+const useGetAllTasks = () => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks],
+    queryFn: async () => {
+      const response = await axiosInstance.get<MicroTasksResponseSchema>(endpoints.microTasks.allTasks);
+      return response.data;
+    },
+  });
+  return {
+    allTasksQuery: query,
+    allTasks: query.data?.data?.tasks || [],
+    allTaskPagination: query.data?.data?.pagination || null,
+    isAllTasksLoading: query.isLoading,
+    isAllTasksError: query.isError,
+    allTasksError: query.error,
+    allTasksRefetch: () => query.refetch(),
+    isAllTasksFetching: query.isFetching,
+  };
+};
+export type TaskStatus =
+  | "all"
+  | "pending"
+  | "ongoing"
+  | "approved"
+  | "processing"
+  | "active"
+  | "paused"
+  | "completed"
+  | "cancelled";
+
+  export interface TaskFilters {
+  search?: string;
+  category?: string;
+  status?: TaskStatus;
+  page?: number;
+  limit?: number;
+  enabled?: boolean; // Optional flag to enable/disable the query
+}
+
+const useGetTasksByFilter = (filters: TaskFilters) => {
+  const params = new URLSearchParams();
+  if(filters.search) params.append("search", filters.search);
+  if(filters.category) params.append("category", filters.category);
+  if(filters.status) params.append("status", filters.status);
+  if(filters.page) params.append("page", String(filters.page));
+  if(filters.limit) params.append("limit", String(filters.limit));
+
+  const queryParams = params.toString();
+  const url = `${endpoints.microTasks.filters}?${queryParams}`;
+
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getTasksByFilter, queryParams],
+    queryFn: async () => {
+      const response = await axiosInstance.get<GetTasksFilterResponseSchema>(url);
+      return response.data;
+    },
+    enabled: !!queryParams,
+  });
+  return {
+    allFilterQuery: query,
+    allFilters: query.data?.data?.tasks || [],
+    allFilterPagination: query.data?.data?.pagination || null,
+    isAllFiltersLoading: query.isLoading,
+    isAllFiltersError: query.isError,
+    allFiltersError: query.error,
+    allFiltersRefetch: () => query.refetch(),
+    isAllFiltersFetching: query.isFetching,
+  };
+};
+
 const useCheckMicroTaskEligibility = (taskId: string) => {
   const query = useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.checkMicroTaskEligibility, taskId],
@@ -250,6 +322,65 @@ const useGetSubmissionDetails = (assignmentId: string) => {
   };
 }
 
+const useGetUserEarningStatistics = () => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getUserMicroTaskEarningStatistics],
+    queryFn: async () => {
+      const response = await axiosInstance.get<{
+        success: boolean;
+        data: {
+          summary: {
+            totalTasksAvailable: number;
+            totalTasksSubmitted: number;
+            totalTasksCompleted: number;
+            myEarnings: number;
+            pendingEarnings: number;
+            approvalRate: number;
+          };
+          recentActivity: Array<{
+            _id: string;
+            taskTitle: string;
+            category: string;
+            payRate: number;
+            currency: string;
+            status: string;
+            paymentStatus: string;
+            submittedAt: string;
+            createdAt: string;
+          }>;
+          monthlyBreakdown: Array<{
+            year: number;
+            month: number;
+            earnings: number;
+            taskCount: number;
+          }>;
+          categoryBreakdown: Array<{
+            category: string;
+            totalTasks: number;
+            totalEarnings: number;
+            approvedTasks: number;
+            paidTasks: number;
+            averageEarnings: number;
+          }>;
+        };
+        message?: string;
+      }>(endpoints.microTaskSubmissions.getEarningStatistics);
+      return response.data;
+    },
+    staleTime: 300000, // 5 minutes
+  });
+
+  return {
+    earningStatsQuery: query,
+    earningStats: query.data?.data || null,
+    isEarningStatsLoading: query.isLoading,
+    isEarningStatsError: query.isError,
+    earningStatsError: query.error,
+    earningStatsRefetch: () => query.refetch(),
+    isEarningStatsFetching: query.isFetching,
+  };
+};
+
 const microTaskQueryService = {
   useGetMicroTaskSubmissionDetails,
   useGetUserMicroTaskSubmissions,
@@ -258,6 +389,9 @@ const microTaskQueryService = {
   useCheckMicroTaskEligibility,
   useGetSingleTask,
   useGetSubmissionDetails,
+  useGetAllTasks,
+  useGetTasksByFilter,
+  useGetUserEarningStatistics,
 };
 
 export default microTaskQueryService;
