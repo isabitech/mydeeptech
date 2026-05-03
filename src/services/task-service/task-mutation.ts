@@ -44,27 +44,6 @@ const useCreateTask = () => {
   };
 };
 
-const useAssignTask = () => {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationKey: [REACT_QUERY_KEYS.MUTATION.assignTask],
-    mutationFn: async (payload: AssignTaskPayload) => {
-      const response = await axiosInstance.post(endpoints.tasks.assignTask, payload);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks] });
-    }
-  });
-
-  return {
-    assignTaskMutation: mutation,
-    isAssignTaskLoading: mutation.isPending,
-    isAssignTaskError: mutation.isError,
-    assignTaskError: mutation.error,
-  };
-};
 
 const useDeleteTask = () => {
   const queryClient = useQueryClient();
@@ -112,7 +91,6 @@ const useUpdateTask = () => {
 
 const taskMutationService = {
   useCreateTask,
-  useAssignTask,
   useDeleteTask,
   useUpdateTask,
 };

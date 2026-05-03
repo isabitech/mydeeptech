@@ -51,9 +51,6 @@ export const setGlobalNavigate = (navigateCallback: ((path: string, options?: { 
 
 export const axiosInstance = axios.create({
       baseURL,
-      headers: {
-        "Content-Type": "application/json",
-      },
       timeout: 30000,
   });
 
@@ -83,9 +80,9 @@ export const useAxiosApi = () => {
     const axiosInstance = useMemo(() => {
     const instance = axios.create({
       baseURL: baseURL,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      // },
       timeout: 30000, // 30 second timeout
     });
 
@@ -279,9 +276,9 @@ export const useAxiosApi = () => {
 // create a default instance (but this won't have React Router navigation)
 const defaultAxiosInstance = axios.create({
   baseURL: baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
   timeout: 30000,
 });
 

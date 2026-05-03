@@ -115,7 +115,7 @@ const SubmissionView: React.FC = () => {
           message: "Error",
           description: "Failed to load submission"
         });
-        navigate("/dashboard/user/microtasks");
+        navigate("/dashboard/microtasks");
       }
     } catch (error) {
       console.error("Error fetching submission:", error);
@@ -229,7 +229,7 @@ const SubmissionView: React.FC = () => {
     return (
       <div style={{ textAlign: "center", padding: 100 }}>
         <Empty description="Submission not found" />
-        <Button onClick={() => navigate("/dashboard/user/microtasks")}>
+        <Button onClick={() => navigate("/dashboard/microtasks")}>
           Back to Tasks
         </Button>
       </div>
@@ -247,7 +247,7 @@ const SubmissionView: React.FC = () => {
       <div style={{ marginBottom: 24 }}>
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/dashboard/user/microtasks")}
+          onClick={() => navigate("/dashboard/microtasks")}
           style={{ marginBottom: 16 }}
         >
           Back to Tasks

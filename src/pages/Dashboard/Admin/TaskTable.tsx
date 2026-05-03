@@ -6,7 +6,7 @@ import { PlusCircleFilled, LinkOutlined, DeleteOutlined, ExclamationCircleOutlin
 import Loader from "../../../components/Loader";
 import { getErrorMessage } from "../../../service/apiUtils";
 import taskQueryService, { TaskType } from "../../../services/task-service/task-query";
-import taskMutationService, { CreateTaskPayload, AssignTaskPayload, UpdateTaskPayload } from "../../../services/task-service/task-mutation";
+import taskMutationService, { CreateTaskPayload, UpdateTaskPayload } from "../../../services/task-service/task-mutation";
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from "dayjs";
 import userQueryService from "../../../services/user-service/user-query";
@@ -44,7 +44,6 @@ const TaskTable = () => {
   // React Query hooks
   const { tasks, isTasksLoading, tasksError } = taskQueryService.useGetAllTasks();
   const { createTaskMutation } = taskMutationService.useCreateTask();
-  const { assignTaskMutation } = taskMutationService.useAssignTask();
   const { deleteTaskMutation } = taskMutationService.useDeleteTask();
   const { updateTaskMutation } = taskMutationService.useUpdateTask();
   const { allUsers: getAllUsers, isUsersLoading, isUsersFetching } = userQueryService.useGetAllUsers(submittedQuery.trim());
@@ -80,22 +79,7 @@ const TaskTable = () => {
       return;
     }
   
-    const payload: AssignTaskPayload = {
-      taskId: selectedTask,
-      userId: selectedUser,
-    };
 
-    assignTaskMutation.mutate(payload, {
-      onSuccess: () => {
-        assignForm.resetFields();
-        setIsAssignTaskModalVisible(false);
-        setSelectedUser("");
-        notification.success({ message: "Task assigned successfully!" });
-      },
-      onError: (error) => {
-        notification.error({ message: getErrorMessage(error) || "Failed to assign task" });
-      },
-    })
   };
 
   const handleDeleteTask = (taskId: string, taskName: string) => {
@@ -111,8 +95,9 @@ const TaskTable = () => {
           onSuccess: () => {
             notification.success({ message: 'Task deleted successfully!' });
           },
-          onError: (error) => {
-            notification.error({ message: 'Failed to delete task', description: getErrorMessage(error) });
+          onError: (error: unknown) => {
+            const errorMsg = getErrorMessage(error);
+            notification.error({ message: 'Failed to delete task', description: errorMsg });
           },
         });
       },
@@ -374,7 +359,6 @@ const handleMenuClick = ({ key }: { key: string }, record: TaskType) => {
         onCancel={() => setIsAssignTaskModalVisible(false)}
         okText="Assign"
         cancelText="Cancel"
-        confirmLoading={assignTaskMutation.isPending}
       >
         <Form form={assignForm} layout="vertical">
           <Form.Item

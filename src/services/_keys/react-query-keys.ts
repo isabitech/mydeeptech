@@ -43,7 +43,7 @@ const MUTATION = {
 
     // Task Mutations
     createTask: "createTask",
-    assignTask: "assignTask",
+    assignTaskToUsers: "assignTaskToUsers",
     deleteTask: "deleteTask",
     updateTask: "updateTask",
 
@@ -57,6 +57,7 @@ const MUTATION = {
     uploadSubmissionImage: "uploadSubmissionImage",
     deleteSubmissionImage: "deleteSubmissionImage",
     submitForReview: "submitForReview",
+    createTaskSlots: "createTaskSlots",
     reviewSubmissionImage: "reviewSubmissionImage",
     completeMicroTaskReview: "completeMicroTaskReview",
     bulkApproveMicroTasks: "bulkApproveMicroTasks",
@@ -113,8 +114,11 @@ const QUERY = {
 
     // Task Queries
     getAllTasks: "getAllTasks",
+    getAssignedTaskToUsers: "assigned-tasks",
+    usersAssignToTask: "usersAssignToTask",
     getAssignedTasks: "getAssignedTasks",
-
+    getPaginatedUsers: "getPaginatedUsers",
+    getMyTasks: "getMyTasks",
     // Micro Task Queries
     getAllMicroTasks: "getAllMicroTasks",
     getMicroTaskById: "getMicroTaskById",
@@ -122,12 +126,14 @@ const QUERY = {
     getAvailableMicroTasks: "getAvailableMicroTasks",
     getMicroTaskSlots: "getMicroTaskSlots",
     getUserMicroTaskSubmissions: "getUserMicroTaskSubmissions",
+    getSingleTask: "getSingleTask",
     getMicroTaskSubmissionDetails: "getMicroTaskSubmissionDetails",
     checkMicroTaskEligibility: "checkMicroTaskEligibility",
     getPendingMicroTaskReviews: "getPendingMicroTaskReviews",
     getMicroTaskReviewStatistics: "getMicroTaskReviewStatistics",
     getMicroTaskReviewQueue: "getMicroTaskReviewQueue",
     getMicroTaskSubmissionForReview: "getMicroTaskSubmissionForReview",
+
 } as const;
 
 const REACT_QUERY_KEYS = {

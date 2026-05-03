@@ -137,12 +137,20 @@ export const endpoints = {
   },
 
   tasks: {
-    createTask: "/auth/createTasks",
-    assignTask: "/auth/assignTask",
-    getAllTasks: "/auth/getAllTasks",
+    createTask: "/tasks/createTasks",
+    assignTaskToUsers: "/tasks/assignTaskToUsers",
+    // getAllTasks: "/auth/getAllTasks",
     deleteTask: "/auth/deleteTask",
-    updateTask: "/auth/updateTask",
-    getAssignedTasks: "/auth/assigned-tasks", // New endpoint for user assigned tasks
+    updateTask: "/tasks/updateTask",
+    getAssignedTasks: "/tasks/assigned-tasks", // User assigned tasks
+    getPaginatedUsers: "/tasks/get-paginated-users", // User assigned tasks
+    getMyTasks: "/tasks/me", // Get tasks assigned to the logged-in user
+
+    // Admin
+    getAllTasks: "/tasks/getAllTasks",
+    getAssignedTaskToUsers: "/tasks/assigned-tasks",
+    usersAssignToTask: "/tasks/usersAssignToTask",
+    getSingleTask: "/tasks/getSingleTask",
   },
 
   // Micro Task endpoints
@@ -159,6 +167,7 @@ export const endpoints = {
     getTaskSlots: "/micro-tasks",
     // User endpoints
     getAvailableTasks: "/micro-tasks/available/me",
+     
   },
 
   // Micro Task Submissions endpoints
@@ -166,7 +175,7 @@ export const endpoints = {
     getUserSubmissions: "/micro-task-submissions/me",
     checkEligibility: "/micro-task-submissions/tasks",
     startSubmission: "/micro-task-submissions/tasks",
-    getSubmissionDetails: "/micro-task-submissions",
+    getSubmissionDetails: "/micro-tasks/submission",
     uploadImage: "/micro-task-submissions",
     deleteImage: "/micro-task-submissions",
     submitForReview: "/micro-task-submissions",

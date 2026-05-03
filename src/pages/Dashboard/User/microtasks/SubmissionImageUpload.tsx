@@ -1,39 +1,33 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
-  Row,
-  Col,
   Button,
   Typography,
   Space,
-  Progress,
-  Alert,
   Spin,
   notification,
   Image,
   Upload,
-  Steps,
   Tag,
-  Empty,
-  Badge,
-  Tooltip,
+  Tabs,
+  List,
+  Popover,
 } from "antd";
+
+const { Dragger } = Upload;
 import {
-  UploadOutlined,
   EyeOutlined,
   DeleteOutlined,
-  ArrowLeftOutlined,
-  SendOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
-import { useParams, useNavigate } from "react-router-dom";
-import type { UploadProps } from "antd/es/upload/interface";
+import { useParams, useSearchParams } from "react-router-dom";
+import type { UploadProps, UploadFile, RcFile } from "antd/es/upload/interface";
 import moment from "moment";
 import { microTaskQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
 import { getErrorMessage } from "../../../../service/apiUtils";
+import { ImageSchema } from "../../../../validators/task/task-submission-schema";
 
 const { Title, Text } = Typography;
-const { Step } = Steps;
 
 interface TaskSlot {
   _id: string;
@@ -57,153 +51,504 @@ interface SubmissionImageUploadProps {
   submissionId?: string; // Optional for route-based usage
 }
 
-const SubmissionImageUpload: React.FC<SubmissionImageUploadProps> = ({ submissionId: propSubmissionId }) => {
-  const navigate = useNavigate();
-  const params = useParams();
-  
-  // Use submissionId from props or URL params
-  const submissionId = propSubmissionId || params.submissionId || "";
+const SubmissionImageUpload: React.FC<SubmissionImageUploadProps> = () => {
 
-  // TanStack Query hooks
+  const params = useParams<{ assignmentId: string}>();
+const [searchParams] = useSearchParams();
+const taskId = searchParams.get("task"); // string | null
+
+  // Use submissionId from props or URL params
+  const assignmentId =  params.assignmentId || "";
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
+  
   const {
     submission,
-    isSubmissionLoading,
-    isSubmissionError,
-    submissionError,
-  } = microTaskQueryService.useGetMicroTaskSubmissionDetails(submissionId);
+  } = microTaskQueryService.useGetMicroTaskSubmissionDetails(assignmentId);
+  const {
+    submissionDetails,
+    submissionDetailsRefetch
+  } = microTaskQueryService.useGetSubmissionDetails(assignmentId);
 
   const {
     uploadImageMutation,
+    isUploadImageLoading
   } = microTaskMutationService.useUploadSubmissionImage();
 
   const {
     deleteImageMutation,
+    isDeleteImageLoading,
   } = microTaskMutationService.useDeleteSubmissionImage();
 
+
   const {
-    submitForReviewMutation,
-    isSubmitForReviewLoading,
-  } = microTaskMutationService.useSubmitForReview();
+    singleTask,
+    isTaskLoading,
+  } = microTaskQueryService.useGetSingleTask(assignmentId ?? "");
 
-  useEffect(() => {
-    if (!submissionId) {
-      notification.error({
-        message: "Error",
-        description: "Submission ID is required"
-      });
-      navigate("/dashboard/user/microtasks");
-    }
-  }, [submissionId, navigate]);
-
-  useEffect(() => {
-    if (isSubmissionError) {
-      notification.error({
-        message: "Error",
-        description: submissionError?.message || "Failed to load submission"
-      });
-      navigate("/dashboard/user/microtasks");
-    }
-  }, [isSubmissionError, submissionError, navigate]);
-
-  const handleImageUpload = async (file: File, slotId: string) => {
-    try {
-      await uploadImageMutation.mutateAsync({
-        submissionId,
-        file,
-        slotId,
-      });
-      
-      notification.success({
-        message: "Image Uploaded",
-        description: "Image uploaded successfully"
-      });
-    } catch (error) {
-      const errorMsg = getErrorMessage(error);
-      notification.error({
-        message: "Upload Failed",
-        description: errorMsg || "Failed to upload image"
-      });
-    }
-  };
-
-  const handleDeleteImage = async (slotId: string) => {
-    try {
-      await deleteImageMutation.mutateAsync({
-        submissionId,
-        slotId,
-      });
-      
-      notification.success({
-        message: "Image Deleted",
-        description: "Image removed successfully"
-      });
-    } catch (error) {
-      const errorMsg = getErrorMessage(error);
+  const handleDeleteImage = async (publicId: string) => {
+    if (!taskId) {
       notification.error({
         message: "Delete Failed",
-        description: errorMsg || "Failed to delete image"
+        description: "Task ID not found. Please refresh the page and try again."
       });
+      return;
     }
+
+    deleteImageMutation.mutate({
+      submissionId: assignmentId ?? "",
+      publicId,
+      taskId: taskId ?? "",
+    }, {
+      onSuccess: () => {
+        notification.success({
+          message: "Image Deleted",
+          description: "Image removed successfully"
+        });
+        submissionDetailsRefetch();
+      },
+      onError: (error) => {
+        const errorMsg = getErrorMessage(error);
+        notification.error({
+          message: "Delete Failed",
+          description: errorMsg || "Failed to delete image"
+        });
+      }
+    });
   };
 
-  const handleSubmitTask = async () => {
-    try {
-      await submitForReviewMutation.mutateAsync(submissionId);
+
+  const handleFileSelection = (files: File[], angle: string) => {
+    setSelectedFiles(prev => {
+      const existingFiles = prev[angle] || [];
+      const newFiles = [...existingFiles, ...files];
       
-      notification.success({
-        message: "Task Submitted",
-        description: "Your task has been submitted for review"
+      // Ensure we don't exceed the 5 file limit
+      const limitedFiles = newFiles.slice(0, 5);
+      
+      return {
+        ...prev,
+        [angle]: limitedFiles
+      };
+    });
+  };
+
+  const handleRemoveFile = (fileIndex: number, angle: string) => {
+    // Clean up object URL to prevent memory leaks
+    const fileToRemove = selectedFiles[angle]?.[fileIndex];
+    if (fileToRemove) {
+      // Find and revoke any object URLs created for this file
+      const objectURL = URL.createObjectURL(fileToRemove);
+      URL.revokeObjectURL(objectURL);
+    }
+    
+    setSelectedFiles(prev => ({
+      ...prev,
+      [angle]: (prev[angle] || []).filter((_, index) => index !== fileIndex)
+    }));
+    
+  };
+
+  const handleFileUpload = async (angle: string) => {
+    const files = selectedFiles[angle];
+    if (!files || files.length === 0) {
+      notification.warning({
+        message: "No Files Selected",
+        description: "Please select files before uploading"
       });
-      
-      navigate("/dashboard/user/microtasks");
-    } catch (error) {
-      const errorMsg = getErrorMessage(error);
+      return;
+    }
+
+    if(!taskId) {
       notification.error({
-        message: "Submission Failed",
-        description: errorMsg || "Failed to submit task"
+        message: "Task ID Missing",
+        description: "Cannot upload images without a valid task ID",
+        key: "upload-error"
+      });
+      return; 
+    }
+
+    if(!assignmentId) {
+      notification.error({
+        message: "Assignment ID Missing",
+        description: "Cannot upload images without a valid assignment ID",
+        key: "upload-error"
+      });
+      return; 
+    }
+
+    const formData = new FormData();
+    formData.append("assignmentId", params.assignmentId || "");
+    formData.append("taskId", taskId || "");
+    const label = angle.charAt(0).toUpperCase() + angle.slice(1);
+    
+    files.forEach((file: File) => {
+        formData.append(label, file);
+    });
+  
+    uploadImageMutation.mutate(formData, {
+      onSuccess: () => {
+        notification.success({
+          message: "Upload Successful",
+          description: "Images uploaded successfully",
+          key: "upload-success"
+        });
+        submissionDetailsRefetch();
+         setSelectedFiles(prev => ({
+        ...prev,
+        [angle]: []
+      }));
+      },
+      onError: (error) => {
+        const errorMsg = getErrorMessage(error);
+        notification.error({
+          message: "Upload Failed",
+          description: errorMsg || "Failed to upload image(s)",
+          key: "upload-error"
+        });
+      }
+    });
+   
+  };
+
+  const getUploadPropsForAngle = (angle: string): UploadProps => {
+    const currentFileCount = (selectedFiles[angle] || []).length;
+    const isMaxReached = currentFileCount >= 5;
+    
+    // Convert local files to Upload component format for proper state management
+    const uploadFileList: UploadFile[] = (selectedFiles[angle] || []).map((file, index) => ({
+      uid: `${angle}-${index}`,
+      name: file.name,
+      status: 'done' as const,
+      originFileObj: file as RcFile, // Cast to RcFile for compatibility
+      url: URL.createObjectURL(file)
+    }));
+    
+    return {
+      fileList: uploadFileList,
+      disabled: isMaxReached, 
+      beforeUpload: (file: RcFile, fileList: RcFile[]) => {
+        // Use actual current file count from state, not from fileList
+        const actualCurrentCount = (selectedFiles[angle] || []).length;
+        
+        // Calculate how many new files are being added in this batch
+        const newFilesCount = fileList.length;
+        const totalAfterUpload = actualCurrentCount + newFilesCount;
+        
+        // If already at max, don't process any files
+        if (actualCurrentCount >= 5) {
+          console.log("Upload disabled - limit reached");
+          notification.warning({
+            message: "File Limit Reached",
+            description: `Maximum of 5 files allowed for ${angle} angle.`
+          });
+          return Upload.LIST_IGNORE;
+        }
+        
+        // Check if adding these files would exceed the limit
+        if (totalAfterUpload > 5) {
+          const remainingSlots = 5 - actualCurrentCount;
+          notification.warning({
+            message: "File Limit Exceeded",
+            description: `Cannot add ${newFilesCount} files. Only ${remainingSlots} slot(s) remaining for ${angle} angle.`,
+            key: "file-limit-warning"
+          });
+          return Upload.LIST_IGNORE;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          notification.error({
+            message: "Invalid File Type",
+            description: `${file.name} is not an image file`
+          });
+          return Upload.LIST_IGNORE;
+        }
+        
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+          notification.error({
+            message: "File Too Large",
+            description: `${file.name} is larger than 10MB`
+          });
+          return Upload.LIST_IGNORE;
+        }
+        
+        console.log("File validation passed, adding to local state");
+        
+        // For better UX with multiple files, add all files at once when the last file in the batch is processed
+        const currentFileIndex = fileList.findIndex(f => f.uid === file.uid);
+        const isLastFile = currentFileIndex === fileList.length - 1;
+        
+        if (isLastFile) {
+          // Add all validated files at once
+          const validatedFiles = fileList.filter(f => {
+            return f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024;
+          });
+          handleFileSelection(validatedFiles, angle);
+        }
+        
+        return Upload.LIST_IGNORE; // Prevent Upload component from managing the file
+      },
+      accept: "image/*",
+      multiple: true, // Enable multiple file selection
+      maxCount: 5,
+      showUploadList: false,
+      customRequest: ({ onSuccess }) => {
+        // This shouldn't be called since we return LIST_IGNORE
+        if (onSuccess) {
+          onSuccess("ok");
+        }
+      },
+      onChange: ({ fileList }: { fileList: UploadFile[] }) => {
+        // Handle file removal from Upload component UI
+        if (fileList.length < uploadFileList.length) {
+          // A file was removed, sync with local state
+          const removedFile = uploadFileList.find(
+            uploadFile => !fileList.some(f => f.uid === uploadFile.uid)
+          );
+          if (removedFile) {
+            const removedIndex = uploadFileList.findIndex(f => f.uid === removedFile.uid);
+            if (removedIndex !== -1) {
+              handleRemoveFile(removedIndex, angle);
+            }
+          }
+        }
+      }
+    };
+  };
+
+  const renderFileList = (angle: string) => {
+    const files = selectedFiles[angle] || [];
+    if (files.length === 0) return null;
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text strong>Selected Files ({files.length}/5)</Text>
+          <Space>
+            <Button 
+              type="primary" 
+              size="small"
+              onClick={() => handleFileUpload(angle)}
+              disabled={files.length === 0 || isUploadImageLoading}
+              loading={isUploadImageLoading}
+            >
+              Upload All ({files.length})
+            </Button>
+            <Button 
+              size="small"
+              onClick={() => setSelectedFiles(prev => ({ ...prev, [angle]: [] }))}
+              disabled={files.length === 0 || isUploadImageLoading}
+            >
+              Clear All
+            </Button>
+          </Space>
+        </div>
+        <List
+          grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5 }}
+          dataSource={files}
+          renderItem={(file, index) => {
+            const previewUrl = URL.createObjectURL(file);
+            
+            return (
+              <List.Item>
+                <Card 
+                  size="small"
+                  hoverable
+                  cover={
+                    <div style={{ position: 'relative', height: 120, overflow: 'hidden' }}>
+                      <img 
+                        src={previewUrl}
+                        alt={file.name}
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover' 
+                        }}
+                        onError={(e) => {
+                          console.error(`Preview failed for ${file.name}:`, e);
+                        }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        display: 'flex',
+                        gap: 4
+                      }}>
+                        <Popover
+                          content={
+                            <div>
+                              <p><strong>Size:</strong> {(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                              <p><strong>Type:</strong> {file.type}</p>
+                              <p><strong>Last Modified:</strong> {new Date(file.lastModified).toLocaleString()}</p>
+                            </div>
+                          }
+                          title="File Details"
+                        >
+                          <Button size="small" shape="circle" icon={<EyeOutlined />} />
+                        </Popover>
+                        <Button 
+                          size="small" 
+                          shape="circle"
+                          danger 
+                          icon={<DeleteOutlined />}
+                          onClick={() => {
+                            handleRemoveFile(index, angle);
+                            URL.revokeObjectURL(previewUrl);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  }
+                >
+                  <Card.Meta 
+                    title={
+                      <div style={{ 
+                        fontSize: '12px', 
+                        fontWeight: 500, 
+                        whiteSpace: 'nowrap', 
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis' 
+                      }}>
+                        {file.name}
+                      </div>
+                    }
+                    description={
+                      <Text type="secondary" style={{ fontSize: '11px' }}>
+                        {(file.size / (1024 * 1024)).toFixed(1)} MB
+                      </Text>
+                    }
+                  />
+                </Card>
+              </List.Item>
+            );
+          }}
+        />
+      </div>
+    );
+  };
+
+  // Helper function to create a single drag and drop component for each tab
+  const createDragDropComponent = (angle: string, title: string) => {
+    const fileCount = (selectedFiles[angle] || []).length;
+    const isMaxReached = fileCount >= 5;
+    
+    return (
+      <div style={{ padding: 16 }}>
+        <div style={{ marginBottom: 24, textAlign: 'center' }}>
+          <Title level={4} style={{ marginBottom: 8 }}>{title}</Title>
+          <Text type="secondary">Drag and drop up to 5 images at once for this angle</Text>
+        </div>
+        
+        <Dragger
+          {...getUploadPropsForAngle(angle)}
+          style={{
+            border: isMaxReached ? "2px dashed #d9d9d9" : "2px dashed #1890ff",
+            borderRadius: 12,
+            backgroundColor: isMaxReached ? "#f5f5f5" : "#f0f7ff",
+            cursor: isMaxReached ? "not-allowed" : "pointer",
+            minHeight: 180,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p className="ant-upload-drag-icon">
+              <CameraOutlined style={{ 
+                fontSize: 48, 
+                color: isMaxReached ? "#bfbfbf" : "#1890ff",
+                marginBottom: 16
+              }} />
+            </p>
+            <p className="ant-upload-text" style={{ 
+              color: isMaxReached ? "#bfbfbf" : "#1890ff", 
+              fontSize: 18, 
+              fontWeight: 500,
+              marginBottom: 8
+            }}>
+              {isMaxReached 
+                ? `Maximum Files Reached (${fileCount}/5)` 
+                : "Drag & Drop Images Here"}
+            </p>
+            <p className="ant-upload-hint" style={{ 
+              color: isMaxReached ? "#bfbfbf" : "#999", 
+              fontSize: 14,
+              marginBottom: 0
+            }}>
+              {isMaxReached 
+                ? "Remove files below to upload more" 
+                : "or click to select files • Max 5 images • 10MB each • JPG, PNG, GIF"}
+            </p>
+          </div>
+        </Dragger>
+        
+        {renderFileList(angle)}
+      </div>
+    );
+  };
+
+  // Generate tabs dynamically based on available slots or default angles
+  const generateTabItems = () => {
+    // If we have actual slots from the backend, use them
+    if (submission?.slots && submission.slots.length > 0) {
+      const groupedSlots = groupSlotsByAngle(submission.slots);
+      
+      return Object.entries(groupedSlots).map(([angle, slots]) => {
+        const normalizedAngle = angle.toLowerCase().replace(/\s+/g, '_').replace(/°/g, '');
+        return {
+          key: normalizedAngle,
+          label: getAngleTabLabel(normalizedAngle),
+          children: createDragDropComponent(normalizedAngle, slots[0].description || angle),
+          // Store the real slots for this angle so we can access them later
+          realSlots: slots
+        };
       });
     }
+    
+    // Create default tabs with Front, Left, Right, and Back views
+    const defaultTabs = [
+      { key: 'front', label: 'Front View', title: 'Front View' },
+      { key: 'left', label: 'Left View', title: 'Left View' },
+      { key: 'right', label: 'Right View', title: 'Right View' },
+      { key: 'back', label: 'Back View', title: 'Back View' }
+    ];
+    return defaultTabs.map(tab => ({
+      key: tab.key,
+      label: tab.label,
+      children: createDragDropComponent(tab.key, tab.title)
+    }));
   };
 
-  const uploadProps: UploadProps = {
-    beforeUpload: () => false, // Prevent auto upload
-    accept: "image/*",
-    multiple: false,
-    showUploadList: false
+  const getAngleTabLabel = (angle: string): string => {
+    const angleMap: Record<string, string> = {
+      'front': 'Front View',
+      'left': 'Left View',
+      'right': 'Right View',
+      'back': 'Back View',
+      'left_45': 'Left 45° View',  
+      'right_45': 'Right 45° View',
+      'left_profile': 'Left Profile View',
+      'right_profile': 'Right Profile View',
+      'down_profile': 'Down Profile View'
+    };
+    return angleMap[angle] || `${angle.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} View`;
   };
 
-  const getCategoryInfo = (category: string) => {
-    switch (category) {
-      case "mask_collection":
-        return { name: "Mask Collection", icon: "😷", color: "blue" };
-      case "age_progression":
-        return { name: "Age Progression", icon: "📅", color: "purple" };
-      default:
-        return { name: category, icon: "📋", color: "default" };
-    }
+  const groupSlotsByAngle = (slots: TaskSlot[]) => {
+    const grouped = slots.reduce((acc, slot) => {
+      const angle = slot.angle || 'unknown';
+      if (!acc[angle]) {
+        acc[angle] = [];
+      }
+      acc[angle].push(slot);
+      return acc;
+    }, {} as Record<string, TaskSlot[]>);
+    return grouped;
   };
 
-  const getSlotInstruction = (slot: TaskSlot, category: string) => {
-    if (category === "mask_collection") {
-      return `Take a photo wearing a face mask with your face at a ${slot.angle} angle`;
-    } else if (category === "age_progression") {
-      return `Upload a photo from ${slot.time_period} showing ${slot.description}`;
-    }
-    return slot.description;
-  };
-
-  // Calculate current step based on progress
-  const currentStep = submission ? (
-    submission.completed_slots === 0 ? 0 :
-    submission.completed_slots < submission.total_slots ? 1 : 2
-  ) : 0;
-
-  const isUploadingSlot = (slotId: string) => {
-    return uploadImageMutation.isPending && 
-           uploadImageMutation.variables?.slotId === slotId;
-  };
-
-  if (isSubmissionLoading) {
+  if (isTaskLoading) {
     return (
       <div style={{ textAlign: "center", padding: 100 }}>
         <Spin size="large" />
@@ -212,322 +557,84 @@ const SubmissionImageUpload: React.FC<SubmissionImageUploadProps> = ({ submissio
     );
   }
 
-  if (!submission) {
-    return (
-      <div style={{ textAlign: "center", padding: 100 }}>
-        <Empty description="Submission not found" />
-        <Button onClick={() => navigate("/dashboard/user/microtasks")}>
-          Back to Tasks
-        </Button>
-      </div>
-    );
-  }
-
-  const categoryInfo = getCategoryInfo(submission.taskId.category);
-  const canSubmit = submission.completed_slots === submission.total_slots && submission.status === "in_progress";
-
   return (
     <div style={{ padding: 24, minHeight: "100vh" }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/dashboard/user/microtasks")}
-          style={{ marginBottom: 16 }}
-        >
-          Back to Tasks
-        </Button>
-        
-        <Title level={2} style={{ marginBottom: 0 }}>
-          <Space>
-            <span>{categoryInfo.icon}</span>
-            {submission.taskId.title}
-            <Tag color={categoryInfo.color}>{categoryInfo.name}</Tag>
-          </Space>
-        </Title>
-        <Text type="secondary">{submission.taskId.description}</Text>
-      </div>
 
-      {/* Progress Steps */}
-      <Card style={{ marginBottom: 24 }}>
-        <Steps current={currentStep} size="small">
-          <Step
-            title="Start Upload"
-            description="Begin uploading images"
-            icon={<CameraOutlined />}
-          />
-          <Step
-            title="Upload Images"
-            description={`${submission.completed_slots}/${submission.total_slots} completed`}
-            icon={<UploadOutlined />}
-          />
-          <Step
-            title="Submit Task"
-            description="Submit for review"
-            icon={<SendOutlined />}
-          />
-        </Steps>
+      {/* Upload Slots  */}
+      <Card title={`Upload Your Images: ${singleTask?.task?.taskTitle ?? ""}`} style={{ marginBottom: 24 }}>
+        <Tabs
+          defaultActiveKey="front"
+          type="card"
+          size="large"
+          items={generateTabItems()}
+        />
       </Card>
 
-      {/* Task Info */}
-      <Row gutter={24} style={{ marginBottom: 24 }}>
-        <Col span={8}>
-          <Card size="small">
-            <Space>
-              <Badge status="processing" />
-              <Text strong>Progress</Text>
-            </Space>
-            <Progress
-              percent={submission.progress_percentage}
-              status="active"
-              strokeColor="#1890ff"
-            />
-          </Card>
-        </Col>
-        
-        <Col span={8}>
-          <Card size="small">
-            <Space>
-              <Badge status="success" />
-              <Text strong>Reward</Text>
-            </Space>
-            <div>
-              <Title level={4} style={{ marginBottom: 0, color: "#52c41a" }}>
-                {submission.taskId.payRateCurrency} {submission.taskId.payRate}
-              </Title>
-            </div>
-          </Card>
-        </Col>
-        
-        <Col span={8}>
-          <Card size="small">
-            <Space>
-              <Badge status="warning" />
-              <Text strong>Time Estimate</Text>
-            </Space>
-            <div>
-              <Text strong>{submission.taskId.estimated_time}</Text>
-              {submission.taskId.deadline && (
-                <div>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Due: {moment(submission.taskId.deadline).format("MMM DD, HH:mm")}
-                  </Text>
-                </div>
-              )}
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Instructions */}
-      <Row gutter={24} style={{ marginBottom: 24 }}>
-        <Col span={12}>
-          <Alert
-            message="Instructions"
-            description={submission.taskId.instructions}
-            type="info"
-            showIcon
-          />
-        </Col>
-        <Col span={12}>
-          <Alert
-            message="Quality Guidelines"
-            description={submission.taskId.quality_guidelines}
-            type="warning"
-            showIcon
-          />
-        </Col>
-      </Row>
-
-      {/* Upload Slots */}
-      <Card title="Upload Your Images" style={{ marginBottom: 24 }}>
-        <Row gutter={[16, 16]}>
-          {submission.slots.map((slot, index) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={slot._id}>
-              <Card
-                size="small"
-                style={{
-                  border: slot.uploaded ? "2px solid #52c41a" : "1px solid #d9d9d9",
-                  position: "relative"
-                }}
-                bodyStyle={{ padding: 12 }}
-              >
-                {slot.uploaded && (
-                  <div style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    zIndex: 2
-                  }}>
-                    <Badge status="success" />
-                  </div>
-                )}
-
-                <div style={{ textAlign: "center", marginBottom: 12 }}>
-                  <Title level={5} style={{ marginBottom: 4 }}>
-                    #{index + 1} {slot.angle || slot.time_period}
-                  </Title>
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    {getSlotInstruction(slot, submission.taskId.category)}
-                  </Text>
-                </div>
-
-                {slot.uploaded && slot.image_url ? (
-                  <div style={{ textAlign: "center" }}>
-                    <Image
-                      src={slot.image_url}
-                      alt={`Slot ${index + 1}`}
-                      style={{
-                        width: "100%",
-                        height: 150,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        marginBottom: 8
-                      }}
-                      preview={{
-                        mask: <EyeOutlined />
-                      }}
-                    />
-                    <Space>
-                      <Tooltip title="Replace Image">
-                        <Upload
-                          {...uploadProps}
-                          onChange={({ file }) => {
-                            if (file.originFileObj) {
-                              handleImageUpload(file.originFileObj, slot._id);
-                            }
+      {/* Uploaded Images Display */}
+      {submissionDetails?.images && submissionDetails.images.length > 0 && (
+        <Card title="Uploaded Images" style={{ marginBottom: 24 }}>
+          <List
+            grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5 }}
+            dataSource={submissionDetails.images}
+            renderItem={(image: ImageSchema, index: number) => (
+              <List.Item>
+                <Card 
+                  size="default"
+                  hoverable
+                  cover={
+                    <div className="flex items-center justify-center relative">
+                     <div className=" flex flex-col gap-5 items-center justify-center  rounded-md h-[150px] w-full overflow-hidden">
+                       <Image
+                        src={image.url}
+                        alt={`${image.label} image`}
+                        className="!w-full object-fill rounded-md"
+                        preview={{
+                          mask: <EyeOutlined style={{ fontSize: 20 }} />
+                        }}
+                      />
+                     </div>
+                      <div style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        display: 'flex',
+                        gap: 4
+                      }}>
+                        <Button 
+                          size="small" 
+                          shape="circle"
+                          danger 
+                          disabled={isDeleteImageLoading}
+                          icon={ isDeleteImageLoading ? <Spin size="small" /> : <DeleteOutlined />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteImage(image.publicId);
                           }}
-                        >
-                          <Button size="small" icon={<UploadOutlined />}>
-                            Replace
-                          </Button>
-                        </Upload>
-                      </Tooltip>
-                      <Tooltip title="Delete Image">
-                        <Button
-                          size="small"
-                          danger
-                          icon={<DeleteOutlined />}
-                          onClick={() => handleDeleteImage(slot._id)}
-                        >
-                          Delete
-                        </Button>
-                      </Tooltip>
-                    </Space>
-                  </div>
-                ) : (
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        width: "100%",
-                        height: 150,
-                        border: "2px dashed #d9d9d9",
-                        borderRadius: 8,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 8,
-                        backgroundColor: "#fafafa"
-                      }}
-                    >
-                      <CameraOutlined style={{ fontSize: 32, color: "#d9d9d9" }} />
+                          style={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            borderColor: '#ff4d4f'
+                          }}
+                        />
+                      </div>
                     </div>
-                    <Upload
-                      {...uploadProps}
-                      onChange={({ file }) => {
-                        if (file.originFileObj) {
-                          handleImageUpload(file.originFileObj, slot._id);
-                        }
-                      }}
-                    >
-                      <Button
-                        type="primary"
-                        icon={<UploadOutlined />}
-                        loading={isUploadingSlot(slot._id)}
-                        size="small"
-                        block
-                      >
-                        {isUploadingSlot(slot._id) ? "Uploading..." : "Upload Image"}
-                      </Button>
-                    </Upload>
-                  </div>
-                )}
-
-                {/* Slot metadata */}
-                {Object.keys(slot.metadata).length > 0 && (
-                  <div style={{ marginTop: 8, fontSize: 11 }}>
-                    {Object.entries(slot.metadata).map(([key, value]) => (
-                      value && (
-                        <Tag key={key} style={{ marginBottom: 2, fontSize: 12 }}>
-                          {key}: {value}
-                        </Tag>
-                      )
-                    ))}
-                  </div>
-                )}
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Card>
-
-      {/* Submit Button */}
-      {submission.status === "in_progress" && (
-        <Card>
-          <div style={{ textAlign: "center" }}>
-            {canSubmit ? (
-              <Space direction="vertical" size="large">
-                <Alert
-                  message="Ready to Submit"
-                  description="All images have been uploaded. You can now submit your task for review."
-                  type="success"
-                  showIcon
-                />
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<SendOutlined />}
-                  loading={isSubmitForReviewLoading}
-                  onClick={handleSubmitTask}
+                  }
                 >
-                  Submit Task for Review
-                </Button>
-              </Space>
-            ) : (
-              <Alert
-                message={`Upload Progress: ${submission.completed_slots}/${submission.total_slots} images`}
-                description="Please upload all required images before submitting."
-                type="info"
-                showIcon
-              />
+                  <Card.Meta 
+                    title={
+                      <div className="text-[12px] font-medium text-center flex items-start">
+                        <Tag color="blue">{image.label}</Tag> {index + 1}
+                      </div>
+                    }
+                    description={
+                      <Text type="secondary" style={{ fontSize: '11px', textAlign: 'center' }}>
+                        {moment(image.uploadedAt).format('MMM DD, HH:mm')}
+                      </Text>
+                    }
+                  />
+                </Card>
+              </List.Item>
             )}
-          </div>
-        </Card>
-      )}
-
-      {/* Status Display for non-in-progress submissions */}
-      {submission.status !== "in_progress" && (
-        <Card>
-          <div style={{ textAlign: "center" }}>
-            <Alert
-              message={`Task Status: ${submission.status.replace("_", " ").toUpperCase()}`}
-              description={
-                submission.status === "completed" ? "Your task has been submitted and is awaiting review." :
-                submission.status === "under_review" ? "Your task is currently being reviewed." :
-                submission.status === "approved" ? "Congratulations! Your task has been approved." :
-                submission.status === "rejected" ? "Your task was rejected. Please check feedback and try again." :
-                submission.status === "partially_rejected" ? "Some images were rejected. Please check feedback and resubmit." :
-                "Unknown status"
-              }
-              type={
-                submission.status === "approved" ? "success" :
-                submission.status === "rejected" ? "error" :
-                submission.status === "partially_rejected" ? "warning" :
-                "info"
-              }
-              showIcon
-            />
-          </div>
+          />
         </Card>
       )}
     </div>

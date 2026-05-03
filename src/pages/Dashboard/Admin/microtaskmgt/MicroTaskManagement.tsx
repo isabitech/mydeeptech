@@ -16,10 +16,10 @@ import {
   Row,
   Col,
   DatePicker,
-  Divider,
-  Progress,
   Statistic,
   Dropdown,
+  Tabs,
+  Avatar,
 } from "antd";
 import {
   PlusSquareOutlined,
@@ -28,16 +28,19 @@ import {
   ReloadOutlined,
   ExclamationCircleOutlined,
   MoreOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  StopOutlined,
-  CopyOutlined,
   BarChartOutlined,
+  EditOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from 'antd/es/table';
-import moment from "moment";
+import dayjs from 'dayjs';
 import axiosInstance from "../../../../service/axiosApi";
 import { endpoints } from "../../../../store/api/endpoints";
+import { microTaskAdminQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
+import { getErrorMessage } from "../../../../service/apiUtils";
+import { BaseTaskSchema, TaskSchema } from "../../../../validators/task/task-schema";
+import { UserSchema } from "../../../../validators/users/users-schema";
+import { TaskAssignmentSchema } from "../../../../validators/task/assigned-task-schema";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -60,44 +63,6 @@ const TASK_STATUSES = [
   { value: "cancelled", label: "Cancelled", color: "error" }
 ];
 
-interface MicroTask {
-  _id: string;
-  title: string;
-  description: string;
-  category: "mask_collection" | "age_progression";
-  required_count: number;
-  status: "draft" | "active" | "paused" | "completed" | "cancelled";
-  payRate: number;
-  payRateCurrency: string;
-  maxParticipants: number | null;
-  deadline: string | null;
-  createdBy: {
-    _id: string;
-    fullName: string;
-  };
-  createdAt: string;
-  updatedAt: string;
-  submissionStats: {
-    total: number;
-    in_progress: number;
-    completed: number;
-    under_review: number;
-    approved: number;
-    rejected: number;
-  };
-}
-
-interface MicroTaskFormData {
-  title: string;
-  description: string;
-  category: "mask_collection" | "age_progression";
-  payRate: number;
-  payRateCurrency: string;
-  maxParticipants?: number;
-  deadline?: string;
-  instructions?: string;
-  quality_guidelines?: string;
-}
 
 interface MicroTaskStatistics {
   tasks: {
@@ -121,15 +86,22 @@ interface MicroTaskStatistics {
 const MicroTaskManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<MicroTask | null>(null);
-  const [tasks, setTasks] = useState<MicroTask[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [tableLoading, setTableLoading] = useState(false);
+  const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Partial<BaseTaskSchema> | null>(null);
+  const [taskToAssign, setTaskToAssign] = useState<Partial<BaseTaskSchema> | null>(null);
+  const [tableLoading] = useState(false);
   const [statistics, setStatistics] = useState<MicroTaskStatistics | null>(null);
   const [form] = Form.useForm();
+  const [assignForm] = Form.useForm();
   const [searchText, setSearchText] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingTask, setEditingTask] = useState<Partial<BaseTaskSchema> | null>(null);
+  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedAssignUserIds, setSelectedAssignUserIds] = useState<string[]>([]);
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -138,40 +110,63 @@ const MicroTaskManagement: React.FC = () => {
     total: 0
   });
 
+
+  const {
+    tasks: tasksData,
+    tasksRefetch
+  } = microTaskAdminQueryService.useGetAllMicroTasksAdmin(
+    pagination.current, 
+    pagination.pageSize, 
+    {
+      status: filterStatus !== "all" ? filterStatus : undefined,
+      category: filterCategory !== "all" ? filterCategory : undefined,
+      search: searchText || undefined
+    }
+  );
+
+  const { createTaskMutation, isCreateTaskLoading } = microTaskMutationService.useCreateMicroTask();
+  const { updateTaskMutation, isUpdateTaskLoading } = microTaskMutationService.useUpdateMicroTask();
+  const { assignTaskToUsersMutation, isAssignTaskToUsersLoading } = microTaskMutationService.useAssignTaskToUsers();
+  const { 
+    assignedTasks, 
+    isAssignedTasksLoading,
+    assignedTasksRefetch,
+     pagination: taskUsersPagination
+  }  = microTaskAdminQueryService.useGetAssignedTaskToUsers(taskToAssign?._id || "", pagination.current, pagination.pageSize);
+  const { 
+    paginatedUsers, 
+    pagination: usersPagination,
+    isPaginatedUsersLoading,
+    isPaginatedUsersFetching,
+  }  = microTaskAdminQueryService.useGetPaginatedUsers(pagination.current, pagination.pageSize, searchQuery);
+
   useEffect(() => {
-    fetchTasks();
     fetchStatistics();
   }, [pagination.current, pagination.pageSize, filterStatus, filterCategory, searchText]);
 
-  const fetchTasks = async () => {
-    setTableLoading(true);
-    try {
-      const params = {
-        page: pagination.current.toString(),
-        limit: pagination.pageSize.toString(),
-        ...(filterStatus !== "all" && { status: filterStatus }),
-        ...(filterCategory !== "all" && { category: filterCategory }),
-        ...(searchText && { search: searchText })
-      };
-
-      const response = await axiosInstance.get(endpoints.microTasks.getAllTasks, { params });
-
-      if (response.data.success) {
-        setTasks(response.data.data.tasks);
-        setPagination(prev => ({
-          ...prev,
-          total: response.data.data.pagination.total_items
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to fetch micro tasks"
-      });
-    } finally {
-      setTableLoading(false);
+  // Sync pagination total with service data
+  useEffect(() => {
+    if (usersPagination?.total !== undefined) {
+      setPagination(prev => ({
+        ...prev,
+        total: usersPagination.total
+      }));
     }
+  }, [usersPagination]);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+  };
+
+  // Reset search when modal closes
+  const handleModalClose = () => {
+    setIsAssignModalVisible(false);
+    setTaskToAssign(null);
+    assignForm.resetFields();
+    setSearch(""); // Reset search
+    setSearchQuery(""); // Reset search query
+    setSelectedUserIds([]); // Reset selected users
+    setSelectedAssignUserIds([]); // Reset assign selected users
   };
 
   const fetchStatistics = async () => {
@@ -186,56 +181,58 @@ const MicroTaskManagement: React.FC = () => {
     }
   };
 
-  const handleCreateTask = async (values: MicroTaskFormData) => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post(endpoints.microTasks.createTask, values);
-
-      if (response.data.success) {
+  const handleUpdateTask = async (taskId: string, taskData: Partial<BaseTaskSchema>) => {
+    console.log("Updating task with data:", taskData);
+    updateTaskMutation.mutate({ taskId, taskData }, {
+      onSuccess: () => {
         notification.success({
           message: "Success",
-          description: "Micro task created successfully"
+          description: "Micro task updated successfully",
+          key: "updateTaskSuccess"
         });
         setIsModalVisible(false);
+        setIsEditMode(false);
+        setEditingTask(null);
         form.resetFields();
-        fetchTasks();
+        tasksRefetch();
         fetchStatistics();
-      } else {
+      },
+      onError: (error) => {
+        const errMsg = getErrorMessage(error);
         notification.error({
           message: "Error",
-          description: response.data.message || "Failed to create micro task"
+          description: errMsg || "Failed to update micro task",
+          key: "updateTaskError"
         });
       }
-    } catch (error) {
-      console.error("Error creating task:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to create micro task"
+    });
+  }
+
+  const handleCreateTask = async (values: TaskSchema) => {
+       // Handle create
+      createTaskMutation.mutate(values, {
+        onSuccess: () => {
+          notification.success({
+            message: "Success",
+            description: "Micro task created successfully",
+            key: "createTaskSuccess"
+          });
+          setIsModalVisible(false);
+          form.resetFields();
+          tasksRefetch();
+          fetchStatistics();
+        },
+        onError: (error) => {
+          const errMsg = getErrorMessage(error);
+          notification.error({
+            message: "Error",
+            description: errMsg || "Failed to create micro task",
+            key: "createTaskError"
+          });
+        }
       });
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const handleUpdateTaskStatus = async (taskId: string, status: string) => {
-    try {
-      const response = await axiosInstance.patch(`${endpoints.microTasks.updateTaskStatus}/${taskId}/status`, { status });
-
-      if (response.data.success) {
-        notification.success({
-          message: "Success",
-          description: `Task ${status} successfully`
-        });
-        fetchTasks();
-      }
-    } catch (error) {
-      console.error("Error updating task status:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to update task status"
-      });
-    }
-  };
 
   const handleDeleteTask = (taskId: string) => {
     Modal.confirm({
@@ -252,7 +249,7 @@ const MicroTaskManagement: React.FC = () => {
               message: "Success",
               description: "Micro task deleted successfully"
             });
-            fetchTasks();
+            tasksRefetch();
             fetchStatistics();
           }
         } catch (error) {
@@ -266,202 +263,222 @@ const MicroTaskManagement: React.FC = () => {
     });
   };
 
-  const handleDuplicateTask = async (task: MicroTask) => {
-    try {
-      const response = await axiosInstance.post(`${endpoints.microTasks.duplicateTask}/${task._id}/duplicate`, {
-        title: `${task.title} (Copy)`
-      });
+  const handleEditTask = (task: Partial<BaseTaskSchema>) => {
+    setEditingTask(task);
+    setIsEditMode(true);
+    
+    // Pre-populate form with task data
+    form.setFieldsValue({
+      taskTitle: task.taskTitle || task.taskTitle,
+      description: task.description ?? undefined,
+      category: task.category,
+      payRate: task.payRate,
+      currency: task.currency,
+      maxParticipants: task.maxParticipants,
+      dueDate: task.dueDate ? dayjs(task.dueDate) : null,
+      instructions: task.instructions,
+      quality_guidelines: task.quality_guidelines
+    });
+    setIsModalVisible(true);
+  };
 
-      if (response.data.success) {
-        notification.success({
-          message: "Success",
-          description: "Task duplicated successfully"
-        });
-        fetchTasks();
-      }
-    } catch (error) {
-      console.error("Error duplicating task:", error);
-      notification.error({
-        message: "Error",
-        description: "Failed to duplicate task"
+  const handleAssignTask = (task: Partial<BaseTaskSchema>) => {
+    setTaskToAssign(task);
+    setIsAssignModalVisible(true);
+  };
+
+
+  const handleAssignUsers = async (values?: { userIds: string[] }) => {
+    if (!taskToAssign) return;
+    
+    // Use selected users from checkboxes if no form values provided
+    const userIds = values?.userIds || selectedAssignUserIds;
+    
+    if (userIds.length === 0) {
+      notification.warning({
+        message: "No Users Selected",
+        description: "Please select at least one user to assign"
       });
+      return;
     }
+    
+    assignTaskToUsersMutation.mutate(
+      {
+        taskId: taskToAssign._id!,
+        userIds: userIds
+      },
+      {
+        onSuccess: () => {
+          notification.success({
+            message: "Success",
+            description: "Task assigned to users successfully"
+          });
+          setSelectedAssignUserIds([]);
+          assignForm.resetFields();
+          assignedTasksRefetch();
+        },
+        onError: (error) => {
+          const errMsg = getErrorMessage(error);
+          notification.error({
+            message: "Error",
+            description: errMsg || "Failed to assign task to users"
+          });
+        }
+      }
+    );
   };
 
-  const getStatusTag = (status: string) => {
-    const statusConfig = TASK_STATUSES.find(s => s.value === status);
-    return <Tag color={statusConfig?.color}>{statusConfig?.label}</Tag>;
+  const handleRemoveUserFromTask = async (userId: string) => {
+    if (!taskToAssign) return;
+    console.log("userId", userId)
+    // try {
+    //   const response = await axiosInstance.delete(
+    //     `${endpoints.microTasks.removeUserFromTask}/${taskToAssign._id}/users/${userId}`
+    //   );
+      
+    //   if (response.data.success) {
+    //     notification.success({
+    //       message: "Success",
+    //       description: "User removed from task successfully"
+    //     });
+    //     assignedTasksRefetch();
+    //   }
+    // } catch (error) {
+    //   console.error("Error removing user from task:", error);
+    //   notification.error({
+    //     message: "Error",
+    //     description: "Failed to remove user from task"
+    //   });
+    // }
   };
 
-  const getCategoryLabel = (category: string) => {
-    const categoryConfig = MICRO_TASK_CATEGORIES.find(c => c.value === category);
-    return categoryConfig?.label || category;
+  const handleBulkRemoveUsers = async () => {
+    if (!taskToAssign || selectedUserIds.length === 0) return;
+
+    // Modal.confirm({
+    //   title: 'Remove Selected Users',
+    //   content: `Are you sure you want to remove ${selectedUserIds.length} selected user(s) from this task?`,
+    //   onOk: async () => {
+    //     try {
+    //       // Remove users one by one (you might want to create a bulk endpoint)
+    //       const promises = selectedUserIds.map(userId => 
+    //         axiosInstance.delete(`${endpoints.microTasks.removeUserFromTask}/${taskToAssign._id}/users/${userId}`)
+    //       );
+          
+    //       await Promise.all(promises);
+          
+    //       notification.success({
+    //         message: "Success",
+    //         description: `${selectedUserIds.length} user(s) removed successfully`
+    //       });
+          
+    //       setSelectedUserIds([]);
+    //       assignedTasksRefetch();
+    //     } catch (error) {
+    //       console.error("Error removing users:", error);
+    //       notification.error({
+    //         message: "Error",
+    //         description: "Failed to remove some users"
+    //       });
+    //     }
+    //   }
+    // });
   };
 
-  const columns: ColumnsType<MicroTask> = [
+
+  const columns: ColumnsType<TaskSchema> = [
     {
-      title: "Task",
-      dataIndex: "title",
-      key: "title",
-      render: (text: string, record: MicroTask) => (
-        <div>
-          <div style={{ fontWeight: "bold" }}>{text}</div>
-          <div style={{ color: "#666", fontSize: "12px" }}>
-            {getCategoryLabel(record.category)}
-          </div>
+      title: "Task Title",
+      dataIndex: "taskTitle",
+      key: "taskTitle",
+      render: (_: unknown, record: TaskSchema) => (
+        <div className="flex flex-col">
+          <div className="font-bold">{record.taskTitle}</div>
+          <span className="text-gray-400 text-xs"> {record?.category}</span>
         </div>
+      ),
+    },
+    {
+      title: "Created By",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (_: unknown, record: TaskSchema) => (
+       <span className="font-bold">{ record.createdBy ? record.createdBy?.fullName : "N/A"}</span>
       ),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => getStatusTag(status),
+      render: (_: string, record: TaskSchema ) => record.isActive ? <Tag color="green">Active</Tag> : <Tag color="red">Inactive</Tag>,
     },
     {
       title: "Pay Rate",
       dataIndex: "payRate",
       key: "payRate",
-      render: (rate: number, record: MicroTask) => (
-        `${record.payRateCurrency} ${rate}`
+      render: (rate: number, record: TaskSchema) => (
+        `${record.currency} ${rate}`
       ),
-    },
-    {
-      title: "Progress",
-      key: "progress",
-      render: (_, record: MicroTask) => {
-        const stats = record.submissionStats;
-        const total = stats.total;
-        const maxParticipants = record.maxParticipants;
-        
-        return (
-          <div>
-            <div>{total} submissions</div>
-            {maxParticipants && (
-              <Progress 
-                percent={Math.round((total / maxParticipants) * 100)} 
-                size="small" 
-                status={total >= maxParticipants ? "success" : "active"}
-                format={() => `${total}/${maxParticipants}`}
-              />
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Review Status",
-      key: "reviewStatus",
-      render: (_, record: MicroTask) => {
-        const stats = record.submissionStats;
-        return (
-          <div>
-            <div>{stats.approved} approved</div>
-            <div>{stats.under_review} pending</div>
-            {stats.rejected > 0 && <div>{stats.rejected} rejected</div>}
-          </div>
-        );
-      },
     },
     {
       title: "Created",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date: string) => moment(date).format("MMM DD, YYYY"),
+      render: (date: string) => dayjs(date).format("MMM DD, YYYY"),
     },
     {
       title: "Actions",
       key: "actions",
-      render: (_, record: MicroTask) => {
+      render: (_: unknown, record: TaskSchema) => {
         const menuItems = [
           {
             key: 'view',
             icon: <EyeOutlined />,
-            label: 'View Details',
+            label: 'View Task',
           },
           {
-            key: 'duplicate',
-            icon: <CopyOutlined />,
-            label: 'Duplicate',
+            key: 'edit',
+            icon: <EditOutlined />,
+            label: 'Edit Task',
+          },
+          {
+            key: 'assign',
+            icon: <UserAddOutlined />,
+            label: 'Assign Task',
           },
           {
             type: 'divider' as const
+          },
+           {
+            key: 'delete',
+            icon: <DeleteOutlined />,
+            label: 'Delete Task',
           }
         ];
 
-        // Add status-specific actions
-        if (record.status === "draft") {
-          menuItems.push({
-            key: 'activate',
-            icon: <PlayCircleOutlined />,
-            label: 'Activate',
-          });
+      const handleMenuClick = ({ key }: { key: string }) => {
+        switch (key) {
+          case "view":
+            setSelectedTask(record);
+            setIsDetailModalVisible(true);
+            break;
+
+          case "edit":
+            handleEditTask(record);
+            break;
+
+          case "assign":
+            handleAssignTask(record);
+            break;
+
+          case "delete":
+            handleDeleteTask(record._id);
+            break;
+
+          default:
+            break;
         }
-
-        if (record.status === "active") {
-          menuItems.push({
-            key: 'pause',
-            icon: <PauseCircleOutlined />,
-            label: 'Pause',
-          });
-        }
-
-        if (record.status === "paused") {
-          menuItems.push({
-            key: 'resume',
-            icon: <PlayCircleOutlined />,
-            label: 'Resume',
-          });
-        }
-
-        if (["active", "paused"].includes(record.status)) {
-          menuItems.push({
-            key: 'complete',
-            icon: <StopOutlined />,
-            label: 'Complete',
-          });
-        }
-
-        // Add delete action
-        menuItems.push(
-          {
-            type: 'divider' as const
-          },
-          {
-            key: 'delete',
-            icon: <DeleteOutlined />,
-            label: 'Delete',
-          }
-        );
-
-        const handleMenuClick = ({ key }: { key: string }) => {
-          switch (key) {
-            case 'view':
-              setSelectedTask(record);
-              setIsDetailModalVisible(true);
-              break;
-            case 'duplicate':
-              handleDuplicateTask(record);
-              break;
-            case 'activate':
-              handleUpdateTaskStatus(record._id, "active");
-              break;
-            case 'pause':
-              handleUpdateTaskStatus(record._id, "paused");
-              break;
-            case 'resume':
-              handleUpdateTaskStatus(record._id, "active");
-              break;
-            case 'complete':
-              handleUpdateTaskStatus(record._id, "completed");
-              break;
-            case 'delete':
-              handleDeleteTask(record._id);
-              break;
-            default:
-              break;
-          }
-        };
+      };
 
         return (
           <Dropdown
@@ -578,7 +595,7 @@ const MicroTaskManagement: React.FC = () => {
           <Col span={4}>
             <Button
               icon={<ReloadOutlined />}
-              onClick={fetchTasks}
+              onClick={tasksRefetch}
             >
               Refresh
             </Button>
@@ -587,7 +604,12 @@ const MicroTaskManagement: React.FC = () => {
             <Button
               type="primary"
               icon={<PlusSquareOutlined />}
-              onClick={() => setIsModalVisible(true)}
+              onClick={() => {
+                setIsEditMode(false);
+                setEditingTask(null);
+                form.resetFields();
+                setIsModalVisible(true);
+              }}
             >
               Create Task
             </Button>
@@ -598,7 +620,7 @@ const MicroTaskManagement: React.FC = () => {
       {/* Tasks Table */}
       <Card>
         <Table
-          dataSource={tasks}
+          dataSource={tasksData}
           columns={columns}
           loading={tableLoading}
           rowKey="_id"
@@ -622,12 +644,14 @@ const MicroTaskManagement: React.FC = () => {
         />
       </Card>
 
-      {/* Create Task Modal */}
+      {/* Create/Edit Task Modal */}
       <Modal
-        title="Create New Micro Task"
+        title={isEditMode ? "Edit Micro Task" : "Create New Micro Task"}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
+          setIsEditMode(false);
+          setEditingTask(null);
           form.resetFields();
         }}
         footer={null}
@@ -636,10 +660,16 @@ const MicroTaskManagement: React.FC = () => {
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleCreateTask}
+          onFinish={() => {
+            if(isEditMode && editingTask) {
+              handleUpdateTask(editingTask._id as string, form.getFieldsValue() as Partial<BaseTaskSchema>);
+            } else {
+              handleCreateTask(form.getFieldsValue() as TaskSchema);
+            }
+          }}
         >
           <Form.Item
-            name="title"
+            name="taskTitle"
             label="Task Title"
             rules={[
               { required: true, message: "Please enter task title" },
@@ -702,7 +732,7 @@ const MicroTaskManagement: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-                name="payRateCurrency"
+                name="currency"
                 label="Currency"
                 rules={[{ required: true, message: "Please select currency" }]}
               >
@@ -730,8 +760,8 @@ const MicroTaskManagement: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-                name="deadline"
-                label="Deadline (Optional)"
+                name="dueDate"
+                label="DueDate (Optional)"
               >
                 <DatePicker
                   style={{ width: "100%" }}
@@ -763,21 +793,24 @@ const MicroTaskManagement: React.FC = () => {
           </Form.Item>
 
           <Form.Item>
-            <Space>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-              >
-                Create Task
-              </Button>
+            <Space style={{ display: "flex", justifyContent: "end" }}>
               <Button
                 onClick={() => {
                   setIsModalVisible(false);
+                  setIsEditMode(false);
+                  setEditingTask(null);
                   form.resetFields();
                 }}
               >
                 Cancel
+              </Button>
+
+               <Button
+                type="primary"
+                htmlType="submit"
+                loading={isUpdateTaskLoading || isCreateTaskLoading}
+              >
+                {isEditMode ? "Update Task" : "Create Task"}
               </Button>
             </Space>
           </Form.Item>
@@ -787,7 +820,7 @@ const MicroTaskManagement: React.FC = () => {
       {/* Task Detail Modal */}
       {selectedTask && (
         <Modal
-          title={`Task Details: ${selectedTask.title}`}
+          title={`Task Details: ${selectedTask.taskTitle}`}
           open={isDetailModalVisible}
           onCancel={() => {
             setIsDetailModalVisible(false);
@@ -798,88 +831,277 @@ const MicroTaskManagement: React.FC = () => {
         >
           <Descriptions bordered column={2}>
             <Descriptions.Item label="Title" span={2}>
-              {selectedTask.title}
+              <strong>{selectedTask.taskTitle}</strong>
             </Descriptions.Item>
             <Descriptions.Item label="Category">
-              {getCategoryLabel(selectedTask.category)}
+              {selectedTask.category}
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              {getStatusTag(selectedTask.status)}
+              {selectedTask.isActive ? <Tag color="green">Active</Tag> : <Tag color="red">Inactive</Tag>}
             </Descriptions.Item>
             <Descriptions.Item label="Pay Rate">
-              {selectedTask.payRateCurrency} {selectedTask.payRate}
+              <strong>{selectedTask.currency} {selectedTask.payRate}</strong>
             </Descriptions.Item>
             <Descriptions.Item label="Required Images">
-              {selectedTask.required_count}
+              {selectedTask.totalImagesRequired ? `${selectedTask.totalImagesRequired} images` : "N/A"}
             </Descriptions.Item>
             <Descriptions.Item label="Max Participants">
-              {selectedTask.maxParticipants || "Unlimited"}
+              {selectedTask?.maxParticipants || "Unlimited"}
             </Descriptions.Item>
-            <Descriptions.Item label="Deadline">
-              {selectedTask.deadline ? 
-                moment(selectedTask.deadline).format("MMM DD, YYYY HH:mm") : 
-                "No deadline"
+            <Descriptions.Item label="Due Date">
+              {selectedTask.dueDate ? 
+                dayjs(selectedTask.dueDate).format("MMM DD, YYYY HH:mm") : 
+                "No due date"
               }
             </Descriptions.Item>
-            <Descriptions.Item label="Description" span={2}>
-              {selectedTask.description}
-            </Descriptions.Item>
+            
             <Descriptions.Item label="Created By">
-              {selectedTask.createdBy.fullName}
+              { selectedTask.createdBy ? selectedTask.createdBy.fullName : "N/A" }
             </Descriptions.Item>
             <Descriptions.Item label="Created Date">
-              {moment(selectedTask.createdAt).format("MMM DD, YYYY HH:mm")}
+              {dayjs(selectedTask.createdAt).format("MMM DD, YYYY HH:mm")}
+            </Descriptions.Item>
+            <Descriptions.Item label="Description" span={2}>
+              {selectedTask?.description ?? "No description provided"}
             </Descriptions.Item>
           </Descriptions>
 
-          <Divider>Submission Statistics</Divider>
-          <Row gutter={16}>
-            <Col span={8}>
-              <Statistic
-                title="Total Submissions"
-                value={selectedTask.submissionStats.total}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="Completed"
-                value={selectedTask.submissionStats.completed}
-                valueStyle={{ color: '#3f8600' }}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="Under Review"
-                value={selectedTask.submissionStats.under_review}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Col>
-          </Row>
-          <Row gutter={16} style={{ marginTop: 16 }}>
-            <Col span={8}>
-              <Statistic
-                title="Approved"
-                value={selectedTask.submissionStats.approved}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="In Progress"
-                value={selectedTask.submissionStats.in_progress}
-                valueStyle={{ color: '#faad14' }}
-              />
-            </Col>
-            <Col span={8}>
-              <Statistic
-                title="Rejected"
-                value={selectedTask.submissionStats.rejected}
-                valueStyle={{ color: '#f5222d' }}
-              />
-            </Col>
-          </Row>
         </Modal>
       )}
+
+      {/* Assign Task Modal */}
+      <Modal
+        title={`Assign Task: ${taskToAssign?.taskTitle}`}
+        open={isAssignModalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width={800}
+      >
+  <Tabs
+    defaultActiveKey="assigned"
+    items={[
+      {
+        key: 'assigned',
+        label: 'Tasks with Users',
+        children: (
+          <div>
+            <div
+              style={{
+                marginBottom: 16,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text strong>Assigned Users ({assignedTasks.length})</Text>
+              {selectedUserIds.length > 0 && (
+                <Button danger size="small" onClick={handleBulkRemoveUsers}>
+                  Remove Selected ({selectedUserIds.length})
+                </Button>
+              )}
+            </div>
+
+            {isAssignedTasksLoading ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                Loading users...
+              </div>
+            ) : assignedTasks.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                No users assigned to this task yet
+              </div>
+            ) : (
+              <Table
+                dataSource={assignedTasks}
+                rowKey="_id"
+                size="small"
+                pagination={{
+                  current: taskUsersPagination?.page || 1,
+                  pageSize: taskUsersPagination?.limit || 10,
+                  total: taskUsersPagination?.total || 0,
+                  size: 'small',
+                  showSizeChanger: false,
+                  showQuickJumper: false,
+                  position: ['bottomCenter'],
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} of ${total} assigned users`,
+                  onChange: (page, pageSize) => {
+                    setPagination((prev) => ({
+                      ...prev,
+                      current: page,
+                      pageSize: pageSize || 10,
+                    }));
+                  },
+                }}
+                scroll={{ x: 'max-content' }}
+                loading={isAssignedTasksLoading}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: selectedUserIds,
+                  onChange: (selectedRowKeys: React.Key[]) => {
+                    setSelectedUserIds(selectedRowKeys as string[]);
+                  },
+                  getCheckboxProps: (record: TaskAssignmentSchema) => ({
+                    disabled: false,
+                    name: record.assignedTo?.fullName || 'Unknown',
+                  }),
+                  columnWidth: 50,
+                }}
+                columns={[
+                  {
+                    title: 'User',
+                    key: 'user',
+                    render: (_, record: TaskAssignmentSchema) => (
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Avatar size="small" style={{ marginRight: 8 }}>
+                          {record.assignedTo?.fullName?.charAt(0).toUpperCase() || 'U'}
+                        </Avatar>
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{record.assignedTo?.fullName || 'Unknown'}</div>
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            {record.assignedTo?.email || 'No email'}
+                          </div>
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Assigned Date',
+                    dataIndex: 'assignedAt',
+                    key: 'assignedAt',
+                    render: (date: string) => dayjs(date).format('MMM DD, YYYY'),
+                  },
+                  {
+                    title: 'Action',
+                    key: 'action',
+                    render: (_: unknown, record: TaskAssignmentSchema) => (
+                      <Button
+                        type="link"
+                        danger
+                        size="small"
+                        onClick={() => {
+                          Modal.confirm({
+                            title: 'Remove User',
+                            content: `Are you sure you want to remove ${record.assignedTo?.fullName || 'this user'} from this task?`,
+                            onOk: () => handleRemoveUserFromTask(record.assignedTo?._id),
+                          });
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    ),
+                  },
+                ]}
+              />
+            )}
+          </div>
+        ),
+      },
+      {
+        key: 'assign',
+        label: 'Assign Task to Users',
+        children: (
+          <div>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <Text strong>All Available Users</Text>
+                <Text type="secondary" style={{ marginLeft: 8 }}>
+                  (Browse all users who can be assigned to tasks)
+                </Text>
+              </div>
+              {selectedAssignUserIds.length > 0 && (
+                <Button 
+                  type="primary"
+                  size="small"
+                  onClick={() => handleAssignUsers()}
+                  loading={isAssignTaskToUsersLoading}
+                >
+                  Assign Selected ({selectedAssignUserIds.length})
+                </Button>
+              )}
+            </div>
+
+              <div style={{ marginBottom: 16 }}>
+                <Search
+                  placeholder="Search users by name or email..."
+                  value={search}
+                  onChange={handleSearchChange}
+                  onSearch={setSearchQuery}
+                  allowClear
+                  loading={isPaginatedUsersLoading || isPaginatedUsersFetching}
+                  style={{ width: '100%' }}
+                />
+              </div>
+
+              <Table
+                dataSource={paginatedUsers}
+                loading={isPaginatedUsersLoading}
+                rowKey="_id"
+                size="small"
+                scroll={{ y: 300, x: 'max-content' }}
+                rowSelection={{
+                  type: 'checkbox',
+                  selectedRowKeys: selectedAssignUserIds,
+                  onChange: (selectedRowKeys: React.Key[]) => {
+                    setSelectedAssignUserIds(selectedRowKeys as string[]);
+                  },
+                  getCheckboxProps: (record: TaskAssignmentSchema["assignedTo"]) => ({
+                    disabled: assignedTasks.some(assigned => assigned.assignedTo?._id === record._id),
+                    name: record.fullName,
+                  }),
+                  columnWidth: 50,
+                }}
+                pagination={{
+                  current: usersPagination?.page || 1,
+                  pageSize: usersPagination?.limit || 10,
+                  total: usersPagination?.total || 0,
+                  size: 'small',
+                  showSizeChanger: false,
+                  showQuickJumper: false,
+                  position: ['bottomCenter'],
+                  showTotal: (total, range) =>
+                    `${range[0]}-${range[1]} of ${total} users`,
+                  onChange: (page, pageSize) => {
+                    setPagination((prev) => ({
+                      ...prev,
+                      current: page,
+                      pageSize: pageSize || 10,
+                    }));
+                  },
+                }}
+                columns={[
+                  {
+                    title: 'Full Name',
+                    dataIndex: 'fullName',
+                    key: 'fullName',
+                    render: (name: string) => (
+                      <div className="capitalize flex items-center">
+                        <Avatar size="small" className="mr-2 size-6 shrink-0">
+                          {name?.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <span>{name}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    title: 'Email',
+                    dataIndex: 'email',
+                    key: 'email',
+                  },
+                  {
+                    title: 'Country',
+                    dataIndex: 'personal_info',
+                    key: 'country',
+                    render: (personalInfo: UserSchema['personal_info']) =>
+                      personalInfo?.country || 'N/A',
+                  },
+                ]}
+              />
+          </div>
+        ),
+      },
+    ]}
+  />
+      </Modal>
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
+import { GetSingleTaskResponseSchema } from "../../validators/task/single-task-schema";
+import { GetSubmissionStatisticsResponseSchema } from "../../validators/task/task-submission-schema";
 
 interface MicroTaskSubmission {
   _id: string;
@@ -31,7 +33,7 @@ interface MicroTaskSubmission {
     uploaded: boolean;
     image_url?: string;
     image_id?: string;
-    metadata: Record<string, any>;
+    metadata: Record<string, unknown>;
   }>;
   createdAt: string;
   submission_date: string | null;
@@ -51,6 +53,25 @@ interface MicroTask {
   estimated_time: string;
   deadline: string | null;
   createdAt: string;
+}
+
+interface TaskAssignment {
+  assignmentId: string;
+  task: {
+    _id: string;
+    taskName: string;
+    taskLink: string;
+    taskGuidelineLink: string;
+    createdBy: {
+      _id: string;
+      fullName: string;
+      email: string;
+    };
+    dateCreated: string;
+    dueDate: string;
+  };
+  assignedDate: string;
+  status: "pending" | "in-progress" | "completed";
 }
 
 const useGetMicroTaskSubmissionDetails = (submissionId: string) => {
@@ -85,7 +106,7 @@ const useGetUserMicroTaskSubmissions = () => {
     queryFn: async () => {
       const response = await axiosInstance.get<{
         success: boolean;
-        data: MicroTaskSubmission[];
+        data: { submissions: MicroTaskSubmission[] };
         message?: string;
       }>(endpoints.microTaskSubmissions.getUserSubmissions);
       return response.data;
@@ -95,12 +116,37 @@ const useGetUserMicroTaskSubmissions = () => {
 
   return {
     userSubmissionsQuery: query,
-    userSubmissions: query.data?.data || [],
+    userSubmissions: query.data?.data?.submissions || [],
     isUserSubmissionsLoading: query.isLoading,
     isUserSubmissionsError: query.isError,
     userSubmissionsError: query.error,
     userSubmissionsRefetch: () => query.refetch(),
     isUserSubmissionsFetching: query.isFetching,
+  };
+};
+
+const useGetAssignedTasks = () => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getAssignedTasks],
+    queryFn: async () => {
+      const response = await axiosInstance.get<{
+        success: boolean;
+        data: TaskAssignment[];
+        message?: string;
+      }>(endpoints.tasks.getAssignedTasks);
+      console.log("Assigned Tasks API Response:", response.data);
+      return response.data;
+    },
+  });
+
+  return {
+    assignedTasksQuery: query,
+    assignedTasks: query.data?.data || [],
+    isAssignedTasksLoading: query.isLoading,
+    isAssignedTasksError: query.isError,
+    assignedTasksError: query.error,
+    assignedTasksRefetch: () => query.refetch(),
+    isAssignedTasksFetching: query.isFetching,
   };
 };
 
@@ -110,9 +156,13 @@ const useGetAvailableMicroTasks = () => {
     queryFn: async () => {
       const response = await axiosInstance.get<{
         success: boolean;
-        data: MicroTask[];
+        data: {
+          tasks: MicroTask[];
+          total: number;
+        };
         message?: string;
       }>(endpoints.microTasks.getAvailableTasks);
+      console.log("Available Tasks API Response:", response.data);
       return response.data;
     },
     staleTime: 120000, // 2 minutes
@@ -120,7 +170,7 @@ const useGetAvailableMicroTasks = () => {
 
   return {
     availableTasksQuery: query,
-    availableTasks: query.data?.data || [],
+    availableTasks: query.data?.data?.tasks || [],
     isAvailableTasksLoading: query.isLoading,
     isAvailableTasksError: query.isError,
     availableTasksError: query.error,
@@ -158,11 +208,56 @@ const useCheckMicroTaskEligibility = (taskId: string) => {
   };
 };
 
+
+const useGetSingleTask = (taskId: string) => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getSingleTask, taskId],
+    queryFn: async () => {
+      const url = `${endpoints.tasks.getSingleTask}/${taskId}`;
+      const response = await axiosInstance.get<GetSingleTaskResponseSchema>(url);
+      return response.data;
+    },
+    enabled: !!taskId,
+  });
+  return {
+    singleTaskQuery: query,
+    singleTask: query.data?.data || null,
+    isTaskLoading: query.isLoading,
+    isTaskError: query.isError,
+    taskError: query.error,
+    taskRefetch: () => query.refetch(),
+  };
+};
+
+const useGetSubmissionDetails = (assignmentId: string) => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskSubmissionDetails, assignmentId],
+    queryFn: async () => {
+      const response = await axiosInstance.get<GetSubmissionStatisticsResponseSchema>(`${endpoints.microTaskSubmissions.getSubmissionDetails}/${assignmentId}`);
+      return response.data;
+    },
+    enabled: !!assignmentId,
+  });
+
+  return {
+    submissionDetailsQuery: query,
+    submissionDetails: query.data?.data || null,
+    isSubmissionDetailsLoading: query.isLoading,
+    isSubmissionDetailsError: query.isError,    
+    submissionDetailsError: query.error,
+    submissionDetailsRefetch: () => query.refetch(),
+    isSubmissionDetailsFetching: query.isFetching,
+  };
+}
+
 const microTaskQueryService = {
   useGetMicroTaskSubmissionDetails,
   useGetUserMicroTaskSubmissions,
   useGetAvailableMicroTasks,
+  useGetAssignedTasks,
   useCheckMicroTaskEligibility,
+  useGetSingleTask,
+  useGetSubmissionDetails,
 };
 
 export default microTaskQueryService;

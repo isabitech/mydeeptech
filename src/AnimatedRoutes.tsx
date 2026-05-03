@@ -126,7 +126,7 @@ const AnimatedRoutes = () => {
                 <Route path="assessment" element={<Assessment />} />
                 <Route path="notifications" element={<UserNotifications />} />
                 <Route path="microtasks" element={<MicroTaskDashboard />} />
-                <Route path="microtasks/submission/:submissionId" element={<SubmissionImageUpload />} />
+                <Route path="microtasks/submission/:assignmentId" element={<SubmissionImageUpload />} />
                 <Route path="microtasks/submission/:submissionId/view" element={<SubmissionView />} />
                 <Route path="ai-interview" element={<AnnotatorInterviewHubPage />} />
                 <Route path="ai-interview/setup/:trackId" element={<AnnotatorInterviewSetupPage />} />

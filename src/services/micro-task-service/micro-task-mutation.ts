@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../../service/axiosApi";
 import { endpoints } from "../../store/api/endpoints";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
+import { BaseTaskSchema, CreateTaskResponseSchema, TaskSchema } from "../../validators/task/task-schema";
 
 interface StartSubmissionResponse {
   success: boolean;
@@ -48,7 +49,6 @@ const useStartMicroTaskSubmission = () => {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserMicroTaskSubmissions] });
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAvailableMicroTasks] });
     },
@@ -63,40 +63,21 @@ const useStartMicroTaskSubmission = () => {
 };
 
 const useUploadSubmissionImage = () => {
-  const queryClient = useQueryClient();
-
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.uploadSubmissionImage],
-    mutationFn: async ({ 
-      submissionId, 
-      file, 
-      slotId 
-    }: { 
-      submissionId: string; 
-      file: File; 
-      slotId: string;
-    }): Promise<UploadImageResponse> => {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("slotId", slotId);
-
-      const response = await axiosInstance.post<UploadImageResponse>(
-        `${endpoints.microTaskSubmissions.uploadImage}/${submissionId}/upload`,
+    mutationFn: async (formData: FormData) => {
+      const response = await axiosInstance.post<UploadImageResponse>("/micro-tasks/upload",
         formData,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+           onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+                (progressEvent.loaded * 100) / (progressEvent.total || 1)
+            );
+            console.log(`Upload progress: ${percent}%`);
+        },
         }
       );
       return response.data;
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate submission details for the specific submission
-      queryClient.invalidateQueries({ 
-        queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskSubmissionDetails, variables.submissionId] 
-      });
-      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserMicroTaskSubmissions] });
     },
   });
 
@@ -109,28 +90,21 @@ const useUploadSubmissionImage = () => {
 };
 
 const useDeleteSubmissionImage = () => {
-  const queryClient = useQueryClient();
-
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.deleteSubmissionImage],
     mutationFn: async ({ 
       submissionId, 
-      slotId 
+      publicId,
+      taskId
     }: { 
       submissionId: string; 
-      slotId: string;
+      publicId: string;
+      taskId: string;
     }) => {
       const response = await axiosInstance.delete(
-        `${endpoints.microTaskSubmissions.deleteImage}/${submissionId}/slots/${slotId}/image`
+        `${endpoints.microTaskSubmissions.getSubmissionDetails}/${submissionId}/deleteImage/?publicId=${publicId}&taskId=${taskId}`
       );
       return response.data;
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate submission details for the specific submission
-      queryClient.invalidateQueries({ 
-        queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskSubmissionDetails, variables.submissionId] 
-      });
-      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getUserMicroTaskSubmissions] });
     },
   });
 
@@ -171,20 +145,48 @@ const useSubmitForReview = () => {
   };
 };
 
+const useCreateTaskSlots = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.createTaskSlots],
+    mutationFn: async (submissionId: string) => {
+      const response = await axiosInstance.post(
+        `${endpoints.microTaskSubmissions.getSubmissionDetails}/${submissionId}/create-slots`
+      );
+      return response.data;
+    },
+    onSuccess: (_, submissionId) => {
+      // Invalidate submission details to refetch with new slots
+      queryClient.invalidateQueries({ 
+        queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskSubmissionDetails, submissionId] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: [REACT_QUERY_KEYS.QUERY.getUserMicroTaskSubmissions] 
+      });
+    },
+  });
+
+  return {
+    createTaskSlotsMutation: mutation,
+    isCreateTaskSlotsLoading: mutation.isPending,
+    isCreateTaskSlotsError: mutation.isError,
+    createTaskSlotsError: mutation.error,
+  };
+};
+
 const useCreateMicroTask = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.createMicroTask],
-    mutationFn: async (taskData: any) => {
-      const response = await axiosInstance.post(
-        endpoints.microTasks.createTask,
-        taskData
-      );
+    mutationFn: async (taskData: TaskSchema) => {
+      const response = await axiosInstance.post<CreateTaskResponseSchema>(endpoints.tasks.createTask, taskData);
+       console.log("taskData", response.data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllMicroTasks] });
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks] });
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAvailableMicroTasks] });
       queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskStatistics] });
     },
@@ -203,11 +205,8 @@ const useUpdateMicroTask = () => {
 
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.updateMicroTask],
-    mutationFn: async ({ taskId, taskData }: { taskId: string; taskData: any }) => {
-      const response = await axiosInstance.put(
-        `${endpoints.microTasks.updateTask}/${taskId}`,
-        taskData
-      );
+    mutationFn: async ({ taskId, taskData }: { taskId: string; taskData: Partial<BaseTaskSchema> }) => {
+      const response = await axiosInstance.put(`${endpoints.tasks.updateTask}/${taskId}`, taskData);
       return response.data;
     },
     onSuccess: () => {
@@ -251,14 +250,40 @@ const useDeleteMicroTask = () => {
   };
 };
 
+const useAssignTaskToUsers = () => {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.assignTaskToUsers],
+    mutationFn: async ({ taskId, userIds }: { taskId: string; userIds: string[] }) => {
+      const response = await axiosInstance.post(`${endpoints.tasks.assignTaskToUsers}`,{ taskId, userIds });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllMicroTasks] });
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAvailableMicroTasks] });
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getMicroTaskStatistics] });
+    },
+  });
+
+  return {
+    assignTaskToUsersMutation: mutation,
+    isAssignTaskToUsersLoading: mutation.isPending,
+    isAssignTaskToUsersError: mutation.isError,
+    assignTaskToUsersError: mutation.error,
+  };
+};
+
 const microTaskMutationService = {
   useStartMicroTaskSubmission,
   useUploadSubmissionImage,
   useDeleteSubmissionImage,
   useSubmitForReview,
+  useCreateTaskSlots,
   useCreateMicroTask,
   useUpdateMicroTask,
   useDeleteMicroTask,
+  useAssignTaskToUsers,
 };
 
 export default microTaskMutationService;

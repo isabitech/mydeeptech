@@ -140,6 +140,19 @@ const GetUsersResponseSchema = z.object({
   error: z.string().nullable(),
 });
 
+const GetUsersResponseSchemaWithPagination = z.object({
+  message: z.string(),
+  data: z.array(UserSchema),
+  success: z.boolean(),
+  error: z.string().nullable(),
+  pagination: z.object({
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  }),
+}); 
+
 // Inferred Types
 type UserSchema = z.infer<typeof UserSchema>;
 type GetUsersResponseSchema = z.infer<typeof GetUsersResponseSchema>;
@@ -153,6 +166,7 @@ type AttachmentsSchema = z.infer<typeof AttachmentsSchema>;
 type ProfilePictureSchema = z.infer<typeof ProfilePictureSchema>;
 type SopAcceptanceSchema = z.infer<typeof SopAcceptanceSchema>;
 type ResultSubmissionSchema = z.infer<typeof ResultSubmissionSchema>;
+type GetUsersResponseSchemaWithPagination = z.infer<typeof GetUsersResponseSchemaWithPagination>;
 
 export {
   GetUsersResponseSchema,
@@ -167,4 +181,5 @@ export {
   ProfilePictureSchema,
   SopAcceptanceSchema,
   ResultSubmissionSchema,
+  GetUsersResponseSchemaWithPagination,
 };

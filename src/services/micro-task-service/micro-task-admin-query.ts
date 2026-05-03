@@ -2,22 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { endpoints } from "../../store/api/endpoints";
 import axiosInstance from "../../service/axiosApi";
 import REACT_QUERY_KEYS from "../_keys/react-query-keys";
+import { GetTasksResponseSchema } from "../../validators/task/task-schema";
+import { GetUsersResponseSchemaWithPagination } from "../../validators/users/users-schema";
+import { GetTaskAssignmentsResponseSchema } from "../../validators/task/assigned-task-schema";
+import { GetMyAssignedTasksResponseSchema } from "../../validators/task/my-tasks-schema";
 
-interface MicroTask {
-  _id: string;
-  title: string;
-  description: string;
-  category: string;
-  status: string;
-  payRate: number;
-  payRateCurrency: string;
-  required_count: number;
-  instructions: string;
-  quality_guidelines: string;
-  estimated_time: string;
-  deadline: string | null;
-  createdAt: string;
-}
 
 interface QASubmission {
   _id: string;
@@ -34,10 +23,73 @@ interface QASubmission {
   }>;
 }
 
-// Admin-specific queries that require ADMIN role
-const useGetAllMicroTasksAdmin = (page?: number, limit?: number, filters?: Record<string, any>) => {
+const useGetAssignedTaskToUsers = (taskId: string, page: number = 1, limit: number = 10) => {
+
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    if (taskId) params.append('taskId', taskId.toString());
+    const queryString = params.toString();
+
   const query = useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getAllMicroTasks, page, limit, filters],
+    queryKey: [REACT_QUERY_KEYS.QUERY.usersAssignToTask, page, limit, taskId],
+    queryFn: async () => {
+      const url = queryString ? `${endpoints.tasks.usersAssignToTask}?${queryString}` : endpoints.tasks.usersAssignToTask;
+      const response = await axiosInstance.get<GetTaskAssignmentsResponseSchema>(url);
+      return response.data;
+      },
+      enabled: !!taskId, // Only run this query if taskId is provided
+  });
+
+  return {
+    assignedTasksQuery: query,
+    assignedTasks: query.data?.data || [],
+    pagination: query.data?.pagination || null,
+    total: query.data?.pagination?.total || 0,
+    isAssignedTasksLoading: query.isLoading,
+    isAssignedTasksError: query.isError,
+    assignedTasksError: query.error,
+    assignedTasksRefetch: () => query.refetch(),
+    isAssignedTasksFetching: query.isFetching,
+  }
+
+}
+
+const useGetPaginatedUsers = (page: number = 1, limit: number = 10, searchQuery?: string) => {
+
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    if (searchQuery) params.append('searchQuery', searchQuery.toString());
+    const queryString = params.toString();
+
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getPaginatedUsers, page, limit, searchQuery],
+    queryFn: async () => {
+      const url = queryString ? `${endpoints.tasks.getPaginatedUsers}?${queryString}` : endpoints.tasks.getPaginatedUsers;
+      const response = await axiosInstance.get<GetUsersResponseSchemaWithPagination>(url);
+      return response.data;
+      },
+      enabled: !!page && !!limit, // Only run this query if page and limit are provided
+  });
+
+  return {
+    paginatedUsersQuery: query,
+    paginatedUsers: query.data?.data || [],
+    pagination: query.data?.pagination || null,
+    total: query.data?.pagination?.total || 0,
+    isPaginatedUsersLoading: query.isLoading,
+    isPaginatedUsersError: query.isError,
+    paginatedUsersError: query.error,
+    paginatedUsersRefetch: () => query.refetch(),
+    isPaginatedUsersFetching: query.isFetching,
+  }
+
+}
+// Admin-specific queries that require ADMIN role
+const useGetAllMicroTasksAdmin = (page?: number, limit?: number, filters?: Record<string, unknown>) => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks, page, limit, filters],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (page) params.append('page', page.toString());
@@ -51,36 +103,21 @@ const useGetAllMicroTasksAdmin = (page?: number, limit?: number, filters?: Recor
       }
       
       const queryString = params.toString();
-      const url = queryString ? `${endpoints.microTasks.getAllTasks}?${queryString}` : endpoints.microTasks.getAllTasks;
-      
-      const response = await axiosInstance.get<{
-        success: boolean;
-        data: MicroTask[];
-        total?: number;
-        message?: string;
-      }>(url);
+      const url = queryString ? `${endpoints.tasks.getAllTasks}?${queryString}` : endpoints.tasks.getAllTasks;
+      const response = await axiosInstance.get<GetTasksResponseSchema>(url);
       return response.data;
-    },
-    staleTime: 60000, // 1 minute
-    retry: (failureCount, error: any) => {
-      // Don't retry on 403 (access denied) errors
-      if (error?.response?.status === 403) {
-        return false;
-      }
-      return failureCount < 3;
     },
   });
 
   return {
     tasksQuery: query,
     tasks: query.data?.data || [],
-    total: query.data?.total || 0,
+    total: query.data?.pagination?.total || 0,
     isTasksLoading: query.isLoading,
     isTasksError: query.isError,
     tasksError: query.error,
     tasksRefetch: () => query.refetch(),
     isTasksFetching: query.isFetching,
-    isAccessDenied: query.error?.response?.status === 403,
   };
 };
 
@@ -104,14 +141,6 @@ const useGetMicroTaskStatisticsAdmin = () => {
       }>(endpoints.microTasks.getStatistics);
       return response.data;
     },
-    staleTime: 300000, // 5 minutes
-    retry: (failureCount, error: any) => {
-      // Don't retry on 403 (access denied) errors
-      if (error?.response?.status === 403) {
-        return false;
-      }
-      return failureCount < 3;
-    },
   });
 
   return {
@@ -121,12 +150,11 @@ const useGetMicroTaskStatisticsAdmin = () => {
     isStatisticsError: query.isError,
     statisticsError: query.error,
     statisticsRefetch: () => query.refetch(),
-    isAccessDenied: query.error?.response?.status === 403,
   };
 };
 
 // QA-specific queries that require QA_REVIEWER or ADMIN role
-const useGetPendingMicroTaskReviews = (page?: number, limit?: number, filters?: Record<string, any>) => {
+const useGetPendingMicroTaskReviews = (page?: number, limit?: number, filters?: Record<string, unknown>) => {
   const query = useQuery({
     queryKey: [REACT_QUERY_KEYS.QUERY.getPendingMicroTaskReviews, page, limit, filters],
     queryFn: async () => {
@@ -152,13 +180,6 @@ const useGetPendingMicroTaskReviews = (page?: number, limit?: number, filters?: 
       }>(url);
       return response.data;
     },
-    staleTime: 30000, // 30 seconds
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 403) {
-        return false;
-      }
-      return failureCount < 3;
-    },
   });
 
   return {
@@ -169,7 +190,6 @@ const useGetPendingMicroTaskReviews = (page?: number, limit?: number, filters?: 
     isReviewsError: query.isError,
     reviewsError: query.error,
     reviewsRefetch: () => query.refetch(),
-    isAccessDenied: query.error?.response?.status === 403,
   };
 };
 
@@ -190,13 +210,6 @@ const useGetMicroTaskReviewStatistics = () => {
       }>(endpoints.microTaskQA.getReviewStatistics);
       return response.data;
     },
-    staleTime: 300000, // 5 minutes
-    retry: (failureCount, error: any) => {
-      if (error?.response?.status === 403) {
-        return false;
-      }
-      return failureCount < 3;
-    },
   });
 
   return {
@@ -206,15 +219,51 @@ const useGetMicroTaskReviewStatistics = () => {
     isReviewStatsError: query.isError,
     reviewStatsError: query.error,
     reviewStatsRefetch: () => query.refetch(),
-    isAccessDenied: query.error?.response?.status === 403,
   };
 };
+
+
+const useGetMyTasks = (page: number = 1, limit: number = 10, filters?: Record<string, unknown>) => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getMyTasks, page, limit, filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (page) params.append('page', page.toString());
+      if (limit) params.append('limit', limit.toString());
+      if (filters) {
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, value.toString());
+          }
+        });
+      }
+      const url = params.toString() ? `${endpoints.tasks.getMyTasks}?${params.toString()}` : endpoints.tasks.getMyTasks;
+      const response = await axiosInstance.get<GetMyAssignedTasksResponseSchema>(url);
+      return response.data;
+    },
+  });
+
+  return {
+    myTasksQuery: query,
+    myTasks: query.data?.data || [],
+    total: query.data?.pagination?.total || 0,
+    isMyTasksLoading: query.isLoading,
+    isMyTasksError: query.isError,
+    myTasksError: query.error,
+    myTasksRefetch: () => query.refetch(),
+    isMyTasksFetching: query.isFetching,
+  };
+};
+
 
 const microTaskAdminQueryService = {
   useGetAllMicroTasksAdmin,
   useGetMicroTaskStatisticsAdmin,
   useGetPendingMicroTaskReviews,
   useGetMicroTaskReviewStatistics,
+  useGetAssignedTaskToUsers,
+  useGetPaginatedUsers,
+  useGetMyTasks,
 };
 
 export default microTaskAdminQueryService;
