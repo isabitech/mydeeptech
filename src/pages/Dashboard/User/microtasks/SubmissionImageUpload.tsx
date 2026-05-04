@@ -20,13 +20,13 @@ import {
   DeleteOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { UploadProps, UploadFile, RcFile } from "antd/es/upload/interface";
 import moment from "moment";
 import { microTaskQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
 import { getErrorMessage } from "../../../../service/apiUtils";
 import { ImageSchema } from "../../../../validators/task/task-submission-schema";
-
+import { ImageSamples } from "./image-data";
 const { Title, Text } = Typography;
 
 interface TaskSlot {
@@ -52,40 +52,17 @@ interface SubmissionImageUploadProps {
 }
 
 const SubmissionImageUpload: React.FC<SubmissionImageUploadProps> = () => {
-
-  const params = useParams<{ assignmentId: string}>();
-const [searchParams] = useSearchParams();
-const taskId = searchParams.get("task"); // string | null
-
-  // Use submissionId from props or URL params
-  const assignmentId =  params.assignmentId || "";
   const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
-  
-  const {
-    submission,
-  } = microTaskQueryService.useGetMicroTaskSubmissionDetails(assignmentId);
-  const {
-    submissionDetails,
-    submissionDetailsRefetch
-  } = microTaskQueryService.useGetSubmissionDetails(assignmentId);
 
-  const {
-    uploadImageMutation,
-    isUploadImageLoading
-  } = microTaskMutationService.useUploadSubmissionImage();
+  const { taskId } = useParams<{ taskId: string}>();
 
-  const {
-    deleteImageMutation,
-    isDeleteImageLoading,
-  } = microTaskMutationService.useDeleteSubmissionImage();
+  const { submission } = microTaskQueryService.useGetMicroTaskSubmissionDetails(taskId ?? "");
+  const { uploadImageMutation, isUploadImageLoading } = microTaskMutationService.useUploadSubmissionImage();
+  const { deleteImageMutation, isDeleteImageLoading} = microTaskMutationService.useDeleteSubmissionImage();
+  const { singleTask, isTaskLoading} = microTaskQueryService.useGetSingleTask(taskId ?? "");
+  const { singleTaskApplication, taskApplicationRefetch } = microTaskQueryService.useGetSingleTaskApplication(taskId ?? "");
 
-
-  const {
-    singleTask,
-    isTaskLoading,
-  } = microTaskQueryService.useGetSingleTask(assignmentId ?? "");
-
-  const handleDeleteImage = async (publicId: string) => {
+  const handleDeleteImage = async (publicId: string, imageId: string) => {
     if (!taskId) {
       notification.error({
         message: "Delete Failed",
@@ -95,10 +72,21 @@ const taskId = searchParams.get("task"); // string | null
       return;
     }
 
+    if (!imageId) {
+      notification.error({
+        message: "Delete Failed",
+        description: "Image ID not found. Please refresh the page and try again.",
+        key: "delete-error"
+      });
+      return;
+    }
+
+
     deleteImageMutation.mutate({
-      submissionId: assignmentId ?? "",
+      taskApplicationId: singleTaskApplication?._id ?? "",
       publicId,
       taskId: taskId ?? "",
+      imageId: imageId ?? "",
     }, {
       onSuccess: () => {
         notification.success({
@@ -106,7 +94,7 @@ const taskId = searchParams.get("task"); // string | null
           description: "Image removed successfully",
           key: "delete-success"
         });
-        submissionDetailsRefetch();
+        taskApplicationRefetch();
       },
       onError: (error) => {
         const errorMsg = getErrorMessage(error);
@@ -124,7 +112,7 @@ const taskId = searchParams.get("task"); // string | null
     setSelectedFiles(prev => {
       const existingFiles = prev[angle] || [];
       const newFiles = [...existingFiles, ...files];
-      
+
       // Ensure we don't exceed the 5 file limit
       const limitedFiles = newFiles.slice(0, 5);
       
@@ -170,22 +158,21 @@ const taskId = searchParams.get("task"); // string | null
       return; 
     }
 
-    if(!assignmentId) {
-      notification.error({
-        message: "Assignment ID Missing",
-        description: "Cannot upload images without a valid assignment ID",
-        key: "upload-error"
-      });
-      return; 
-    }
-
     const formData = new FormData();
-    formData.append("assignmentId", params.assignmentId || "");
-    formData.append("taskId", taskId || "");
-    const label = angle.charAt(0).toUpperCase() + angle.slice(1);
+    formData.append("taskId", taskId ?? "");
     
+    // Map angle to the correct field name expected by backend
+    const angleToFieldMap: Record<string, string> = {
+      'front': 'View 1',
+      'left': 'View 2',
+      'right': 'View 3',
+      'back': 'View 4'
+    };
+    
+    const fieldName = angleToFieldMap[angle] || 'View 1';
+
     files.forEach((file: File) => {
-        formData.append(label, file);
+        formData.append(fieldName, file);
     });
   
     uploadImageMutation.mutate(formData, {
@@ -195,7 +182,7 @@ const taskId = searchParams.get("task"); // string | null
           description: "Images uploaded successfully",
           key: "upload-success"
         });
-        submissionDetailsRefetch();
+        taskApplicationRefetch();
          setSelectedFiles(prev => ({
         ...prev,
         [angle]: []
@@ -430,10 +417,33 @@ const taskId = searchParams.get("task"); // string | null
     );
   };
 
+  // Helper function to get sample images for a specific angle
+  const getSampleImagesForAngle = (angle: string) => {
+    const angleMap: Record<string, string> = {
+      'front': 'INDOOR OFFICE A',
+      'left': 'INDOOR OFFICE B',
+      'right': 'INDOOR OFFICE C',
+      'back': 'OUTDOOR COURTYARD',
+      'left_45': 'INDOOR OFFICE B',
+      'right_45': 'INDOOR OFFICE C',
+      'left_profile': 'INDOOR OFFICE B',
+      'right_profile': 'INDOOR OFFICE C'
+    };
+    
+    const scenarioName = angleMap[angle];
+    if (!scenarioName) return [];
+    
+    // Return all 5 images from the specific scenario
+    return ImageSamples.filter(sample => 
+      sample.imageText.includes(scenarioName)
+    );
+  };
+
   // Helper function to create a single drag and drop component for each tab
   const createDragDropComponent = (angle: string, title: string) => {
     const fileCount = (selectedFiles[angle] || []).length;
     const isMaxReached = fileCount >= 5;
+    const sampleImages = getSampleImagesForAngle(angle);
     
     return (
       <div style={{ padding: 16 }}>
@@ -441,6 +451,62 @@ const taskId = searchParams.get("task"); // string | null
           <Title level={4} style={{ marginBottom: 8 }}>{title}</Title>
           <Text type="secondary">Drag and drop up to 5 images at once for this angle</Text>
         </div>
+        
+        {/* Reference Images Section */}
+        {sampleImages.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ marginBottom: 12, textAlign: 'center' }}>
+              <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>
+                📸 Reference Examples for {title}
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                Use these as reference for the angle and positioning
+              </Text>
+            </div>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: 12,
+              flexWrap: 'wrap',
+              padding: '12px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #e1e5e9'
+            }}>
+              {sampleImages.map((sample) => (
+                <div key={sample.id} style={{ 
+                  textAlign: 'center',
+                  maxWidth: '150px',
+                  flex: '0 0 auto'
+                }}>
+                  <Image
+                    src={sample.imageUrl}
+                    alt={sample.imageText}
+                    width={120}
+                    height={90}
+                    style={{ 
+                      borderRadius: '6px',
+                      objectFit: 'cover',
+                      border: '2px solid #d9d9d9'
+                    }}
+                    preview={{
+                      mask: <EyeOutlined style={{ fontSize: 16 }} />
+                    }}
+                  />
+                  <div style={{ 
+                    marginTop: '4px',
+                    fontSize: '11px',
+                    color: '#666',
+                    lineHeight: '1.2'
+                  }}>
+                    {sample.imageText.split(' ').slice(-3).join(' ')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         <Dragger
           {...getUploadPropsForAngle(angle)}
@@ -508,12 +574,12 @@ const taskId = searchParams.get("task"); // string | null
       });
     }
     
-    // Create default tabs with Front, Left, Right, and Back views
+    // Create default tabs with View 1, View 2, View 3, and View 4
     const defaultTabs = [
-      { key: 'front', label: 'Front View', title: 'Front View' },
-      { key: 'left', label: 'Left View', title: 'Left View' },
-      { key: 'right', label: 'Right View', title: 'Right View' },
-      { key: 'back', label: 'Back View', title: 'Back View' }
+      { key: 'front', label: 'View 1', title: 'View 1' },
+      { key: 'left', label: 'View 2', title: 'View 2' },
+      { key: 'right', label: 'View 3', title: 'View 3' },
+      { key: 'back', label: 'View 4', title: 'View 4' }
     ];
     return defaultTabs.map(tab => ({
       key: tab.key,
@@ -524,17 +590,17 @@ const taskId = searchParams.get("task"); // string | null
 
   const getAngleTabLabel = (angle: string): string => {
     const angleMap: Record<string, string> = {
-      'front': 'Front View',
-      'left': 'Left View',
-      'right': 'Right View',
-      'back': 'Back View',
-      'left_45': 'Left 45° View',  
-      'right_45': 'Right 45° View',
-      'left_profile': 'Left Profile View',
-      'right_profile': 'Right Profile View',
-      'down_profile': 'Down Profile View'
+      'front': 'View 1',
+      'left': 'View 2',
+      'right': 'View 3',
+      'back': 'View 4',
+      'left_45': 'View 2',  
+      'right_45': 'View 3',
+      'left_profile': 'View 2',
+      'right_profile': 'View 3',
+      'down_profile': 'View 4'
     };
-    return angleMap[angle] || `${angle.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} View`;
+    return angleMap[angle] || `View ${angle.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`;
   };
 
   const groupSlotsByAngle = (slots: TaskSlot[]) => {
@@ -572,11 +638,11 @@ const taskId = searchParams.get("task"); // string | null
       </Card>
 
       {/* Uploaded Images Display */}
-      {submissionDetails?.images && submissionDetails.images.length > 0 && (
+      {singleTaskApplication?.images && singleTaskApplication.images.length > 0 && (
         <Card title="Uploaded Images" style={{ marginBottom: 24 }}>
           <List
             grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5 }}
-            dataSource={submissionDetails.images}
+            dataSource={singleTaskApplication.images}
             renderItem={(image: ImageSchema, index: number) => (
               <List.Item>
                 <Card 
@@ -609,7 +675,7 @@ const taskId = searchParams.get("task"); // string | null
                           icon={ isDeleteImageLoading ? <Spin size="small" /> : <DeleteOutlined />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteImage(image.publicId);
+                            handleDeleteImage(image.publicId, image._id);
                           }}
                           style={{
                             backgroundColor: 'rgba(255, 255, 255, 0.9)',

@@ -30,7 +30,6 @@ import {
   MoreOutlined,
   BarChartOutlined,
   EditOutlined,
-  UserAddOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -99,15 +98,20 @@ const MicroTaskManagement: React.FC = () => {
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
   const [searchText, setSearchText] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [tasksSearchInput, setTasksSearchInput] = useState("");
+  const [filterStatus, setFilterStatus] = useState<TaskStatus>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingTask, setEditingTask] = useState<Partial<BaseTaskSchema> | null>(null);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [selectedAssignUserIds, setSelectedAssignUserIds] = useState<string[]>([]);
   const [taskStatus, setTaskStatus] = useState<TaskStatus>("all");
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
+  const [applicationToReject, setApplicationToReject] = useState<TaskApplicationSchema | null>(null);
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -116,21 +120,6 @@ const MicroTaskManagement: React.FC = () => {
     total: 0
   });
 
-
-  const {
-    tasks: tasksData,
-    tasksRefetch,
-    isTasksLoading,
-    isTasksFetching
-  } = microTaskAdminQueryService.useGetAllMicroTasksAdmin(
-    pagination.current, 
-    pagination.pageSize, 
-    {
-      status: filterStatus !== "all" ? filterStatus : undefined,
-      category: filterCategory !== "all" ? filterCategory : undefined,
-      search: searchText || undefined
-    }
-  );
 
   const { createTaskMutation, isCreateTaskLoading } = microTaskMutationService.useCreateMicroTask();
   const { updateTaskMutation, isUpdateTaskLoading } = microTaskMutationService.useUpdateMicroTask();
@@ -144,15 +133,31 @@ const MicroTaskManagement: React.FC = () => {
      pagination: taskUsersPagination
   }  = microTaskAdminQueryService.useGetAssignedTaskToUsers(taskToAssign?._id || "", pagination.current, pagination.pageSize);
   const { 
-    paginatedUsers,
-    pagination: usersPagination,
-    isPaginatedUsersLoading,
-    isPaginatedUsersFetching,
-  }  = microTaskAdminQueryService.useGetPaginatedUsers(pagination.current, pagination.pageSize, searchQuery);
+    paginatedUsers, 
+    pagination: usersPagination,  
+    isPaginatedUsersLoading, 
+    isPaginatedUsersFetching } = microTaskAdminQueryService.useGetPaginatedUsers(pagination.current, pagination.pageSize, searchQuery);
 
-  const { allFilters, allFiltersRefetch, isAllFiltersLoading, isAllFiltersFetching } = microTaskQueryService.useGetTasksByFilter({ 
-    page: 1, limit: 10, status: taskStatus, search: search || undefined
-  });
+  const { 
+    allFilters, 
+    allFiltersRefetch, 
+    isAllFiltersLoading, 
+    isAllFiltersFetching } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: taskStatus, search: search || undefined });
+
+    const {
+    tasks: tasksData,
+    tasksRefetch,
+    isTasksLoading,
+    isTasksFetching
+  } = microTaskAdminQueryService.useGetAllMicroTasksAdmin(
+    {
+      page: pagination.current,
+      limit: pagination.pageSize,
+      status: filterStatus,
+      category: filterCategory,
+      search: searchText || undefined
+    }
+  );
 
   useEffect(() => {
     fetchStatistics();
@@ -172,6 +177,14 @@ const MicroTaskManagement: React.FC = () => {
     setSearch(event.target.value);
   };
 
+  const handleApplicationSearch = (value: string) => {
+    setSearch(value);
+  };
+
+  const handleTasksSearch = (value: string) => {
+    setSearchText(value);
+  };
+
   // Reset search when modal closes
   const handleModalClose = () => {
     setIsAssignModalVisible(false);
@@ -186,7 +199,6 @@ const MicroTaskManagement: React.FC = () => {
   const fetchStatistics = async () => {
     try {
       const response = await axiosInstance.get(endpoints.microTasks.getStatistics);
-
       if (response.data.success) {
         setStatistics(response.data.data);
       }
@@ -196,7 +208,6 @@ const MicroTaskManagement: React.FC = () => {
   };
 
   const handleUpdateTask = async (taskId: string, taskData: Partial<BaseTaskSchema>) => {
-    console.log("Updating task with data:", taskData);
     updateTaskMutation.mutate({ taskId, taskData }, {
       onSuccess: () => {
         notification.success({
@@ -247,9 +258,13 @@ const MicroTaskManagement: React.FC = () => {
       });
   };
 
-  const handleApproveOrRejectApplication = async (applicationId: string, action: "approve" | "reject") => {
+  const handleApproveOrRejectApplication = async (applicationId: string, action: "approve" | "reject", rejectionReason?: string) => {
     try {
-         await approveOrRejectApplicationMutation.mutateAsync({ applicationId, action });
+         await approveOrRejectApplicationMutation.mutateAsync({ 
+           applicationId, 
+           action,
+           ...(rejectionReason && { rejectionReason })
+         });
           notification.success({
             message: "Success",
             description: action === "approve" ? "Application approved successfully" : "Application rejected successfully",
@@ -422,11 +437,6 @@ const MicroTaskManagement: React.FC = () => {
             label: 'Edit Task',
           },
           {
-            key: 'assign',
-            icon: <UserAddOutlined />,
-            label: 'Assign Task',
-          },
-          {
             type: 'divider' as const
           },
            {
@@ -547,9 +557,11 @@ const MicroTaskManagement: React.FC = () => {
                       <Col span={8}>
                         <Search
                           placeholder="Search tasks..."
-                          value={searchText}
-                          onChange={(e) => setSearchText(e.target.value)}
+                          value={tasksSearchInput}
+                          onChange={(e) => setTasksSearchInput(e.target.value)}
+                          onSearch={handleTasksSearch}
                           allowClear
+                          onClear={() => setSearchText("")}
                         />
                       </Col>
                       <Col span={4}>
@@ -645,7 +657,11 @@ const MicroTaskManagement: React.FC = () => {
                     <Col span={8}>
                       <Search
                         placeholder="Search applications..."
+                        value={searchInput}
+                        onChange={(event) => setSearchInput(event.target.value)}
+                        onSearch={handleApplicationSearch}
                         allowClear
+                        onClear={() => setSearch("")}
                       />
                     </Col>
                     <Col span={4}>
@@ -662,6 +678,7 @@ const MicroTaskManagement: React.FC = () => {
                         <Option value="approved">Approved</Option>
                         <Option value="processing">Processing</Option>
                         <Option value="active">Active</Option>
+                        <Option value="rejected">Rejected</Option>
                         <Option value="paused">Paused</Option>
                         <Option value="cancelled">Cancelled</Option>
                       </Select>
@@ -741,22 +758,19 @@ const MicroTaskManagement: React.FC = () => {
                           return <Tag color={statusColors[status] || 'default'}>{status?.replace('_', ' ').toUpperCase()}</Tag>;
                         },
                       },
-                      {
-                        title: "Submitted",
-                        dataIndex: "submittedAt",
-                        key: "submittedAt",
-                        render: (date: string) => date ? dayjs(date).format("MMM DD, YYYY") : 'Not submitted',
+                    {
+                      title: "Submitted",
+                      key: "createdAt",
+                      render: (_, record) => {
+                        const date = record?.createdAt;
+                        return date ? dayjs(date).format("MMM DD, YYYY") : 'Not submitted';
                       },
+                    },
                       {
                         title: "Actions",
                         key: "actions",
                         render: (_: unknown, record: TaskApplicationSchema) => {
                           const menuItems = [
-                            {
-                              key: 'view',
-                              icon: <EyeOutlined />,
-                              label: 'View Submission',
-                            },
                             {
                               key: 'approve',
                               icon: <EditOutlined />,
@@ -787,19 +801,13 @@ const MicroTaskManagement: React.FC = () => {
                                   }
                                 });
                                 break;
-                              case "reject":
-                                Modal.confirm({
-                                  title: "Reject Application",
-                                  content: `Are you sure you want to reject this application from ${record.applicant?.fullName || 'this user'}? This action cannot be undone.`,
-                                  icon: <ExclamationCircleOutlined />,
-                                  okText: "Reject",
-                                  okType: "danger",
-                                  cancelText: "Cancel",
-                                  onOk: () => {
-                                    return handleApproveOrRejectApplication(record._id, "reject");
-                                  }
-                                });
+                              case "reject": {
+                                // Open custom rejection modal
+                                setApplicationToReject(record);
+                                setRejectionReason("");
+                                setIsRejectModalVisible(true);
                                 break;
+                              }
                               default:
                                 break;
                             }
@@ -1295,6 +1303,77 @@ const MicroTaskManagement: React.FC = () => {
       },
     ]}
   />
+      </Modal>
+
+      {/* Custom Rejection Modal */}
+      <Modal
+        title="Reject Application"
+        open={isRejectModalVisible}
+        onCancel={() => {
+          setIsRejectModalVisible(false);
+          setApplicationToReject(null);
+          setRejectionReason("");
+        }}
+        footer={[
+          <Button 
+            key="cancel"
+            onClick={() => {
+              setIsRejectModalVisible(false);
+              setApplicationToReject(null);
+              setRejectionReason("");
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="reject"
+            type="primary"
+            danger
+            onClick={async () => {
+              if (applicationToReject) {
+                try {
+                  await handleApproveOrRejectApplication(
+                    applicationToReject._id,
+                    "reject",
+                    rejectionReason.trim() || undefined
+                  );
+                  setIsRejectModalVisible(false);
+                  setApplicationToReject(null);
+                  setRejectionReason("");
+                } catch (error) {
+                  // Error handling is already done in handleApproveOrRejectApplication
+                  console.log("Error rejecting application:", error);
+                }
+              }
+            }}
+          >
+            Reject Application
+          </Button>
+        ]}
+        width={520}
+      >
+        <div className="mb-4">
+          <p className="mb-4 text-gray-400">
+            Are you sure you want to reject this application from {applicationToReject?.applicant?.fullName || 'this user'}?
+          </p>
+        </div>
+        
+        <div>
+          <label className="block mb-2 font-bold">
+            Rejection Reason (Optional):
+          </label>
+          <TextArea
+            rows={4}
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            maxLength={500}
+            showCount
+            style={{ resize: 'none' }}
+          />
+          <div className="mt-5 text-xs text-gray-400">
+            💡 Providing specific feedback helps applicants understand how to improve for future applications.
+          </div>
+        </div>
       </Modal>
     </div>
   );

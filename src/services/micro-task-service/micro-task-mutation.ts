@@ -63,6 +63,7 @@ const useStartMicroTaskSubmission = () => {
 };
 
 const useUploadSubmissionImage = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.uploadSubmissionImage],
     mutationFn: async (formData: FormData) => {
@@ -70,15 +71,16 @@ const useUploadSubmissionImage = () => {
         formData,
         {
            onUploadProgress: (progressEvent) => {
-            const percent = Math.round(
-                (progressEvent.loaded * 100) / (progressEvent.total || 1)
-            );
+            const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
             console.log(`Upload progress: ${percent}%`);
         },
         }
       );
       return response.data;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks] });
+    }
   });
 
   return {
@@ -115,17 +117,24 @@ const useDeleteSubmissionImage = () => {
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.deleteSubmissionImage],
     mutationFn: async ({ 
-      submissionId, 
+      taskApplicationId, 
       publicId,
-      taskId
+      taskId,
+      imageId
     }: { 
-      submissionId: string; 
+      taskApplicationId: string;
       publicId: string;
       taskId: string;
+      imageId: string;
     }) => {
-      const response = await axiosInstance.delete(
-        `${endpoints.microTaskSubmissions.getSubmissionDetails}/${submissionId}/deleteImage/?publicId=${publicId}&taskId=${taskId}`
-      );
+  
+      const payload = {
+            taskApplicationId, 
+            publicId,
+            taskId,
+            imageId
+      }
+      const response = await axiosInstance.delete(`${endpoints.microTaskSubmissions.getSubmissionDetails}/${taskApplicationId}/deleteImage`, { data: payload });
       return response.data;
     },
   });
@@ -251,8 +260,26 @@ const useApproveOrRejectApplication = () => {
 
   const mutation = useMutation({
     mutationKey: [REACT_QUERY_KEYS.MUTATION.approveOrRejectApplication],
-    mutationFn: async ({ applicationId, action }: { applicationId: string; action: 'approve' | 'reject' }) => {
-      const response = await axiosInstance.post(`${endpoints.microTasks.approveOrRejectApplication}`, { applicationId, action });
+    mutationFn: async ({ 
+      applicationId, 
+      action, 
+      rejectionReason 
+    }: { 
+      applicationId: string; 
+      action: 'approve' | 'reject'; 
+      rejectionReason?: string; 
+    }) => {
+      const payload: { applicationId: string; action: 'approve' | 'reject'; rejectionReason?: string } = {
+        applicationId,
+        action
+      };
+      
+      // Only include rejectionReason if it's provided
+      if (rejectionReason) {
+        payload.rejectionReason = rejectionReason;
+      }
+
+      const response = await axiosInstance.post(`${endpoints.microTasks.approveOrRejectApplication}`, payload);
 
       console.log("Approve/Reject Application API Response:", response.data);
       return response.data;

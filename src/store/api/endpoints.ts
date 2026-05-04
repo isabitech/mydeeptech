@@ -170,7 +170,6 @@ export const endpoints = {
     allTasks: "/micro-tasks/all",
     filters: "/micro-tasks/filters",
     approveOrRejectApplication: "/micro-tasks/approve_or_reject_application", // Approve or reject task applications
-     
   },
 
   // Micro Task Submissions endpoints

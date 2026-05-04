@@ -16,19 +16,17 @@ import {
   Tabs,
   Pagination,
   Divider,
-  notification,
 } from "antd";
 import {
   EyeOutlined,
   DollarOutlined,
-  LoadingOutlined,
   TrophyOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { microTaskQueryService, microTaskAdminQueryService, microTaskMutationService } from "../../../../services/micro-task-service";
+import { microTaskQueryService, microTaskAdminQueryService } from "../../../../services/micro-task-service";
 import { TaskSchema } from "../../../../validators/task/all-task-schema";
 import { TaskStatus } from "../../../../services/micro-task-service/micro-task-query";
 
@@ -38,18 +36,19 @@ const MicroTaskDashboard: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<TaskSchema | null>(null);
   const [isTaskModalVisible, setIsTaskModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<TaskStatus>("active");
+  const [modalContext, setModalContext] = useState<'active' | 'pending' | 'approved' | 'rejected'>('active');
 
   const navigate = useNavigate();
 
   const { isMyTasksLoading } = microTaskAdminQueryService.useGetMyTasks();
   const { allTasks, allTaskPagination } = microTaskQueryService.useGetAllTasks();
-  const { applyForTaskMutation, isApplyForTaskLoading } = microTaskMutationService.useApplyForTask();
   const { allFilters: allFiltersPending } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "pending" });
   const { allFilters: allFiltersApproved } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "approved" });
+  const { allFilters: allFiltersRejected } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "rejected" });
   const { earningStats, isEarningStatsLoading, earningStatsError } = microTaskQueryService.useGetUserEarningStatistics();
 
-  const handleStartTask = async (submissionId: string, taskId: string) => {
-    navigate(`/dashboard/microtasks/submission/${submissionId}?task=${taskId}`);
+  const handleStartTask = async  (taskId: string) => {
+    navigate(`/dashboard/microtasks/${taskId}/start`);
   };
 
   const getCategoryInfo = (category: string) => {
@@ -72,38 +71,6 @@ const MicroTaskDashboard: React.FC = () => {
         return { name: category, description: "", color: "default", icon: "" };
     }
   };
-
-  const handleApplyTask = (taskId: string) => {
-
-    if(!taskId) {
-      notification.error({
-        message: "Application Failed",
-        description: "Invalid task ID. Please try again.",
-        key: "applyTaskError"
-      });
-      return;
-    }
-  
-    applyForTaskMutation.mutate(taskId, {
-      onSuccess: () => {
-        notification.success({
-          message: "Application Successful",
-          description: "You have successfully applied for the task. It will now appear in your 'My Tasks' tab.",
-          key: "applyTaskSuccess"
-        });
-      },
-      onError: (error) => {
-        // Optionally show an error message or notification
-        console.error("Error applying for task:", error);
-        notification.error({
-          message: "Application Failed",
-          description: "There was an error applying for the task. Please try again.",
-          key: "applyTaskError"
-        });
-      } 
-    });
-  };
-
 
   // Show loading state
   if (isMyTasksLoading) {
@@ -213,26 +180,20 @@ const MicroTaskDashboard: React.FC = () => {
                             icon={<EyeOutlined />}
                             onClick={() => {
                               setSelectedTask(record);
+                              setModalContext('active');
                               setIsTaskModalVisible(true);
                             }}
                           >
                             Details
                           </Button>,
-                          // <Button
-                          //   key="start"
-                          //   type="primary"
-                          //   onClick={() => handleStartTask(record?._id ?? "", record?.task?._id ?? "")}
-                          // >
-                          //   Start Task
-                          // </Button>,
                           <Button
                             key="apply"
                             type="default"
-                            loading={isApplyForTaskLoading}
-                            icon={isApplyForTaskLoading ? <LoadingOutlined /> : undefined}
-                            onClick={() => handleApplyTask(record?._id ?? "")}
+                            onClick={() => { 
+                              handleStartTask(record?._id ?? "");
+                            }}
                           >
-                            Apply
+                            Start Task
                           </Button>,
                         ]}
                       >
@@ -376,6 +337,7 @@ const MicroTaskDashboard: React.FC = () => {
                             icon={<EyeOutlined />}
                             onClick={() => {
                               setSelectedTask(record.task);
+                              setModalContext('approved');
                               setIsTaskModalVisible(true);
                             }}
                           >
@@ -384,9 +346,9 @@ const MicroTaskDashboard: React.FC = () => {
                           <Button
                             key="start"
                             type="primary"
-                            onClick={() => handleStartTask(record?._id ?? "", record?.task?._id ?? "")}
+                            onClick={() => handleStartTask(record?.task?._id ?? "")}
                           >
-                            Start Task
+                             View Task
                           </Button>
                         </Space>
                       ),
@@ -394,6 +356,71 @@ const MicroTaskDashboard: React.FC = () => {
                   ]}
                   locale={{
                     emptyText: <Empty description="No pending tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                  }}
+                />
+              </Card>
+            ),
+          },
+          {
+            key: 'rejected',
+            label: (
+              <span>
+                Rejected ({Array.isArray(allFiltersRejected) ? allFiltersRejected.length : 0})
+              </span>
+            ),
+            children: (
+              <Card>
+                <Table
+                  dataSource={Array.isArray(allFiltersRejected) ? allFiltersRejected : []}
+                  rowKey="_id"
+                  pagination={{ pageSize: 10, position: ['bottomCenter'] }}
+                  columns={[
+                    {
+                      title: 'Task Name',
+                      dataIndex: 'taskTitle',
+                      key: 'taskTitle',
+                      render: (text, record) => (
+                        <div className="flex flex-col">
+                          <strong>{record.task.taskTitle || 'Untitled Task'}</strong>
+                           <span>{record.task.category && (<span className="text-xs text-gray-400">{record.task.category}</span>)}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      title: 'Pay Rate',
+                      key: 'payRate',
+                      render: (record) => (
+                        <Text strong>{record.task.currency || 'USD'} {record.task.payRate || 0}</Text>
+                      ),
+                    },
+                    {
+                      title: 'Rejected Date',
+                      dataIndex: 'updatedAt',
+                      key: 'rejectedDate',
+                      render: (date) => date ? moment(date).format('MMM DD, YYYY') : 'N/A',
+                    },
+                    {
+                      title: 'Actions',
+                      key: 'actions',
+                      render: (record) => (
+                        <Space>
+                          <Button
+                            type="link"
+                            icon={<EyeOutlined />}
+                            onClick={() => {
+                              setSelectedTask(record.task);
+                              setModalContext('rejected');
+                              setIsTaskModalVisible(true);
+                            }}
+                          >
+                            View Details
+                          </Button>
+                        </Space>
+                      ),
+                    },
+                  ]}
+                  locale={{
+                    emptyText: <Empty description="No rejected tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                   }}
                 />
               </Card>
@@ -411,6 +438,7 @@ const MicroTaskDashboard: React.FC = () => {
           onCancel={() => {
             setIsTaskModalVisible(false);
             setSelectedTask(null);
+            setModalContext('active');
           }}
           footer={[
             <Button
@@ -418,20 +446,23 @@ const MicroTaskDashboard: React.FC = () => {
               onClick={() => {
                 setIsTaskModalVisible(false);
                 setSelectedTask(null);
+                setModalContext('active');
               }}
             >
               Close
             </Button>,
-            <Button
-              key="start"
-              type="primary"
-              onClick={() => {
-                setIsTaskModalVisible(false);
-                handleStartTask(selectedTask._id, selectedTask._id || "");
-              }}
-            >
-              Start Task
-            </Button>
+            ...(modalContext !== 'rejected' ? [
+              <Button
+                key="start"
+                type="primary"
+                onClick={() => {
+                  setIsTaskModalVisible(false);
+                  handleStartTask(selectedTask._id || "");
+                }}
+              >
+                View Task
+              </Button>
+            ] : []),
           ]}
         >
           <div style={{ marginBottom: 16 }}>

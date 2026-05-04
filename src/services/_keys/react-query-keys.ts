@@ -137,6 +137,7 @@ const QUERY = {
     getMicroTaskReviewQueue: "getMicroTaskReviewQueue",
     getMicroTaskSubmissionForReview: "getMicroTaskSubmissionForReview",
     getTasksByFilter: "getTasksByFilter",
+    getSingleTaskApplication: "getSingleTaskApplication",
 
 } as const;
 

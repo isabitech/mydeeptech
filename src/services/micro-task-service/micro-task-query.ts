@@ -6,6 +6,7 @@ import { GetSingleTaskResponseSchema } from "../../validators/task/single-task-s
 import { GetSubmissionStatisticsResponseSchema } from "../../validators/task/task-submission-schema";
 import { MicroTasksResponseSchema } from "../../validators/task/all-task-schema";
 import { GetTasksFilterResponseSchema } from "../../validators/task/task-filters";
+import { GetMicroTaskResponseSchema } from "../../validators/task/single-task-for-application-schema";
 
 interface MicroTaskSubmission {
   _id: string;
@@ -209,6 +210,7 @@ export type TaskStatus =
   | "active"
   | "paused"
   | "completed"
+  | "rejected"
   | "cancelled";
 
   export interface TaskFilters {
@@ -222,9 +224,9 @@ export type TaskStatus =
 
 const useGetTasksByFilter = (filters: TaskFilters) => {
   const params = new URLSearchParams();
-  if(filters.search) params.append("search", filters.search);
-  if(filters.category) params.append("category", filters.category);
-  if(filters.status) params.append("status", filters.status);
+  if(filters.search) params.append("search", filters.search.trim());
+  if(filters.category) params.append("category", filters.category.trim());
+  if(filters.status) params.append("status", filters.status.trim());
   if(filters.page) params.append("page", String(filters.page));
   if(filters.limit) params.append("limit", String(filters.limit));
 
@@ -286,6 +288,7 @@ const useGetSingleTask = (taskId: string) => {
     queryKey: [REACT_QUERY_KEYS.QUERY.getSingleTask, taskId],
     queryFn: async () => {
       const url = `${endpoints.tasks.getSingleTask}/${taskId}`;
+      console.log("Fetching single task with URL:", url);
       const response = await axiosInstance.get<GetSingleTaskResponseSchema>(url);
       return response.data;
     },
@@ -298,6 +301,28 @@ const useGetSingleTask = (taskId: string) => {
     isTaskError: query.isError,
     taskError: query.error,
     taskRefetch: () => query.refetch(),
+  };
+};
+
+
+const useGetSingleTaskApplication = (taskId: string) => {
+  const query = useQuery({
+    queryKey: [REACT_QUERY_KEYS.QUERY.getSingleTaskApplication, taskId],
+    queryFn: async () => {
+      const url = `${endpoints.microTasks.getTaskById}/${taskId}/application`;
+      const response = await axiosInstance.get<GetMicroTaskResponseSchema>(url);
+      console.log("Fetching single task application with URL:", response.data);
+      return response.data;
+    },
+    enabled: !!taskId,
+  });
+  return {
+    singleTaskApplicationQuery: query,
+    singleTaskApplication: query.data?.data || null,
+    isTaskApplicationLoading: query.isLoading,
+    isTaskApplicationError: query.isError,
+    taskApplicationError: query.error,
+    taskApplicationRefetch: () => query.refetch(),
   };
 };
 
@@ -392,6 +417,7 @@ const microTaskQueryService = {
   useGetAllTasks,
   useGetTasksByFilter,
   useGetUserEarningStatistics,
+  useGetSingleTaskApplication,
 };
 
 export default microTaskQueryService;

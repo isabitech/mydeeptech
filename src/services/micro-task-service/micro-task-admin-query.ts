@@ -6,6 +6,7 @@ import { GetTasksResponseSchema } from "../../validators/task/task-schema";
 import { GetUsersResponseSchemaWithPagination } from "../../validators/users/users-schema";
 import { GetTaskAssignmentsResponseSchema } from "../../validators/task/assigned-task-schema";
 import { GetMyAssignedTasksResponseSchema } from "../../validators/task/my-tasks-schema";
+import { TaskFilters } from "./micro-task-query";
 
 
 interface QASubmission {
@@ -86,27 +87,27 @@ const useGetPaginatedUsers = (page: number = 1, limit: number = 10, searchQuery?
   }
 
 }
+
+
 // Admin-specific queries that require ADMIN role
-const useGetAllMicroTasksAdmin = (page?: number, limit?: number, filters?: Record<string, unknown>) => {
+const useGetAllMicroTasksAdmin = (filters: TaskFilters) => {
+
+   const params = new URLSearchParams();
+   if(filters.search) params.append("search", filters.search.trim());
+   if(filters.category) params.append("category", filters.category.trim());
+   if(filters.status) params.append("status", filters.status.trim());
+   if(filters.page) params.append("page", String(filters.page));
+   if(filters.limit) params.append("limit", String(filters.limit));
+   const queryParams = params.toString();
+   const url = queryParams ? `${endpoints.tasks.getAllTasks}?${queryParams}` : endpoints.tasks.getAllTasks;
+
   const query = useQuery({
-    queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks, page, limit, filters],
+    queryKey: [REACT_QUERY_KEYS.QUERY.getAllTasks, filters],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (page) params.append('page', page.toString());
-      if (limit) params.append('limit', limit.toString());
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
-            params.append(key, value.toString());
-          }
-        });
-      }
-      
-      const queryString = params.toString();
-      const url = queryString ? `${endpoints.tasks.getAllTasks}?${queryString}` : endpoints.tasks.getAllTasks;
       const response = await axiosInstance.get<GetTasksResponseSchema>(url);
       return response.data;
     },
+    enabled: !!queryParams,
   });
 
   return {
