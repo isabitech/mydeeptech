@@ -139,7 +139,7 @@ const SubmissionImageUpload: React.FC = () => {
   const { deleteImageMutation, isDeleteImageLoading } = microTaskMutationService.useDeleteSubmissionImage();
   const { singleTask, isTaskLoading } = microTaskQueryService.useGetSingleTask(taskId ?? "");
   const { singleTaskApplication, taskApplicationRefetch } = microTaskQueryService.useGetSingleTaskApplication(taskId ?? "");
-    const images: ImageSchema[] = singleTaskApplication?.images || [];
+    const images = singleTaskApplication?.images || [] as ImageSchema[];
 
   // console.log("Single Task Application:", singleTaskApplication);
 
@@ -147,6 +147,7 @@ const SubmissionImageUpload: React.FC = () => {
  // Get images grouped by view and sorted by sequence
   const getImagesForView = (viewKey: string): ImageSchema[] => {
     const viewImages = images.filter((img) => img.label === viewKey);
+  
     
     // Sort by sequence number from metadata if available, otherwise by creation order
     return viewImages.sort((a, b) => {

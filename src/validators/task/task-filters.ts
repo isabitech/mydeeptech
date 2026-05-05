@@ -4,20 +4,22 @@ import { z } from "zod";
  * 1. Enums
  */
 const TaskStatusSchema = z.enum([
-  "pending",
+   "pending",
   "ongoing",
   "processing",
   "active",
   "paused",
   "completed",
-  "cancelled"
+  "cancelled",
+  "approved",
+  "rejected"
 ]);
 
 /**
  * 2. Nested Schemas
  */
 
-// Task داخل application
+// Task application
 const TaskSchema = z.object({
   _id: z.string(),
   taskTitle: z.string(),
@@ -29,7 +31,38 @@ const ApplicantSchema = z.object({
   _id: z.string(),
   fullName: z.string(),
   email: z.string().email(),
-  id: z.string()
+  id: z.string(),
+  phone: z.string(),
+});
+
+const MetadataSchema = z.object({
+  angle: z.string().nullable().optional(),
+  taskCategory: z.string().nullable().optional(),
+  imageSequence: z.number().nullable().optional(),
+  uploadTimestamp: z.date().nullable().optional(),
+  fileSize: z.number().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  fileType: z.string().nullable().optional(),
+  resolution: z.object({
+    width: z.number().nullable().optional(),
+    height: z.number().nullable().optional(),
+  }).nullable().optional(),
+  fileUrl: z.string().nullable().optional(),
+  publicId: z.string().nullable().optional(),
+}).optional();
+
+// Image
+const ImageSchema = z.object({
+  _id: z.string(),
+  url: z.string().url(),
+  publicId: z.string(),
+  status: z.string(),
+  label: z.string(), // Backend stores "View 1", "View 2", "View 3", "View 4"
+  metadata: MetadataSchema,
+  reviewedBy: ApplicantSchema,
+  rejectionMessage: z.string().nullable().optional(),
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 /**
@@ -41,6 +74,7 @@ const TaskApplicationSchema = z.object({
   applicant: ApplicantSchema,
   assignedBy: z.any().nullable(), // refine later if needed
   status: TaskStatusSchema,
+  images: z.array(ImageSchema),
   dueDate: z.string().datetime(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

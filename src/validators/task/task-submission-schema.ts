@@ -26,13 +26,24 @@ const MetadataSchema = z.object({
   publicId: z.string().nullable().optional(),
 }).optional();
 
-// Image
+
+const ApplicantSchema = z.object({
+  _id: z.string(),
+  fullName: z.string(),
+  email: z.string().email(),
+  id: z.string(),
+  phone: z.string(),
+});
+
 const ImageSchema = z.object({
   _id: z.string(),
   url: z.string().url(),
   publicId: z.string(),
+  status: z.string(),
   label: z.string(), // Backend stores "View 1", "View 2", "View 3", "View 4"
   metadata: MetadataSchema,
+  reviewedBy: ApplicantSchema,
+  rejectionMessage: z.string().nullable().optional(),
   createdAt: z.string().datetime().optional(),
   updatedAt: z.string().datetime().optional(),
 });

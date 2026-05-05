@@ -297,6 +297,40 @@ const useApproveOrRejectApplication = () => {
   };
 };
 
+
+const useRejectSubmissionImage = () => {
+  const mutation = useMutation({
+    mutationKey: [REACT_QUERY_KEYS.MUTATION.rejectSubmissionImage],
+    mutationFn: async ({ 
+      taskApplicationId, 
+      imageId, 
+      rejectionReason,
+      taskId
+    }: { 
+      taskApplicationId: string; 
+      imageId: string; 
+      rejectionReason: string; 
+      taskId: string;
+    }) => {
+      const payload = {
+        taskId,
+        imageId,
+        applicationId: taskApplicationId,
+        rejectionMessage: rejectionReason,
+      };
+      const response = await axiosInstance.post(`${endpoints.microTasks.rejectImage}`, payload);
+      return response.data;
+    }
+  });
+
+  return {
+    rejectSubmissionImageMutation: mutation,
+    isRejectSubmissionImageLoading: mutation.isPending,
+    isRejectSubmissionImageError: mutation.isError,
+    rejectSubmissionImageError: mutation.error,
+  };
+};
+
 const useDeleteMicroTask = () => {
   const queryClient = useQueryClient();
 
@@ -359,6 +393,7 @@ const microTaskMutationService = {
   useAssignTaskToUsers,
   useApplyForTask,
   useApproveOrRejectApplication,
+  useRejectSubmissionImage,
 };
 
 export default microTaskMutationService;

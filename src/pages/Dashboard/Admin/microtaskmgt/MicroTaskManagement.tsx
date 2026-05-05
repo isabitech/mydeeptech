@@ -20,6 +20,7 @@ import {
   Dropdown,
   Tabs,
   Avatar,
+  Image as AntImage,
 } from "antd";
 import {
   PlusSquareOutlined,
@@ -30,6 +31,9 @@ import {
   MoreOutlined,
   BarChartOutlined,
   EditOutlined,
+  UserOutlined,
+  CloseCircleOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -42,6 +46,7 @@ import { UserSchema } from "../../../../validators/users/users-schema";
 import { TaskAssignmentSchema } from "../../../../validators/task/assigned-task-schema";
 import { TaskStatus } from "../../../../services/micro-task-service/micro-task-query";
 import { TaskApplicationSchema } from "../../../../validators/task/task-filters";
+import { ImageSchema } from "../../../../validators/task/task-submission-schema";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -65,7 +70,6 @@ const TASK_STATUSES = [
   { value: "completed", label: "Completed", color: "blue" },
   { value: "cancelled", label: "Cancelled", color: "error" }
 ];
-
 
 interface MicroTaskStatistics {
   tasks: {
@@ -92,8 +96,10 @@ const MicroTaskManagement: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isAssignModalVisible, setIsAssignModalVisible] = useState(false);
+  const [isViewApplicantModalVisible, setIsViewApplicantModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Partial<BaseTaskSchema> | null>(null);
   const [taskToAssign, setTaskToAssign] = useState<Partial<BaseTaskSchema> | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<TaskApplicationSchema | null>(null);
   const [statistics, setStatistics] = useState<MicroTaskStatistics | null>(null);
   const [form] = Form.useForm();
   const [assignForm] = Form.useForm();
@@ -112,6 +118,20 @@ const MicroTaskManagement: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejectModalVisible, setIsRejectModalVisible] = useState(false);
   const [applicationToReject, setApplicationToReject] = useState<TaskApplicationSchema | null>(null);
+  
+  // State for image rejection
+  const [isImageRejectModalVisible, setIsImageRejectModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{
+    _id: string;
+    url: string;
+    label: string;
+    title?: string;
+  } | null>(null);
+  const [imageRejectionReason, setImageRejectionReason] = useState("");
+
+  // State for image metadata modal
+  const [isImageMetadataModalVisible, setIsImageMetadataModalVisible] = useState(false);
+  const [selectedImageMetadata, setSelectedImageMetadata] = useState<ImageSchema | null>(null);
 
   // Pagination state
   const [pagination, setPagination] = useState({
@@ -120,18 +140,18 @@ const MicroTaskManagement: React.FC = () => {
     total: 0
   });
 
-
   const { createTaskMutation, isCreateTaskLoading } = microTaskMutationService.useCreateMicroTask();
   const { updateTaskMutation, isUpdateTaskLoading } = microTaskMutationService.useUpdateMicroTask();
   const { assignTaskToUsersMutation, isAssignTaskToUsersLoading } = microTaskMutationService.useAssignTaskToUsers();
   const { approveOrRejectApplicationMutation } = microTaskMutationService.useApproveOrRejectApplication();
+  const { rejectSubmissionImageMutation, isRejectSubmissionImageLoading } = microTaskMutationService.useRejectSubmissionImage();
 
   const { 
     assignedTasks, 
     isAssignedTasksLoading,
     assignedTasksRefetch,
      pagination: taskUsersPagination
-  }  = microTaskAdminQueryService.useGetAssignedTaskToUsers(taskToAssign?._id || "", pagination.current, pagination.pageSize);
+  }  = microTaskAdminQueryService.useGetAssignedTaskToUsers((taskToAssign?._id || selectedApplication?.task?._id || ""), pagination.current, pagination.pageSize);
   const { 
     paginatedUsers, 
     pagination: usersPagination,  
@@ -155,9 +175,10 @@ const MicroTaskManagement: React.FC = () => {
       limit: pagination.pageSize,
       status: filterStatus,
       category: filterCategory,
-      search: searchText || undefined
+      search: searchText || undefined,
     }
   );
+
 
   useEffect(() => {
     fetchStatistics();
@@ -206,6 +227,42 @@ const MicroTaskManagement: React.FC = () => {
       console.error("Error fetching statistics:", error);
     }
   };
+
+  const handleRejectSubmissionImage = async (imageId: string, taskApplicationId: string, rejectionReason: string, taskId: string) => {
+    rejectSubmissionImageMutation.mutate({ imageId, taskApplicationId, rejectionReason, taskId }, {
+      onSuccess: () => {
+        notification.success({
+          message: "Success",
+          description: "Image rejected successfully",
+          key: "rejectSubmissionImageSuccess"
+        });
+        
+        // Update selectedApplication to mark the image as rejected
+        if (selectedApplication && selectedApplication.images) {
+          const updatedApplication = {
+            ...selectedApplication,
+            images: selectedApplication.images.map(image => 
+              image._id === imageId 
+                ? { ...image, status: 'rejected', rejectionMessage: rejectionReason }
+                : image
+            )
+          };
+          setSelectedApplication(updatedApplication);
+        }
+        
+        // Refresh the applications list to reflect the changes
+        allFiltersRefetch();
+      },
+      onError: (error) => {
+        const errMsg = getErrorMessage(error);  
+        notification.error({
+          message: "Error",
+          description: errMsg || "Failed to reject submission image",
+          key: "rejectSubmissionImageError"
+        }); 
+      } 
+    })
+  }
 
   const handleUpdateTask = async (taskId: string, taskData: Partial<BaseTaskSchema>) => {
     updateTaskMutation.mutate({ taskId, taskData }, {
@@ -271,6 +328,11 @@ const MicroTaskManagement: React.FC = () => {
             key: "updateApplicationStatusSuccess"
         });
         allFiltersRefetch();
+        // Close the view applicant modal if it's open
+        if (isViewApplicantModalVisible) {
+          setIsViewApplicantModalVisible(false);
+          setSelectedApplication(null);
+        }
     } catch (error) {
         const errMsg = getErrorMessage(error);
         notification.error({
@@ -281,6 +343,38 @@ const MicroTaskManagement: React.FC = () => {
     }
   }
 
+  // Handle image rejection
+  const handleRejectImage = async () => {
+    if (!selectedApplication || !selectedImage) return;
+
+    // Get the task ID from the selected application
+    const taskId = selectedApplication.task?._id;
+    const taskApplicationId = selectedApplication._id;
+    const imageId = selectedImage._id;
+    const rejectionReasonText = imageRejectionReason.trim() || "Image rejected by admin";
+
+    if (!taskId) {
+      notification.error({
+        message: "Error",
+        description: "Unable to reject image: Task ID not found",
+        key: "rejectImageError"
+      });
+      return;
+    }
+
+    // Call the rejection mutation
+    handleRejectSubmissionImage(
+      imageId,
+      taskApplicationId,
+      rejectionReasonText,
+      taskId
+    );
+    
+    
+    setIsImageRejectModalVisible(false);
+    setSelectedImage(null);
+    setImageRejectionReason("");
+  };
 
   const handleDeleteTask = (taskId: string) => {
     Modal.confirm({
@@ -335,7 +429,6 @@ const MicroTaskManagement: React.FC = () => {
     setIsAssignModalVisible(true);
   };
 
-
   const handleAssignUsers = async (values?: { userIds: string[] }) => {
     if (!taskToAssign) return;
     
@@ -380,6 +473,11 @@ const MicroTaskManagement: React.FC = () => {
     if (!taskToAssign || selectedUserIds.length === 0) return;
   };
 
+  // Handle view applicant
+  const handleViewApplicant = (record: TaskApplicationSchema) => {
+    setSelectedApplication(record);
+    setIsViewApplicantModalVisible(true);
+  };
 
   const columns: ColumnsType<TaskSchema> = [
     {
@@ -772,6 +870,14 @@ const MicroTaskManagement: React.FC = () => {
                         render: (_: unknown, record: TaskApplicationSchema) => {
                           const menuItems = [
                             {
+                              key: 'viewApplicant',
+                              icon: <UserOutlined />,
+                              label: 'View Applicant',
+                            },
+                            {
+                              type: 'divider' as const,
+                            },
+                            {
                               key: 'approve',
                               icon: <EditOutlined />,
                               label: 'Approve',
@@ -785,8 +891,8 @@ const MicroTaskManagement: React.FC = () => {
 
                           const handleMenuClick = ({ key }: { key: string }) => {
                             switch (key) {
-                              case "view":
-                                console.log("View submission for:", record._id);
+                              case "viewApplicant":
+                                handleViewApplicant(record);
                                 break;
                               case "approve":
                                 Modal.confirm({
@@ -1305,7 +1411,163 @@ const MicroTaskManagement: React.FC = () => {
   />
       </Modal>
 
-      {/* Custom Rejection Modal */}
+      {/* View Applicant Modal */}
+      <Modal
+        title={`Applicant Details: ${selectedApplication?.applicant?.fullName || 'User'}`}
+        open={isViewApplicantModalVisible}
+        onCancel={() => {
+          setIsViewApplicantModalVisible(false);
+          setSelectedApplication(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => {
+            setIsViewApplicantModalVisible(false);
+            setSelectedApplication(null);
+          }}>
+            Close
+          </Button>
+        ]}
+        width={900}
+      >
+        {selectedApplication && (
+          <div>
+            {/* Applicant Information */}
+            <Card size="small" title="Contact Information" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Text type="secondary">Full Name:</Text>
+                  <div>
+                    <Text strong>{selectedApplication.applicant?.fullName || 'N/A'}</Text>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Email:</Text>
+                  <div>
+                    <Text strong>{selectedApplication.applicant?.email || 'N/A'}</Text>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Phone:</Text>
+                  <div>
+                    <Text strong>{selectedApplication.applicant?.phone || 'N/A'}</Text>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Images Section */}
+            <Card 
+              size="small" 
+              title={`Images (${selectedApplication.images?.length || 0})`}
+              style={{ marginBottom: 16 }}
+            >
+              {selectedApplication.images && selectedApplication.images.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {selectedApplication.images.map((image) => {
+                    return (
+                    <Col xs={24} sm={12} md={8} lg={8} key={image._id}>
+                      <Card
+                        size="small"
+                        cover={
+                          <div style={{ 
+                            height: 200, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            backgroundColor: '#f5f5f5',
+                            overflow: 'hidden'
+                          }}>
+                            <AntImage
+                              src={image.url}
+                              alt={image.label}
+                              style={{ 
+                                maxHeight: 200, 
+                                width: 'auto', 
+                                maxWidth: '100%',
+                                objectFit: 'contain'
+                              }}
+                              preview={{
+                                mask: <EyeOutlined />
+                              }}
+                            />
+                          </div>
+                        }
+                        actions={[
+                          <Button 
+                            type="text" 
+                            danger 
+                            icon={<CloseCircleOutlined />}
+                            loading={isRejectSubmissionImageLoading}
+                            disabled={isRejectSubmissionImageLoading || !!(image?.rejectionMessage)}
+                            onClick={() => {
+                              setSelectedImage(image);
+                              setImageRejectionReason("");
+                              setIsImageRejectModalVisible(true);
+                            }}
+                          >
+                            Reject
+                          </Button>,
+                          <Button 
+                            type="text" 
+                            icon={<InfoCircleOutlined />}
+                            onClick={() => {
+                              setSelectedImageMetadata(image);
+                              setIsImageMetadataModalVisible(true);
+                            }}
+                          >
+                            Metadata
+                          </Button>
+                        ]}
+                      >
+                        <div className="">
+                          <Text strong>{image.label || 'Untitled'}</Text>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400 text-xs">{`Uploaded: ${dayjs(image.createdAt).format('MMM DD, YYYY')}`}</span>
+                            {
+                              image?.rejectionMessage && ( <span className="text-red-600 text-xs bg-red-100 border border-red-500 rounded-md px-1">Rejected</span>)
+                            }
+                          </div>
+                        </div>
+                      </Card>
+                    </Col>
+                  )
+                  })}
+                </Row>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                  <Text type="secondary">No images uploaded for this application</Text>
+                </div>
+              )}
+            </Card>
+
+            {/* Application Status */}
+            <Card size="small" title="Application Information">
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Text type="secondary">Status:</Text>
+                  <Tag color={selectedApplication.status === 'approved' ? 'success' : 'error'}>
+                      {selectedApplication.status?.toUpperCase() || 'N/A'}
+                    </Tag>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Application Date:</Text>
+                  <div>
+                    <Text strong>{dayjs(selectedApplication.createdAt).format('MMM DD, YYYY HH:mm')}</Text>
+                  </div>
+                </Col>
+                <Col span={8}>
+                  <Text type="secondary">Due Date:</Text>
+                  <div>
+                    <Text strong>{selectedApplication.dueDate ? dayjs(selectedApplication.dueDate).format('MMM DD, YYYY') : 'No due date'}</Text>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+          </div>
+        )}
+      </Modal>
+
+      {/* Custom Rejection Modal for Application */}
       <Modal
         title="Reject Application"
         open={isRejectModalVisible}
@@ -1375,6 +1637,222 @@ const MicroTaskManagement: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Image Rejection Modal */}
+      <Modal
+        title="Reject Image"
+        open={isImageRejectModalVisible}
+        onCancel={() => {
+          setIsImageRejectModalVisible(false);
+          setSelectedImage(null);
+          setImageRejectionReason("");
+        }}
+        footer={[
+          <Button 
+            key="cancel"
+            onClick={() => {
+              setIsImageRejectModalVisible(false);
+              setSelectedImage(null);
+              setImageRejectionReason("");
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="reject"
+            type="primary"
+            danger
+            onClick={handleRejectImage}
+            loading={isRejectSubmissionImageLoading}
+          >
+            Reject Image
+          </Button>
+        ]}
+        width={520}
+      >
+        <div className="mb-4">
+          <p className="mb-2 text-gray-400">
+            Are you sure you want to reject this image?
+          </p>
+          {selectedImage && (
+            <div style={{ marginBottom: 16 }}>
+              <Card size="small">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <AntImage
+                    src={selectedImage.url}
+                    alt={selectedImage.label}
+                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4 }}
+                    preview={false}
+                  />
+                  <div>
+                    <Text strong>{selectedImage.title || selectedImage.label || 'Untitled'}</Text>
+                    <br />
+                    <Text type="secondary">ID: {selectedImage._id}</Text>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+        </div>
+        
+        <div>
+          <label className="block mb-2 font-bold">
+            Rejection Reason (Optional):
+          </label>
+          <TextArea
+            rows={4}
+            value={imageRejectionReason}
+            onChange={(e) => setImageRejectionReason(e.target.value)}
+            maxLength={500}
+            showCount
+            placeholder="Please provide a reason for rejecting this image..."
+            style={{ resize: 'none' }}
+          />
+          <div className="mt-2 text-xs text-gray-400">
+            💡 Providing specific feedback helps applicants understand quality requirements.
+          </div>
+        </div>
+      </Modal>
+
+      {/* Image Metadata Modal */}
+
+{/* Image Metadata Modal */}
+<Modal
+  title="Image Metadata"
+  open={isImageMetadataModalVisible}
+  onCancel={() => {
+    setIsImageMetadataModalVisible(false);
+    setSelectedImageMetadata(null);
+  }}
+  footer={[
+    <Button 
+      key="close"
+      onClick={() => {
+        setIsImageMetadataModalVisible(false);
+        setSelectedImageMetadata(null);
+      }}
+    >
+      Close
+    </Button>
+  ]}
+  width={600}
+>
+  {selectedImageMetadata && (
+    <div>
+      {/* Image Preview */}
+      <Card size="small" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <AntImage
+            src={selectedImageMetadata.url}
+            alt={selectedImageMetadata.label}
+            style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8 }}
+            preview={false}
+          />
+          <div>
+            <Text strong>{selectedImageMetadata.label || 'Untitled'}</Text>
+            <br />
+            <Text type="secondary">ID: {selectedImageMetadata._id}</Text>
+          </div>
+        </div>
+      </Card>
+
+      {/* Metadata Information */}
+      <Card size="small" title="Metadata Information">
+        <Descriptions column={2} size="small">
+          <Descriptions.Item label="Angle">
+            {selectedImageMetadata.metadata?.angle || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Task Category">
+            {selectedImageMetadata.metadata?.taskCategory || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Image Sequence">
+            {selectedImageMetadata.metadata?.imageSequence || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Upload Timestamp">
+            {selectedImageMetadata.metadata?.uploadTimestamp ? 
+              dayjs(selectedImageMetadata.metadata?.uploadTimestamp).format('MMM DD, YYYY HH:mm:ss') : 
+              dayjs(selectedImageMetadata.createdAt).format('MMM DD, YYYY HH:mm:ss')
+            }
+          </Descriptions.Item>
+          <Descriptions.Item label="File Size">
+            {selectedImageMetadata.metadata?.fileSize ? 
+              `${Math.round(selectedImageMetadata.metadata.fileSize / 1024)} KB` : 
+              'N/A'
+            }
+          </Descriptions.Item>
+          <Descriptions.Item label="File Name">
+            {selectedImageMetadata.metadata?.fileName || selectedImageMetadata.label || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="File Type">
+            {selectedImageMetadata.metadata?.fileType || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Resolution">
+            {selectedImageMetadata.metadata?.resolution?.width && selectedImageMetadata.metadata?.resolution?.height ? 
+              `${selectedImageMetadata.metadata.resolution.width} x ${selectedImageMetadata.metadata.resolution.height}` :
+              'N/A'
+            }
+          </Descriptions.Item>
+         <Descriptions.Item label="File URL" span={2}>
+            <Typography.Link 
+              href={selectedImageMetadata.metadata?.fileUrl || selectedImageMetadata.url}
+              target="_blank"
+              copyable={{ text: selectedImageMetadata.metadata?.fileUrl || selectedImageMetadata.url }}
+            >
+              View / Copy URL
+            </Typography.Link>
+          </Descriptions.Item>
+          <Descriptions.Item label="Public ID" span={2}>
+            <Text copyable={{ text: selectedImageMetadata.publicId }}>
+              {selectedImageMetadata.publicId || 'N/A'}
+            </Text>
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      {/* Status Information (if present) */}
+      {(selectedImageMetadata.status || selectedImageMetadata.rejectionMessage) && (
+        <Card size="small" title="Status Information" style={{ marginTop: 16 }}>
+          <Descriptions column={1} size="small">
+            {selectedImageMetadata.status && (
+              <Descriptions.Item label="Status">
+                <Tag color={selectedImageMetadata.status === 'rejected' ? 'error' : 'success'}>
+                  {selectedImageMetadata.status.toUpperCase()}
+                </Tag>
+              </Descriptions.Item>
+            )}
+            {selectedImageMetadata.rejectionMessage && (
+              <Descriptions.Item label="Rejection Message">
+                {selectedImageMetadata.rejectionMessage}
+              </Descriptions.Item>
+            )}
+            {selectedImageMetadata.reviewedBy && (
+              <Descriptions.Item label="Reviewed By">
+                {selectedImageMetadata.reviewedBy ? selectedImageMetadata.reviewedBy.fullName : 'N/A'}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+        </Card>
+      )}
+
+      {/* Raw Metadata (optional - shows the complete metadata object) */}
+      {selectedImageMetadata.metadata && (
+        <Card size="small" title="Raw Metadata" style={{ marginTop: 16 }}>
+          <pre style={{ 
+            backgroundColor: '#f5f5f5', 
+            padding: '12px', 
+            borderRadius: '4px',
+            fontSize: '12px',
+            overflow: 'auto',
+            maxHeight: '200px'
+          }}>
+            {JSON.stringify(selectedImageMetadata.metadata, null, 2)}
+          </pre>
+        </Card>
+      )}
+    </div>
+  )}
+</Modal>
+
     </div>
   );
 };

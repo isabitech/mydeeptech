@@ -55,7 +55,7 @@ const MUTATION = {
     updateMicroTaskStatus: "updateMicroTaskStatus",
     startMicroTaskSubmission: "startMicroTaskSubmission",
     uploadSubmissionImage: "uploadSubmissionImage",
-    applyForTask: "uploadSubmissionImage",
+    applyForTask: "applyForTask",
     deleteSubmissionImage: "deleteSubmissionImage",
     submitForReview: "submitForReview",
     createTaskSlots: "createTaskSlots",
@@ -63,6 +63,7 @@ const MUTATION = {
     completeMicroTaskReview: "completeMicroTaskReview",
     bulkApproveMicroTasks: "bulkApproveMicroTasks",
     approveOrRejectApplication: "approveOrRejectApplication",
+    rejectSubmissionImage: "rejectSubmissionImage",
 } as const;
 
 const QUERY = {
