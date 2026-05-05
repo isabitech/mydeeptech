@@ -84,13 +84,6 @@ export const useDomainManagement = (profile: Profile | null | undefined) => {
           /^[0-9a-fA-F]{24}$/.test(id)
         );
 
-      console.log("🎯 Domain management:", {
-        initiallySelected: initiallySelectedIds,
-        currentlySelected: selectedDomains,
-        toAdd: toAdd,
-        toRemove: toRemove.map(r => ({ id: r.id, domainId: r.domainId }))
-      });
-
       const promises = [];
 
       // Remove deselected domains

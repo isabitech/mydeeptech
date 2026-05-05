@@ -42,7 +42,7 @@ const MicroTaskDashboard: React.FC = () => {
 
   const { isMyTasksLoading } = microTaskAdminQueryService.useGetMyTasks();
   const { allTasks, allTaskPagination } = microTaskQueryService.useGetAllTasks();
-  const { allFilters: allFiltersPending } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "pending" });
+  const { allFilters: allFiltersPending } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "ongoing" });
   const { allFilters: allFiltersApproved } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "approved" });
   const { allFilters: allFiltersRejected } = microTaskQueryService.useGetTasksByFilter({ page: 1, limit: 10, status: "rejected" });
   const { earningStats, isEarningStatsLoading, earningStatsError } = microTaskQueryService.useGetUserEarningStatistics();

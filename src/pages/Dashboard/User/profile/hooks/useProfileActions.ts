@@ -66,13 +66,11 @@ export const useProfileActions = (
     // Re-populate form with current profile data when entering edit mode
     if (profile) {
       const formattedData = formatProfileForForm(profile);
-      console.log("🔄 Setting form values:", formattedData);
       form.setFieldsValue(formattedData);
       
       // Immediately verify the account name was set
       setTimeout(() => {
-        const accountNameInForm = form.getFieldValue("accountName");
-        console.log("✅ Account name after form set:", accountNameInForm);
+        form.getFieldValue("accountName");
       }, 50);
     }
     

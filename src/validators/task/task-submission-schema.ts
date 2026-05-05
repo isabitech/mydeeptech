@@ -10,13 +10,31 @@ const UploadProgressSchema = z.object({
   total: z.number(),
 });
 
+const MetadataSchema = z.object({
+  angle: z.string().nullable().optional(),
+  taskCategory: z.string().nullable().optional(),
+  imageSequence: z.number().nullable().optional(),
+  uploadTimestamp: z.date().nullable().optional(),
+  fileSize: z.number().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  fileType: z.string().nullable().optional(),
+  resolution: z.object({
+    width: z.number().nullable().optional(),
+    height: z.number().nullable().optional(),
+  }).nullable().optional(),
+  fileUrl: z.string().nullable().optional(),
+  publicId: z.string().nullable().optional(),
+}).optional();
+
 // Image
 const ImageSchema = z.object({
-  url: z.string().url(),
-  label: z.enum(["Front", "Right", "Left", "Bottom"]),
-  publicId: z.string(),
   _id: z.string(),
-  uploadedAt: z.string(),
+  url: z.string().url(),
+  publicId: z.string(),
+  label: z.string(), // Backend stores "View 1", "View 2", "View 3", "View 4"
+  metadata: MetadataSchema,
+  createdAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
 });
 
 // Submission Data
