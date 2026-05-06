@@ -600,8 +600,8 @@ const MicroTaskManagement: React.FC = () => {
 
       {/* Statistics Cards */}
       {statistics && (
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col span={6}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={24} sm={12} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Total Tasks"
@@ -610,7 +610,7 @@ const MicroTaskManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col xs={24} sm={12} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Active Tasks"
@@ -619,7 +619,7 @@ const MicroTaskManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col xs={24} sm={12} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Total Submissions"
@@ -627,7 +627,7 @@ const MicroTaskManagement: React.FC = () => {
               />
             </Card>
           </Col>
-          <Col span={6}>
+          <Col xs={24} sm={12} md={12} lg={6}>
             <Card>
               <Statistic
                 title="Pending Review"
@@ -651,8 +651,8 @@ const MicroTaskManagement: React.FC = () => {
                 <div>
                   {/* Tasks Controls */}
                   <Card style={{ marginBottom: 20 }}>
-                    <Row gutter={16} align="middle">
-                      <Col span={8}>
+                    <Row gutter={[16, 16]} align="middle">
+                      <Col xs={24} sm={24} md={12} lg={8}>
                         <Search
                           placeholder="Search tasks..."
                           value={tasksSearchInput}
@@ -662,7 +662,7 @@ const MicroTaskManagement: React.FC = () => {
                           onClear={() => setSearchText("")}
                         />
                       </Col>
-                      <Col span={4}>
+                      <Col xs={12} sm={12} md={6} lg={4}>
                         <Select
                           style={{ width: "100%" }}
                           value={filterStatus}
@@ -677,7 +677,7 @@ const MicroTaskManagement: React.FC = () => {
                           ))}
                         </Select>
                       </Col>
-                      <Col span={4}>
+                      <Col xs={12} sm={12} md={6} lg={4}>
                         <Select
                           style={{ width: "100%" }}
                           value={filterCategory}
@@ -692,7 +692,7 @@ const MicroTaskManagement: React.FC = () => {
                           ))}
                         </Select>
                       </Col>
-                      <Col span={4}>
+                      <Col xs={12} sm={12} md={6} lg={4}>
                         <Button
                           icon={<ReloadOutlined />}
                           loading={isTasksFetching || isTasksLoading}
@@ -701,7 +701,7 @@ const MicroTaskManagement: React.FC = () => {
                           Refresh
                         </Button>
                       </Col>
-                      <Col span={4}>
+                      <Col xs={12} sm={12} md={6} lg={4}>
                         <Button
                           type="primary"
                           icon={<PlusSquareOutlined />}
@@ -741,6 +741,7 @@ const MicroTaskManagement: React.FC = () => {
                         }));
                       }
                     }}
+                    scroll={{ x: "max-content" }}
                   />
                 </div>
               ),
@@ -751,8 +752,8 @@ const MicroTaskManagement: React.FC = () => {
               children: (
                 <div>
                   {/* Applications Content */}
-                  <Row gutter={16} align="middle" style={{ marginBottom: 20 }}>
-                    <Col span={8}>
+                  <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 20 }}>
+                    <Col xs={24} sm={24} md={12} lg={8}>
                       <Search
                         placeholder="Search applications..."
                         value={searchInput}
@@ -762,7 +763,7 @@ const MicroTaskManagement: React.FC = () => {
                         onClear={() => setSearch("")}
                       />
                     </Col>
-                    <Col span={4}>
+                    <Col xs={12} sm={12} md={6} lg={4}>
                       <Select
                         style={{ width: "100%" }}
                         placeholder="Filter by status"
@@ -781,7 +782,7 @@ const MicroTaskManagement: React.FC = () => {
                         <Option value="cancelled">Cancelled</Option>
                       </Select>
                     </Col>
-                    <Col span={4}>
+                    <Col xs={12} sm={12} md={6} lg={4}>
                       <Button
                         icon={<ReloadOutlined />}
                         loading={isAllFiltersLoading || isAllFiltersFetching}
@@ -790,7 +791,7 @@ const MicroTaskManagement: React.FC = () => {
                         Refresh
                       </Button>
                     </Col>
-                    <Col span={4}>
+                    <Col xs={12} sm={12} md={6} lg={4}>
                       {/* Additional actions can be added here */}
                     </Col>
                   </Row>
@@ -807,6 +808,7 @@ const MicroTaskManagement: React.FC = () => {
                       showTotal: (total, range) => 
                         `${range[0]}-${range[1]} of ${total} applications`,
                     }}
+                    scroll={{ x: "max-content" }}
                     columns={[
                       {
                         title: "Applicant",

@@ -256,6 +256,7 @@ const MicroTaskDashboard: React.FC = () => {
                   dataSource={Array.isArray(allFiltersPending) ? allFiltersPending : []}
                   rowKey="_id"
                   pagination={{ pageSize: 10, position: ['bottomCenter'] }}
+                  scroll={{ x: "max-content" }}
                   columns={[
                     {
                       title: 'Task Name',
@@ -357,6 +358,7 @@ const MicroTaskDashboard: React.FC = () => {
                   locale={{
                     emptyText: <Empty description="No pending tasks" image={Empty.PRESENTED_IMAGE_SIMPLE} />
                   }}
+                  scroll={{ x: "max-content" }}
                 />
               </Card>
             ),
@@ -374,6 +376,7 @@ const MicroTaskDashboard: React.FC = () => {
                   dataSource={Array.isArray(allFiltersRejected) ? allFiltersRejected : []}
                   rowKey="_id"
                   pagination={{ pageSize: 10, position: ['bottomCenter'] }}
+                   scroll={{ x: "max-content" }}
                   columns={[
                     {
                       title: 'Task Name',
